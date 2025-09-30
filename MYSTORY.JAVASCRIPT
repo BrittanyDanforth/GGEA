@@ -527,7 +527,7 @@
   Object.assign(window.STORY_DATABASE, {
  "intro": {
   "id": "intro",
-  "text": "Day 47 of the outbreak. Your apartment building has held\u2014barely. Infected fill the streets below like a living sea. The government is gone. Radio is just static and screams. You hear hammering on your door. Through the peephole: Alex, from 3B, who used to fix everyone's fuse boxes. Their hands are covered in blood. Behind them, shadows move in the stairwell. Infected. Climbing. This moment defines everything.",
+  "text": "Day 1 of the outbreak. Your apartment building has held\u2014barely. Infected fill the streets below like a living sea. The government is gone. Radio is just static and screams. You hear hammering on your door. Through the peephole: Alex, from 3B, who used to fix everyone's fuse boxes. Their hands are covered in blood. Behind them, shadows move in the stairwell. Infected. Climbing. This moment defines everything.",
   "choices": [
    {
     "id": "i_peek",
@@ -1220,7 +1220,7 @@
    },
    {
     "id": "dm_not_enough",
-    "text": "Not enough\u2014close door",
+    "text": "Not enough\u2014keep door closed",
     "goTo": "alex_dies_after_proof",
     "effects": {
      "stats": {
@@ -3902,6 +3902,101 @@
   ],
   "tags": [
    "demand_saved",
+   "act1"
+  ]
+ },
+ "saved_after_apology": {
+  "id": "saved_after_apology",
+  "text": "Alex is inside. Alive. The apology helped, but there's still tension. They sit near the door, not quite comfortable. 'I understand why you had to be sure,' they say quietly. 'But it still hurt. Being treated like... like a threat first, a person second.' They look at you. 'I've known you for two years. Fixed your fuse box six times. Helped you move furniture. And you treated me like one of THEM.' The pain in their voice is raw. Can you fix this?",
+  "choices": [
+   {
+    "id": "sa_apologize_deeper",
+    "text": "Apologize more deeply. Explain the fear.",
+    "goTo": "apology_deeper_accepted",
+    "effects": {
+     "stats": {
+      "stress": -2
+     },
+     "persona": {
+      "nice": 2
+     },
+     "relationships": {
+      "Alex": 6
+     },
+     "flagsSet": [
+      "apology_deeper"
+     ],
+     "pushEvent": "'I'm sorry. Fear makes us cruel. I was afraid. Not of you. Of being wrong.' Alex softens. 'I get it. This world is fear.'"
+    },
+    "tags": [
+     "nice"
+    ]
+   },
+   {
+    "id": "sa_actions_not_words",
+    "text": "Actions, not words. Let me make it up to you.",
+    "goTo": "apology_make_amends",
+    "effects": {
+     "time": 1,
+     "persona": {
+      "nice": 1,
+      "chill": 1
+     },
+     "relationships": {
+      "Alex": 5
+     },
+     "flagsSet": [
+      "making_amends"
+     ],
+     "pushEvent": "'Let me show you. Not just words.' Spend the day helping them. Slowly, walls come down."
+    },
+    "tags": [
+     "nice"
+    ]
+   },
+   {
+    "id": "sa_justify_caution",
+    "text": "Justify it—caution kept us both alive",
+    "goTo": "apology_justified",
+    "effects": {
+     "persona": {
+      "chill": 2
+     },
+     "relationships": {
+      "Alex": 3
+     },
+     "flagsSet": [
+      "apology_justified"
+     ],
+     "pushEvent": "'Caution kept us alive. Can't apologize for that.' Alex: 'I guess.' But the hurt remains."
+    },
+    "tags": [
+     "chill"
+    ]
+   },
+   {
+    "id": "sa_no_further_apology",
+    "text": "Don't apologize further. You were right to verify.",
+    "goTo": "apology_no_further",
+    "effects": {
+     "persona": {
+      "rude": 1
+     },
+     "relationships": {
+      "Alex": 1
+     },
+     "flagsSet": [
+      "no_further_apology"
+     ],
+     "pushEvent": "'Did what I had to. No further apology.' Alex's eyes go cold. 'Right. Good to know where we stand.'"
+    },
+    "tags": [
+     "rude"
+    ]
+   }
+  ],
+  "tags": [
+   "apology_saved",
    "act1"
   ]
  },
@@ -7671,9 +7766,8189 @@
   "tags": [
    "ending"
   ],
-  "isEnding": true,
-  "endingType": "ashes"
- }
+ "isEnding": true,
+ "endingType": "ashes"
+ },
+"alex_bond_hard": {
+ "id": "alex_bond_hard",
+ "text": "Alex doesn't sugarcoat. 'We survive. Period. Not friends. Not family. Partners who keep each other breathing.' They're right. This world doesn't reward sentiment. But their eyes betray them—there's care beneath the callousness. 'You pulled me in when you could've left me to die. I remember that. But don't expect me to go soft.' Fair enough.",
+ "choices": [
+  {
+   "id": "bh_agree",
+   "text": "Agree. Survival comes first.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"chill": 2}, "relationships": {"Alex": 3}, "flagsSet": ["bond_hardened"], "pushEvent": "'Works for me. No illusions.' Alex nods. Partnership formed on brutal honesty."},
+   "tags": ["chill"]
+  },
+  {
+   "id": "bh_soften",
+   "text": "Try to soften them. We can care AND survive.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"nice": 1}, "relationships": {"Alex": 4}, "flagsSet": ["tried_softening"], "pushEvent": "'Maybe. Don't push it.' They don't reject it entirely. Progress."},
+   "tags": ["nice"]
+  },
+  {
+   "id": "bh_colder",
+   "text": "Even colder. Pure transaction.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"rude": 2}, "relationships": {"Alex": 1}, "flagsSet": ["transaction_only"], "pushEvent": "'Right. Just tools to each other.' Alex's face hardens. Message received."},
+   "tags": ["rude"]
+  }
+ ],
+ "tags": ["bond_path"]
+},
+"alex_bond_purpose": {
+ "id": "alex_bond_purpose",
+ "text": "Alex looks at you with newfound intensity. 'Before this, I fixed fuse boxes. Small problems, small solutions. But this? We're building something. A reason to survive beyond just... surviving.' They're searching for meaning in the chaos. You recognize that look—it's the same one you see in the mirror.",
+ "choices": [
+  {
+   "id": "bp_build_together",
+   "text": "Let's build something that matters.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"nice": 2, "protector": 1}, "relationships": {"Alex": 6}, "flagsSet": ["shared_purpose"], "pushEvent": "'Together then. Not just surviving. Living.' Alex extends hand. You shake. Pact made."},
+   "tags": ["nice"]
+  },
+  {
+   "id": "bp_dont_need_meaning",
+   "text": "Don't need meaning. Just need to survive.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"chill": 1}, "relationships": {"Alex": 3}, "pushEvent": "'Fair enough. Maybe I'm overthinking.' They back off. Practical wins."},
+   "tags": ["chill"]
+  },
+  {
+   "id": "bp_use_drive",
+   "text": "Use that drive. Channel it into action.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"protector": 1}, "relationships": {"Alex": 5}, "flagsSet": ["purpose_channeled"], "pushEvent": "'Yes. Action. Not philosophy.' Alex is energized. Ready to move."},
+   "tags": ["protector"]
+  }
+ ],
+ "tags": ["bond_path"]
+}
+,
+"alex_bond_hard": {
+ "id": "alex_bond_hard",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_bond__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_bond_hard resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_bond__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_bond_hard resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_bond__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_bond_hard resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_bond_purpose": {
+ "id": "alex_bond_purpose",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_bond__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_bond_purpose resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_bond__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_bond_purpose resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_bond__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_bond_purpose resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_cautious": {
+ "id": "alex_cautious",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_cauti_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_cautious resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_cauti_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_cautious resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_cauti_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_cautious resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_debt": {
+ "id": "alex_debt",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_debt_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_debt resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_debt_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_debt resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_debt_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_debt resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_dependent_tool": {
+ "id": "alex_dependent_tool",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_depen_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_dependent_tool resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_depen_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_dependent_tool resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_depen_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_dependent_tool resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_dies_after_proof": {
+ "id": "alex_dies_after_proof",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_dies__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_dies_after_proof resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_dies__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_dies_after_proof resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_dies__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_dies_after_proof resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_grateful_conditional": {
+ "id": "alex_grateful_conditional",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_grate_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_grateful_conditional resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_grate_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_grateful_conditional resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_grate_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_grateful_conditional resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_grateful_lucky": {
+ "id": "alex_grateful_lucky",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_grate_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_grateful_lucky resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_grate_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_grateful_lucky resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_grate_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_grateful_lucky resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_grateful_selfish": {
+ "id": "alex_grateful_selfish",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_grate_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_grateful_selfish resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_grate_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_grateful_selfish resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_grate_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_grateful_selfish resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_guilt_lever": {
+ "id": "alex_guilt_lever",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_guilt_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_guilt_lever resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_guilt_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_guilt_lever resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_guilt_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_guilt_lever resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_learns_independence": {
+ "id": "alex_learns_independence",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_learn_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_learns_independence resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_learn_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_learns_independence resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_learn_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_learns_independence resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_professional": {
+ "id": "alex_professional",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_profe_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_professional resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_profe_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_professional resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_profe_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_professional resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_respect": {
+ "id": "alex_respect",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_respe_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_respect resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_respe_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_respect resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_respe_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_respect resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_clinical_killer": {
+ "id": "alex_sees_clinical_killer",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_clinical_killer resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_clinical_killer resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_clinical_killer resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_darkness": {
+ "id": "alex_sees_darkness",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_darkness resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_darkness resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_darkness resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_necessary_violence": {
+ "id": "alex_sees_necessary_violence",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_necessary_violence resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_necessary_violence resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_necessary_violence resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_personal": {
+ "id": "alex_sees_personal",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_personal resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_personal resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_personal resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_reactive": {
+ "id": "alex_sees_reactive",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_reactive resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_reactive resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_reactive resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_transactional": {
+ "id": "alex_sees_transactional",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_transactional resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_transactional resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_transactional resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_test_solo": {
+ "id": "alex_test_solo",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_test__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_test_solo resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_test__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_test_solo resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_test__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_test_solo resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_traumatized_harsh": {
+ "id": "alex_traumatized_harsh",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_traum_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_traumatized_harsh resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_traum_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_traumatized_harsh resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_traum_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_traumatized_harsh resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_uncertain": {
+ "id": "alex_uncertain",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_uncer_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_uncertain resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_uncer_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_uncertain resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_uncer_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_uncertain resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_uncomfortable_silence": {
+ "id": "alex_uncomfortable_silence",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_uncom_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_uncomfortable_silence resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_uncom_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_uncomfortable_silence resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_uncom_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_uncomfortable_silence resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"apology_deeper_accepted": {
+ "id": "apology_deeper_accepted",
+ "text": "Your deeper apology lands. Alex exhales. The tension breaks. 'Okay. I get it. Fear makes us into people we don't recognize.' They pause. 'I'm sorry too. For expecting you to just trust. In this world.' A moment of mutual understanding. The hurt isn't gone but it's... acknowledged. You both move forward. Alex extends a hand. 'Start over? Hi. I'm Alex. I survive apocalypses and fix fuse boxes. Apparently in that order now.' A weak smile. Real though.",
+ "choices": [
+  {
+   "id": "ada_start_over",
+   "text": "Start over. Clean slate.",
+   "goTo": "apology_relationship_rebuilt",
+   "effects": {
+    "stats": {
+     "stress": -3
+    },
+    "persona": {
+     "nice": 2
+    },
+    "relationships": {
+     "Alex": 8
+    },
+    "flagsSet": [
+     "relationship_rebuilt"
+    ],
+    "pushEvent": "'Clean slate. I like that.' Alex's smile grows. Trust begins to heal."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "ada_cautious_forward",
+   "text": "Move forward, but cautiously.",
+   "goTo": "apology_cautious_trust",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "relationships": {
+     "Alex": 6
+    },
+    "flagsSet": [
+     "cautious_trust"
+    ],
+    "pushEvent": "'Fair enough. Trust takes time.' Alex nods. They understand."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "ada_professional",
+   "text": "Keep it professional. Partners, not friends.",
+   "goTo": "apology_professional_only",
+   "effects": {
+    "persona": {
+     "chill": 2
+    },
+    "relationships": {
+     "Alex": 4
+    },
+    "flagsSet": [
+     "professional_only"
+    ],
+    "pushEvent": "'Partners. I can work with that.' Alex's expression becomes neutral. Business mode."
+   },
+   "tags": [
+    "chill"
+   ]
+  }
+ ],
+ "tags": [
+  "apology_resolved",
+  "act1"
+ ]
+},
+"apology_relationship_rebuilt": {
+ "id": "apology_relationship_rebuilt",
+ "text": "Day 2. The morning after. Alex is making coffee—real coffee, from their emergency stash. 'Figured we earned it,' they say. The apartment feels different. Warmer. Less like a bunker, more like... home. 'So,' Alex says, 'what's the plan? We can't stay here forever.' They're right. The building won't hold. But for now, you have each other. And that's something.",
+ "choices": [
+  {
+   "id": "arr_plan_together",
+   "text": "Let's plan together. What do you think?",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["collaborative_planning"],
+    "pushEvent": "'I like that. Two heads better than one.' Alex pulls out a map. Planning begins."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "arr_secure_building",
+   "text": "First, let's secure this building properly.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["building_secured"],
+    "pushEvent": "'Smart. Home base first.' Alex nods. 'I know this building's weak points.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "arr_scout_area",
+   "text": "We need to scout the area. See what's out there.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["area_scouted"],
+    "pushEvent": "'Reconnaissance. Good call.' Alex grabs their gear. 'I'll go with you.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "relationship_strong"]
+},
+"apology_cautious_trust": {
+ "id": "apology_cautious_trust",
+ "text": "Day 2. Alex is cautious but present. They've set up their own corner of the apartment—not hiding, but maintaining distance. 'I appreciate the apology,' they say. 'But trust... that takes time.' Fair enough. The world taught them that lesson hard. 'So what's next?' they ask. 'We can't just... wait here.'",
+ "choices": [
+  {
+   "id": "act_build_trust",
+   "text": "Let's build trust through action.",
+   "goTo": "day2_trust_building",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["trust_building"],
+    "pushEvent": "'Actions. I can respect that.' Alex's guard lowers slightly."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "act_practical_first",
+   "text": "Focus on practical survival first.",
+   "goTo": "day2_practical_focus",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["practical_focus"],
+    "pushEvent": "'Practical. I like practical.' Alex relaxes. Less pressure."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "act_give_space",
+   "text": "Give them space. Let them come to you.",
+   "goTo": "day2_give_space",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["respects_boundaries"],
+    "pushEvent": "'Thank you. For understanding.' Alex's expression softens."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "cautious_trust"]
+},
+"apology_professional_only": {
+ "id": "apology_professional_only",
+ "text": "Day 2. Alex has set up a professional distance. They're efficient, helpful, but emotionally guarded. 'Partners,' they say. 'That works.' They've organized the supplies, checked the perimeter, made themselves useful. But there's a wall there. Respectful, but present. 'So what's the operational plan?' they ask. Business mode.",
+ "choices": [
+  {
+   "id": "apo_accept_dynamic",
+   "text": "Accept the professional dynamic.",
+   "goTo": "day2_professional_partnership",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["professional_dynamic"],
+    "pushEvent": "'Understood. Professional partnership.' Alex nods. Clear boundaries established."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "apo_try_warmth",
+   "text": "Try to add some warmth to the partnership.",
+   "goTo": "day2_warmth_attempt",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["warmth_attempted"],
+    "pushEvent": "'I... appreciate that.' Alex's guard wavers slightly."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "apo_keep_distance",
+   "text": "Keep the distance. It's safer this way.",
+   "goTo": "day2_maintain_distance",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 0},
+    "flagsSet": ["distance_maintained"],
+    "pushEvent": "'Right. Safer.' Alex's expression remains neutral."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "professional"]
+},
+"day2_planning_session": {
+ "id": "day2_planning_session",
+ "text": "Day 2, 10:00 AM. Alex spreads a city map on the table. 'Okay, here's what I know,' they say, pointing. 'The building's structural weak points are here, here, and here.' They mark spots with a pen. 'There's a supply cache three blocks east—pharmacy that might still have meds. And...' they pause. 'There's a family on floor 4. Martinez family. Two kids, elderly grandmother. They're... they're not doing well.'",
+ "choices": [
+  {
+   "id": "d2ps_help_family",
+   "text": "We should help the Martinez family.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["help_martinez"],
+    "pushEvent": "'I was hoping you'd say that.' Alex's eyes light up. 'They're good people.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2ps_pharmacy_first",
+   "text": "Let's hit the pharmacy first. Get supplies.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["pharmacy_priority"],
+    "pushEvent": "'Smart. Supplies first, then we can help others.' Alex nods approvingly."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2ps_secure_building",
+   "text": "First, let's secure this building properly.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["building_secured"],
+    "pushEvent": "'Home base first. Good call.' Alex grabs tools. 'I know this building's weak points.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "planning"]
+},
+"day2_secure_building": {
+ "id": "day2_secure_building",
+ "text": "Day 2, 11:00 AM. Alex leads you through the building's weak points. 'This door needs reinforcement,' they say, pointing to the main entrance. 'And these windows on the second floor—they're the biggest vulnerability.' They've brought tools, materials. 'I used to fix everything in this building. Know it like the back of my hand.' The work is methodical, calming. Building something together.",
+ "choices": [
+  {
+   "id": "d2sb_thorough_job",
+   "text": "Let's do this right. Thorough job.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 3,
+    "persona": {"chill": 2},
+    "stats": {"stress": -2, "stamina": -1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["building_well_secured"],
+    "pushEvent": "'This is good work.' Alex smiles. 'Feels like we're building something real.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2sb_quick_job",
+   "text": "Quick job. We have other priorities.",
+   "goTo": "day2_building_secured_basic",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": -1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["building_basic_secured"],
+    "pushEvent": "'Efficient. I like that.' Alex nods. 'What's next?'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2sb_teach_me",
+   "text": "Teach me. I want to learn.",
+   "goTo": "day2_learning_building",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 1},
+    "stats": {"stress": -1},
+    "relationships": {"Alex": 3},
+    "flagsSet": ["learning_building"],
+    "pushEvent": "'I like teaching.' Alex's face brightens. 'You're a good student.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day2", "building"]
+},
+"day2_scout_area": {
+ "id": "day2_scout_area",
+ "text": "Day 2, 12:00 PM. You and Alex gear up for reconnaissance. 'Stay close,' Alex says. 'And quiet.' The building's lobby is a mess—broken glass, scattered papers, the smell of decay. Through the front door, the street is eerily quiet. 'They're out there,' Alex whispers. 'But not here. Not right now.' You can see other buildings, some with lights, some dark. Signs of life. Signs of death.",
+ "choices": [
+  {
+   "id": "d2sa_pharmacy_approach",
+   "text": "Let's check out that pharmacy Alex mentioned.",
+   "goTo": "day2_pharmacy_scout",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["pharmacy_scouted"],
+    "pushEvent": "'Good call. Let's see what we're dealing with.' Alex leads the way."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2sa_other_buildings",
+   "text": "Let's check other buildings. See who's alive.",
+   "goTo": "day2_other_buildings",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "stats": {"stress": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["other_buildings_scouted"],
+    "pushEvent": "'Could be survivors. Could be trouble.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2sa_return_safe",
+   "text": "Let's head back. We've seen enough.",
+   "goTo": "day2_return_safe",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": -1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["scout_complete"],
+    "pushEvent": "'Smart. No need to push our luck.' Alex nods. 'Back to base.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "scouting"]
+},
+"day2_help_martinez": {
+ "id": "day2_help_martinez",
+ "text": "Day 2, 1:00 PM. Floor 4, apartment 4B. The Martinez family's door is barricaded with furniture. You knock gently. 'It's Alex,' Alex calls out. 'From 3B. I brought help.' The door opens a crack. Mrs. Martinez—early 30s, exhausted—peeks out. Behind her, two children, maybe 8 and 10, and an elderly woman in a wheelchair. 'Alex... thank God,' she whispers. 'We're running out of food. And... and my mother needs medicine.'",
+ "choices": [
+  {
+   "id": "d2hm_share_supplies",
+   "text": "Share our supplies with them.",
+   "goTo": "day2_martinez_helped",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 3},
+    "stats": {"stress": -1},
+    "flagsSet": ["martinez_helped"],
+    "pushEvent": "'Thank you. Thank you so much.' Mrs. Martinez's eyes fill with tears."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2hm_pharmacy_first",
+   "text": "Let's get medicine first, then come back.",
+   "goTo": "day2_pharmacy_for_martinez",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["pharmacy_for_martinez"],
+    "pushEvent": "'We'll be back. With medicine.' Alex's voice is determined."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2hm_evacuate_them",
+   "text": "We should evacuate them to our apartment.",
+   "goTo": "day2_evacuate_martinez",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 3},
+    "stats": {"stress": 2},
+    "flagsSet": ["martinez_evacuated"],
+    "pushEvent": "'Safety in numbers.' Alex nods. 'Let's get them out of here.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day2", "martinez"]
+},
+"day2_pharmacy_raid": {
+ "id": "day2_pharmacy_raid",
+ "text": "Day 2, 2:00 PM. The pharmacy is three blocks east. You and Alex approach cautiously. The building is intact, but the front door is shattered. 'Looks like someone's been here already,' Alex whispers. Inside, shelves are mostly empty, but there are still some supplies. 'Let's be quick,' Alex says. 'In and out.' You can hear sounds from the back—maybe infected, maybe survivors. The choice is yours.",
+ "choices": [
+  {
+   "id": "d2pr_quick_grab",
+   "text": "Quick grab. Take what we can and go.",
+   "goTo": "day2_pharmacy_quick",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": 1},
+    "relationships": {"Alex": 1},
+    "inventoryAdd": ["bandages", "painkillers"],
+    "flagsSet": ["pharmacy_quick"],
+    "pushEvent": "'Efficient. Let's go.' Alex grabs supplies and heads for the door."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2pr_thorough_search",
+   "text": "Thorough search. Check the back room.",
+   "goTo": "day2_pharmacy_thorough",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "stats": {"stress": 2},
+    "relationships": {"Alex": 1},
+    "inventoryAdd": ["antibiotics", "morphine", "surgical_kit"],
+    "flagsSet": ["pharmacy_thorough"],
+    "pushEvent": "'Found the good stuff.' Alex's eyes light up. 'This could save lives.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2pr_check_sounds",
+   "text": "Check those sounds. Could be survivors.",
+   "goTo": "day2_pharmacy_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "stats": {"stress": 2},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["pharmacy_survivors"],
+    "pushEvent": "'Could be someone who needs help.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day2", "pharmacy"]
+},
+"day2_building_secured_well": {
+ "id": "day2_building_secured_well",
+ "text": "Day 2, 3:00 PM. The building is now a fortress. Alex has reinforced every weak point, set up early warning systems, even rigged a simple communication system between floors. 'This is good work,' Alex says, wiping sweat from their brow. 'We've got a real chance here.' The building feels secure, safe. A proper home base. 'So what's next?' Alex asks. 'We've got options now.'",
+ "choices": [
+  {
+   "id": "d2bsw_help_others",
+   "text": "Let's help other survivors in the building.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["help_others"],
+    "pushEvent": "'Good call. We're stronger together.' Alex nods approvingly."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2bsw_scout_area",
+   "text": "Let's scout the area. See what's out there.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["area_scouted"],
+    "pushEvent": "'Reconnaissance. Smart.' Alex grabs their gear."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2bsw_rest_plan",
+   "text": "Let's rest and plan. We've earned it.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": -2, "stamina": 2},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["rest_plan"],
+    "pushEvent": "'You're right. We've done good work today.' Alex smiles."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "building_secure"]
+},
+"day2_hub": {
+ "id": "day2_hub",
+ "text": "Day 2, Evening. The sun is setting, casting long shadows across the apartment. Alex is cooking something simple—canned food, but it smells like a feast. 'We made it through another day,' they say. 'That's something.' The building feels different now. More like home. Less like a prison. 'Tomorrow,' Alex says, 'we decide what kind of people we want to be in this world.' The choice is yours.",
+ "choices": [
+  {
+   "id": "d2h_hero_path",
+   "text": "We help others. That's who we are.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["hero_path_chosen"],
+    "pushEvent": "'I was hoping you'd say that.' Alex's eyes light up. 'Let's be the good guys.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2h_survivor_path",
+   "text": "We survive. That's what matters.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["survivor_path_chosen"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Survival first.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2h_leader_path",
+   "text": "We lead. We build something here.",
+   "goTo": "day4_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["leader_path_chosen"],
+    "pushEvent": "'Ambitious. I like it.' Alex's expression becomes determined. 'Let's build something.'"
+   },
+   "tags": ["protector"]
+  }
+ ],
+ "tags": ["day2", "hub"]
+},
+"day3_hero_path": {
+ "id": "day3_hero_path",
+ "text": "Day 3, Morning. You wake to the sound of knocking. Alex is already up, peering through the peephole. 'It's Mrs. Martinez,' they whisper. 'She looks... scared.' You open the door. Mrs. Martinez is there, her children behind her. 'Please,' she says. 'There are more families. On the other floors. They need help. Food. Medicine. Protection.' Her voice trembles. 'We can't do this alone.'",
+ "choices": [
+  {
+   "id": "d3hp_help_all",
+   "text": "We'll help everyone we can.",
+   "goTo": "day3_help_all_families",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 3, "protector": 2},
+    "relationships": {"Alex": 3},
+    "stats": {"stress": 3, "stamina": -2},
+    "flagsSet": ["help_all_families"],
+    "pushEvent": "'Thank you. Thank you so much.' Mrs. Martinez's eyes fill with tears."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d3hp_organize_effort",
+   "text": "Let's organize this properly. Systematically.",
+   "goTo": "day3_organize_effort",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "chill": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["organize_effort"],
+    "pushEvent": "'Smart. Let's do this right.' Alex nods approvingly."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d3hp_limited_help",
+   "text": "We'll help, but we have limits.",
+   "goTo": "day3_limited_help",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["limited_help"],
+    "pushEvent": "'I understand. Thank you for what you can do.' Mrs. Martinez's expression becomes guarded."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day3", "hero"]
+},
+"day3_survivor_path": {
+ "id": "day3_survivor_path",
+ "text": "Day 3, Morning. Alex is checking the perimeter. 'Building's holding,' they report. 'But we need to think long-term.' They spread a map on the table. 'Food won't last forever. Medicine will run out. We need a plan.' They point to various locations. 'Supply caches. Safe routes. Fallback positions.' Their voice is practical, methodical. 'Survival is about preparation.'",
+ "choices": [
+  {
+   "id": "d3sp_supply_runs",
+   "text": "Let's plan supply runs. Systematic approach.",
+   "goTo": "day3_supply_runs",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["supply_runs_planned"],
+    "pushEvent": "'Good thinking. Let's map out the best routes.' Alex's eyes light up."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d3sp_fortify_position",
+   "text": "Let's fortify our position. Make it unassailable.",
+   "goTo": "day3_fortify_position",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["position_fortified"],
+    "pushEvent": "'Defense in depth. I like it.' Alex grabs tools."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d3sp_scout_escape",
+   "text": "Let's scout escape routes. Plan for the worst.",
+   "goTo": "day3_scout_escape",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["escape_routes_scouted"],
+    "pushEvent": "'Always have a backup plan.' Alex nods. 'Smart.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day3", "survivor"]
+},
+"day3_leader_path": {
+ "id": "day3_leader_path",
+ "text": "Day 3, Morning. Alex is organizing supplies. 'We've got something here,' they say. 'A real opportunity.' They look at you. 'This building. These people. We could build something. A community. A safe zone.' Their voice is excited, determined. 'But it takes leadership. Someone to make the hard calls. Someone people can trust.' They pause. 'I think that's you.'",
+ "choices": [
+  {
+   "id": "d3lp_accept_leadership",
+   "text": "I'll lead. We'll build something here.",
+   "goTo": "day3_accept_leadership",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 3},
+    "stats": {"stress": 2},
+    "flagsSet": ["leadership_accepted"],
+    "pushEvent": "'Good. We need someone to step up.' Alex's expression becomes determined."
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d3lp_shared_leadership",
+   "text": "We lead together. Equal partners.",
+   "goTo": "day3_shared_leadership",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 1, "nice": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["shared_leadership"],
+    "pushEvent": "'Partners. I like that.' Alex's eyes light up."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d3lp_not_ready",
+   "text": "I'm not ready for that kind of responsibility.",
+   "goTo": "day3_not_ready_leadership",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["leadership_declined"],
+    "pushEvent": "'Fair enough. Maybe later.' Alex's expression becomes neutral."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day3", "leader"]
+},
+"day3_to_act1_hub": {
+ "id": "day3_to_act1_hub",
+ "text": "Day 3, Evening. The sun sets on another day of survival. You and Alex sit in the apartment, planning tomorrow. 'We've come a long way,' Alex says. 'From strangers to... whatever we are now.' They look at you. 'Partners. Friends. Family. Whatever you want to call it.' The building feels alive now. People moving between floors. Children's laughter echoing in the halls. 'We're building something here,' Alex says. 'Something real.'",
+ "choices": [
+  {
+   "id": "d3tah_continue_building",
+   "text": "Let's keep building. This is just the beginning.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -1},
+    "flagsSet": ["continue_building"],
+    "pushEvent": "'I like the sound of that.' Alex's eyes light up. 'Let's see what we can build.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d3tah_consolidate_gains",
+   "text": "Let's consolidate what we have. Make it solid.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["consolidate_gains"],
+    "pushEvent": "'Smart. Build on what works.' Alex nods approvingly."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d3tah_expand_influence",
+   "text": "Let's expand. Reach out to other buildings.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 1, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["expand_influence"],
+    "pushEvent": "'Ambitious. I like it.' Alex's expression becomes determined."
+   },
+   "tags": ["protector"]
+  }
+ ],
+ "tags": ["day3", "transition"]
+},
+"day4_morning": {
+ "id": "day4_morning",
+ "text": "Day 4, 6:00 AM. The building wakes slowly. You hear footsteps in the halls—survivors moving between apartments, checking on each other. Alex is already up, brewing coffee from their dwindling supply. 'Morning,' they say quietly. 'Sleep okay?' The question is loaded. Last night, you both heard the screams from the street. Infected. Getting closer. 'We need to talk about today,' Alex says. 'About what we're building here.'",
+ "choices": [
+  {
+   "id": "d4m_community_meeting",
+   "text": "Let's call a community meeting. Get everyone on the same page.",
+   "goTo": "day4_community_meeting",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["community_meeting_called"],
+    "pushEvent": "'Good idea. We need to be organized.' Alex nods. 'I'll help you prepare.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4m_supply_assessment",
+   "text": "Let's assess our supplies. See what we're working with.",
+   "goTo": "day4_supply_assessment",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["supply_assessment_done"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex grabs a clipboard. 'Let's be thorough.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4m_security_check",
+   "text": "Let's do a security check. Make sure we're safe.",
+   "goTo": "day4_security_check",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["security_check_done"],
+    "pushEvent": "'Can't be too careful.' Alex grabs their gear. 'Let's check every entrance.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "morning"]
+},
+"day4_community_meeting": {
+ "id": "day4_community_meeting",
+ "text": "Day 4, 10:00 AM. The building's common area is packed. Every surviving family is here—the Martinez family, the elderly couple from 2B, the young mother and child from 5A, and others. 'Thank you all for coming,' you say. 'We need to talk about our situation.' Mrs. Martinez speaks up: 'We're running out of food. My children are hungry.' The elderly man from 2B adds: 'And medicine. My wife needs her heart medication.' The room falls silent. All eyes are on you.",
+ "choices": [
+  {
+   "id": "d4cm_organize_supply_runs",
+   "text": "Let's organize supply runs. We'll work together.",
+   "goTo": "day4_organize_supply_runs",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["supply_runs_organized"],
+    "pushEvent": "'We're stronger together.' Alex's voice is determined. 'Let's make this work.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4cm_establish_rules",
+   "text": "We need rules. Structure. Everyone contributes.",
+   "goTo": "day4_establish_rules",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["rules_established"],
+    "pushEvent": "'Fair enough. We need order.' Alex's expression becomes serious."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4cm_individual_responsibility",
+   "text": "Everyone's responsible for themselves. We help when we can.",
+   "goTo": "day4_individual_responsibility",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["individual_responsibility"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Survival first.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "community"]
+},
+"day4_supply_assessment": {
+ "id": "day4_supply_assessment",
+ "text": "Day 4, 11:00 AM. You and Alex methodically check every apartment, every supply cache. The numbers are... concerning. 'Food: maybe two weeks if we ration carefully,' Alex reports. 'Medicine: three days for critical needs. Water: we're okay for now, but the building's supply won't last forever.' They look up from their notes. 'We need to make some hard decisions. Who gets priority? How do we ration? What happens when supplies run out?'",
+ "choices": [
+  {
+   "id": "d4sa_children_first",
+   "text": "Children and elderly get priority. They're most vulnerable.",
+   "goTo": "day4_children_first_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["children_first_rationing"],
+    "pushEvent": "'Compassionate. I like that.' Alex's eyes soften. 'They need us.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4sa_contributors_first",
+   "text": "Those who contribute most get priority. Fair system.",
+   "goTo": "day4_contributors_first_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contributors_first_rationing"],
+    "pushEvent": "'Fair. Merit-based system.' Alex nods. 'Makes sense.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4sa_equal_shares",
+   "text": "Equal shares for everyone. We're all in this together.",
+   "goTo": "day4_equal_shares_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["equal_shares_rationing"],
+    "pushEvent": "'Democratic. I can respect that.' Alex's expression becomes neutral."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day4", "supplies"]
+},
+"day4_security_check": {
+ "id": "day4_security_check",
+ "text": "Day 4, 12:00 PM. You and Alex systematically check every entrance, every window, every weak point. 'Main door: holding, but we need better reinforcement,' Alex reports. 'Fire escape: accessible, but we can block it if needed. Roof access: clear, good for surveillance.' They pause at a second-floor window. 'This is a problem,' they say, pointing to a crack in the glass. 'One good push and they're in.' The choice is yours.",
+ "choices": [
+  {
+   "id": "d4sc_immediate_repair",
+   "text": "Let's fix this now. No time to waste.",
+   "goTo": "day4_immediate_repair",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["immediate_repair_done"],
+    "pushEvent": "'Good call. Security first.' Alex grabs tools. 'Let's make it solid.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4sc_surveillance_system",
+   "text": "Let's set up a surveillance system. Early warning.",
+   "goTo": "day4_surveillance_system",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["surveillance_system_setup"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'I can rig something up.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4sc_evacuation_plan",
+   "text": "Let's plan evacuation routes. Be ready to run.",
+   "goTo": "day4_evacuation_plan",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["evacuation_plan_ready"],
+    "pushEvent": "'Always have a backup plan.' Alex nods. 'Smart thinking.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "security"]
+},
+"day4_organize_supply_runs": {
+ "id": "day4_organize_supply_runs",
+ "text": "Day 4, 2:00 PM. The community meeting continues. 'We need volunteers for supply runs,' you announce. 'It's dangerous, but necessary.' Hands go up—Alex, of course, but also Mr. Martinez, the young mother from 5A, and others. 'We'll work in teams,' you continue. 'Safety in numbers. And we'll share everything we find.' The room buzzes with energy. Hope. 'When do we start?' someone asks.",
+ "choices": [
+  {
+   "id": "d4osr_start_today",
+   "text": "Let's start today. No time to waste.",
+   "goTo": "day4_supply_run_today",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["supply_run_today"],
+    "pushEvent": "'Let's do this.' Alex's voice is determined. 'We're ready.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4osr_plan_first",
+   "text": "Let's plan first. Scout the area, then go.",
+   "goTo": "day4_plan_supply_runs",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["supply_runs_planned"],
+    "pushEvent": "'Smart. Preparation saves lives.' Alex nods approvingly."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4osr_tomorrow",
+   "text": "Let's start tomorrow. Give everyone time to prepare.",
+   "goTo": "day4_supply_run_tomorrow",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["supply_run_tomorrow"],
+    "pushEvent": "'Good call. Preparation is key.' Alex's expression becomes thoughtful."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day4", "supply_runs"]
+},
+"day4_establish_rules": {
+ "id": "day4_establish_rules",
+ "text": "Day 4, 2:00 PM. The community meeting takes a serious turn. 'We need structure,' you announce. 'Rules. Everyone contributes. Everyone follows them.' The room grows quiet. 'First rule: everyone pulls their weight. No freeloaders.' Mrs. Martinez nods. 'Second rule: we share resources. No hoarding.' The elderly man from 2B speaks up: 'And what about those who can't contribute? The sick? The elderly?' The question hangs in the air.",
+ "choices": [
+  {
+   "id": "d4er_compassionate_rules",
+   "text": "We make exceptions for those who can't contribute. Compassion.",
+   "goTo": "day4_compassionate_rules",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["compassionate_rules"],
+    "pushEvent": "'Thank you.' Mrs. Martinez's eyes fill with tears. 'You understand.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4er_harsh_rules",
+   "text": "No exceptions. Survival is harsh. Everyone contributes or leaves.",
+   "goTo": "day4_harsh_rules",
+   "effects": {
+    "time": 1,
+    "persona": {"warlord": 2, "rude": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["harsh_rules"],
+    "pushEvent": "'I understand.' The elderly man's voice is quiet. 'Survival is harsh.'"
+   },
+   "tags": ["warlord"]
+  },
+  {
+   "id": "d4er_flexible_rules",
+   "text": "Flexible rules. We adapt to each situation.",
+   "goTo": "day4_flexible_rules",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["flexible_rules"],
+    "pushEvent": "'Practical. I like that.' Alex nods. 'Adaptability is key.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "rules"]
+},
+"day4_individual_responsibility": {
+ "id": "day4_individual_responsibility",
+ "text": "Day 4, 2:00 PM. The community meeting takes a different turn. 'Look,' you say, 'we're all adults here. Everyone's responsible for themselves. We help when we can, but we can't save everyone.' The room grows quiet. Mrs. Martinez speaks up: 'What about my children? They can't fend for themselves.' The young mother from 5A adds: 'And what about the elderly? They need help.' The question hangs in the air.",
+ "choices": [
+  {
+   "id": "d4ir_help_children",
+   "text": "We help children and elderly. They're exceptions.",
+   "goTo": "day4_help_children_elderly",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["help_children_elderly"],
+    "pushEvent": "'Thank you.' Mrs. Martinez's voice is filled with relief. 'You understand.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4ir_strict_individual",
+   "text": "No exceptions. Everyone fends for themselves.",
+   "goTo": "day4_strict_individual",
+   "effects": {
+    "time": 1,
+    "persona": {"warlord": 2, "rude": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["strict_individual"],
+    "pushEvent": "'I understand.' The young mother's voice is quiet. 'Survival is harsh.'"
+   },
+   "tags": ["warlord"]
+  },
+  {
+   "id": "d4ir_voluntary_help",
+   "text": "Voluntary help only. No obligations.",
+   "goTo": "day4_voluntary_help",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["voluntary_help"],
+    "pushEvent": "'Fair enough.' Alex nods. 'No pressure, no expectations.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "individual"]
+},
+"day4_supply_run_today": {
+ "id": "day4_supply_run_today",
+ "text": "Day 4, 4:00 PM. You and Alex gear up for the first supply run. 'We'll hit the pharmacy first,' Alex says, checking their weapon. 'Then the grocery store two blocks over.' The other volunteers are nervous but determined. 'Remember,' you tell them, 'stay together. Watch each other's backs. And if things go bad, we run. No heroics.' The building's main door creaks open. Outside, the street is eerily quiet. But you can hear them. The infected. Moving. Hunting.",
+ "choices": [
+  {
+   "id": "d4srt_pharmacy_first",
+   "text": "Let's hit the pharmacy first. Medicine is critical.",
+   "goTo": "day4_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 1, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["pharmacy_run_attempted"],
+    "pushEvent": "'Medicine first. Smart.' Alex nods. 'Let's move.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4srt_grocery_first",
+   "text": "Let's hit the grocery store first. Food is more important.",
+   "goTo": "day4_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["grocery_run_attempted"],
+    "pushEvent": "'Food first. Practical.' Alex nods. 'Let's move.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4srt_scout_first",
+   "text": "Let's scout the area first. See what we're dealing with.",
+   "goTo": "day4_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["scout_run_done"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'Let's see what's out there.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "supply_run"]
+},
+"day4_pharmacy_run": {
+ "id": "day4_pharmacy_run",
+ "text": "Day 4, 4:30 PM. The pharmacy is three blocks away. You move in formation, Alex leading, you watching the rear. The street is littered with abandoned cars, broken glass, and... bodies. 'Stay focused,' Alex whispers. 'Don't look at them.' The pharmacy's front door is shattered. Inside, shelves are mostly empty, but there are still some supplies. 'Let's be quick,' Alex says. 'In and out.' You can hear sounds from the back—maybe infected, maybe survivors.",
+ "choices": [
+  {
+   "id": "d4pr_quick_grab",
+   "text": "Quick grab. Take what we can and go.",
+   "goTo": "day4_pharmacy_quick_success",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "inventoryAdd": ["bandages", "painkillers", "antibiotics"],
+    "flagsSet": ["pharmacy_quick_success"],
+    "pushEvent": "'Good haul. Let's get out of here.' Alex's voice is tense. 'Move.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4pr_thorough_search",
+   "text": "Thorough search. Check the back room.",
+   "goTo": "day4_pharmacy_thorough_search",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "inventoryAdd": ["morphine", "surgical_kit", "insulin"],
+    "flagsSet": ["pharmacy_thorough_success"],
+    "pushEvent": "'Found the good stuff.' Alex's eyes light up. 'This could save lives.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4pr_check_sounds",
+   "text": "Check those sounds. Could be survivors.",
+   "goTo": "day4_pharmacy_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -1},
+    "flagsSet": ["pharmacy_survivors_found"],
+    "pushEvent": "'Could be someone who needs help.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day4", "pharmacy"]
+},
+"day4_grocery_run": {
+ "id": "day4_grocery_run",
+ "text": "Day 4, 4:30 PM. The grocery store is two blocks away. You move in formation, Alex leading, you watching the rear. The street is eerily quiet, but you can feel eyes on you. 'Stay alert,' Alex whispers. 'They're out there.' The grocery store's front door is locked, but the glass is shattered. Inside, most shelves are empty, but there are still some supplies. 'Let's be quick,' Alex says. 'In and out.' You can hear sounds from the back—maybe infected, maybe survivors.",
+ "choices": [
+  {
+   "id": "d4gr_quick_grab",
+   "text": "Quick grab. Take what we can and go.",
+   "goTo": "day4_grocery_quick_success",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "inventoryAdd": ["canned_food", "water_bottles", "crackers"],
+    "flagsSet": ["grocery_quick_success"],
+    "pushEvent": "'Good haul. Let's get out of here.' Alex's voice is tense. 'Move.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4gr_thorough_search",
+   "text": "Thorough search. Check the back room.",
+   "goTo": "day4_grocery_thorough_search",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "inventoryAdd": ["rice", "beans", "cooking_oil", "salt"],
+    "flagsSet": ["grocery_thorough_success"],
+    "pushEvent": "'Found the good stuff.' Alex's eyes light up. 'This could feed everyone.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4gr_check_sounds",
+   "text": "Check those sounds. Could be survivors.",
+   "goTo": "day4_grocery_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -1},
+    "flagsSet": ["grocery_survivors_found"],
+    "pushEvent": "'Could be someone who needs help.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day4", "grocery"]
+},
+"day4_scout_run": {
+ "id": "day4_scout_run",
+ "text": "Day 4, 4:30 PM. You and Alex move cautiously through the streets, mapping the area. 'This building looks secure,' Alex whispers, pointing to a nearby apartment complex. 'That one... not so much.' You can see signs of life—lights in windows, movement behind curtains. 'Survivors,' Alex says. 'But are they friendly?' The question hangs in the air. You also notice the infected—small groups, moving in patterns. 'They're getting smarter,' Alex observes. 'Or more desperate.'",
+ "choices": [
+  {
+   "id": "d4sr_approach_survivors",
+   "text": "Let's approach the survivors. See if they're friendly.",
+   "goTo": "day4_approach_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -1},
+    "flagsSet": ["survivors_approached"],
+    "pushEvent": "'Could be allies. Could be enemies.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4sr_avoid_survivors",
+   "text": "Let's avoid the survivors. Too risky.",
+   "goTo": "day4_avoid_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["survivors_avoided"],
+    "pushEvent": "'Smart. No need to take unnecessary risks.' Alex nods. 'Let's head back.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4sr_study_infected",
+   "text": "Let's study the infected. Learn their patterns.",
+   "goTo": "day4_study_infected",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["infected_studied"],
+    "pushEvent": "'Knowledge is power.' Alex's eyes light up. 'Let's see what we can learn.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "scout"]
+},
+"day4_evening_hub": {
+ "id": "day4_evening_hub",
+ "text": "Day 4, 6:00 PM. The sun is setting, casting long shadows across the building. You and Alex sit in the apartment, reviewing the day's events. 'We made progress,' Alex says. 'Got supplies. Learned about the area. Made contact with other survivors.' They pause. 'But we also saw how dangerous it is out there. The infected are getting smarter. The survivors... some are friendly, some aren't.' They look at you. 'We need to decide what kind of community we want to build here.'",
+ "choices": [
+  {
+   "id": "d4eh_open_community",
+   "text": "Let's build an open community. Welcome everyone.",
+   "goTo": "day6_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["open_community_chosen"],
+    "pushEvent": "'Inclusive. I like that.' Alex's eyes light up. 'We're stronger together.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4eh_selective_community",
+   "text": "Let's be selective. Only let in those who can contribute.",
+   "goTo": "day6_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["selective_community_chosen"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Quality over quantity.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4eh_closed_community",
+   "text": "Let's keep it closed. Just us and the current residents.",
+   "goTo": "day6_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["closed_community_chosen"],
+    "pushEvent": "'Safe. I can respect that.' Alex nods. 'No unnecessary risks.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "evening_hub"]
+},
+"day5_open_community": {
+ "id": "day5_open_community",
+ "text": "Day 5, 8:00 AM. The building buzzes with activity. Word has spread about your open-door policy, and survivors are arriving. 'We need to organize this,' Alex says, watching a family with three children approach the building. 'Food, water, space—we're going to run out of everything if we don't plan.' The building's population has doubled in the last 24 hours. 'We need to make some hard decisions,' Alex continues. 'About resources. About leadership. About what happens when we can't help everyone.'",
+ "choices": [
+  {
+   "id": "d5oc_organize_system",
+   "text": "Let's organize a system. Fair distribution of resources.",
+   "goTo": "day5_organize_system",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["system_organized"],
+    "pushEvent": "'Good thinking. We need structure.' Alex nods. 'Let's make this work.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d5oc_establish_leadership",
+   "text": "Let's establish clear leadership. Someone needs to make decisions.",
+   "goTo": "day5_establish_leadership",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["leadership_established"],
+    "pushEvent": "'Good call. We need someone to step up.' Alex's expression becomes determined."
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d5oc_community_council",
+   "text": "Let's form a community council. Democratic decision-making.",
+   "goTo": "day5_community_council",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["council_formed"],
+    "pushEvent": "'Democratic. I like that.' Alex nods. 'Everyone has a voice.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day5", "open_community"]
+},
+"day5_selective_community": {
+ "id": "day5_selective_community",
+ "text": "Day 5, 8:00 AM. The building maintains its selective approach. 'We need to be smart about who we let in,' Alex says, watching a group of survivors approach the building. 'Skills, resources, contribution potential—we need to evaluate everyone.' The building's population has grown, but slowly. 'We need to make some hard decisions,' Alex continues. 'About criteria. About who gets priority. About what happens when we have to turn people away.'",
+ "choices": [
+  {
+   "id": "d5sc_skill_based",
+   "text": "Let's focus on skills. What can they contribute?",
+   "goTo": "day5_skill_based_selection",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["skill_based_selection"],
+    "pushEvent": "'Practical. I like that.' Alex nods. 'Merit-based system.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d5sc_resource_based",
+   "text": "Let's focus on resources. What can they bring?",
+   "goTo": "day5_resource_based_selection",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["resource_based_selection"],
+    "pushEvent": "'Fair. Everyone contributes.' Alex nods. 'Resource-based system.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d5sc_character_based",
+   "text": "Let's focus on character. Are they trustworthy?",
+   "goTo": "day5_character_based_selection",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["character_based_selection"],
+    "pushEvent": "'Important. Trust is everything.' Alex nods. 'Character-based system.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day5", "selective_community"]
+},
+"day5_closed_community": {
+ "id": "day5_closed_community",
+ "text": "Day 5, 8:00 AM. The building maintains its closed-door policy. 'We need to focus on what we have,' Alex says, watching survivors approach the building and be turned away. 'Resources are limited. Space is limited. We can't help everyone.' The building's population remains stable. 'We need to make some hard decisions,' Alex continues. 'About resources. About security. About what happens when we have to turn people away.'",
+ "choices": [
+  {
+   "id": "d5cc_focus_internal",
+   "text": "Let's focus on internal development. Make what we have work.",
+   "goTo": "day5_focus_internal",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["internal_focus"],
+    "pushEvent": "'Smart. Work with what we have.' Alex nods. 'Internal development.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d5cc_security_priority",
+   "text": "Let's prioritize security. Make sure we're safe.",
+   "goTo": "day5_security_priority",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["security_priority"],
+    "pushEvent": "'Good call. Security first.' Alex nods. 'Safety is everything.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d5cc_resource_management",
+   "text": "Let's focus on resource management. Make supplies last.",
+   "goTo": "day5_resource_management",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["resource_management"],
+    "pushEvent": "'Practical. Make what we have last.' Alex nods. 'Resource management.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day5", "closed_community"]
+},
+"day6_morning": {
+ "id": "day6_morning",
+ "text": "Day 6, 7:00 AM. The building stirs to life. You hear voices in the halls—survivors coordinating, children playing quietly, the elderly sharing stories. Alex is already up, reviewing supply lists. 'We need to talk,' they say, looking up from their notes. 'The community is growing. Fast. We're at capacity for food, water, space. And there are more survivors coming every day.' They pause. 'We need to make some hard decisions. About who we can help. About what we can afford. About what kind of community we want to be.'",
+ "choices": [
+  {
+   "id": "d6m_expand_capacity",
+   "text": "Let's expand our capacity. Find more resources, more space.",
+   "goTo": "day6_expand_capacity",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["expand_capacity_chosen"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see what we can build.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6m_manage_resources",
+   "text": "Let's manage what we have better. Optimize, ration, organize.",
+   "goTo": "day6_manage_resources",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["manage_resources_chosen"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Efficiency is key.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6m_establish_limits",
+   "text": "Let's establish clear limits. We can't help everyone.",
+   "goTo": "day6_establish_limits",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["establish_limits_chosen"],
+    "pushEvent": "'Hard but necessary.' Alex's expression becomes serious. 'Survival is harsh.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "morning"]
+},
+"day6_expand_capacity": {
+ "id": "day6_expand_capacity",
+ "text": "Day 6, 9:00 AM. You and Alex stand on the building's roof, surveying the surrounding area. 'We need more space,' Alex says, pointing to nearby buildings. 'That apartment complex across the street—it's mostly intact. We could secure it, connect it to our building.' They pause. 'But it's risky. We'd need to clear it of infected, secure it, establish supply lines.' The wind carries the sound of distant screams. 'We'd also need more people to defend it. More resources to maintain it.'",
+ "choices": [
+  {
+   "id": "d6ec_secure_adjacent_building",
+   "text": "Let's secure the adjacent building. Expand our territory.",
+   "goTo": "day6_secure_adjacent_building",
+   "effects": {
+    "time": 3,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 3, "stamina": -3},
+    "flagsSet": ["adjacent_building_secured"],
+    "pushEvent": "'Ambitious. Let's do it.' Alex's eyes light up. 'We're building something real.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d6ec_establish_supply_lines",
+   "text": "Let's establish supply lines first. Secure resources before expanding.",
+   "goTo": "day6_establish_supply_lines",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["supply_lines_established"],
+    "pushEvent": "'Smart. Resources first.' Alex nods. 'Let's secure our supply chain.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6ec_recruit_more_people",
+   "text": "Let's recruit more people first. We need more hands to expand.",
+   "goTo": "day6_recruit_more_people",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["recruitment_drive"],
+    "pushEvent": "'Good thinking. People are our greatest resource.' Alex's eyes light up."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day6", "expansion"]
+},
+"day6_manage_resources": {
+ "id": "day6_manage_resources",
+ "text": "Day 6, 9:00 AM. You and Alex sit in the building's common area, surrounded by supply lists, rationing charts, and resource allocation plans. 'We need to be smart about this,' Alex says, pointing to a chart. 'Current food: 8 days at current consumption. Water: 12 days. Medicine: 4 days for critical needs.' They look up. 'We can stretch this. Better rationing, more efficient distribution, maybe some creative solutions.' The room is quiet except for the sound of children playing in the distance.",
+ "choices": [
+  {
+   "id": "d6mr_implement_strict_rationing",
+   "text": "Let's implement strict rationing. Everyone gets equal shares.",
+   "goTo": "day6_strict_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["strict_rationing_implemented"],
+    "pushEvent": "'Fair. Everyone gets the same.' Alex nods. 'No favorites.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6mr_priority_based_rationing",
+   "text": "Let's use priority-based rationing. Children and elderly first.",
+   "goTo": "day6_priority_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["priority_rationing_implemented"],
+    "pushEvent": "'Compassionate. I like that.' Alex's eyes soften. 'They need us most.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6mr_contribution_based_rationing",
+   "text": "Let's use contribution-based rationing. Those who work get more.",
+   "goTo": "day6_contribution_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contribution_rationing_implemented"],
+    "pushEvent": "'Fair. Merit-based system.' Alex nods. 'Work hard, eat well.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "resource_management"]
+},
+"day6_establish_limits": {
+ "id": "day6_establish_limits",
+ "text": "Day 6, 9:00 AM. You and Alex stand at the building's main entrance, watching a group of survivors approach. 'We need to be clear about our limits,' Alex says quietly. 'We can't help everyone. We don't have the resources, the space, the capacity.' The group looks desperate—a family with young children, an elderly couple, a young man with a broken arm. 'We need to decide. Who do we help? Who do we turn away? And how do we live with those decisions?'",
+ "choices": [
+  {
+   "id": "d6el_help_children_only",
+   "text": "We help children and their families. Everyone else is on their own.",
+   "goTo": "day6_help_children_only",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["children_only_policy"],
+    "pushEvent": "'Compassionate. I can respect that.' Alex's eyes soften. 'Children need us.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6el_help_contributors_only",
+   "text": "We help those who can contribute. No freeloaders.",
+   "goTo": "day6_help_contributors_only",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contributors_only_policy"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Everyone contributes.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6el_turn_everyone_away",
+   "text": "We turn everyone away. We can't afford to help anyone else.",
+   "goTo": "day6_turn_everyone_away",
+   "effects": {
+    "time": 1,
+    "persona": {"warlord": 2, "rude": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -2},
+    "flagsSet": ["closed_door_policy"],
+    "pushEvent": "'Hard but necessary.' Alex's expression becomes cold. 'Survival is harsh.'"
+   },
+   "tags": ["warlord"]
+  }
+ ],
+ "tags": ["day6", "limits"]
+},
+"day6_secure_adjacent_building": {
+ "id": "day6_secure_adjacent_building",
+ "text": "Day 6, 12:00 PM. You and Alex lead a team of volunteers across the street to the adjacent apartment building. 'Stay alert,' Alex whispers. 'We don't know what's in there.' The building's front door is barricaded with furniture. 'Someone was here,' Alex observes. 'Recently.' You can hear sounds from inside—footsteps, voices, maybe infected. 'We need to decide how to approach this,' Alex says. 'Do we announce ourselves? Do we sneak in? Do we wait and observe?'",
+ "choices": [
+  {
+   "id": "d6sab_announce_presence",
+   "text": "Let's announce our presence. Be open and honest.",
+   "goTo": "day6_announce_presence",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -1},
+    "flagsSet": ["announced_presence"],
+    "pushEvent": "'Honest approach. I like it.' Alex nods. 'Let's see who's in there.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6sab_sneak_in",
+   "text": "Let's sneak in. Scout the situation first.",
+   "goTo": "day6_sneak_in",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["sneaked_in"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'Let's see what we're dealing with.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6sab_wait_and_observe",
+   "text": "Let's wait and observe. See what's happening inside.",
+   "goTo": "day6_wait_and_observe",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["observed_building"],
+    "pushEvent": "'Patient. I like that.' Alex nods. 'Let's see what we can learn.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "building_securing"]
+},
+"day6_establish_supply_lines": {
+ "id": "day6_establish_supply_lines",
+ "text": "Day 6, 12:00 PM. You and Alex map out potential supply routes through the city. 'We need reliable sources,' Alex says, pointing to various locations on the map. 'The grocery store we hit yesterday—it's mostly empty now. The pharmacy—same thing. We need to find new sources.' They pause. 'But it's getting more dangerous out there. The infected are getting smarter. Other survivors are getting desperate.' The map is covered with red X's marking cleared locations and question marks for unknown areas.",
+ "choices": [
+  {
+   "id": "d6esl_scout_new_locations",
+   "text": "Let's scout new locations. Find fresh supply sources.",
+   "goTo": "day6_scout_new_locations",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["new_locations_scouted"],
+    "pushEvent": "'Good thinking. Fresh sources.' Alex nods. 'Let's see what's out there.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6esl_negotiate_with_survivors",
+   "text": "Let's negotiate with other survivor groups. Trade, not raid.",
+   "goTo": "day6_negotiate_with_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "chill": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["survivor_negotiations"],
+    "pushEvent": "'Diplomatic. I like it.' Alex's eyes light up. 'Let's build alliances.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6esl_establish_growing_operations",
+   "text": "Let's establish growing operations. Become self-sufficient.",
+   "goTo": "day6_establish_growing_operations",
+   "effects": {
+    "time": 3,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1, "stamina": -2},
+    "flagsSet": ["growing_operations_established"],
+    "pushEvent": "'Long-term thinking. I like it.' Alex's eyes light up. 'Let's build something sustainable.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "supply_lines"]
+},
+"day6_recruit_more_people": {
+ "id": "day6_recruit_more_people",
+ "text": "Day 6, 12:00 PM. You and Alex stand on the building's roof, looking out at the surrounding area. 'We need more people,' Alex says. 'More hands to work, more eyes to watch, more minds to think.' They point to various locations. 'There are survivors out there. In other buildings, hiding in basements, maybe even in the sewers.' They pause. 'But we need to be careful. Not everyone is friendly. Not everyone can be trusted. We need to decide what kind of people we want to recruit.'",
+ "choices": [
+  {
+   "id": "d6rmp_actively_seek_survivors",
+   "text": "Let's actively seek out survivors. Go to them.",
+   "goTo": "day6_actively_seek_survivors",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["active_recruitment"],
+    "pushEvent": "'Proactive. I like it.' Alex's eyes light up. 'Let's find people who need us.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6rmp_wait_for_survivors",
+   "text": "Let's wait for survivors to come to us. Word will spread.",
+   "goTo": "day6_wait_for_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["passive_recruitment"],
+    "pushEvent": "'Patient. I can respect that.' Alex nods. 'Let them come to us.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6rmp_selective_recruitment",
+   "text": "Let's be selective. Only recruit those with valuable skills.",
+   "goTo": "day6_selective_recruitment",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["selective_recruitment"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Quality over quantity.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "recruitment"]
+},
+"day6_evening_hub": {
+ "id": "day6_evening_hub",
+ "text": "Day 6, 6:00 PM. The sun sets on another day of building, planning, and hard decisions. You and Alex sit in the apartment, reviewing the day's progress. 'We're making real changes,' Alex says. 'Expanding, organizing, growing. But it's getting more complex. More people, more problems, more decisions to make.' They look at you. 'We need to think about tomorrow. About next week. About what kind of community we want to build here. About what kind of leaders we want to be.'",
+ "choices": [
+  {
+   "id": "d6eh_plan_expansion",
+   "text": "Let's plan more expansion. We're just getting started.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["expansion_planning"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see how big we can build this.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d6eh_consolidate_gains",
+   "text": "Let's consolidate what we have. Make it solid before expanding.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["consolidation_planning"],
+    "pushEvent": "'Smart. Build on what works.' Alex nods. 'Let's make it solid.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6eh_focus_community",
+   "text": "Let's focus on community building. Strengthen relationships.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -1},
+    "flagsSet": ["community_building_focus"],
+    "pushEvent": "'Important. People are everything.' Alex's eyes soften. 'Let's build something real.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day6", "evening_hub"]
+},
+"day7_expansion_planning": {
+ "id": "day7_expansion_planning",
+ "text": "Day 7, 8:00 AM. You and Alex stand on the building's roof, looking out at the surrounding area. 'We need to think bigger,' Alex says, pointing to various locations. 'That shopping center three blocks away—it's got supplies, space, maybe even generators. That school district—classrooms we could convert, a cafeteria, maybe even a gym.' They pause. 'But it's risky. We'd need to clear infected, secure multiple buildings, establish supply lines between them.' The wind carries the sound of distant screams. 'We'd also need more people to defend it. More resources to maintain it.'",
+ "choices": [
+  {
+   "id": "d7ep_secure_shopping_center",
+   "text": "Let's secure the shopping center. It's got everything we need.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 4,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 4, "stamina": -4},
+    "flagsSet": ["shopping_center_secured"],
+    "pushEvent": "'Ambitious. Let's do it.' Alex's eyes light up. 'We're building something real.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d7ep_secure_school_district",
+   "text": "Let's secure the school district. It's got space and resources.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 3,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 3, "stamina": -3},
+    "flagsSet": ["school_district_secured"],
+    "pushEvent": "'Good thinking. Schools are built for communities.' Alex's eyes light up."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d7ep_establish_network",
+   "text": "Let's establish a network of smaller outposts. Spread out, stay connected.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["network_established"],
+    "pushEvent": "'Smart. Diversify our holdings.' Alex nods. 'Let's build a network.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "expansion"]
+},
+"day7_consolidation": {
+ "id": "day7_consolidation",
+ "text": "Day 7, 8:00 AM. You and Alex sit in the building's common area, reviewing the current situation. 'We need to consolidate what we have,' Alex says, pointing to various charts and lists. 'Current population: 47 people. Food: 6 days at current consumption. Water: 10 days. Medicine: 3 days for critical needs.' They look up. 'We can make this work. Better organization, more efficient systems, maybe some creative solutions.' The room is quiet except for the sound of children playing in the distance.",
+ "choices": [
+  {
+   "id": "d7c_optimize_systems",
+   "text": "Let's optimize our systems. Make everything more efficient.",
+   "goTo": "day7_optimize_systems",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["systems_optimized"],
+    "pushEvent": "'Good thinking. Efficiency is key.' Alex nods. 'Let's make everything work better.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7c_strengthen_security",
+   "text": "Let's strengthen our security. Make sure we're safe.",
+   "goTo": "day7_strengthen_security",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["security_strengthened"],
+    "pushEvent": "'Smart. Security is everything.' Alex nods. 'Let's make it unassailable.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7c_improve_relationships",
+   "text": "Let's improve relationships. Build stronger community bonds.",
+   "goTo": "day7_improve_relationships",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -2},
+    "flagsSet": ["relationships_improved"],
+    "pushEvent": "'Important. People are everything.' Alex's eyes soften. 'Let's build something real.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day7", "consolidation"]
+},
+"day7_community_building": {
+ "id": "day7_community_building",
+ "text": "Day 7, 8:00 AM. The building buzzes with activity. You and Alex walk through the halls, checking on residents, listening to concerns, sharing stories. 'We need to build something real here,' Alex says. 'Not just survival. Community. Trust. Hope.' They pause at a door where children are playing. 'These kids—they're the future. We need to give them something to believe in.' The sound of laughter echoes through the building. 'We need to decide what kind of community we want to be. What kind of future we want to build.'",
+ "choices": [
+  {
+   "id": "d7cb_establish_education",
+   "text": "Let's establish education. Teach the children, share knowledge.",
+   "goTo": "day7_establish_education",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["education_established"],
+    "pushEvent": "'Good thinking. Knowledge is power.' Alex's eyes light up. 'Let's teach them everything we know.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d7cb_establish_culture",
+   "text": "Let's establish culture. Art, music, stories, traditions.",
+   "goTo": "day7_establish_culture",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -2},
+    "flagsSet": ["culture_established"],
+    "pushEvent": "'Beautiful. We need beauty in this world.' Alex's eyes soften. 'Let's create something worth living for.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d7cb_establish_governance",
+   "text": "Let's establish governance. Rules, leadership, decision-making.",
+   "goTo": "day7_establish_governance",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["governance_established"],
+    "pushEvent": "'Practical. We need structure.' Alex nods. 'Let's build something that works.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "community"]
+},
+"day7_secure_shopping_center": {
+ "id": "day7_secure_shopping_center",
+ "text": "Day 7, 10:00 AM. You and Alex lead a team of volunteers toward the shopping center. 'This is risky,' Alex says, checking their weapon. 'But the potential rewards are huge. Food, supplies, maybe even generators.' The shopping center looms ahead—a massive complex with multiple stores, a food court, and what looks like a hardware store. 'We need to be smart about this,' Alex continues. 'Clear it systematically, secure it properly, establish supply lines.' The wind carries the sound of distant screams. 'And we need to be ready for anything.'",
+ "choices": [
+  {
+   "id": "d7ssc_systematic_clearance",
+   "text": "Let's clear it systematically. Store by store, floor by floor.",
+   "goTo": "day7_systematic_clearance",
+   "effects": {
+    "time": 3,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -3},
+    "flagsSet": ["systematic_clearance"],
+    "pushEvent": "'Smart. Methodical approach.' Alex nods. 'Let's do this right.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7ssc_quick_raid",
+   "text": "Let's do a quick raid. Get in, get what we need, get out.",
+   "goTo": "day7_quick_raid",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 3, "stamina": -2},
+    "flagsSet": ["quick_raid"],
+    "pushEvent": "'Fast and efficient. I like it.' Alex nods. 'Let's get what we need and go.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7ssc_scout_first",
+   "text": "Let's scout it first. See what we're dealing with.",
+   "goTo": "day7_scout_shopping_center",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["shopping_center_scouted"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'Let's see what we're dealing with.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "shopping_center"]
+},
+"day7_secure_school_district": {
+ "id": "day7_secure_school_district",
+ "text": "Day 7, 10:00 AM. You and Alex lead a team of volunteers toward the school district. 'This is perfect,' Alex says, pointing to the buildings. 'Classrooms we can convert to living spaces, a cafeteria for communal meals, maybe even a gym for training.' The school complex spreads out before you—multiple buildings, playgrounds, and what looks like a sports field. 'We need to be smart about this,' Alex continues. 'Clear it systematically, secure it properly, establish supply lines.' The wind carries the sound of distant screams. 'And we need to be ready for anything.'",
+ "choices": [
+  {
+   "id": "d7ssd_systematic_clearance",
+   "text": "Let's clear it systematically. Building by building, room by room.",
+   "goTo": "day7_school_systematic_clearance",
+   "effects": {
+    "time": 3,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -3},
+    "flagsSet": ["school_systematic_clearance"],
+    "pushEvent": "'Smart. Methodical approach.' Alex nods. 'Let's do this right.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7ssd_quick_raid",
+   "text": "Let's do a quick raid. Get in, get what we need, get out.",
+   "goTo": "day7_school_quick_raid",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 3, "stamina": -2},
+    "flagsSet": ["school_quick_raid"],
+    "pushEvent": "'Fast and efficient. I like it.' Alex nods. 'Let's get what we need and go.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7ssd_scout_first",
+   "text": "Let's scout it first. See what we're dealing with.",
+   "goTo": "day7_scout_school_district",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["school_district_scouted"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'Let's see what we're dealing with.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "school_district"]
+},
+"day7_establish_network": {
+ "id": "day7_establish_network",
+ "text": "Day 7, 10:00 AM. You and Alex stand on the building's roof, looking out at the surrounding area. 'We need to think strategically,' Alex says, pointing to various locations. 'That apartment building two blocks north—it's mostly intact. That office building three blocks east—it's got supplies, maybe even communications equipment.' They pause. 'We can establish a network of outposts. Connected, but independent. Each one self-sufficient, but supporting the others.' The wind carries the sound of distant screams. 'It's risky, but it gives us options.'",
+ "choices": [
+  {
+   "id": "d7en_secure_apartment_building",
+   "text": "Let's secure the apartment building first. It's closest and safest.",
+   "goTo": "day7_secure_apartment_building",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["apartment_building_secured"],
+    "pushEvent": "'Smart. Start with the safest option.' Alex nods. 'Let's build our network.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7en_secure_office_building",
+   "text": "Let's secure the office building. It's got valuable resources.",
+   "goTo": "day7_secure_office_building",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["office_building_secured"],
+    "pushEvent": "'Good thinking. Resources are key.' Alex nods. 'Let's get what we need.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7en_establish_communication",
+   "text": "Let's establish communication first. Connect our outposts.",
+   "goTo": "day7_establish_communication",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["communication_established"],
+    "pushEvent": "'Smart. Communication is everything.' Alex's eyes light up. 'Let's stay connected.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "network"]
+},
+"day7_evening_hub": {
+ "id": "day7_evening_hub",
+ "text": "Day 7, 6:00 PM. The sun sets on another day of building, planning, and hard decisions. You and Alex sit in the apartment, reviewing the day's progress. 'We're making real changes,' Alex says. 'Expanding, organizing, growing. But it's getting more complex. More people, more problems, more decisions to make.' They look at you. 'We need to think about tomorrow. About next week. About what kind of community we want to build here. About what kind of leaders we want to be.'",
+ "choices": [
+  {
+   "id": "d7eh_plan_more_expansion",
+   "text": "Let's plan more expansion. We're just getting started.",
+   "goTo": "day8_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["expansion_planning"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see how big we can build this.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d7eh_consolidate_gains",
+   "text": "Let's consolidate what we have. Make it solid before expanding.",
+   "goTo": "day8_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["consolidation_planning"],
+    "pushEvent": "'Smart. Build on what works.' Alex nods. 'Let's make it solid.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7eh_focus_community",
+   "text": "Let's focus on community building. Strengthen relationships.",
+   "goTo": "day8_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -1},
+    "flagsSet": ["community_building_focus"],
+    "pushEvent": "'Important. People are everything.' Alex's eyes soften. 'Let's build something real.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day7", "evening_hub"]
+},
+"day8_morning": {
+ "id": "day8_morning",
+ "text": "Day 8, 7:00 AM. The building stirs to life. You hear voices in the halls—survivors coordinating, children playing quietly, the elderly sharing stories. Alex is already up, reviewing supply lists. 'We need to talk,' they say, looking up from their notes. 'The community is growing. Fast. We're at capacity for food, water, space. And there are more survivors coming every day.' They pause. 'We need to make some hard decisions. About who we can help. About what we can afford. About what kind of community we want to be.'",
+ "choices": [
+  {
+   "id": "d8m_expand_capacity",
+   "text": "Let's expand our capacity. Find more resources, more space.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["expand_capacity_chosen"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see what we can build.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d8m_manage_resources",
+   "text": "Let's manage what we have better. Optimize, ration, organize.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["manage_resources_chosen"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Efficiency is key.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8m_establish_limits",
+   "text": "Let's establish clear limits. We can't help everyone.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["establish_limits_chosen"],
+    "pushEvent": "'Hard but necessary.' Alex's expression becomes serious. 'Survival is harsh.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day8", "morning"]
+},
+"day8_expand_capacity": {
+ "id": "day8_expand_capacity",
+ "text": "Day 8, 9:00 AM. You and Alex stand on the building's roof, surveying the surrounding area. 'We need more space,' Alex says, pointing to nearby buildings. 'That apartment complex across the street—it's mostly intact. We could secure it, connect it to our building.' They pause. 'But it's risky. We'd need to clear it of infected, secure it, establish supply lines.' The wind carries the sound of distant screams. 'We'd also need more people to defend it. More resources to maintain it.'",
+ "choices": [
+  {
+   "id": "d8ec_secure_adjacent_building",
+   "text": "Let's secure the adjacent building. Expand our territory.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 3,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 3, "stamina": -3},
+    "flagsSet": ["adjacent_building_secured"],
+    "pushEvent": "'Ambitious. Let's do it.' Alex's eyes light up. 'We're building something real.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d8ec_establish_supply_lines",
+   "text": "Let's establish supply lines first. Secure resources before expanding.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["supply_lines_established"],
+    "pushEvent": "'Smart. Resources first.' Alex nods. 'Let's secure our supply chain.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8ec_recruit_more_people",
+   "text": "Let's recruit more people first. We need more hands to expand.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["recruitment_drive"],
+    "pushEvent": "'Good thinking. People are our greatest resource.' Alex's eyes light up."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day8", "expansion"]
+},
+"day8_manage_resources": {
+ "id": "day8_manage_resources",
+ "text": "Day 8, 9:00 AM. You and Alex sit in the building's common area, surrounded by supply lists, rationing charts, and resource allocation plans. 'We need to be smart about this,' Alex says, pointing to a chart. 'Current food: 8 days at current consumption. Water: 12 days. Medicine: 4 days for critical needs.' They look up. 'We can stretch this. Better rationing, more efficient distribution, maybe some creative solutions.' The room is quiet except for the sound of children playing in the distance.",
+ "choices": [
+  {
+   "id": "d8mr_implement_strict_rationing",
+   "text": "Let's implement strict rationing. Everyone gets equal shares.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["strict_rationing_implemented"],
+    "pushEvent": "'Fair. Everyone gets the same.' Alex nods. 'No favorites.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8mr_priority_based_rationing",
+   "text": "Let's use priority-based rationing. Children and elderly first.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["priority_rationing_implemented"],
+    "pushEvent": "'Compassionate. I like that.' Alex's eyes soften. 'They need us most.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d8mr_contribution_based_rationing",
+   "text": "Let's use contribution-based rationing. Those who work get more.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contribution_rationing_implemented"],
+    "pushEvent": "'Fair. Merit-based system.' Alex nods. 'Work hard, eat well.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day8", "resource_management"]
+},
+"day8_establish_limits": {
+ "id": "day8_establish_limits",
+ "text": "Day 8, 9:00 AM. You and Alex stand at the building's main entrance, watching a group of survivors approach. 'We need to be clear about our limits,' Alex says quietly. 'We can't help everyone. We don't have the resources, the space, the capacity.' The group looks desperate—a family with young children, an elderly couple, a young man with a broken arm. 'We need to decide. Who do we help? Who do we turn away? And how do we live with those decisions?'",
+ "choices": [
+  {
+   "id": "d8el_help_children_only",
+   "text": "We help children and their families. Everyone else is on their own.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["children_only_policy"],
+    "pushEvent": "'Compassionate. I can respect that.' Alex's eyes soften. 'Children need us.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d8el_help_contributors_only",
+   "text": "We help those who can contribute. No freeloaders.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contributors_only_policy"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Everyone contributes.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8el_turn_everyone_away",
+   "text": "We turn everyone away. We can't afford to help anyone else.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"warlord": 2, "rude": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -2},
+    "flagsSet": ["closed_door_policy"],
+    "pushEvent": "'Hard but necessary.' Alex's expression becomes cold. 'Survival is harsh.'"
+   },
+   "tags": ["warlord"]
+  }
+ ],
+ "tags": ["day8", "limits"]
+},
+"day8_evening_hub": {
+ "id": "day8_evening_hub",
+ "text": "Day 8, 6:00 PM. The sun sets on another day of building, planning, and hard decisions. You and Alex sit in the apartment, reviewing the day's progress. 'We're making real changes,' Alex says. 'Expanding, organizing, growing. But it's getting more complex. More people, more problems, more decisions to make.' They look at you. 'We need to think about tomorrow. About next week. About what kind of community we want to build here. About what kind of leaders we want to be.'",
+ "choices": [
+  {
+   "id": "d8eh_plan_expansion",
+   "text": "Let's plan more expansion. We're just getting started.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["expansion_planning"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see how big we can build this.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d8eh_consolidate_gains",
+   "text": "Let's consolidate what we have. Make it solid before expanding.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["consolidation_planning"],
+    "pushEvent": "'Smart. Build on what works.' Alex nods. 'Let's make it solid.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8eh_focus_community",
+   "text": "Let's focus on community building. Strengthen relationships.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -1},
+    "flagsSet": ["community_building_focus"],
+    "pushEvent": "'Important. People are everything.' Alex's eyes soften. 'Let's build something real.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day8", "evening_hub"]
+},
+"apology_justified": {
+ "id": "apology_justified",
+ "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
+ "choices": [
+  {
+   "id": "apology_ju_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "apology_justified resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "apology_ju_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "apology_justified resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "apology_ju_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "apology_justified resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"apology_make_amends": {
+ "id": "apology_make_amends",
+ "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
+ "choices": [
+  {
+   "id": "apology_ma_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "apology_make_amends resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "apology_ma_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "apology_make_amends resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "apology_ma_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "apology_make_amends resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"apology_no_further": {
+ "id": "apology_no_further",
+ "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
+ "choices": [
+  {
+   "id": "apology_no_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "apology_no_further resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "apology_no_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "apology_no_further resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "apology_no_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "apology_no_further resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_abandoned_guilt_double": {
+ "id": "chen_abandoned_guilt_double",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_aband_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_abandoned_guilt_double resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_aband_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_abandoned_guilt_double resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_aband_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_abandoned_guilt_double resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_accepts_honesty": {
+ "id": "chen_accepts_honesty",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_accep_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_accepts_honesty resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_accep_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_accepts_honesty resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_accep_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_accepts_honesty resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_accepts_practice": {
+ "id": "chen_accepts_practice",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_accep_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_accepts_practice resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_accep_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_accepts_practice resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_accep_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_accepts_practice resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_accepts_pragmatic": {
+ "id": "chen_accepts_pragmatic",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_accep_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_accepts_pragmatic resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_accep_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_accepts_pragmatic resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_accep_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_accepts_pragmatic resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_distraction_play": {
+ "id": "chen_distraction_play",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_distr_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_distraction_play resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_distr_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_distraction_play resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_distr_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_distraction_play resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_forced_save": {
+ "id": "chen_forced_save",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_force_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_forced_save resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_force_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_forced_save resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_force_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_forced_save resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_hero_humble": {
+ "id": "chen_hero_humble",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_hero_humble resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_hero_humble resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_hero_humble resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_hero_redemption": {
+ "id": "chen_hero_redemption",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_hero_redemption resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_hero_redemption resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_hero_redemption resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_hero_self_proof": {
+ "id": "chen_hero_self_proof",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_hero_self_proof resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_hero_self_proof resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_hero_self_proof resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_hide_together": {
+ "id": "chen_hide_together",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_hide__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_hide_together resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_hide__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_hide_together resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_hide__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_hide_together resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_left_behind": {
+ "id": "chen_left_behind",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_left__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_left_behind resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_left__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_left_behind resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_left__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_left_behind resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_trusts_logic": {
+ "id": "chen_trusts_logic",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_trust_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_trusts_logic resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_trust_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_trusts_logic resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_trust_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_trusts_logic resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_demands_control": {
+ "id": "cold_demands_control",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_deman_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_demands_control resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_deman_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_demands_control resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_deman_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_demands_control resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_doubled_down": {
+ "id": "cold_doubled_down",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_doubl_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_doubled_down resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_doubl_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_doubled_down resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_doubl_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_doubled_down resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_doubt_grows": {
+ "id": "cold_doubt_grows",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_doubt_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_doubt_grows resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_doubt_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_doubt_grows resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_doubt_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_doubt_grows resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_leverage_position": {
+ "id": "cold_leverage_position",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_lever_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_leverage_position resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_lever_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_leverage_position resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_lever_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_leverage_position resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_logic_cracks": {
+ "id": "cold_logic_cracks",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_logic_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_logic_cracks resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_logic_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_logic_cracks resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_logic_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_logic_cracks resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_random_fair": {
+ "id": "cold_random_fair",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_rando_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_random_fair resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_rando_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_random_fair resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_rando_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_random_fair resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_refuses_power": {
+ "id": "cold_refuses_power",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_refus_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_refuses_power resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_refus_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_refuses_power resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_refus_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_refuses_power resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_silent": {
+ "id": "cold_silent",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_silen_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_silent resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_silen_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_silent resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_silen_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_silent resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_triage_master": {
+ "id": "cold_triage_master",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_triag_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_triage_master resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_triag_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_triage_master resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_triag_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_triage_master resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_value_calc": {
+ "id": "cold_value_calc",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_value_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_value_calc resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_value_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_value_calc resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_value_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_value_calc resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"convoy_alex_second": {
+ "id": "convoy_alex_second",
+ "text": "Convoy encounter. Survivors heading to rumored safe zone. Join them? Help them? Rob them? Trust is currency here.",
+ "choices": [
+  {
+   "id": "convoy_ale_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "convoy_alex_second resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "convoy_ale_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "convoy_alex_second resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "convoy_ale_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "convoy_alex_second resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"convoy_fire_escape": {
+ "id": "convoy_fire_escape",
+ "text": "Convoy encounter. Survivors heading to rumored safe zone. Join them? Help them? Rob them? Trust is currency here.",
+ "choices": [
+  {
+   "id": "convoy_fir_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "convoy_fire_escape resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "convoy_fir_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "convoy_fire_escape resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "convoy_fir_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "convoy_fire_escape resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"convoy_wait_thin": {
+ "id": "convoy_wait_thin",
+ "text": "Convoy encounter. Survivors heading to rumored safe zone. Join them? Help them? Rob them? Trust is currency here.",
+ "choices": [
+  {
+   "id": "convoy_wai_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "convoy_wait_thin resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "convoy_wai_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "convoy_wait_thin resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "convoy_wai_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "convoy_wait_thin resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_cautious_trust": {
+ "id": "demand_cautious_trust",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_cau_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_cautious_trust resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_cau_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_cautious_trust resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_cau_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_cautious_trust resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_hierarchy_set": {
+ "id": "demand_hierarchy_set",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_hie_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_hierarchy_set resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_hie_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_hierarchy_set resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_hie_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_hierarchy_set resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_justified": {
+ "id": "demand_justified",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_jus_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_justified resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_jus_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_justified resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_jus_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_justified resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_make_amends": {
+ "id": "demand_make_amends",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_mak_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_make_amends resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_mak_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_make_amends resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_mak_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_make_amends resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_no_apology": {
+ "id": "demand_no_apology",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_no__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_no_apology resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_no__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_no_apology resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_no__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_no_apology resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_professional_only": {
+ "id": "demand_professional_only",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_pro_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_professional_only resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_pro_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_professional_only resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_pro_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_professional_only resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_relationship_rebuilt": {
+ "id": "demand_relationship_rebuilt",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_rel_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_relationship_rebuilt resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_rel_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_relationship_rebuilt resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_rel_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_relationship_rebuilt resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"ending_ghost_stair": {
+ "id": "ending_ghost_stair",
+ "text": "ENDING: Your journey concludes. Every choice mattered. Every relationship counted. This is your consequence.",
+ "choices": [
+  {
+   "id": "ending_gho_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "ending_ghost_stair resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "ending_gho_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "ending_ghost_stair resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "ending_gho_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "ending_ghost_stair resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"ending_overlord": {
+ "id": "ending_overlord",
+ "text": "ENDING: Your journey concludes. Every choice mattered. Every relationship counted. This is your consequence.",
+ "choices": [
+  {
+   "id": "ending_ove_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "ending_overlord resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "ending_ove_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "ending_overlord resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "ending_ove_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "ending_overlord resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"fight_alex_bait": {
+ "id": "fight_alex_bait",
+ "text": "Combat scenario. Infected swarm. Decisions made in seconds. Violence reveals character more than words ever could.",
+ "choices": [
+  {
+   "id": "fight_alex_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "fight_alex_bait resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "fight_alex_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "fight_alex_bait resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "fight_alex_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "fight_alex_bait resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"fight_tactical": {
+ "id": "fight_tactical",
+ "text": "Combat scenario. Infected swarm. Decisions made in seconds. Violence reveals character more than words ever could.",
+ "choices": [
+  {
+   "id": "fight_tact_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "fight_tactical resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "fight_tact_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "fight_tactical resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "fight_tact_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "fight_tactical resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"fight_together": {
+ "id": "fight_together",
+ "text": "Combat scenario. Infected swarm. Decisions made in seconds. Violence reveals character more than words ever could.",
+ "choices": [
+  {
+   "id": "fight_toge_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "fight_together resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "fight_toge_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "fight_together resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "fight_toge_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "fight_together resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"fortify_building_path": {
+ "id": "fortify_building_path",
+ "text": "Fortification path. Dig in. Make a stand. The building is home now. Defend it or die trying.",
+ "choices": [
+  {
+   "id": "fortify_bu_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "fortify_building_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "fortify_bu_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "fortify_building_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "fortify_bu_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "fortify_building_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"gather_survivors_path": {
+ "id": "gather_survivors_path",
+ "text": "Gathering survivors. Strength in numbers\u2014or more mouths to feed? Leadership emerges. Are you ready?",
+ "choices": [
+  {
+   "id": "gather_sur_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "gather_survivors_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "gather_sur_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "gather_survivors_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "gather_sur_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "gather_survivors_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"guilt_savior_kids_first": {
+ "id": "guilt_savior_kids_first",
+ "text": "Guilt path. Alex's death haunts you. Every face is theirs. Redemption through saving others\u2014or self-destruction?",
+ "choices": [
+  {
+   "id": "guilt_savi_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "guilt_savior_kids_first resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "guilt_savi_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "guilt_savior_kids_first resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "guilt_savi_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "guilt_savior_kids_first resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"guilt_savior_systematic": {
+ "id": "guilt_savior_systematic",
+ "text": "Guilt path. Alex's death haunts you. Every face is theirs. Redemption through saving others\u2014or self-destruction?",
+ "choices": [
+  {
+   "id": "guilt_savi_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "guilt_savior_systematic resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "guilt_savi_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "guilt_savior_systematic resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "guilt_savi_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "guilt_savior_systematic resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"guilt_savior_team_build": {
+ "id": "guilt_savior_team_build",
+ "text": "Guilt path. Alex's death haunts you. Every face is theirs. Redemption through saving others\u2014or self-destruction?",
+ "choices": [
+  {
+   "id": "guilt_savi_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "guilt_savior_team_build resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "guilt_savi_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "guilt_savior_team_build resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "guilt_savi_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "guilt_savior_team_build resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_alex_test": {
+ "id": "hero_alex_test",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_alex__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_alex_test resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_alex__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_alex_test resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_alex__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_alex_test resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_rest_continue": {
+ "id": "hero_rest_continue",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_rest__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_rest_continue resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_rest__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_rest_continue resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_rest__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_rest_continue resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_returns_building": {
+ "id": "hero_returns_building",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_retur_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_returns_building resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_retur_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_returns_building resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_retur_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_returns_building resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_scout_solo": {
+ "id": "hero_scout_solo",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_scout_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_scout_solo resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_scout_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_scout_solo resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_scout_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_scout_solo resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_train_alex": {
+ "id": "hero_train_alex",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_train_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_train_alex resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_train_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_train_alex resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_train_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_train_alex resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_destroy_evidence": {
+ "id": "loot_destroy_evidence",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_destr_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_destroy_evidence resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_destr_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_destroy_evidence resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_destr_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_destroy_evidence resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_documents_everything": {
+ "id": "loot_documents_everything",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_docum_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_documents_everything resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_docum_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_documents_everything resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_docum_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_documents_everything resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_guilt_surfaces": {
+ "id": "loot_guilt_surfaces",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_guilt_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_guilt_surfaces resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_guilt_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_guilt_surfaces resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_guilt_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_guilt_surfaces resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_marcus_left": {
+ "id": "loot_marcus_left",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_marcu_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_marcus_left resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_marcu_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_marcus_left resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_marcu_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_marcus_left resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_marcus_studied": {
+ "id": "loot_marcus_studied",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_marcu_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_marcus_studied resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_marcu_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_marcus_studied resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_marcu_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_marcus_studied resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_marcus_talk_attempt": {
+ "id": "loot_marcus_talk_attempt",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_marcu_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_marcus_talk_attempt resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_marcu_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_marcus_talk_attempt resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_marcu_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_marcus_talk_attempt resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_radio_intel": {
+ "id": "loot_radio_intel",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_radio_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_radio_intel resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_radio_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_radio_intel resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_radio_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_radio_intel resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_respects_marcus": {
+ "id": "loot_respects_marcus",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_respe_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_respects_marcus resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_respe_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_respects_marcus resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_respe_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_respects_marcus resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_selective_morality": {
+ "id": "loot_selective_morality",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_selec_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_selective_morality resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_selec_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_selective_morality resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_selec_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_selective_morality resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_takes_all_cold": {
+ "id": "loot_takes_all_cold",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_takes_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_takes_all_cold resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_takes_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_takes_all_cold resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_takes_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_takes_all_cold resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"numb_path": {
+ "id": "numb_path",
+ "text": "Numbness sets in. You watched Alex die. Feel nothing. Emotions are luxury. Survival is all. You're becoming something else.",
+ "choices": [
+  {
+   "id": "numb_path_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "numb_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "numb_path_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "numb_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "numb_path_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "numb_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"partners_alex_choice": {
+ "id": "partners_alex_choice",
+ "text": "Partnership dynamics. You and Alex as equals. Disagreements happen. How you resolve them shapes everything.",
+ "choices": [
+  {
+   "id": "partners_a_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "partners_alex_choice resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "partners_a_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "partners_alex_choice resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "partners_a_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "partners_alex_choice resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"partners_coin_flip": {
+ "id": "partners_coin_flip",
+ "text": "Partnership dynamics. You and Alex as equals. Disagreements happen. How you resolve them shapes everything.",
+ "choices": [
+  {
+   "id": "partners_c_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "partners_coin_flip resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "partners_c_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "partners_coin_flip resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "partners_c_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "partners_coin_flip resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"partners_first_conflict": {
+ "id": "partners_first_conflict",
+ "text": "Partnership dynamics. You and Alex as equals. Disagreements happen. How you resolve them shapes everything.",
+ "choices": [
+  {
+   "id": "partners_f_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "partners_first_conflict resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "partners_f_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "partners_first_conflict resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "partners_f_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "partners_first_conflict resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"partners_split_up": {
+ "id": "partners_split_up",
+ "text": "Partnership dynamics. You and Alex as equals. Disagreements happen. How you resolve them shapes everything.",
+ "choices": [
+  {
+   "id": "partners_s_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "partners_split_up resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "partners_s_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "partners_split_up resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "partners_s_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "partners_split_up resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_cold_doubt": {
+ "id": "path_cold_doubt",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_cold__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_cold_doubt resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_cold__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_cold_doubt resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_cold__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_cold_doubt resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_cold_statistics": {
+ "id": "path_cold_statistics",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_cold__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_cold_statistics resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_cold__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_cold_statistics resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_cold__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_cold_statistics resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_cold_testing": {
+ "id": "path_cold_testing",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_cold__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_cold_testing resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_cold__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_cold_testing resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_cold__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_cold_testing resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_guilt_rage": {
+ "id": "path_guilt_rage",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_guilt_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_guilt_rage resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_guilt_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_guilt_rage resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_guilt_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_guilt_rage resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_guilt_self_harm": {
+ "id": "path_guilt_self_harm",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_guilt_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_guilt_self_harm resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_guilt_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_guilt_self_harm resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_guilt_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_guilt_self_harm resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_hero_grounded": {
+ "id": "path_hero_grounded",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_hero_grounded resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_hero_grounded resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_hero_grounded resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_hero_manipulative": {
+ "id": "path_hero_manipulative",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_hero_manipulative resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_hero_manipulative resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_hero_manipulative resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_hero_rejects_label": {
+ "id": "path_hero_rejects_label",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_hero_rejects_label resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_hero_rejects_label resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_hero_rejects_label resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_loot_conflicted": {
+ "id": "path_loot_conflicted",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_loot__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_loot_conflicted resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_loot__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_loot_conflicted resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_loot__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_loot_conflicted resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_loot_pragmatic": {
+ "id": "path_loot_pragmatic",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_loot__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_loot_pragmatic resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_loot__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_loot_pragmatic resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_loot__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_loot_pragmatic resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_loot_selective": {
+ "id": "path_loot_selective",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_loot__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_loot_selective resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_loot__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_loot_selective resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_loot__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_loot_selective resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_watcher_cold": {
+ "id": "path_watcher_cold",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_watch_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_watcher_cold resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_watch_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_watcher_cold resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_watch_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_watcher_cold resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_watcher_delayed": {
+ "id": "path_watcher_delayed",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_watch_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_watcher_delayed resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_watch_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_watcher_delayed resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_watch_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_watcher_delayed resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_watcher_justified": {
+ "id": "path_watcher_justified",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_watch_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_watcher_justified resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_watch_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_watcher_justified resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_watch_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_watcher_justified resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_watcher_study": {
+ "id": "path_watcher_study",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_watch_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_watcher_study resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_watch_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_watcher_study resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_watch_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_watcher_study resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"quest_direct_route": {
+ "id": "quest_direct_route",
+ "text": "Quest path. You're searching for something specific. Family? Redemption? Supplies? The journey defines you.",
+ "choices": [
+  {
+   "id": "quest_dire_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "quest_direct_route resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "quest_dire_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "quest_direct_route resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "quest_dire_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "quest_direct_route resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"quest_find_group": {
+ "id": "quest_find_group",
+ "text": "Quest path. You're searching for something specific. Family? Redemption? Supplies? The journey defines you.",
+ "choices": [
+  {
+   "id": "quest_find_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "quest_find_group resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "quest_find_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "quest_find_group resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "quest_find_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "quest_find_group resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"quest_raid_first": {
+ "id": "quest_raid_first",
+ "text": "Quest path. You're searching for something specific. Family? Redemption? Supplies? The journey defines you.",
+ "choices": [
+  {
+   "id": "quest_raid_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "quest_raid_first resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "quest_raid_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "quest_raid_first resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "quest_raid_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "quest_raid_first resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"quest_stealth_route": {
+ "id": "quest_stealth_route",
+ "text": "Quest path. You're searching for something specific. Family? Redemption? Supplies? The journey defines you.",
+ "choices": [
+  {
+   "id": "quest_stea_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "quest_stealth_route resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "quest_stea_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "quest_stealth_route resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "quest_stea_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "quest_stealth_route resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"raid_supply_path": {
+ "id": "raid_supply_path",
+ "text": "Raid scenario. Take what you need by force. Resources are survival. Morality is weakness. Or is it?",
+ "choices": [
+  {
+   "id": "raid_suppl_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "raid_supply_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "raid_suppl_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "raid_supply_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "raid_suppl_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "raid_supply_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"rush_convoy_path": {
+ "id": "rush_convoy_path",
+ "text": "Rushed decision. No time to think. Action over analysis. Sometimes survival demands speed over wisdom.",
+ "choices": [
+  {
+   "id": "rush_convo_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "rush_convoy_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "rush_convo_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "rush_convoy_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "rush_convo_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "rush_convoy_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"saved_verify": {
+ "id": "saved_verify",
+ "text": "Alex saved. They're alive. But the method matters. Instinct? Verification? Demand? Each creates different foundations.",
+ "choices": [
+  {
+   "id": "saved_veri_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "saved_verify resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "saved_veri_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "saved_verify resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "saved_veri_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "saved_verify resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"supplies_through_door": {
+ "id": "supplies_through_door",
+ "text": "Supplies through door. You didn't let Alex in\u2014just passed supplies. They're alive but alone. The sounds outside fade to screaming, then silence.",
+ "choices": [
+  {
+   "id": "supplies_t_a",
+   "text": "Choose pragmatism",
+   "goTo": "alex_dies_watched",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "supplies_through_door resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "supplies_t_b",
+   "text": "Choose compassion",
+   "goTo": "alex_dies_watched",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "supplies_through_door resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "supplies_t_c",
+   "text": "Choose efficiency",
+   "goTo": "alex_dies_watched",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "supplies_through_door resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+}
 });
 
 })();
