@@ -10481,6 +10481,986 @@
  ],
  "tags": ["day5", "closed_community"]
 },
+"day6_morning": {
+ "id": "day6_morning",
+ "text": "Day 6, 7:00 AM. The building stirs to life. You hear voices in the halls—survivors coordinating, children playing quietly, the elderly sharing stories. Alex is already up, reviewing supply lists. 'We need to talk,' they say, looking up from their notes. 'The community is growing. Fast. We're at capacity for food, water, space. And there are more survivors coming every day.' They pause. 'We need to make some hard decisions. About who we can help. About what we can afford. About what kind of community we want to be.'",
+ "choices": [
+  {
+   "id": "d6m_expand_capacity",
+   "text": "Let's expand our capacity. Find more resources, more space.",
+   "goTo": "day6_expand_capacity",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["expand_capacity_chosen"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see what we can build.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6m_manage_resources",
+   "text": "Let's manage what we have better. Optimize, ration, organize.",
+   "goTo": "day6_manage_resources",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["manage_resources_chosen"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Efficiency is key.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6m_establish_limits",
+   "text": "Let's establish clear limits. We can't help everyone.",
+   "goTo": "day6_establish_limits",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["establish_limits_chosen"],
+    "pushEvent": "'Hard but necessary.' Alex's expression becomes serious. 'Survival is harsh.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "morning"]
+},
+"day6_expand_capacity": {
+ "id": "day6_expand_capacity",
+ "text": "Day 6, 9:00 AM. You and Alex stand on the building's roof, surveying the surrounding area. 'We need more space,' Alex says, pointing to nearby buildings. 'That apartment complex across the street—it's mostly intact. We could secure it, connect it to our building.' They pause. 'But it's risky. We'd need to clear it of infected, secure it, establish supply lines.' The wind carries the sound of distant screams. 'We'd also need more people to defend it. More resources to maintain it.'",
+ "choices": [
+  {
+   "id": "d6ec_secure_adjacent_building",
+   "text": "Let's secure the adjacent building. Expand our territory.",
+   "goTo": "day6_secure_adjacent_building",
+   "effects": {
+    "time": 3,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 3, "stamina": -3},
+    "flagsSet": ["adjacent_building_secured"],
+    "pushEvent": "'Ambitious. Let's do it.' Alex's eyes light up. 'We're building something real.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d6ec_establish_supply_lines",
+   "text": "Let's establish supply lines first. Secure resources before expanding.",
+   "goTo": "day6_establish_supply_lines",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["supply_lines_established"],
+    "pushEvent": "'Smart. Resources first.' Alex nods. 'Let's secure our supply chain.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6ec_recruit_more_people",
+   "text": "Let's recruit more people first. We need more hands to expand.",
+   "goTo": "day6_recruit_more_people",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["recruitment_drive"],
+    "pushEvent": "'Good thinking. People are our greatest resource.' Alex's eyes light up."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day6", "expansion"]
+},
+"day6_manage_resources": {
+ "id": "day6_manage_resources",
+ "text": "Day 6, 9:00 AM. You and Alex sit in the building's common area, surrounded by supply lists, rationing charts, and resource allocation plans. 'We need to be smart about this,' Alex says, pointing to a chart. 'Current food: 8 days at current consumption. Water: 12 days. Medicine: 4 days for critical needs.' They look up. 'We can stretch this. Better rationing, more efficient distribution, maybe some creative solutions.' The room is quiet except for the sound of children playing in the distance.",
+ "choices": [
+  {
+   "id": "d6mr_implement_strict_rationing",
+   "text": "Let's implement strict rationing. Everyone gets equal shares.",
+   "goTo": "day6_strict_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["strict_rationing_implemented"],
+    "pushEvent": "'Fair. Everyone gets the same.' Alex nods. 'No favorites.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6mr_priority_based_rationing",
+   "text": "Let's use priority-based rationing. Children and elderly first.",
+   "goTo": "day6_priority_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["priority_rationing_implemented"],
+    "pushEvent": "'Compassionate. I like that.' Alex's eyes soften. 'They need us most.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6mr_contribution_based_rationing",
+   "text": "Let's use contribution-based rationing. Those who work get more.",
+   "goTo": "day6_contribution_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contribution_rationing_implemented"],
+    "pushEvent": "'Fair. Merit-based system.' Alex nods. 'Work hard, eat well.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "resource_management"]
+},
+"day6_establish_limits": {
+ "id": "day6_establish_limits",
+ "text": "Day 6, 9:00 AM. You and Alex stand at the building's main entrance, watching a group of survivors approach. 'We need to be clear about our limits,' Alex says quietly. 'We can't help everyone. We don't have the resources, the space, the capacity.' The group looks desperate—a family with young children, an elderly couple, a young man with a broken arm. 'We need to decide. Who do we help? Who do we turn away? And how do we live with those decisions?'",
+ "choices": [
+  {
+   "id": "d6el_help_children_only",
+   "text": "We help children and their families. Everyone else is on their own.",
+   "goTo": "day6_help_children_only",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["children_only_policy"],
+    "pushEvent": "'Compassionate. I can respect that.' Alex's eyes soften. 'Children need us.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6el_help_contributors_only",
+   "text": "We help those who can contribute. No freeloaders.",
+   "goTo": "day6_help_contributors_only",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contributors_only_policy"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Everyone contributes.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6el_turn_everyone_away",
+   "text": "We turn everyone away. We can't afford to help anyone else.",
+   "goTo": "day6_turn_everyone_away",
+   "effects": {
+    "time": 1,
+    "persona": {"warlord": 2, "rude": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -2},
+    "flagsSet": ["closed_door_policy"],
+    "pushEvent": "'Hard but necessary.' Alex's expression becomes cold. 'Survival is harsh.'"
+   },
+   "tags": ["warlord"]
+  }
+ ],
+ "tags": ["day6", "limits"]
+},
+"day6_secure_adjacent_building": {
+ "id": "day6_secure_adjacent_building",
+ "text": "Day 6, 12:00 PM. You and Alex lead a team of volunteers across the street to the adjacent apartment building. 'Stay alert,' Alex whispers. 'We don't know what's in there.' The building's front door is barricaded with furniture. 'Someone was here,' Alex observes. 'Recently.' You can hear sounds from inside—footsteps, voices, maybe infected. 'We need to decide how to approach this,' Alex says. 'Do we announce ourselves? Do we sneak in? Do we wait and observe?'",
+ "choices": [
+  {
+   "id": "d6sab_announce_presence",
+   "text": "Let's announce our presence. Be open and honest.",
+   "goTo": "day6_announce_presence",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -1},
+    "flagsSet": ["announced_presence"],
+    "pushEvent": "'Honest approach. I like it.' Alex nods. 'Let's see who's in there.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6sab_sneak_in",
+   "text": "Let's sneak in. Scout the situation first.",
+   "goTo": "day6_sneak_in",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["sneaked_in"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'Let's see what we're dealing with.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6sab_wait_and_observe",
+   "text": "Let's wait and observe. See what's happening inside.",
+   "goTo": "day6_wait_and_observe",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["observed_building"],
+    "pushEvent": "'Patient. I like that.' Alex nods. 'Let's see what we can learn.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "building_securing"]
+},
+"day6_establish_supply_lines": {
+ "id": "day6_establish_supply_lines",
+ "text": "Day 6, 12:00 PM. You and Alex map out potential supply routes through the city. 'We need reliable sources,' Alex says, pointing to various locations on the map. 'The grocery store we hit yesterday—it's mostly empty now. The pharmacy—same thing. We need to find new sources.' They pause. 'But it's getting more dangerous out there. The infected are getting smarter. Other survivors are getting desperate.' The map is covered with red X's marking cleared locations and question marks for unknown areas.",
+ "choices": [
+  {
+   "id": "d6esl_scout_new_locations",
+   "text": "Let's scout new locations. Find fresh supply sources.",
+   "goTo": "day6_scout_new_locations",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["new_locations_scouted"],
+    "pushEvent": "'Good thinking. Fresh sources.' Alex nods. 'Let's see what's out there.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6esl_negotiate_with_survivors",
+   "text": "Let's negotiate with other survivor groups. Trade, not raid.",
+   "goTo": "day6_negotiate_with_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "chill": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["survivor_negotiations"],
+    "pushEvent": "'Diplomatic. I like it.' Alex's eyes light up. 'Let's build alliances.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6esl_establish_growing_operations",
+   "text": "Let's establish growing operations. Become self-sufficient.",
+   "goTo": "day6_establish_growing_operations",
+   "effects": {
+    "time": 3,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1, "stamina": -2},
+    "flagsSet": ["growing_operations_established"],
+    "pushEvent": "'Long-term thinking. I like it.' Alex's eyes light up. 'Let's build something sustainable.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "supply_lines"]
+},
+"day6_recruit_more_people": {
+ "id": "day6_recruit_more_people",
+ "text": "Day 6, 12:00 PM. You and Alex stand on the building's roof, looking out at the surrounding area. 'We need more people,' Alex says. 'More hands to work, more eyes to watch, more minds to think.' They point to various locations. 'There are survivors out there. In other buildings, hiding in basements, maybe even in the sewers.' They pause. 'But we need to be careful. Not everyone is friendly. Not everyone can be trusted. We need to decide what kind of people we want to recruit.'",
+ "choices": [
+  {
+   "id": "d6rmp_actively_seek_survivors",
+   "text": "Let's actively seek out survivors. Go to them.",
+   "goTo": "day6_actively_seek_survivors",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["active_recruitment"],
+    "pushEvent": "'Proactive. I like it.' Alex's eyes light up. 'Let's find people who need us.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d6rmp_wait_for_survivors",
+   "text": "Let's wait for survivors to come to us. Word will spread.",
+   "goTo": "day6_wait_for_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["passive_recruitment"],
+    "pushEvent": "'Patient. I can respect that.' Alex nods. 'Let them come to us.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6rmp_selective_recruitment",
+   "text": "Let's be selective. Only recruit those with valuable skills.",
+   "goTo": "day6_selective_recruitment",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["selective_recruitment"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Quality over quantity.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day6", "recruitment"]
+},
+"day6_evening_hub": {
+ "id": "day6_evening_hub",
+ "text": "Day 6, 6:00 PM. The sun sets on another day of building, planning, and hard decisions. You and Alex sit in the apartment, reviewing the day's progress. 'We're making real changes,' Alex says. 'Expanding, organizing, growing. But it's getting more complex. More people, more problems, more decisions to make.' They look at you. 'We need to think about tomorrow. About next week. About what kind of community we want to build here. About what kind of leaders we want to be.'",
+ "choices": [
+  {
+   "id": "d6eh_plan_expansion",
+   "text": "Let's plan more expansion. We're just getting started.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["expansion_planning"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see how big we can build this.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d6eh_consolidate_gains",
+   "text": "Let's consolidate what we have. Make it solid before expanding.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["consolidation_planning"],
+    "pushEvent": "'Smart. Build on what works.' Alex nods. 'Let's make it solid.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d6eh_focus_community",
+   "text": "Let's focus on community building. Strengthen relationships.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -1},
+    "flagsSet": ["community_building_focus"],
+    "pushEvent": "'Important. People are everything.' Alex's eyes soften. 'Let's build something real.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day6", "evening_hub"]
+},
+"day7_expansion_planning": {
+ "id": "day7_expansion_planning",
+ "text": "Day 7, 8:00 AM. You and Alex stand on the building's roof, looking out at the surrounding area. 'We need to think bigger,' Alex says, pointing to various locations. 'That shopping center three blocks away—it's got supplies, space, maybe even generators. That school district—classrooms we could convert, a cafeteria, maybe even a gym.' They pause. 'But it's risky. We'd need to clear infected, secure multiple buildings, establish supply lines between them.' The wind carries the sound of distant screams. 'We'd also need more people to defend it. More resources to maintain it.'",
+ "choices": [
+  {
+   "id": "d7ep_secure_shopping_center",
+   "text": "Let's secure the shopping center. It's got everything we need.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 4,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 4, "stamina": -4},
+    "flagsSet": ["shopping_center_secured"],
+    "pushEvent": "'Ambitious. Let's do it.' Alex's eyes light up. 'We're building something real.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d7ep_secure_school_district",
+   "text": "Let's secure the school district. It's got space and resources.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 3,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 3, "stamina": -3},
+    "flagsSet": ["school_district_secured"],
+    "pushEvent": "'Good thinking. Schools are built for communities.' Alex's eyes light up."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d7ep_establish_network",
+   "text": "Let's establish a network of smaller outposts. Spread out, stay connected.",
+   "goTo": "day7_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["network_established"],
+    "pushEvent": "'Smart. Diversify our holdings.' Alex nods. 'Let's build a network.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "expansion"]
+},
+"day7_consolidation": {
+ "id": "day7_consolidation",
+ "text": "Day 7, 8:00 AM. You and Alex sit in the building's common area, reviewing the current situation. 'We need to consolidate what we have,' Alex says, pointing to various charts and lists. 'Current population: 47 people. Food: 6 days at current consumption. Water: 10 days. Medicine: 3 days for critical needs.' They look up. 'We can make this work. Better organization, more efficient systems, maybe some creative solutions.' The room is quiet except for the sound of children playing in the distance.",
+ "choices": [
+  {
+   "id": "d7c_optimize_systems",
+   "text": "Let's optimize our systems. Make everything more efficient.",
+   "goTo": "day7_optimize_systems",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["systems_optimized"],
+    "pushEvent": "'Good thinking. Efficiency is key.' Alex nods. 'Let's make everything work better.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7c_strengthen_security",
+   "text": "Let's strengthen our security. Make sure we're safe.",
+   "goTo": "day7_strengthen_security",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["security_strengthened"],
+    "pushEvent": "'Smart. Security is everything.' Alex nods. 'Let's make it unassailable.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7c_improve_relationships",
+   "text": "Let's improve relationships. Build stronger community bonds.",
+   "goTo": "day7_improve_relationships",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -2},
+    "flagsSet": ["relationships_improved"],
+    "pushEvent": "'Important. People are everything.' Alex's eyes soften. 'Let's build something real.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day7", "consolidation"]
+},
+"day7_community_building": {
+ "id": "day7_community_building",
+ "text": "Day 7, 8:00 AM. The building buzzes with activity. You and Alex walk through the halls, checking on residents, listening to concerns, sharing stories. 'We need to build something real here,' Alex says. 'Not just survival. Community. Trust. Hope.' They pause at a door where children are playing. 'These kids—they're the future. We need to give them something to believe in.' The sound of laughter echoes through the building. 'We need to decide what kind of community we want to be. What kind of future we want to build.'",
+ "choices": [
+  {
+   "id": "d7cb_establish_education",
+   "text": "Let's establish education. Teach the children, share knowledge.",
+   "goTo": "day7_establish_education",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["education_established"],
+    "pushEvent": "'Good thinking. Knowledge is power.' Alex's eyes light up. 'Let's teach them everything we know.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d7cb_establish_culture",
+   "text": "Let's establish culture. Art, music, stories, traditions.",
+   "goTo": "day7_establish_culture",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -2},
+    "flagsSet": ["culture_established"],
+    "pushEvent": "'Beautiful. We need beauty in this world.' Alex's eyes soften. 'Let's create something worth living for.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d7cb_establish_governance",
+   "text": "Let's establish governance. Rules, leadership, decision-making.",
+   "goTo": "day7_establish_governance",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["governance_established"],
+    "pushEvent": "'Practical. We need structure.' Alex nods. 'Let's build something that works.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "community"]
+},
+"day7_secure_shopping_center": {
+ "id": "day7_secure_shopping_center",
+ "text": "Day 7, 10:00 AM. You and Alex lead a team of volunteers toward the shopping center. 'This is risky,' Alex says, checking their weapon. 'But the potential rewards are huge. Food, supplies, maybe even generators.' The shopping center looms ahead—a massive complex with multiple stores, a food court, and what looks like a hardware store. 'We need to be smart about this,' Alex continues. 'Clear it systematically, secure it properly, establish supply lines.' The wind carries the sound of distant screams. 'And we need to be ready for anything.'",
+ "choices": [
+  {
+   "id": "d7ssc_systematic_clearance",
+   "text": "Let's clear it systematically. Store by store, floor by floor.",
+   "goTo": "day7_systematic_clearance",
+   "effects": {
+    "time": 3,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -3},
+    "flagsSet": ["systematic_clearance"],
+    "pushEvent": "'Smart. Methodical approach.' Alex nods. 'Let's do this right.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7ssc_quick_raid",
+   "text": "Let's do a quick raid. Get in, get what we need, get out.",
+   "goTo": "day7_quick_raid",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 3, "stamina": -2},
+    "flagsSet": ["quick_raid"],
+    "pushEvent": "'Fast and efficient. I like it.' Alex nods. 'Let's get what we need and go.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7ssc_scout_first",
+   "text": "Let's scout it first. See what we're dealing with.",
+   "goTo": "day7_scout_shopping_center",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["shopping_center_scouted"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'Let's see what we're dealing with.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "shopping_center"]
+},
+"day7_secure_school_district": {
+ "id": "day7_secure_school_district",
+ "text": "Day 7, 10:00 AM. You and Alex lead a team of volunteers toward the school district. 'This is perfect,' Alex says, pointing to the buildings. 'Classrooms we can convert to living spaces, a cafeteria for communal meals, maybe even a gym for training.' The school complex spreads out before you—multiple buildings, playgrounds, and what looks like a sports field. 'We need to be smart about this,' Alex continues. 'Clear it systematically, secure it properly, establish supply lines.' The wind carries the sound of distant screams. 'And we need to be ready for anything.'",
+ "choices": [
+  {
+   "id": "d7ssd_systematic_clearance",
+   "text": "Let's clear it systematically. Building by building, room by room.",
+   "goTo": "day7_school_systematic_clearance",
+   "effects": {
+    "time": 3,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -3},
+    "flagsSet": ["school_systematic_clearance"],
+    "pushEvent": "'Smart. Methodical approach.' Alex nods. 'Let's do this right.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7ssd_quick_raid",
+   "text": "Let's do a quick raid. Get in, get what we need, get out.",
+   "goTo": "day7_school_quick_raid",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 3, "stamina": -2},
+    "flagsSet": ["school_quick_raid"],
+    "pushEvent": "'Fast and efficient. I like it.' Alex nods. 'Let's get what we need and go.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7ssd_scout_first",
+   "text": "Let's scout it first. See what we're dealing with.",
+   "goTo": "day7_scout_school_district",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["school_district_scouted"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'Let's see what we're dealing with.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "school_district"]
+},
+"day7_establish_network": {
+ "id": "day7_establish_network",
+ "text": "Day 7, 10:00 AM. You and Alex stand on the building's roof, looking out at the surrounding area. 'We need to think strategically,' Alex says, pointing to various locations. 'That apartment building two blocks north—it's mostly intact. That office building three blocks east—it's got supplies, maybe even communications equipment.' They pause. 'We can establish a network of outposts. Connected, but independent. Each one self-sufficient, but supporting the others.' The wind carries the sound of distant screams. 'It's risky, but it gives us options.'",
+ "choices": [
+  {
+   "id": "d7en_secure_apartment_building",
+   "text": "Let's secure the apartment building first. It's closest and safest.",
+   "goTo": "day7_secure_apartment_building",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["apartment_building_secured"],
+    "pushEvent": "'Smart. Start with the safest option.' Alex nods. 'Let's build our network.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7en_secure_office_building",
+   "text": "Let's secure the office building. It's got valuable resources.",
+   "goTo": "day7_secure_office_building",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["office_building_secured"],
+    "pushEvent": "'Good thinking. Resources are key.' Alex nods. 'Let's get what we need.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7en_establish_communication",
+   "text": "Let's establish communication first. Connect our outposts.",
+   "goTo": "day7_establish_communication",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["communication_established"],
+    "pushEvent": "'Smart. Communication is everything.' Alex's eyes light up. 'Let's stay connected.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day7", "network"]
+},
+"day7_evening_hub": {
+ "id": "day7_evening_hub",
+ "text": "Day 7, 6:00 PM. The sun sets on another day of building, planning, and hard decisions. You and Alex sit in the apartment, reviewing the day's progress. 'We're making real changes,' Alex says. 'Expanding, organizing, growing. But it's getting more complex. More people, more problems, more decisions to make.' They look at you. 'We need to think about tomorrow. About next week. About what kind of community we want to build here. About what kind of leaders we want to be.'",
+ "choices": [
+  {
+   "id": "d7eh_plan_more_expansion",
+   "text": "Let's plan more expansion. We're just getting started.",
+   "goTo": "day8_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["expansion_planning"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see how big we can build this.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d7eh_consolidate_gains",
+   "text": "Let's consolidate what we have. Make it solid before expanding.",
+   "goTo": "day8_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["consolidation_planning"],
+    "pushEvent": "'Smart. Build on what works.' Alex nods. 'Let's make it solid.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d7eh_focus_community",
+   "text": "Let's focus on community building. Strengthen relationships.",
+   "goTo": "day8_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -1},
+    "flagsSet": ["community_building_focus"],
+    "pushEvent": "'Important. People are everything.' Alex's eyes soften. 'Let's build something real.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day7", "evening_hub"]
+},
+"day8_morning": {
+ "id": "day8_morning",
+ "text": "Day 8, 7:00 AM. The building stirs to life. You hear voices in the halls—survivors coordinating, children playing quietly, the elderly sharing stories. Alex is already up, reviewing supply lists. 'We need to talk,' they say, looking up from their notes. 'The community is growing. Fast. We're at capacity for food, water, space. And there are more survivors coming every day.' They pause. 'We need to make some hard decisions. About who we can help. About what we can afford. About what kind of community we want to be.'",
+ "choices": [
+  {
+   "id": "d8m_expand_capacity",
+   "text": "Let's expand our capacity. Find more resources, more space.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["expand_capacity_chosen"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see what we can build.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d8m_manage_resources",
+   "text": "Let's manage what we have better. Optimize, ration, organize.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["manage_resources_chosen"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Efficiency is key.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8m_establish_limits",
+   "text": "Let's establish clear limits. We can't help everyone.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["establish_limits_chosen"],
+    "pushEvent": "'Hard but necessary.' Alex's expression becomes serious. 'Survival is harsh.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day8", "morning"]
+},
+"day8_expand_capacity": {
+ "id": "day8_expand_capacity",
+ "text": "Day 8, 9:00 AM. You and Alex stand on the building's roof, surveying the surrounding area. 'We need more space,' Alex says, pointing to nearby buildings. 'That apartment complex across the street—it's mostly intact. We could secure it, connect it to our building.' They pause. 'But it's risky. We'd need to clear it of infected, secure it, establish supply lines.' The wind carries the sound of distant screams. 'We'd also need more people to defend it. More resources to maintain it.'",
+ "choices": [
+  {
+   "id": "d8ec_secure_adjacent_building",
+   "text": "Let's secure the adjacent building. Expand our territory.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 3,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 3, "stamina": -3},
+    "flagsSet": ["adjacent_building_secured"],
+    "pushEvent": "'Ambitious. Let's do it.' Alex's eyes light up. 'We're building something real.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d8ec_establish_supply_lines",
+   "text": "Let's establish supply lines first. Secure resources before expanding.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["supply_lines_established"],
+    "pushEvent": "'Smart. Resources first.' Alex nods. 'Let's secure our supply chain.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8ec_recruit_more_people",
+   "text": "Let's recruit more people first. We need more hands to expand.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["recruitment_drive"],
+    "pushEvent": "'Good thinking. People are our greatest resource.' Alex's eyes light up."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day8", "expansion"]
+},
+"day8_manage_resources": {
+ "id": "day8_manage_resources",
+ "text": "Day 8, 9:00 AM. You and Alex sit in the building's common area, surrounded by supply lists, rationing charts, and resource allocation plans. 'We need to be smart about this,' Alex says, pointing to a chart. 'Current food: 8 days at current consumption. Water: 12 days. Medicine: 4 days for critical needs.' They look up. 'We can stretch this. Better rationing, more efficient distribution, maybe some creative solutions.' The room is quiet except for the sound of children playing in the distance.",
+ "choices": [
+  {
+   "id": "d8mr_implement_strict_rationing",
+   "text": "Let's implement strict rationing. Everyone gets equal shares.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["strict_rationing_implemented"],
+    "pushEvent": "'Fair. Everyone gets the same.' Alex nods. 'No favorites.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8mr_priority_based_rationing",
+   "text": "Let's use priority-based rationing. Children and elderly first.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["priority_rationing_implemented"],
+    "pushEvent": "'Compassionate. I like that.' Alex's eyes soften. 'They need us most.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d8mr_contribution_based_rationing",
+   "text": "Let's use contribution-based rationing. Those who work get more.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contribution_rationing_implemented"],
+    "pushEvent": "'Fair. Merit-based system.' Alex nods. 'Work hard, eat well.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day8", "resource_management"]
+},
+"day8_establish_limits": {
+ "id": "day8_establish_limits",
+ "text": "Day 8, 9:00 AM. You and Alex stand at the building's main entrance, watching a group of survivors approach. 'We need to be clear about our limits,' Alex says quietly. 'We can't help everyone. We don't have the resources, the space, the capacity.' The group looks desperate—a family with young children, an elderly couple, a young man with a broken arm. 'We need to decide. Who do we help? Who do we turn away? And how do we live with those decisions?'",
+ "choices": [
+  {
+   "id": "d8el_help_children_only",
+   "text": "We help children and their families. Everyone else is on their own.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["children_only_policy"],
+    "pushEvent": "'Compassionate. I can respect that.' Alex's eyes soften. 'Children need us.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d8el_help_contributors_only",
+   "text": "We help those who can contribute. No freeloaders.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contributors_only_policy"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Everyone contributes.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8el_turn_everyone_away",
+   "text": "We turn everyone away. We can't afford to help anyone else.",
+   "goTo": "day8_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"warlord": 2, "rude": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -2},
+    "flagsSet": ["closed_door_policy"],
+    "pushEvent": "'Hard but necessary.' Alex's expression becomes cold. 'Survival is harsh.'"
+   },
+   "tags": ["warlord"]
+  }
+ ],
+ "tags": ["day8", "limits"]
+},
+"day8_evening_hub": {
+ "id": "day8_evening_hub",
+ "text": "Day 8, 6:00 PM. The sun sets on another day of building, planning, and hard decisions. You and Alex sit in the apartment, reviewing the day's progress. 'We're making real changes,' Alex says. 'Expanding, organizing, growing. But it's getting more complex. More people, more problems, more decisions to make.' They look at you. 'We need to think about tomorrow. About next week. About what kind of community we want to build here. About what kind of leaders we want to be.'",
+ "choices": [
+  {
+   "id": "d8eh_plan_expansion",
+   "text": "Let's plan more expansion. We're just getting started.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["expansion_planning"],
+    "pushEvent": "'Ambitious. I like it.' Alex's eyes light up. 'Let's see how big we can build this.'"
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d8eh_consolidate_gains",
+   "text": "Let's consolidate what we have. Make it solid before expanding.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["consolidation_planning"],
+    "pushEvent": "'Smart. Build on what works.' Alex nods. 'Let's make it solid.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d8eh_focus_community",
+   "text": "Let's focus on community building. Strengthen relationships.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -1},
+    "flagsSet": ["community_building_focus"],
+    "pushEvent": "'Important. People are everything.' Alex's eyes soften. 'Let's build something real.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day8", "evening_hub"]
+},
 "apology_justified": {
  "id": "apology_justified",
  "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
