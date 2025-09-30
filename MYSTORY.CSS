@@ -164,6 +164,24 @@ img, svg, video { max-width: 100%; display: block; }
 .story-display::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
   background: linear-gradient(90deg, transparent, var(--brand), transparent); opacity: 0.35; }
 
+.persona-flavor {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px dashed rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: grid;
+  gap: 4px;
+}
+
+.persona-flavor p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
 .choices-display { display: grid; gap: var(--space-3); }
 .choice {
   display: inline-flex; align-items: center; justify-content: space-between; gap: 10px;
