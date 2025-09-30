@@ -8,26 +8,26 @@
     "route_fixer",
     "route_killer",
     "route_sociopath",
-    "proof_protector_rescue",
-    "proof_protector_stand",
-    "proof_protector_beacon",
-    "proof_protector_safeconvoy",
+    "proof_protector_holdline",
+    "proof_protector_convoy",
+    "proof_protector_beacons",
     "proof_warlord_blackout",
     "proof_warlord_tithe",
-    "proof_warlord_stomp",
     "proof_warlord_supremacy",
-    "proof_fixer_conduit",
-    "proof_fixer_barter",
-    "proof_fixer_web",
-    "proof_fixer_omnimarket",
-    "proof_killer_mark",
-    "proof_killer_cull",
+    "proof_fixer_network",
+    "proof_fixer_markets",
+    "proof_fixer_ledgers",
+    "proof_killer_hunt",
     "proof_killer_fear",
-    "proof_killer_apex",
-    "proof_sociopath_mirror",
-    "proof_sociopath_isolate",
-    "proof_sociopath_purge",
-    "proof_sociopath_dominion",
+    "proof_killer_cull",
+    "proof_sociopath_mask",
+    "proof_sociopath_trial",
+    "proof_sociopath_requiem",
+    "protector_final_bastion",
+    "warlord_final_tribute",
+    "fixer_final_network",
+    "killer_final_reign",
+    "sociopath_final_stage",
     "rescued_convoy",
     "held_line",
     "shared_rations",
@@ -822,2942 +822,1424 @@
 
   window.STORY_DATABASE = window.STORY_DATABASE || {};
 
-  Object.assign(window.STORY_DATABASE, {
-    neutral_act0_intro_apartment: {
-      id: "neutral_act0_intro_apartment",
-      text: "Your apartment walls tremble as sirens fade into rain. Someone hammers on your door and whispers your name: Alex, the neighbor who always fixes the fuse box.",
-      tags: ["intro", "act0"],
-      choices: [
-        {
-          id: "intro_peek",
-          text: "Check the peephole before touching the locks",
-          goTo: "neutral_act0_contact_alex",
-          effects: {
-            stats: { stress: -1 },
-            pushEvent: "You study Alex's panic through the fisheye glass."
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "intro_barricade",
-          text: "Drag the dresser toward the door just in case",
-          goTo: "neutral_act0_contact_alex",
-          effects: {
-            stats: { stamina: -1, stress: 1 },
-            pushEvent: "Wood scrapes the tile as you brace the entryway."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "intro_callout",
-          text: "Call out to Alex through the door",
-          goTo: "neutral_act0_contact_alex",
-          effects: {
-            relationships: { Alex: 2 },
-            pushEvent: "Alex answers with breathless relief."
-          },
-          tags: ["social"]
-        }
-      ]
-    },
+  const ROUTE_PROOFS = {
+    protector: ["proof_protector_holdline", "proof_protector_convoy", "proof_protector_beacons"],
+    warlord: ["proof_warlord_blackout", "proof_warlord_tithe", "proof_warlord_supremacy"],
+    fixer: ["proof_fixer_network", "proof_fixer_markets", "proof_fixer_ledgers"],
+    killer: ["proof_killer_hunt", "proof_killer_fear", "proof_killer_cull"],
+    sociopath: ["proof_sociopath_mask", "proof_sociopath_trial", "proof_sociopath_requiem"]
+  };
 
-    neutral_act1_side_alex_comfort: {
-      id: "neutral_act1_side_alex_comfort",
-      text: "Alex's knuckles are split and their breathing shudders in the gloom. The families watch from cracked doorways to see whether kindness still survives this floor.",
-      tags: ["side", "alex", "act1"],
-      choices: [
-        {
-          id: "alex_bind_wounds",
-          text: "Clean Alex's wounds and wrap their hands (spend field kit)",
-          goTo: "neutral_act1_hub_apartment",
-          req: { items: ["field_kit"] },
-          blockedReason: "Need a field kit.",
-          cost: { items: ["field_kit"], time: 1 },
-          effects: {
-            stats: { morality: 2, stress: -2 },
-            persona: { protector: 1 },
-            relationships: { Alex: 7 },
-            flagsSet: ["alex_act1_resolved", "alex_trust_builder"],
-            pushEvent: "You patch Alex up; their grip steadies on your shoulder."
-          },
-          tags: ["moral", "leader"]
-        },
-        {
-          id: "alex_plan_together",
-          text: "Map escape routes with Alex until the hallway quiets",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            time: 1,
-            stats: { stress: -1 },
-            persona: { fixer: 1 },
-            relationships: { Alex: 4 },
-            flagsSet: ["alex_act1_resolved", "alex_trust_builder"],
-            pushEvent: "You and Alex chart stairs, roofs, and who needs carrying."
-          },
-          tags: ["social", "leader"]
-        },
-        {
-          id: "alex_guard_rest",
-          text: "Stand guard so Alex can finally sleep for an hour",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            time: 2,
-            stats: { stress: -3, morality: 1 },
-            relationships: { Alex: 3 },
-            flagsSet: ["alex_act1_resolved", "alex_guardian"],
-            pushEvent: "You watch the hall while Alex dreams of better days."
-          },
-          tags: ["survival", "moral"]
-        }
-      ]
-    },
-
-    neutral_act1_side_alex_dominate: {
-      id: "neutral_act1_side_alex_dominate",
-      text: "You pin Alex between the flickering EXIT sign and the rain-smeared window. Everyone else sees whether compassion or control will rule this block.",
-      tags: ["side", "alex", "act1"],
-      choices: [
-        {
-          id: "alex_take_supply",
-          text: "Rifle Alex's pack and pocket their painkillers",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            time: 1,
-            stats: { morality: -2, stress: -1 },
-            persona: { sociopath: 1 },
-            relationships: { Alex: -6 },
-            inventoryAdd: ["painkillers"],
-            flagsSet: ["alex_act1_resolved", "alex_exploited"],
-            pushEvent: "Alex watches you walk off with their lifeline."
-          },
-          tags: ["stealth", "moral"]
-        },
-        {
-          id: "alex_issue_threat",
-          text: "Threaten to dump Alex outside unless they obey",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            stats: { morality: -3, stress: 1 },
-            persona: { warlord: 1 },
-            relationships: { Alex: -5 },
-            flagsSet: ["alex_act1_resolved", "alex_controlled"],
-            pushEvent: "Alex nods through tears, promising to do anything you say."
-          },
-          tags: ["combat", "moral"]
-        },
-        {
-          id: "alex_break_trust",
-          text: "Strike Alex to prove your word is law",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            stats: { morality: -4, stress: 2 },
-            persona: { killer: 1 },
-            relationships: { Alex: -8 },
-            flagsSet: ["alex_act1_resolved", "alex_abused"],
-            pushEvent: "Gasps ripple as Alex crumples, clutching their cheek."
-          },
-          tags: ["combat", "moral"]
-        }
-      ]
-    },
-
-    neutral_act0_contact_alex: {
-      id: "neutral_act0_contact_alex",
-      text: "Alex shakes, soaked in alley rain. Their brother turned downstairs, the infection spreading door to door. They beg you to choose: hide together, share supplies, or keep distance.",
-      tags: ["scene", "act0"],
-      choices: [
-        {
-          id: "let_alex_in",
-          text: "Undo the locks and pull Alex inside",
-          goTo: "neutral_act0_background_select",
-          effects: {
-            stats: { morality: 2, stress: -2 },
-            relationships: { Alex: 6 },
-            flagsSet: ["alex_alive"],
-            pushEvent: "You haul Alex over the threshold and slam the deadbolt."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "pass_supplies",
-          text: "Pass gauze and water through the chain",
-          goTo: "neutral_act0_background_select",
-          effects: {
-            stats: { morality: 1 },
-            inventoryRemove: ["old_radio"],
-            flagsSet: ["alex_alive"],
-            pushEvent: "You slide supplies through the gap while the hallway wails."
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "keep_distance",
-          text: "Keep the chain tight and gather every detail",
-          goTo: "neutral_act0_background_select",
-          effects: {
-            persona: { fixer: 1 },
-            stats: { stress: -1 },
-            flagsSet: ["alex_alive"],
-            pushEvent: "You map the outbreak street by street as Alex talks."
-          },
-          tags: ["stealth"]
-        }
-      ]
-    },
-
-    neutral_act0_background_select: {
-      id: "neutral_act0_background_select",
-      text: "Alex asks what to do next. The answer depends on who you are. Choose the skills you'll lean on when the city falls.",
-      tags: ["scene", "act0"],
-      choices: [
-        {
-          id: "background_medic",
-          text: "\"I'm the medic on this floor. Let me triage.\"",
-          assignName: true,
-          setBackground: "medic",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            stats: { health: 5, stress: -2, morality: 2 },
-            persona: { protector: 1 },
-            inventoryAdd: ["field_kit"],
-            flagsSet: ["background_medic"],
-            pushEvent: "Your medic bag hits the floor ready to open."
-          },
-          tags: ["social"]
-        },
-        {
-          id: "background_fighter",
-          text: "\"I'm the union muscle. I keep us standing.\"",
-          assignName: true,
-          setBackground: "fighter",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            stats: { stamina: 3, stress: -1, morality: -1 },
-            persona: { warlord: 1 },
-            inventoryAdd: ["crowbar"],
-            flagsSet: ["background_fighter"],
-            pushEvent: "Metal groans as you pry a locker open for gear."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "background_hacker",
-          text: "\"I'm the building's network tech. I keep us linked.\"",
-          assignName: true,
-          setBackground: "hacker",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            stats: { morality: 1, stress: -1 },
-            persona: { fixer: 1 },
-            inventoryAdd: ["signal_deck"],
-            flagsSet: ["background_hacker"],
-            pushEvent: "You boot a battered laptop and reroute the rooftop antenna."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "background_thief",
-          text: "\"I'm the one who slips locks and keeps us stocked.\"",
-          assignName: true,
-          setBackground: "thief",
-          goTo: "neutral_act1_hub_apartment",
-          effects: {
-            stats: { stress: -2, morality: -2 },
-            persona: { sociopath: 1 },
-            inventoryAdd: ["lockpicks"],
-            flagsSet: ["background_thief"],
-            pushEvent: "Lockpicks clink in your palm; Alex eyes you with wary trust."
-          },
-          tags: ["stealth"]
-        }
-      ]
-    },
-
-    neutral_act1_hub_apartment: {
-      id: "neutral_act1_hub_apartment",
-      text: "Sirens fade beneath rain slamming broken windows. Alex paces between sobbing neighbors while smoke coils in the stairwell. {{name}}—the {{background}} of this block—must decide whether to steady Alex, weaponize their fear, or drag everyone into your plan.",
-      tags: ["hub", "act1"],
-      choices: [
-        {
-          id: "alex_check_in",
-          text: "Sit with Alex and slow their breathing",
-          goTo: "neutral_act1_side_alex_comfort",
-          req: { flags: ["alex_alive"], flagsNone: ["alex_act1_resolved"] },
-          blockedReason: "Alex must still be with you.",
-          effects: {
-            stats: { stress: -1 },
-            time: 1,
-            pushEvent: "You take Alex's shaking hands and promise they're not alone."
-          },
-          tags: ["moral", "alex"]
-        },
-        {
-          id: "alex_dominate",
-          text: "Corner Alex and turn their panic into leverage",
-          goTo: "neutral_act1_side_alex_dominate",
-          req: { flags: ["alex_alive"], flagsNone: ["alex_act1_resolved"] },
-          blockedReason: "Alex must still be with you.",
-          effects: {
-            stats: { morality: -1 },
-            time: 1,
-            pushEvent: "You crowd Alex against the window while the hall watches."
-          },
-          tags: ["moral", "alex"]
-        },
-        {
-          id: "pick_protector",
-          text: "Stand with Alex and organize a floor watch (Protector)",
-          goTo: "good_act1_setpiece_stairwell_rescue",
-          effects: {
-            flagsSet: ["route_protector"],
-            persona: { protector: 2 },
-            stats: { morality: 2, stress: 2 },
-            relationships: { Alex: 2 },
-            pushEvent: "You and Alex start assigning posts and promises."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "pick_warlord",
-          text: "Force Alex to drag the frightened into formation (Warlord)",
-          goTo: "ant_act1_setpiece_blackout_trap",
-          effects: {
-            flagsSet: ["route_warlord"],
-            persona: { warlord: 2 },
-            stats: { morality: -2, stress: -1 },
-            relationships: { Alex: -3 },
-            pushEvent: "You bark orders through Alex's clenched jaw."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "pick_fixer",
-          text: "Send Alex to broker with the stranded convoy (Fixer)",
-          goTo: "man_act1_setpiece_convoy_deal",
-          effects: {
-            flagsSet: ["route_fixer"],
-            persona: { fixer: 2 },
-            relationships: { Convoy: 5, Alex: 1 },
-            pushEvent: "You hand Alex your radio and a script to follow."
-          },
-          tags: ["social"]
-        },
-        {
-          id: "pick_killer",
-          text: "Use Alex as bait to clear the corridor (Killer)",
-          goTo: "killer_act1_setpiece_corridor_hunt",
-          effects: {
-            flagsSet: ["route_killer"],
-            persona: { killer: 2 },
-            stats: { morality: -3, stress: -2 },
-            relationships: { Alex: -5 },
-            pushEvent: "You point Alex toward the dark and ready your knife."
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "pick_sociopath",
-          text: "Promise Alex safety while you tighten invisible strings (Sociopath)",
-          goTo: "socio_act1_setpiece_gaslight",
-          effects: {
-            flagsSet: ["route_sociopath"],
-            persona: { sociopath: 2 },
-            stats: { morality: -1, stress: 1 },
-            relationships: { Alex: -1 },
-            pushEvent: "You whisper comfort in Alex's ear and pocket their spare keys."
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-    good_act1_setpiece_stairwell_rescue: {
-      id: "good_act1_setpiece_stairwell_rescue",
-      text: "The stairwell barricade bows inward. Soot-streaked kids cling to banisters while the groan of the horde builds from below.",
-      tags: ["setpiece", "act1", "leader"],
-      choices: [
-        {
-          id: "brace_wall",
-          text: "Brace the door with your own body (−2 STA)",
-          goTo: "good_act1_branch_hold_line",
-          cost: { stats: { stamina: 2 } },
-          effects: {
-            stats: { stress: 3, morality: 2 },
-            persona: { protector: 1 },
-            pushEvent: "The barricade holds by inches."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "stage_decoy",
-          text: "Stage a decoy with blaring radios",
-          goTo: "good_act1_branch_hold_line",
-          effects: {
-            inventoryRemove: ["old_radio"],
-            stats: { stress: 1 },
-            persona: { protector: 1 }
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "guide_service",
-          text: "Guide families through the service corridor (STA ≥ 10)",
-          goTo: "good_act1_branch_escape",
-          req: { stats: { stamina: { gte: 10 } } },
-          blockedReason: "Need stamina ≥ 10",
-          effects: {
-            stats: { stress: 2 },
-            persona: { protector: 1 },
-            pushEvent: "You lead them under the smoke."
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "signal_roof",
-          text: "Signal the roof for evac (need flare)",
-          goTo: "good_act1_branch_escape",
-          req: { items: ["flare"] },
-          blockedReason: "Need a flare",
-          effects: {
-            stats: { stress: 4 },
-            persona: { protector: 2 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    good_act1_branch_hold_line: {
-      id: "good_act1_branch_hold_line",
-      text: "Sweat and splinters. You and the neighbors form a living shield until the pounding quiets and the youngest are ushered out.",
-      tags: ["act1", "moral"],
-      choices: [
-        {
-          id: "count_survivors",
-          text: "Count every survivor and log their needs.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["held_line", "proof_protector_rescue"],
-            stats: { stress: 2 },
-            persona: { protector: 1 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "patch_arms",
-          text: "Patch bruised arms before moving on.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            inventoryAdd: ["makeshift_splint"],
-            stats: { morality: 1 }
-          },
-          tags: ["survival"]
-        }
-      ]
-    },
-
-    good_act1_branch_escape: {
-      id: "good_act1_branch_escape",
-      text: "You hustle families through dripping maintenance halls, marking safe corners as the roar of the stairwell fades.",
-      tags: ["act1", "stealth"],
-      choices: [
-        {
-          id: "mark_path",
-          text: "Mark the tunnel as a safe route.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_protector_rescue"],
-            inventoryAdd: ["chalk"]
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "send_signal",
-          text: "Send coordinates to the stadium scouts.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            relationships: { Stadium: 3 },
-            stats: { stress: 1 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-    ant_act1_setpiece_blackout_trap: {
-      id: "ant_act1_setpiece_blackout_trap",
-      text: "Flickering emergency lights paint the lobby red. Raiders slam their makeshift battering ram as tenants huddle around you, waiting for orders.",
-      tags: ["setpiece", "act1", "combat"],
-      choices: [
-        {
-          id: "kill_power",
-          text: "Kill the power and speak in the dark",
-          goTo: "ant_act1_branch_dominion",
-          effects: {
-            flagsSet: ["proof_warlord_blackout"],
-            persona: { warlord: 1 },
-            stats: { morality: -2, stress: -1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "rig_exits",
-          text: "Rig the exits with trip-wire mines (need charges)",
-          goTo: "ant_act1_branch_dominion",
-          req: { items: ["charges"] },
-          blockedReason: "Need explosive charges",
-          effects: {
-            stats: { stress: -3 },
-            persona: { warlord: 2 }
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "extract_tithe",
-          text: "Extract a tithe from every shop",
-          goTo: "ant_act1_branch_tithe",
-          effects: {
-            inventoryAdd: ["tribute_crate"],
-            persona: { warlord: 1 },
-            stats: { morality: -2 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "crush_captain",
-          text: "Crush the raider captain in front of everyone",
-          goTo: "ant_act1_branch_dominion",
-          effects: {
-            relationships: { Raiders: -6 },
-            stats: { morality: -3 },
-            persona: { warlord: 1 }
-          },
-          tags: ["combat"]
-        }
-      ]
-    },
-
-    ant_act1_branch_dominion: {
-      id: "ant_act1_branch_dominion",
-      text: "Darkness swallows the block. Your voice becomes the only point of law, promising survival in exchange for allegiance.",
-      tags: ["act1", "combat"],
-      choices: [
-        {
-          id: "appoint_enforcers",
-          text: "Appoint enforcers and brand your sigil.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_warlord_stomp"],
-            relationships: { "Enforcers": 5 },
-            stats: { morality: -2 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "offer_protection",
-          text: "Offer protection to those who tithe.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_warlord_blackout"],
-            inventoryAdd: ["favors_ledger"],
-            stats: { stress: -1 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    ant_act1_branch_tithe: {
-      id: "ant_act1_branch_tithe",
-      text: "You count tribute by flashlight, noting who hesitates and who falls in line.",
-      tags: ["act1", "social"],
-      choices: [
-        {
-          id: "hoard_tribute",
-          text: "Hoard tribute for later expansion.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_warlord_tithe"],
-            inventoryAdd: ["fuel_cells", "charges"],
-            stats: { morality: -1 }
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "gift_raiders",
-          text: "Gift tribute to the raiders to buy loyalty.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            inventoryRemove: ["tribute_crate"],
-            relationships: { Raiders: 4 },
-            stats: { stress: -2 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-    man_act1_setpiece_convoy_deal: {
-      id: "man_act1_setpiece_convoy_deal",
-      text: "Convoy engines idle below, fuel fumes thick. Drivers argue over maps while militia spotters watch from shattered balconies.",
-      tags: ["setpiece", "act1", "social"],
-      choices: [
-        {
-          id: "broker_pass",
-          text: "Broker a safe lane through the stadium lines",
-          goTo: "man_act1_branch_coop",
-          effects: {
-            flagsSet: ["proof_fixer_conduit"],
-            relationships: { Convoy: 4, Stadium: 3 },
-            persona: { fixer: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "sell_secrets",
-          text: "Sell curfew intel to both sides",
-          goTo: "man_act1_branch_web",
-          effects: {
-            inventoryAdd: ["encoded_map"],
-            stats: { morality: -1 },
-            persona: { fixer: 1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "double_cross",
-          text: "Promise escort then tip the raiders",
-          goTo: "man_act1_branch_betray",
-          effects: {
-            flagsSet: ["convoy_betrayed"],
-            stats: { morality: -3 },
-            persona: { fixer: 1 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "swap_supplies",
-          text: "Swap antibiotics for fuel markers (need antibiotics)",
-          goTo: "man_act1_branch_coop",
-          req: { items: ["antibiotics"] },
-          blockedReason: "Need antibiotics",
-          effects: {
-            inventoryRemove: ["antibiotics"],
-            inventoryAdd: ["fuel_markers"],
-            flagsSet: ["proof_fixer_barter"]
-          },
-          tags: ["survival"]
-        }
-      ]
-    },
-
-    man_act1_branch_coop: {
-      id: "man_act1_branch_coop",
-      text: "You ink signatures on an ammo crate lid. Radios crackle with rerouted patrols while grateful drivers hand you markers.",
-      tags: ["act1", "social"],
-      choices: [
-        {
-          id: "bank_favor",
-          text: "Bank the favor for the next act.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_fixer_conduit"],
-            relationships: { Convoy: 2 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "quiet_donation",
-          text: "Quietly fund the stadium medics.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            relationships: { Stadium: 3 },
-            stats: { morality: 1 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    man_act1_branch_web: {
-      id: "man_act1_branch_web",
-      text: "You spin curfew intel into a network. Each faction thinks you're theirs.",
-      tags: ["act1", "social"],
-      choices: [
-        {
-          id: "track_favors",
-          text: "Track favors in a private ledger.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_fixer_web"],
-            inventoryAdd: ["favor_tokens"]
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "seed_discord",
-          text: "Seed discord between raiders and convoy.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            relationships: { Raiders: -3, Convoy: 2 },
-            stats: { morality: -1 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    man_act1_branch_betray: {
-      id: "man_act1_branch_betray",
-      text: "Your whisper reaches the raiders before the convoy rolls. Screams echo under the rain, and you pocket the spoils.",
-      tags: ["act1", "stealth"],
-      choices: [
-        {
-          id: "count_profit",
-          text: "Count profit and prepare a cover story.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_fixer_barter"],
-            inventoryAdd: ["bloodied_chits"],
-            stats: { morality: -2 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "erase_traces",
-          text: "Erase traces to keep trust alive.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            stats: { stress: 2 },
-            persona: { fixer: 1 }
-          },
-          tags: ["stealth"]
-        }
-      ]
-    },
-    killer_act1_setpiece_corridor_hunt: {
-      id: "killer_act1_setpiece_corridor_hunt",
-      text: "The hallway reeks of bleach and fear. Predators prowl the blackout, and every scream could be silenced—by you.",
-      tags: ["setpiece", "act1", "stealth"],
-      choices: [
-        {
-          id: "mark_targets",
-          text: "Mark the loudest threats for removal",
-          goTo: "killer_act1_branch_mark",
-          effects: {
-            flagsSet: ["proof_killer_mark"],
-            persona: { killer: 1 },
-            stats: { stress: -3 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "stage_accident",
-          text: "Stage an accident down the stairwell",
-          goTo: "killer_act1_branch_mark",
-          effects: {
-            stats: { morality: -2 },
-            persona: { killer: 1 }
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "cull_stragglers",
-          text: "Cull the stragglers who slow you",
-          goTo: "killer_act1_branch_cull",
-          effects: {
-            stats: { morality: -4 },
-            persona: { killer: 2 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "harvest_supplies",
-          text: "Harvest supplies from the fallen",
-          goTo: "killer_act1_branch_cull",
-          effects: {
-            inventoryAdd: ["trophy_dogtags"],
-            stats: { stress: -1 }
-          },
-          tags: ["survival"]
-        }
-      ]
-    },
-
-    killer_act1_branch_mark: {
-      id: "killer_act1_branch_mark",
-      text: "You strike, silent and precise. The threats vanish, and whispers about the ghost on the ninth floor begin.",
-      tags: ["act1", "stealth"],
-      choices: [
-        {
-          id: "leave_warning",
-          text: "Leave a warning carved in the drywall.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_killer_fear"],
-            stats: { stress: -2 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "stash_weapons",
-          text: "Stash scavenged weapons for later.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            inventoryAdd: ["throwing_knife"],
-            persona: { killer: 1 }
-          },
-          tags: ["survival"]
-        }
-      ]
-    },
-
-    killer_act1_branch_cull: {
-      id: "killer_act1_branch_cull",
-      text: "Blood mixes with rainwater. Survivors keep their heads down when you pass.",
-      tags: ["act1", "moral"],
-      choices: [
-        {
-          id: "catalog_prey",
-          text: "Catalog the next targets.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_killer_cull"],
-            persona: { killer: 1 },
-            stats: { morality: -2 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "clean_blade",
-          text: "Clean your blade and prepare for act two.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            stats: { stress: -1 }
-          },
-          tags: ["survival"]
-        }
-      ]
-    },
-    socio_act1_setpiece_gaslight: {
-      id: "socio_act1_setpiece_gaslight",
-      text: "Neighbors whisper your name. In a crisis, truth is malleable. You can make their terror orbit you.",
-      tags: ["setpiece", "act1", "moral"],
-      choices: [
-        {
-          id: "spread_rumor",
-          text: "Spread rumors that only you know escape routes",
-          goTo: "socio_act1_branch_isolate",
-          effects: {
-            flagsSet: ["proof_sociopath_mirror"],
-            persona: { sociopath: 1 },
-            stats: { stress: -1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "invent_threat",
-          text: "Invent a phantom threat to keep them pliant",
-          goTo: "socio_act1_branch_isolate",
-          effects: {
-            stats: { morality: -1 },
-            persona: { sociopath: 1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "trade_favors",
-          text: "Trade safety for secrets",
-          goTo: "socio_act1_branch_puppet",
-          effects: {
-            inventoryAdd: ["blackmail_cache"],
-            persona: { sociopath: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "stage_crisis",
-          text: "Stage a crisis only you can solve",
-          goTo: "socio_act1_branch_puppet",
-          effects: {
-            flagsSet: ["proof_sociopath_isolate"],
-            stats: { morality: -2 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    socio_act1_branch_isolate: {
-      id: "socio_act1_branch_isolate",
-      text: "The building clings to your every word. You ration hope by the syllable.",
-      tags: ["act1", "social"],
-      choices: [
-        {
-          id: "demand_tithes",
-          text: "Demand emotional tithes for guidance.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_sociopath_isolate"],
-            relationships: { Tenants: -4 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "promise_salvation",
-          text: "Promise salvation later—for a price.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_sociopath_mirror"],
-            inventoryAdd: ["IOU_stack"]
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    socio_act1_branch_puppet: {
-      id: "socio_act1_branch_puppet",
-      text: "Secrets fill your pocket. The desperate tell you everything because you nod at the right moments.",
-      tags: ["act1", "social"],
-      choices: [
-        {
-          id: "catalog_secrets",
-          text: "Catalog secrets for leverage.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            flagsSet: ["proof_sociopath_purge"],
-            persona: { sociopath: 1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "play_saviors",
-          text: "Play savior to the highest bidder.",
-          goTo: "neutral_act1_bridge_to_act2",
-          effects: {
-            relationships: { "VIP Refugees": 4 },
-            stats: { morality: -1 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-    neutral_act1_bridge_to_act2: {
-      id: "neutral_act1_bridge_to_act2",
-      text: "Dawn stains the skyline bruised purple. Sirens migrate toward downtown while your building exhales shaken breaths. Act two looms.",
-      tags: ["bridge", "act1"],
-      timeDelta: 2,
-      choices: [
-        {
-          id: "act2_protector",
-          text: "Mobilize a haven convoy (Protector)",
-          goTo: "good_act2_setpiece_haven_shield",
-          req: { flags: ["route_protector", "proof_protector_rescue"] },
-          blockedReason: "Protector path only",
-          effects: {
-            stats: { stamina: -1 },
-            pushEvent: "Volunteers form up for the streets."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "act2_warlord",
-          text: "Press your advantage and tax the block (Warlord)",
-          goTo: "ant_act2_setpiece_tithe_march",
-          req: { flags: ["route_warlord", "proof_warlord_blackout"] },
-          blockedReason: "Warlord path only",
-          effects: {
-            stats: { stress: -2 },
-            pushEvent: "Collectors pound on doors at dawn."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "act2_fixer",
-          text: "Broker a citywide lifeline (Fixer)",
-          goTo: "man_act2_setpiece_network",
-          req: { flags: ["route_fixer", "proof_fixer_conduit"] },
-          blockedReason: "Fixer path only",
-          effects: {
-            stats: { stress: 1 },
-            pushEvent: "Radios chirp with new codes."
-          },
-          tags: ["social"]
-        },
-        {
-          id: "act2_killer",
-          text: "Stalk the refugee routes (Killer)",
-          goTo: "killer_act2_setpiece_cull",
-          req: { flags: ["route_killer", "proof_killer_mark"] },
-          blockedReason: "Killer path only",
-          effects: {
-            stats: { stress: -3 },
-            pushEvent: "Fear shadows every corridor."
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "act2_sociopath",
-          text: "Consolidate emotional debt (Sociopath)",
-          goTo: "socio_act2_setpiece_bottleneck",
-          req: { flags: ["route_sociopath", "proof_sociopath_mirror"] },
-          blockedReason: "Sociopath path only",
-          effects: {
-            stats: { stress: -1 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-    good_act2_setpiece_haven_shield: {
-      id: "good_act2_setpiece_haven_shield",
-      text: "A garage becomes a refugee staging ground. Weather reports warn of an inbound horde shift within hours.",
-      tags: ["setpiece", "act2", "leader"],
-      choices: [
-        {
-          id: "fortify_barricade",
-          text: "Fortify the barricade with welded panels",
-          goTo: "good_act2_branch_shield",
-          effects: {
-            stats: { stamina: -2 },
-            persona: { protector: 1 }
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "train_civilians",
-          text: "Train civilians on evacuation drills",
-          goTo: "good_act2_branch_shield",
-          effects: {
-            relationships: { Volunteers: 4 },
-            stats: { stress: 2 },
-            persona: { protector: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "escort_medics",
-          text: "Escort medics through infected blocks",
-          goTo: "good_act2_branch_supply",
-          effects: {
-            inventoryAdd: ["medkit"],
-            stats: { morality: 2 },
-            persona: { protector: 1 }
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "sweep_rooftops",
-          text: "Sweep rooftops for flare points",
-          goTo: "good_act2_branch_supply",
-          effects: {
-            flagsSet: ["proof_protector_beacon"],
-            stats: { stress: 1 }
-          },
-          tags: ["stealth"]
-        }
-      ]
-    },
-
-    good_act2_branch_shield: {
-      id: "good_act2_branch_shield",
-      text: "Metal shrieks as you seal the garage. Families breathe easier once the drills begin running like clockwork.",
-      tags: ["act2", "leader"],
-      choices: [
-        {
-          id: "assign_roles",
-          text: "Assign roles and rotate rest shifts.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_protector_stand"],
-            stats: { stress: -2 },
-            persona: { protector: 1 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "share_supplies",
-          text: "Share supplies with the convoy escorts.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            inventoryRemove: ["fuel_markers"],
-            relationships: { Convoy: 3 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    good_act2_branch_supply: {
-      id: "good_act2_branch_supply",
-      text: "Medics set broken bones while you chart rooftop signal chains across the district.",
-      tags: ["act2", "survival"],
-      choices: [
-        {
-          id: "cache_medkits",
-          text: "Cache medkits for the next surge.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_protector_stand"],
-            inventoryAdd: ["medkit"],
-            stats: { stress: -1 }
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "coordinate_rooftops",
-          text: "Coordinate rooftop flares with the stadium.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            relationships: { Stadium: 4 },
-            stats: { morality: 2 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-    ant_act2_setpiece_tithe_march: {
-      id: "ant_act2_setpiece_tithe_march",
-      text: "Your enforcers fan across the block collecting tribute. Rumors say the Raiders eye your territory enviously.",
-      tags: ["setpiece", "act2", "combat"],
-      choices: [
-        {
-          id: "raid_neighbors",
-          text: "Raid neighboring blocks before they raid you",
-          goTo: "ant_act2_branch_dominate",
-          effects: {
-            stats: { morality: -3 },
-            persona: { warlord: 1 },
-            pushEvent: "Your banner flies over stolen roofs."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "extort_market",
-          text: "Extort the market for fuel",
-          goTo: "ant_act2_branch_dominate",
-          effects: {
-            inventoryAdd: ["fuel_cells"],
-            persona: { warlord: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "parley_raiders",
-          text: "Parley with raider lieutenants",
-          goTo: "ant_act2_branch_bargain",
-          effects: {
-            relationships: { Raiders: 4 },
-            stats: { morality: -2 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "public_execution",
-          text: "Hold a public execution of dissenters",
-          goTo: "ant_act2_branch_dominate",
-          effects: {
-            flagsSet: ["proof_warlord_stomp"],
-            stats: { morality: -4 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    ant_act2_branch_dominate: {
-      id: "ant_act2_branch_dominate",
-      text: "Your enforcers march in lockstep, boots echoing through surrendered streets.",
-      tags: ["act2", "combat"],
-      choices: [
-        {
-          id: "carve_tax",
-          text: "Carve the new tax rates into the walls.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_warlord_tithe"],
-            stats: { stress: -2 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "arm_recruits",
-          text: "Arm new recruits with raider weapons.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            inventoryAdd: ["raider_rifle"],
-            persona: { warlord: 1 }
-          },
-          tags: ["combat"]
-        }
-      ]
-    },
-
-    ant_act2_branch_bargain: {
-      id: "ant_act2_branch_bargain",
-      text: "Raider lieutenants meet you in a burned-out deli. Trust is a rare commodity.",
-      tags: ["act2", "social"],
-      choices: [
-        {
-          id: "demand_alliance",
-          text: "Demand alliance under your flag.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_warlord_blackout"],
-            relationships: { Raiders: 2 },
-            stats: { morality: -1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "poison_offer",
-          text: "Poison their offer and seize their supplies.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            inventoryAdd: ["raider_cache"],
-            stats: { morality: -3 }
-          },
-          tags: ["stealth"]
-        }
-      ]
-    },
-    man_act2_setpiece_network: {
-      id: "man_act2_setpiece_network",
-      text: "The city map glows with routes and blockades. Three factions want exclusive access to your intel.",
-      tags: ["setpiece", "act2", "social"],
-      choices: [
-        {
-          id: "triage_comms",
-          text: "Triage communications for the Stadium",
-          goTo: "man_act2_branch_alliance",
-          effects: {
-            relationships: { Stadium: 5 },
-            stats: { morality: 1 },
-            persona: { fixer: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "auction_paths",
-          text: "Auction safe paths hourly",
-          goTo: "man_act2_branch_alliance",
-          effects: {
-            inventoryAdd: ["credit_scrip"],
-            stats: { morality: -1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "ghost_signal",
-          text: "Ghost signal the Raiders to trap them",
-          goTo: "man_act2_branch_betrayal",
-          effects: {
-            relationships: { Raiders: -4 },
-            persona: { fixer: 1 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "double_promises",
-          text: "Make double promises to Convoy and Stadium",
-          goTo: "man_act2_branch_betrayal",
-          effects: {
-            flagsSet: ["proof_fixer_web"],
-            stats: { morality: -2 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    man_act2_branch_alliance: {
-      id: "man_act2_branch_alliance",
-      text: "Your office becomes a nerve center. Every request flows through you first.",
-      tags: ["act2", "social"],
-      choices: [
-        {
-          id: "lock_contracts",
-          text: "Lock exclusive contracts for the final push.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_fixer_barter"],
-            relationships: { Convoy: 3 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "skim_supplies",
-          text: "Skim supplies for your private stash.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            inventoryAdd: ["diverted_crate"],
-            stats: { morality: -1 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    man_act2_branch_betrayal: {
-      id: "man_act2_branch_betrayal",
-      text: "Lies stack like sandbags. Each promise you break buys leverage elsewhere.",
-      tags: ["act2", "stealth"],
-      choices: [
-        {
-          id: "seed_conflict",
-          text: "Seed conflict between rivals to inflate demand.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_fixer_web"],
-            persona: { fixer: 1 },
-            stats: { morality: -2 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "secure_exit",
-          text: "Secure a personal exit route.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            inventoryAdd: ["secret_pass"],
-            stats: { stress: -2 }
-          },
-          tags: ["stealth"]
-        }
-      ]
-    },
-    killer_act2_setpiece_cull: {
-      id: "killer_act2_setpiece_cull",
-      text: "Refugee routes snake through parking garages. You stalk them from above, charting who slows the line.",
-      tags: ["setpiece", "act2", "stealth"],
-      choices: [
-        {
-          id: "pick_targets",
-          text: "Pick off the loudest liabilities",
-          goTo: "killer_act2_branch_shadow",
-          effects: {
-            stats: { morality: -3 },
-            persona: { killer: 1 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "sabotage_route",
-          text: "Sabotage alternate exits to funnel prey",
-          goTo: "killer_act2_branch_shadow",
-          effects: {
-            flagsSet: ["proof_killer_fear"],
-            stats: { stress: -2 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "toy_with_raiders",
-          text: "Toy with raider scouts before ending them",
-          goTo: "killer_act2_branch_harvest",
-          effects: {
-            relationships: { Raiders: -4 },
-            inventoryAdd: ["raider_tokens"]
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "bleed_resources",
-          text: "Bleed resources from the terrified",
-          goTo: "killer_act2_branch_harvest",
-          effects: {
-            inventoryAdd: ["loot_pouch"],
-            stats: { morality: -2 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    killer_act2_branch_shadow: {
-      id: "killer_act2_branch_shadow",
-      text: "Screams echo once then never again. Routes bend around the legend forming in your wake.",
-      tags: ["act2", "stealth"],
-      choices: [
-        {
-          id: "etch_symbol",
-          text: "Etch your symbol near the exits.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_killer_mark"],
-            stats: { stress: -1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "stash_victims",
-          text: "Stash victims to use as bait later.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            inventoryAdd: ["hidden_cache"],
-            persona: { killer: 1 }
-          },
-          tags: ["stealth"]
-        }
-      ]
-    },
-
-    killer_act2_branch_harvest: {
-      id: "killer_act2_branch_harvest",
-      text: "You dismantle raider patrols and terrified refugees alike. Supplies spill like entrails.",
-      tags: ["act2", "combat"],
-      choices: [
-        {
-          id: "refine_trophies",
-          text: "Refine trophies into traps.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_killer_cull"],
-            inventoryAdd: ["wire_garrote"]
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "taunt_survivors",
-          text: "Taunt survivors over stolen radios.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            stats: { morality: -2 },
-            persona: { killer: 1 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-    socio_act2_setpiece_bottleneck: {
-      id: "socio_act2_setpiece_bottleneck",
-      text: "You control access to the last intact stairwell. Survivors barter trust, secrets, and promises at your door.",
-      tags: ["setpiece", "act2", "social"],
-      choices: [
-        {
-          id: "charge_confessions",
-          text: "Charge confessions for passage",
-          goTo: "socio_act2_branch_ledger",
-          effects: {
-            flagsSet: ["proof_sociopath_isolate"],
-            persona: { sociopath: 1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "auction_loyalty",
-          text: "Auction loyalty to the highest fear",
-          goTo: "socio_act2_branch_ledger",
-          effects: {
-            inventoryAdd: ["scrip_stack"],
-            stats: { morality: -2 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "manufacture_cult",
-          text: "Manufacture a cult of calm",
-          goTo: "socio_act2_branch_cult",
-          effects: {
-            relationships: { "Devotees": 6 },
-            persona: { sociopath: 1 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "play_both",
-          text: "Play rival factions off one another",
-          goTo: "socio_act2_branch_cult",
-          effects: {
-            flagsSet: ["proof_sociopath_purge"],
-            stats: { morality: -2 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    socio_act2_branch_ledger: {
-      id: "socio_act2_branch_ledger",
-      text: "Your ledger bulges with confessions and pledges. Each entry is a leash.",
-      tags: ["act2", "social"],
-      choices: [
-        {
-          id: "tighten_grip",
-          text: "Tighten the grip and deny rest.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_sociopath_mirror"],
-            stats: { stress: -1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "sell_entries",
-          text: "Sell entries to the Fixer network.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            inventoryAdd: ["blackmail_cache"],
-            relationships: { Convoy: 1 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    socio_act2_branch_cult: {
-      id: "socio_act2_branch_cult",
-      text: "Devotees chant softly, swearing you kept them sane. It's half truth, half myth.",
-      tags: ["act2", "leader"],
-      choices: [
-        {
-          id: "implant_trigger",
-          text: "Implant emotional triggers for later.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            flagsSet: ["proof_sociopath_purge"],
-            persona: { sociopath: 1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "gift_false_hope",
-          text: "Gift false hope to keep them docile.",
-          goTo: "neutral_act2_bridge_to_act3",
-          effects: {
-            stats: { morality: -2 },
-            relationships: { Tenants: -3 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-    neutral_act2_bridge_to_act3: {
-      id: "neutral_act2_bridge_to_act3",
-      text: "Night falls again. Radio chatter reports curfew walls forming near the stadium, the docks, the refinery. The city waits for your move.",
-      tags: ["bridge", "act2"],
-      timeDelta: 6,
-      choices: [
-        {
-          id: "bridge_protector",
-          text: "Lead evac buses through the stadium gauntlet (Protector)",
-          goTo: "good_act3_setpiece_beacon",
-          req: { flags: ["route_protector", "proof_protector_stand"] },
-          blockedReason: "Protector proof needed",
-          effects: {
-            stats: { stress: 2 },
-            pushEvent: "Buses rev while families board." 
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "bridge_warlord",
-          text: "Claim the refinery as your fortress (Warlord)",
-          goTo: "ant_act3_setpiece_refinery",
-          req: { flags: ["route_warlord", "proof_warlord_tithe"] },
-          blockedReason: "Warlord proof needed",
-          effects: {
-            stats: { morality: -1 },
-            pushEvent: "Your army marches on the refinery." 
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "bridge_fixer",
-          text: "Broker the decisive alliance (Fixer)",
-          goTo: "man_act3_setpiece_conclave",
-          req: { flags: ["route_fixer", "proof_fixer_barter"] },
-          blockedReason: "Fixer proof needed",
-          effects: {
-            stats: { stress: 1 },
-            pushEvent: "You schedule a clandestine conclave." 
-          },
-          tags: ["social"]
-        },
-        {
-          id: "bridge_killer",
-          text: "Bleed the curfew wall dry (Killer)",
-          goTo: "killer_act3_setpiece_slaughter",
-          req: { flags: ["route_killer", "proof_killer_cull"] },
-          blockedReason: "Killer proof needed",
-          effects: {
-            stats: { stress: -4 },
-            pushEvent: "You vanish into the curfew shadows." 
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "bridge_sociopath",
-          text: "Turn panic into a cult uprising (Sociopath)",
-          goTo: "socio_act3_setpiece_ascend",
-          req: { flags: ["route_sociopath", "proof_sociopath_purge"] },
-          blockedReason: "Sociopath proof needed",
-          effects: {
-            stats: { stress: -1 },
-            pushEvent: "Candles bloom across stairwells in your name." 
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-    good_act3_setpiece_beacon: {
-      id: "good_act3_setpiece_beacon",
-      text: "Stadium floodlights sputter. The last evac convoy waits for your call sign while the horde presses the outer wall.",
-      tags: ["setpiece", "act3", "leader"],
-      choices: [
-        {
-          id: "hold_gate",
-          text: "Hold the gate until the buses clear",
-          goTo: "good_act3_resolution_beacon",
-          req: { flags: ["proof_protector_rescue", "proof_protector_stand"] },
-          blockedReason: "Need Protector proofs",
-          effects: {
-            flagsSet: ["proof_protector_beacon"],
-            stats: { stress: 4, stamina: -2 },
-            persona: { protector: 1 },
-            pushEvent: "You stand as the wall."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "evac_children",
-          text: "Evacuate the children first",
-          goTo: "good_act3_resolution_beacon",
-          req: { flags: ["proof_protector_rescue", "proof_protector_stand"] },
-          effects: {
-            flagsSet: ["proof_protector_beacon"],
-            stats: { morality: 3 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "deploy_flares",
-          text: "Deploy rooftop flares as guidance",
-          goTo: "good_act3_resolution_beacon",
-          req: { flags: ["proof_protector_rescue", "proof_protector_stand"] },
-          effects: {
-            flagsSet: ["proof_protector_beacon"],
-            inventoryRemove: ["flare"],
-            stats: { stress: 2 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "sacrifice_time",
-          text: "Sacrifice time to rescue stragglers",
-          goTo: "good_act3_resolution_beacon",
-          req: { flags: ["proof_protector_rescue", "proof_protector_stand"] },
-          effects: {
-            flagsSet: ["proof_protector_beacon"],
-            stats: { stress: 3, stamina: -1 },
-            relationships: { Volunteers: 3 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    good_act3_resolution_beacon: {
-      id: "good_act3_resolution_beacon",
-      text: "Engines fade into the dawn while ash still drifts across the seats you defended. Families look to you for the next move.",
-      tags: ["resolution", "act3", "leader"],
-      choices: [
-        {
-          id: "debrief_crews",
-          text: "Debrief the volunteers and triage the shaken",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            stats: { stress: -2, morality: 1 },
-            relationships: { Volunteers: 3 },
-            pushEvent: "Evac crews steady under your calm orders."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "scout_new_route",
-          text: "Scout the skyline for a safer corridor",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            stats: { stamina: -1 },
-            inventoryAdd: ["flare_bundle"],
-            persona: { protector: 1 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "console_refugees",
-          text: "Console the families left waiting",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            relationships: { Haven: 4 },
-            stats: { morality: 2 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-    ant_act3_setpiece_refinery: {
-      id: "ant_act3_setpiece_refinery",
-      text: "The refinery belches flame. Taking it means fuel, power, and absolute rule over the district.",
-      tags: ["setpiece", "act3", "combat"],
-      choices: [
-        {
-          id: "storm_gates",
-          text: "Storm the gates with your enforcers",
-          goTo: "ant_act3_resolution_iron_rule",
-          req: { flags: ["proof_warlord_blackout", "proof_warlord_tithe"] },
-          effects: {
-            flagsSet: ["refinery_burned"],
-            stats: { morality: -4 },
-            persona: { warlord: 1 }
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "execute_foreman",
-          text: "Execute the foreman on live radio",
-          goTo: "ant_act3_resolution_iron_rule",
-          req: { flags: ["proof_warlord_blackout", "proof_warlord_tithe"] },
-          effects: {
-            flagsSet: ["refinery_burned"],
-            relationships: { Raiders: 3 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "enslave_workers",
-          text: "Enslave the workers and brand them",
-          goTo: "ant_act3_resolution_iron_rule",
-          req: { flags: ["proof_warlord_blackout", "proof_warlord_tithe"] },
-          effects: {
-            flagsSet: ["refinery_burned"],
-            relationships: { Tenants: -8 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "broadcast_rule",
-          text: "Broadcast your rule to the city",
-          goTo: "ant_act3_resolution_iron_rule",
-          req: { flags: ["proof_warlord_blackout", "proof_warlord_tithe"] },
-          effects: {
-            flagsSet: ["refinery_burned"],
-            stats: { stress: -2 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    ant_act3_resolution_iron_rule: {
-      id: "ant_act3_resolution_iron_rule",
-      text: "Fuel drums blaze with your sigil while frightened lieutenants await orders. The refinery is yours—but holding it demands constant pressure.",
-      tags: ["resolution", "act3", "combat"],
-      choices: [
-        {
-          id: "draft_decree",
-          text: "Draft a decree and tax every barrel",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            stats: { morality: -2, stress: -2 },
-            relationships: { Raiders: 3 },
-            pushEvent: "Your tithe doubles overnight."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "reward_loyal",
-          text: "Reward loyal bruisers with spoils",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            inventoryRemove: ["rations"],
-            relationships: { Enforcers: 4 },
-            persona: { warlord: 1 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "tighten_grip",
-          text: "Tighten curfews and threaten dissent",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            stats: { morality: -3 },
-            flagsSet: ["wall_breached"],
-            pushEvent: "The refinery speakers scream your will."
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-    man_act3_setpiece_conclave: {
-      id: "man_act3_setpiece_conclave",
-      text: "In the shadow of the docks, representatives from Stadium, Convoy, and Raiders meet at your insistence. Every eye watches you.",
-      tags: ["setpiece", "act3", "social"],
-      choices: [
-        {
-          id: "balance_power",
-          text: "Balance power with a fragile truce",
-          goTo: "man_act3_resolution_web",
-          req: { flags: ["proof_fixer_conduit", "proof_fixer_barter"] },
-          effects: {
-            flagsSet: ["proof_fixer_web"],
-            relationships: { Stadium: 2, Convoy: 2 },
-            stats: { morality: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "sell_everyone",
-          text: "Sell everyone out for personal gain",
-          goTo: "man_act3_resolution_web",
-          req: { flags: ["proof_fixer_conduit", "proof_fixer_barter"] },
-          effects: {
-            flagsSet: ["proof_fixer_web"],
-            inventoryAdd: ["vault_key"],
-            stats: { morality: -3 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "install_proxy",
-          text: "Install a proxy leader loyal to you",
-          goTo: "man_act3_resolution_web",
-          req: { flags: ["proof_fixer_conduit", "proof_fixer_barter"] },
-          effects: {
-            flagsSet: ["proof_fixer_web"],
-            relationships: { "Proxy Council": 6 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "vanish",
-          text: "Vanish with the conclave in your debt",
-          goTo: "man_act3_resolution_web",
-          req: { flags: ["proof_fixer_conduit", "proof_fixer_barter"] },
-          effects: {
-            flagsSet: ["proof_fixer_web"],
-            inventoryAdd: ["secret_pass"],
-            stats: { stress: -3 }
-          },
-          tags: ["stealth"]
-        }
-      ]
-    },
-
-    man_act3_resolution_web: {
-      id: "man_act3_resolution_web",
-      text: "Ink dries on three competing accords. Faction envoys whisper promises you can cash in or crush at will.",
-      tags: ["resolution", "act3", "social"],
-      choices: [
-        {
-          id: "secure_ledger",
-          text: "Secure the ledgers and prep contingency trades",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            inventoryAdd: ["binding_contracts"],
-            relationships: { Stadium: 2, Convoy: 2 },
-            persona: { fixer: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "seed_rumors",
-          text: "Seed rumors that keep every faction dependent",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            stats: { morality: -1 },
-            flagsSet: ["proof_fixer_web"],
-            pushEvent: "Your name threads every backchannel."
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "bank_favors",
-          text: "Bank favors for the storm ahead",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            relationships: { Raiders: 3, Convoy: 3 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-    killer_act3_setpiece_slaughter: {
-      id: "killer_act3_setpiece_slaughter",
-      text: "The curfew wall's heart beats with terrified commanders. Slip inside and the city's fear becomes legend.",
-      tags: ["setpiece", "act3", "stealth"],
-      choices: [
-        {
-          id: "silence_command",
-          text: "Silence the command tent",
-          goTo: "killer_act3_resolution_ghost",
-          req: { flags: ["proof_killer_mark", "proof_killer_cull"] },
-          effects: {
-            flagsSet: ["proof_killer_fear"],
-            stats: { stress: -5 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "paint_message",
-          text: "Paint a message in blood",
-          goTo: "killer_act3_resolution_ghost",
-          req: { flags: ["proof_killer_mark", "proof_killer_cull"] },
-          effects: {
-            flagsSet: ["proof_killer_fear"],
-            stats: { morality: -4 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "booby_trap",
-          text: "Booby-trap the wall for days to come",
-          goTo: "killer_act3_resolution_ghost",
-          req: { flags: ["proof_killer_mark", "proof_killer_cull"] },
-          effects: {
-            flagsSet: ["proof_killer_fear"],
-            inventoryAdd: ["detonator"],
-            stats: { stress: -2 }
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "whisper_radio",
-          text: "Whisper to survivors on stolen radio",
-          goTo: "killer_act3_resolution_ghost",
-          req: { flags: ["proof_killer_mark", "proof_killer_cull"] },
-          effects: {
-            flagsSet: ["proof_killer_fear"],
-            relationships: { Survivors: -6 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    killer_act3_resolution_ghost: {
-      id: "killer_act3_resolution_ghost",
-      text: "Commanders vanish, walls crumble, and whispers about the ghost of curfew spread faster than infection. Patrols now prowl for you.",
-      tags: ["resolution", "act3", "stealth"],
-      choices: [
-        {
-          id: "strip_supplies",
-          text: "Strip the barracks of ammo and vanish",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            inventoryAdd: ["suppressed_rifle"],
-            stats: { stress: -2 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "mark_targets",
-          text: "Mark new targets on a stolen map",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            flagsSet: ["proof_killer_fear"],
-            persona: { killer: 1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "stalk_commander",
-          text: "Stalk the surviving commander for intel",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            relationships: { Curfew: -5 },
-            stats: { morality: -2 }
-          },
-          tags: ["combat"]
-        }
-      ]
-    },
-    socio_act3_setpiece_ascend: {
-      id: "socio_act3_setpiece_ascend",
-      text: "Candles line the stairwells. Your devotees await guidance while rival leaders plot to expose you.",
-      tags: ["setpiece", "act3", "moral"],
-      choices: [
-        {
-          id: "stage_miracle",
-          text: "Stage a miracle to cement faith",
-          goTo: "socio_act3_resolution_icon",
-          req: { flags: ["proof_sociopath_mirror", "proof_sociopath_purge"] },
-          effects: {
-            flagsSet: ["proof_sociopath_isolate"],
-            relationships: { "Devotees": 8 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "purge_rivals",
-          text: "Purge rivals in front of the crowd",
-          goTo: "socio_act3_resolution_icon",
-          req: { flags: ["proof_sociopath_mirror", "proof_sociopath_purge"] },
-          effects: {
-            flagsSet: ["proof_sociopath_isolate"],
-            stats: { morality: -4 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "sell_salvation",
-          text: "Sell salvation slots for future power",
-          goTo: "socio_act3_resolution_icon",
-          req: { flags: ["proof_sociopath_mirror", "proof_sociopath_purge"] },
-          effects: {
-            flagsSet: ["proof_sociopath_isolate"],
-            inventoryAdd: ["devotion_ledgers"],
-            stats: { stress: -2 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "fake_confession",
-          text: "Fake a confession to keep them hooked",
-          goTo: "socio_act3_resolution_icon",
-          req: { flags: ["proof_sociopath_mirror", "proof_sociopath_purge"] },
-          effects: {
-            flagsSet: ["proof_sociopath_isolate"],
-            relationships: { Tenants: -5 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    socio_act3_resolution_icon: {
-      id: "socio_act3_resolution_icon",
-      text: "The city kneels—not out of love, but because you taught them fear. Devotees chant while rivals scatter into the rain.",
-      tags: ["resolution", "act3", "moral"],
-      choices: [
-        {
-          id: "harvest_confessions",
-          text: "Harvest confessions to weaponize later",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            inventoryAdd: ["blackmail_cache"],
-            persona: { sociopath: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "stage_procession",
-          text: "Stage a procession that cements devotion",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            flagsSet: ["proof_sociopath_isolate"],
-            relationships: { Devotees: 5 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "erase_dissent",
-          text: "Erase dissenting voices quietly",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            stats: { morality: -3 },
-            relationships: { Tenants: -4 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    neutral_act3_hub_main: {
-      id: "neutral_act3_hub_main",
-      text: "Rooftop floodlights buzz as volunteers argue over dwindling crates. Helicopters circle while curfew sirens edge closer.",
-      tags: ["hub", "act3"],
-      timeDelta: 1,
-      choices: [
-        {
-          id: "coordinate_push",
-          text: "Coordinate the next citywide push",
-          goTo: "neutral_act3_bridge_to_act4",
-          effects: {
-            stats: { stress: 1 },
-            pushEvent: "Command net synchs to your voice."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "sweep_tunnels",
-          text: "Sweep the maintenance tunnels for supplies",
-          goTo: "neutral_act3_side_cache",
-          effects: {
-            stats: { stamina: -1 },
-            persona: { protector: 1 }
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "hold_vigil",
-          text: "Hold a brief vigil for the fallen",
-          goTo: "neutral_act3_side_brief",
-          effects: {
-            stats: { stress: -2 },
-            relationships: { Survivors: 2 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    neutral_act3_side_cache: {
-      id: "neutral_act3_side_cache",
-      text: "The maintenance tunnels stink of oil and bleach. Hidden lockers wait beneath emergency tarps.",
-      tags: ["side", "act3"],
-      choices: [
-        {
-          id: "take_supplies",
-          text: "Take the medical cache for your people",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            inventoryAdd: ["medkit"],
-            stats: { morality: 1 }
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "share_haul",
-          text: "Share the haul with another faction",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            relationships: { Convoy: 3, Stadium: 2 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    neutral_act3_side_brief: {
-      id: "neutral_act3_side_brief",
-      text: "A cracked classroom becomes a quiet chapel. Survivors trade whispered stories while the storm pauses outside.",
-      tags: ["side", "act3"],
-      choices: [
-        {
-          id: "promise_return",
-          text: "Promise a return with better news",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            stats: { morality: 1 },
-            relationships: { Haven: 2 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "steal_focus",
-          text: "Steal focus for your own agenda",
-          goTo: "neutral_act3_hub_main",
-          effects: {
-            stats: { morality: -2 },
-            persona: { sociopath: 1 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    neutral_act3_bridge_to_act4: {
-      id: "neutral_act3_bridge_to_act4",
-      text: "Maps sprawl across a cracked table. Every route north, south, and skybound demands a champion before dawn.",
-      tags: ["bridge", "act3"],
-      timeDelta: 4,
-      choices: [
-        {
-          id: "act4_protector",
-          text: "Escort the evac skybridge (Protector)",
-          goTo: "good_act4_setpiece_skybridge",
-          req: { flags: ["route_protector", "proof_protector_rescue", "proof_protector_stand", "proof_protector_beacon"] },
-          blockedReason: "Protector proofs required",
-          effects: {
-            stats: { stress: 1 },
-            pushEvent: "You chart safe passages above the streets."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "act4_warlord",
-          text: "Crush the convoy choke point (Warlord)",
-          goTo: "ant_act4_setpiece_crucible",
-          req: { flags: ["route_warlord", "proof_warlord_blackout", "proof_warlord_tithe", "proof_warlord_stomp"] },
-          blockedReason: "Warlord proofs required",
-          effects: {
-            stats: { morality: -2 },
-            pushEvent: "Your columns deploy to seize the artery."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "act4_fixer",
-          text: "Bind the markets with a master contract (Fixer)",
-          goTo: "man_act4_setpiece_exchange",
-          req: { flags: ["route_fixer", "proof_fixer_conduit", "proof_fixer_barter", "proof_fixer_web"] },
-          blockedReason: "Fixer proofs required",
-          effects: {
-            stats: { stress: 1 },
-            pushEvent: "Every broker waits for your signal."
-          },
-          tags: ["social"]
-        },
-        {
-          id: "act4_killer",
-          text: "Bleed the curfew command core (Killer)",
-          goTo: "killer_act4_setpiece_harvest",
-          req: { flags: ["route_killer", "proof_killer_mark", "proof_killer_cull", "proof_killer_fear"] },
-          blockedReason: "Killer proofs required",
-          effects: {
-            stats: { stress: -3 },
-            pushEvent: "You slip toward the armored elevators."
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "act4_socio",
-          text: "Orchestrate the devotion broadcast (Sociopath)",
-          goTo: "socio_act4_setpiece_liturgy",
-          req: { flags: ["route_sociopath", "proof_sociopath_mirror", "proof_sociopath_purge", "proof_sociopath_isolate"] },
-          blockedReason: "Sociopath proofs required",
-          effects: {
-            stats: { stress: -1 },
-            pushEvent: "Loudspeakers await your sermon."
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    good_act4_setpiece_skybridge: {
-      id: "good_act4_setpiece_skybridge",
-      text: "A fractured skybridge sways above burning avenues. Convoy buses idle below while infected claw toward the stairs.",
-      tags: ["setpiece", "act4", "leader"],
-      choices: [
-        {
-          id: "lead_shields",
-          text: "Lead the shield wall across (−2 STA)",
-          goTo: "good_act4_resolution_skybridge",
-          cost: { stats: { stamina: 2 } },
-          effects: {
-            flagsSet: ["proof_protector_safeconvoy"],
-            stats: { stress: 3, morality: 2 },
-            persona: { protector: 1 },
-            pushEvent: "You grind forward as a moving barricade."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "rig_anchor",
-          text: "Rig anchors and haul survivors with cables",
-          goTo: "good_act4_resolution_skybridge",
-          effects: {
-            flagsSet: ["proof_protector_safeconvoy"],
-            inventoryRemove: ["flare_bundle"],
-            stats: { stress: 2 }
-          },
-          tags: ["survival"]
-        },
-        {
-          id: "guide_children",
-          text: "Guide children through a vent crawl",
-          goTo: "good_act4_resolution_skybridge",
-          effects: {
-            flagsSet: ["proof_protector_safeconvoy"],
-            relationships: { Haven: 4 },
-            stats: { morality: 3 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    good_act4_resolution_skybridge: {
-      id: "good_act4_resolution_skybridge",
-      text: "The last bus clears the skybridge. Rain washes blood from your armor as scouts report fresh choke points ahead.",
-      tags: ["resolution", "act4", "leader"],
-      choices: [
-        {
-          id: "dispatch_guides",
-          text: "Dispatch guides to the next shelters",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            relationships: { Volunteers: 4 },
-            stats: { stress: -2 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "share_route",
-          text: "Share the safe corridor intel",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            relationships: { Stadium: 3, Convoy: 3 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    ant_act4_setpiece_crucible: {
-      id: "ant_act4_setpiece_crucible",
-      text: "Freight containers form a fortress at the convoy choke point. Your lieutenants await orders to prove total dominion.",
-      tags: ["setpiece", "act4", "combat"],
-      choices: [
-        {
-          id: "seize_fuel",
-          text: "Seize every fuel rig for tribute",
-          goTo: "ant_act4_resolution_crucible",
-          effects: {
-            flagsSet: ["proof_warlord_supremacy"],
-            stats: { morality: -3, stress: -2 },
-            pushEvent: "Tribute lines stretch toward your banners."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "public_execution",
-          text: "Stage a public execution to deter revolt",
-          goTo: "ant_act4_resolution_crucible",
-          effects: {
-            flagsSet: ["proof_warlord_supremacy"],
-            relationships: { Civilians: -6 },
-            persona: { warlord: 1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "buy_loyalty",
-          text: "Buy loyalty with plundered stockpiles",
-          goTo: "ant_act4_resolution_crucible",
-          effects: {
-            flagsSet: ["proof_warlord_supremacy"],
-            inventoryRemove: ["water"],
-            relationships: { Enforcers: 5 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    ant_act4_resolution_crucible: {
-      id: "ant_act4_resolution_crucible",
-      text: "The choke point bends to your will. Refugees tremble at each checkpoint branded with your crest.",
-      tags: ["resolution", "act4", "combat"],
-      choices: [
-        {
-          id: "fortify_crucible",
-          text: "Fortify the barricades further",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            stats: { stress: -1 },
-            relationships: { Raiders: 3 }
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "send_message",
-          text: "Broadcast your decree across districts",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            flagsSet: ["wall_breached"],
-            stats: { morality: -1 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    man_act4_setpiece_exchange: {
-      id: "man_act4_setpiece_exchange",
-      text: "Signal jammers fall silent as you step onto the exchange floor. Every faction ledger uploads through your console.",
-      tags: ["setpiece", "act4", "social"],
-      choices: [
-        {
-          id: "sync_markets",
-          text: "Sync markets under a unified tariff",
-          goTo: "man_act4_resolution_exchange",
-          effects: {
-            flagsSet: ["proof_fixer_omnimarket"],
-            relationships: { Stadium: 3, Convoy: 3 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "short_sell",
-          text: "Short-sell Raider caches for leverage",
-          goTo: "man_act4_resolution_exchange",
-          effects: {
-            flagsSet: ["proof_fixer_omnimarket"],
-            stats: { morality: -2 },
-            inventoryAdd: ["credit_chits"]
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "gift_relief",
-          text: "Gift relief shipments to earn trust",
-          goTo: "man_act4_resolution_exchange",
-          effects: {
-            flagsSet: ["proof_fixer_omnimarket"],
-            relationships: { FreeCrews: 4 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    man_act4_resolution_exchange: {
-      id: "man_act4_resolution_exchange",
-      text: "Deal trackers ping in rhythm with your heartbeat. Every crate and ration now routes through channels you control.",
-      tags: ["resolution", "act4", "social"],
-      choices: [
-        {
-          id: "spin_narrative",
-          text: "Spin a narrative that paints you indispensable",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            pushEvent: "Your voice saturates pirate radio."
-          },
-          tags: ["social"]
-        },
-        {
-          id: "audit_favors",
-          text: "Audit who owes you before the final act",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            inventoryAdd: ["debt_ledger"],
-            stats: { stress: -1 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    killer_act4_setpiece_harvest: {
-      id: "killer_act4_setpiece_harvest",
-      text: "Armored elevators thrum toward the curfew command spire. Guards rotate in tight formations; one opening could break them.",
-      tags: ["setpiece", "act4", "stealth"],
-      choices: [
-        {
-          id: "sabotage_lift",
-          text: "Sabotage the lift cables",
-          goTo: "killer_act4_resolution_harvest",
-          effects: {
-            flagsSet: ["proof_killer_apex"],
-            stats: { stress: -4 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "poison_reserves",
-          text: "Poison the command reserves",
-          goTo: "killer_act4_resolution_harvest",
-          effects: {
-            flagsSet: ["proof_killer_apex"],
-            relationships: { Curfew: -8 },
-            stats: { morality: -3 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "assassinate_chief",
-          text: "Assassinate the chief in the blackout",
-          goTo: "killer_act4_resolution_harvest",
-          effects: {
-            flagsSet: ["proof_killer_apex"],
-            inventoryAdd: ["command_codes"]
-          },
-          tags: ["combat"]
-        }
-      ]
-    },
-
-    killer_act4_resolution_harvest: {
-      id: "killer_act4_resolution_harvest",
-      text: "The command spire falls into panic. Your shadow now stalks their every transmission.",
-      tags: ["resolution", "act4", "stealth"],
-      choices: [
-        {
-          id: "bleed_patrols",
-          text: "Bleed remaining patrols for intel",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            relationships: { Curfew: -4 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "stash_caches",
-          text: "Stash captured codes for later",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            inventoryAdd: ["encrypted_orders"]
-          },
-          tags: ["survival"]
-        }
-      ]
-    },
-
-    socio_act4_setpiece_liturgy: {
-      id: "socio_act4_setpiece_liturgy",
-      text: "Broadcast towers glow orange. Followers gather with candles while skeptics jam the stairwells.",
-      tags: ["setpiece", "act4", "moral"],
-      choices: [
-        {
-          id: "promise_safety",
-          text: "Promise safety for eternal obedience",
-          goTo: "socio_act4_resolution_liturgy",
-          effects: {
-            flagsSet: ["proof_sociopath_dominion"],
-            relationships: { Devotees: 6 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "weaponize_fear",
-          text: "Weaponize fear with staged miracles",
-          goTo: "socio_act4_resolution_liturgy",
-          effects: {
-            flagsSet: ["proof_sociopath_dominion"],
-            stats: { morality: -3 },
-            pushEvent: "Your sermon echoes through empty towers."
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "trade_faith",
-          text: "Trade faith for rare supplies",
-          goTo: "socio_act4_resolution_liturgy",
-          effects: {
-            flagsSet: ["proof_sociopath_dominion"],
-            inventoryAdd: ["ration_tithes"],
-            persona: { sociopath: 1 }
-          },
-          tags: ["social"]
-        }
-      ]
-    },
-
-    socio_act4_resolution_liturgy: {
-      id: "socio_act4_resolution_liturgy",
-      text: "Your broadcast blankets the blocks. Devotees wait breathless for your next command.",
-      tags: ["resolution", "act4", "moral"],
-      choices: [
-        {
-          id: "catalog_devotion",
-          text: "Catalog who worships and who resists",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            inventoryAdd: ["devotion_ledgers"]
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "seed_sleeper",
-          text: "Seed sleeper whispers for later control",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            persona: { sociopath: 1 },
-            stats: { morality: -1 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    neutral_act4_hub_main: {
-      id: "neutral_act4_hub_main",
-      text: "Rain lashes the stadium mezzanine you now use as command. Allies compare scars while the horizon flashes.",
-      tags: ["hub", "act4"],
-      timeDelta: 2,
-      choices: [
-        {
-          id: "share_intel",
-          text: "Share intel and plan the final gambit",
-          goTo: "neutral_act4_bridge_to_act5",
-          effects: {
-            stats: { stress: 1 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "tend_wounds",
-          text: "Tend wounds and stabilize morale",
-          req: { flagsNone: ["act4_signal_done"] },
-          goTo: "neutral_act4_side_signal",
-          effects: {
-            stats: { stress: -3 },
-            relationships: { Volunteers: 2 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "interrogate_spy",
-          text: "Interrogate a captured spy",
-          req: { flagsNone: ["act4_spy_done"] },
-          goTo: "neutral_act4_side_triad",
-          effects: {
-            persona: { fixer: 1 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "walk_lines",
-          text: "Walk the barricades so every volunteer sees you steady",
-          req: { flags: ["act4_signal_done", "act4_spy_done"] },
-          goTo: "neutral_act4_bridge_to_act5",
-          effects: {
-            stats: { stress: -2 },
-            relationships: { Volunteers: 3 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    neutral_act4_side_signal: {
-      id: "neutral_act4_side_signal",
-      text: "The broadcast booth rattles in the wind. Backup batteries hum while operators await instructions.",
-      tags: ["side", "act4"],
-      choices: [
-        {
-          id: "boost_allies",
-          text: "Boost allied frequencies",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            relationships: { Stadium: 2, Convoy: 2 },
-            flagsSet: ["act4_signal_done"]
-          },
-          tags: ["social"]
-        },
-        {
-          id: "jam_raiders",
-          text: "Jam the Raider networks",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            relationships: { Raiders: -4 },
-            stats: { stress: -1 },
-            flagsSet: ["act4_signal_done"]
-          },
-          tags: ["combat"]
-        }
-      ]
-    },
-
-    neutral_act4_side_triad: {
-      id: "neutral_act4_side_triad",
-      text: "A storage bay becomes an impromptu tribunal. The spy offers secrets in exchange for safe passage.",
-      tags: ["side", "act4"],
-      choices: [
-        {
-          id: "accept_bargain",
-          text: "Accept the bargain and mark the intel",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            inventoryAdd: ["curfew_roster"],
-            stats: { morality: -1 },
-            flagsSet: ["act4_spy_done"]
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "refuse_deal",
-          text: "Refuse and detain them",
-          goTo: "neutral_act4_hub_main",
-          effects: {
-            stats: { morality: 1 },
-            flagsSet: ["act4_spy_done"]
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    neutral_act4_bridge_to_act5: {
-      id: "neutral_act4_bridge_to_act5",
-      text: "Thunder rolls as scouts report the final convergences. One more push decides the city's story.",
-      tags: ["bridge", "act4"],
-      timeDelta: 4,
-      choices: [
-        {
-          id: "act5_protector",
-          text: "Guard the evac column to the interstate (Protector)",
-          goTo: "good_act5_setpiece_final_stand",
-          req: { flags: ["route_protector", "proof_protector_rescue", "proof_protector_stand", "proof_protector_beacon", "proof_protector_safeconvoy"] },
-          blockedReason: "Protector capstone required",
-          effects: {
-            stats: { stress: 2 },
-            pushEvent: "Families rally for the final dash."
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "act5_warlord",
-          text: "Impose the final blood tithe (Warlord)",
-          goTo: "ant_act5_setpiece_bloodtax",
-          req: { flags: ["route_warlord", "proof_warlord_blackout", "proof_warlord_tithe", "proof_warlord_stomp", "proof_warlord_supremacy"] },
-          blockedReason: "Warlord capstone required",
-          effects: {
-            stats: { morality: -3 }
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "act5_fixer",
-          text: "Broker the defining accord (Fixer)",
-          goTo: "man_act5_setpiece_worlddeal",
-          req: { flags: ["route_fixer", "proof_fixer_conduit", "proof_fixer_barter", "proof_fixer_web", "proof_fixer_omnimarket"] },
-          blockedReason: "Fixer capstone required",
-          effects: {
-            stats: { stress: 1 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "act5_killer",
-          text: "Erase the source of command (Killer)",
-          goTo: "killer_act5_setpiece_lastblade",
-          req: { flags: ["route_killer", "proof_killer_mark", "proof_killer_cull", "proof_killer_fear", "proof_killer_apex"] },
-          blockedReason: "Killer capstone required",
-          effects: {
-            stats: { stress: -4 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "act5_socio",
-          text: "Seal devotion with a final lie (Sociopath)",
-          goTo: "socio_act5_setpiece_lastlie",
-          req: { flags: ["route_sociopath", "proof_sociopath_mirror", "proof_sociopath_purge", "proof_sociopath_isolate", "proof_sociopath_dominion"] },
-          blockedReason: "Sociopath capstone required",
-          effects: {
-            stats: { stress: -1 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    good_act5_setpiece_final_stand: {
-      id: "good_act5_setpiece_final_stand",
-      text: "The interstate ramps are jammed with fleeing buses. A final wave of infected pours from the tunnels.",
-      tags: ["setpiece", "act5", "leader"],
-      choices: [
-        {
-          id: "hold_wall",
-          text: "Hold the barricade until everyone clears",
-          goTo: "good_act5_ending_safekeeper",
-          effects: {
-            stats: { stress: 4, stamina: -3 },
-            relationships: { Volunteers: 5 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "rescue_last",
-          text: "Rescue the last stranded bus",
-          goTo: "good_act5_ending_safekeeper",
-          effects: {
-            stats: { morality: 4 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "guide_sky",
-          text: "Guide evac craft through the smoke",
-          goTo: "good_act5_ending_safekeeper",
-          effects: {
-            stats: { stress: 3 },
-            inventoryRemove: ["flare"],
-            pushEvent: "Pilots follow your flares to freedom."
-          },
-          tags: ["survival"]
-        }
-      ]
-    },
-
-    good_act5_ending_safekeeper: {
-      id: "good_act5_ending_safekeeper",
-      text: "Columns of survivors cross the interstate alive because you refused to abandon them. They whisper your name as guardian of the road ahead.",
-      isEnding: true,
-      endingType: "good"
-    },
-
-    ant_act5_setpiece_bloodtax: {
-      id: "ant_act5_setpiece_bloodtax",
-      text: "Your banners hang over the refinery plaza. The last strong factions await the tribute you demand.",
-      tags: ["setpiece", "act5", "combat"],
-      choices: [
-        {
-          id: "demand_kneel",
-          text: "Demand every leader kneel",
-          goTo: "ant_act5_ending_overlord",
-          effects: {
-            stats: { morality: -4 },
-            relationships: { Raiders: 5 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "burn_resisters",
-          text: "Burn resisters as warning",
-          goTo: "ant_act5_ending_overlord",
-          effects: {
-            stats: { morality: -5 },
-            pushEvent: "Ash drifts over the plaza."
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "chain_supply",
-          text: "Chain supply routes to your tithe",
-          goTo: "ant_act5_ending_overlord",
-          effects: {
-            stats: { stress: -2 },
-            relationships: { Enforcers: 4 }
-          },
-          tags: ["combat"]
-        }
-      ]
-    },
-
-    ant_act5_ending_overlord: {
-      id: "ant_act5_ending_overlord",
-      text: "Districts bow to your decree. Fuel, medicine, and hope flow only through your iron tithe.",
-      isEnding: true,
-      endingType: "ruthless"
-    },
-
-    man_act5_setpiece_worlddeal: {
-      id: "man_act5_setpiece_worlddeal",
-      text: "The last negotiators gather in a floodlit garage. Every faction waits to hear the deal that will define tomorrow.",
-      tags: ["setpiece", "act5", "social"],
-      choices: [
-        {
-          id: "forge_union",
-          text: "Forge a true union",
-          goTo: "man_act5_ending_conductor",
-          effects: {
-            relationships: { Stadium: 4, Convoy: 4 },
-            stats: { stress: -2 }
-          },
-          tags: ["social"]
-        },
-        {
-          id: "double_cross",
-          text: "Double-cross two sides for profit",
-          goTo: "man_act5_ending_conductor",
-          effects: {
-            stats: { morality: -3 },
-            inventoryAdd: ["vault_key"],
-            pushEvent: "Fortunes shift in your favor."
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "crown_proxy",
-          text: "Crown a proxy leader loyal to you",
-          goTo: "man_act5_ending_conductor",
-          effects: {
-            relationships: { Proxy: 5 }
-          },
-          tags: ["leader"]
-        }
-      ]
-    },
-
-    man_act5_ending_conductor: {
-      id: "man_act5_ending_conductor",
-      text: "Every supply line routes through agreements you scripted. Alliances survive only because you keep them balanced.",
-      isEnding: true,
-      endingType: "manipulator"
-    },
-
-    killer_act5_setpiece_lastblade: {
-      id: "killer_act5_setpiece_lastblade",
-      text: "Deep beneath the stadium, the infection's handlers prepare their final gambit. Silence them and the city earns one more dawn.",
-      tags: ["setpiece", "act5", "stealth"],
-      choices: [
-        {
-          id: "silence_handlers",
-          text: "Silence the handlers without a trace",
-          goTo: "killer_act5_ending_night",
-          effects: {
-            stats: { stress: -5 }
-          },
-          tags: ["stealth"]
-        },
-        {
-          id: "detonate_lab",
-          text: "Detonate the lab and vanish",
-          goTo: "killer_act5_ending_night",
-          effects: {
-            stats: { morality: -3 },
-            inventoryRemove: ["detonator"],
-            pushEvent: "A muted blast rattles the arena."
-          },
-          tags: ["combat"]
-        },
-        {
-          id: "steal_samples",
-          text: "Steal samples as leverage",
-          goTo: "killer_act5_ending_night",
-          effects: {
-            inventoryAdd: ["viral_samples"],
-            stats: { stress: -2 }
-          },
-          tags: ["moral"]
-        }
-      ]
-    },
-
-    killer_act5_ending_night: {
-      id: "killer_act5_ending_night",
-      text: "Legends say the night itself fights for you. Command falls, whispers linger, and the city survives on fear of your blade.",
-      isEnding: true,
-      endingType: "killer"
-    },
-
-    socio_act5_setpiece_lastlie: {
-      id: "socio_act5_setpiece_lastlie",
-      text: "Every remaining survivor tunes into your broadcast. One last lie will define who kneels tomorrow.",
-      tags: ["setpiece", "act5", "moral"],
-      choices: [
-        {
-          id: "promise_sanctuary",
-          text: "Promise sanctuary if they surrender",
-          goTo: "socio_act5_ending_void",
-          effects: {
-            relationships: { Devotees: 6 }
-          },
-          tags: ["leader"]
-        },
-        {
-          id: "threaten_exile",
-          text: "Threaten exile for disloyalty",
-          goTo: "socio_act5_ending_void",
-          effects: {
-            stats: { morality: -4 }
-          },
-          tags: ["moral"]
-        },
-        {
-          id: "sell_hearts",
-          text: "Sell hearts to the highest bidder",
-          goTo: "socio_act5_ending_void",
-          effects: {
-            inventoryAdd: ["devotion_ledgers"],
-            persona: { sociopath: 1 }
-          },
-          tags: ["social"]
+  const ROUTE_BLUEPRINTS = {
+    protector: {
+      label: "Protector",
+      routeFlag: "route_protector",
+      personaKey: "protector",
+      relationship: "Volunteers",
+      relationshipDelta: 6,
+      moralityTilt: [3, 1, -3],
+      stressTilt: [2, 3, 4],
+      tags: ["leader", "moral"],
+      verbs: ["Reinforce", "Shield", "Escort", "Anchor", "Guide"],
+      narrative: {
+        actions: [
+          "brace splintered doorframes with scavenged rebar",
+          "stage exhausted volunteers into rotating shifts",
+          "steady trembling shoulders with crisp directives",
+          "chain rooftop beacons into a steady glow",
+          "shepherd families through smoke-choked hallways"
+        ],
+        environments: [
+          "rain needles against blown-out windows",
+          "generator fumes crawl along the tile",
+          "distant sirens pulse like a heart gone feral",
+          "ash drifts down the stairwell like gray snow",
+          "floodlights flicker against slick concrete"
+        ],
+        pressures: [
+          "every scream from below sharpens the panic",
+          "the barricade bows beneath relentless fists",
+          "civilians beg for space beside the barricade",
+          "the power grid threatens another blackout",
+          "Alex's voice shakes as they take roll call"
+        ],
+        reflections: [
+          "You promised Alex this floor would hold.",
+          "Compassion is the only weapon left sharpened.",
+          "If you falter, the block's children vanish.",
+          "Protecting them means rewriting what mercy costs.",
+          "Alex watches to see if hope still matters."
+        ]
+      },
+      acts: [
+        {
+          act: 1,
+          slug: "floor_watch",
+          title: "Steady the floor watch",
+          entryPrompt: "Guide Alex as they steady the seventh-floor watch (Protector)",
+          summary: "Alex begs you to keep the seventh-floor barricade intact while frightened families crowd the hall.",
+          focus: ["seventh-floor barricade", "makeshift infirmary", "families huddled behind doors"],
+          stakes: [
+            "If the door splinters, every child on this level screams into the dark.",
+            "Volunteers will fracture unless someone sets the rhythm."],
+          loot: "ration_brick",
+          proofFlag: ROUTE_PROOFS.protector[0],
+          returnHub: "neutral_act1_hub_main",
+          exitForward: "neutral_act1_bridge_rooftop",
+          personaShift: 2
+        },
+        {
+          act: 2,
+          slug: "convoy_shield",
+          title: "Guard the convoy corridor",
+          entryPrompt: "Send Alex to reinforce the stadium gate (Protector)",
+          summary: "Curfew sirens blare as the stadium gate buckles under survivors desperate for convoy seats.",
+          focus: ["stadium perimeter", "convoy lane", "curfew checkpoints"],
+          stakes: [
+            "Families will be trampled unless you choreograph the extraction.",
+            "The convoy captain only trusts promises kept in blood and fuel."],
+          loot: "flare",
+          proofFlag: ROUTE_PROOFS.protector[1],
+          returnHub: "neutral_act2_hub_main",
+          exitForward: "neutral_act2_bridge_curfew",
+          personaShift: 2
+        },
+        {
+          act: 3,
+          slug: "beacon_chain",
+          title: "Ignite the beacon chain",
+          entryPrompt: "Have Alex ignite the rooftop beacon chain (Protector)",
+          summary: "Dawn smoke chokes the skyline as you race to keep rooftop beacons aligned for evac guidance.",
+          focus: ["signal tower", "wind-scoured catwalk", "ash-clogged antenna"],
+          stakes: [
+            "Without your lights the evac columns crash blind into raider nests.",
+            "The district holds its breath for your signal."],
+          loot: "antibiotics",
+          proofFlag: ROUTE_PROOFS.protector[2],
+          returnHub: "neutral_act3_hub_main",
+          exitForward: "neutral_act3_bridge_signal",
+          personaShift: 2
+        },
+        {
+          act: 4,
+          slug: "siege_command",
+          title: "Command the siege volunteers",
+          entryPrompt: "Direct Alex to coordinate siege drills (Protector)",
+          summary: "Raiders mass outside the stadium while exhausted civilians wait for your final orders.",
+          focus: ["sandbag wall", "triage amphitheater", "command dais"],
+          stakes: [
+            "If morale snaps now, every prior rescue unravels.",
+            "Alex needs proof that compassion can still roar."],
+          loot: "signal_flares",
+          finalFlag: "protector_final_bastion",
+          returnHub: "neutral_act4_hub_main",
+          exitForward: "neutral_act4_bridge_finale",
+          personaShift: 3
+        },
+        {
+          act: 5,
+          slug: "legacy_watch",
+          title: "Hold the last beacon",
+          entryPrompt: "Lead Alex through the final evacuation (Protector)",
+          summary: "The Long Siren keens one last time as you decide which convoys leave and who stays to defend.",
+          focus: ["evac roof", "signal console", "crowded muster line"],
+          stakes: [
+            "Every promise from earlier acts comes due under the floodlights.",
+            "Alex stands beside you, waiting to see what safety costs now."],
+          loot: "relief_cache",
+          returnHub: "neutral_act5_hub_main",
+          exitForward: "neutral_act5_hub_main",
+          personaShift: 3,
+          endings: [
+            {
+              slug: "long_watch",
+              endingType: "good",
+              text: "You and Alex choreograph beacon codes until dawn. Convoys thread the ruins guided by steady pulses that carry your name in whispered gratitude."
+            },
+            {
+              slug: "ashen_vigil",
+              endingType: "good",
+              text: "You stay behind with a skeleton crew, holding the barricade while Alex leads the last evac column. Hope survives because you decided the Long Siren would not fade."
+            }
+          ]
+        }
+      ]
+    },
+    warlord: {
+      label: "Warlord",
+      routeFlag: "route_warlord",
+      personaKey: "warlord",
+      relationship: "Raiders",
+      relationshipDelta: 6,
+      moralityTilt: [-3, -1, -4],
+      stressTilt: [3, 2, 5],
+      tags: ["combat", "leader"],
+      verbs: ["Dominate", "Extort", "Threaten", "Coerce", "Exploit"],
+      narrative: {
+        actions: [
+          "reroute ration lines at knifepoint",
+          "pit rival crews against each other",
+          "broadcast ultimatums over the emergency band",
+          "burn warning sigils into barricade walls",
+          "force tribute collectors to march through the rain"
+        ],
+        environments: [
+          "sirens warp into a slow hunting howl",
+          "floodlights smear blood across concrete",
+          "smoke drifts from looted storefronts",
+          "the convoy horns tremble at your checkpoints",
+          "drones buzz above, relaying your threats"
+        ],
+        pressures: [
+          "refugees cower as you count their offerings",
+          "rival captains test your patience with smug silence",
+          "the militia scrambles to answer your blockade",
+          "Alex flinches at the cruelty you orchestrate",
+          "power shifts with every scream behind closed doors"
+        ],
+        reflections: [
+          "Fear is the only currency people still respect.",
+          "Alex learns what rule by dread truly costs.",
+          "Mercy would dissolve the grip you've earned.",
+          "You tell yourself tyranny is the fastest path to order.",
+          "When the siren stops, your shadow must linger."
+        ]
+      },
+      acts: [
+        {
+          act: 1,
+          slug: "blackout_tithe",
+          title: "Seize the blackout",
+          entryPrompt: "Force Alex to lock down the blackout stairwell (Warlord)",
+          summary: "Power dies across the block, letting you tax anyone who needs your generators to survive.",
+          focus: ["darkened stairwell", "raider checkpoint", "ration queue"],
+          stakes: [
+            "If you hesitate, rival crews seize the tribute.",
+            "Alex has to learn fear is leverage."],
+          loot: "ammo_cache",
+          proofFlag: ROUTE_PROOFS.warlord[0],
+          returnHub: "neutral_act1_hub_main",
+          exitForward: "neutral_act1_bridge_rooftop",
+          personaShift: 3
+        },
+        {
+          act: 2,
+          slug: "tithe_march",
+          title: "March the tithe",
+          entryPrompt: "Send Alex to collect the convoy tithe (Warlord)",
+          summary: "Convoy haulers roll into your territory, demanding passage—if you can pry enough tribute first.",
+          focus: ["tribute square", "fuel depot", "armored blockade"],
+          stakes: [
+            "Squeeze too hard and the convoy guns open fire.",
+            "Let them through free and your crews riot."],
+          loot: "ration_brick",
+          proofFlag: ROUTE_PROOFS.warlord[1],
+          returnHub: "neutral_act2_hub_main",
+          exitForward: "neutral_act2_bridge_curfew",
+          personaShift: 3
+        },
+        {
+          act: 3,
+          slug: "iron_rule",
+          title: "Crush rival captains",
+          entryPrompt: "Make Alex broker your iron rule (Warlord)",
+          summary: "Three raider captains contest your rule; you must break them or bind them in iron contracts.",
+          focus: ["captured overpass", "execution stage", "loot hangar"],
+          stakes: [
+            "Lose focus and a coup flares behind your back.",
+            "Alex fears who you become with this much power."],
+          loot: "skull_ring",
+          proofFlag: ROUTE_PROOFS.warlord[2],
+          returnHub: "neutral_act3_hub_main",
+          exitForward: "neutral_act3_bridge_signal",
+          personaShift: 3
+        },
+        {
+          act: 4,
+          slug: "supremacy_edict",
+          title: "Publish the supremacy edict",
+          entryPrompt: "Order Alex to broadcast your supremacy edict (Warlord)",
+          summary: "You hold the stadium hostage, threatening to vent the stands unless every faction kneels.",
+          focus: ["hijacked broadcast booth", "spotlighted gallows", "looted command truck"],
+          stakes: [
+            "Back down now and every lieutenant deserts.",
+            "Alex wonders if there's a way back from this."],
+          loot: "shock_baton",
+          finalFlag: "warlord_final_tribute",
+          returnHub: "neutral_act4_hub_main",
+          exitForward: "neutral_act4_bridge_finale",
+          personaShift: 4
+        },
+        {
+          act: 5,
+          slug: "iron_reign",
+          title: "Seal the city under iron",
+          entryPrompt: "Command Alex to seal the city under iron (Warlord)",
+          summary: "The Long Siren drops into a growl as you decide which districts burn and which are tithed.",
+          focus: ["floodlit courtyard", "tribute vault", "armored dais"],
+          stakes: [
+            "Every scream tonight will echo your name.",
+            "Alex must either kneel or run."],
+          loot: "gold_tithe",
+          returnHub: "neutral_act5_hub_main",
+          exitForward: "neutral_act5_hub_main",
+          personaShift: 4,
+          endings: [
+            {
+              slug: "iron_reign",
+              endingType: "ruthless",
+              text: "You crown yourself atop the stadium floodlights while Alex enforces your tribute lines. The Long Siren re-tunes to your heartbeat—relentless and merciless."
+            },
+            {
+              slug: "shattered_throne",
+              endingType: "bad",
+              text: "Alex slips a blade between your plans, spiriting refugees away as your lieutenants splinter. You sit alone amid the burning tithe vault, ruler of ash."
+            }
+          ]
+        }
+      ]
+    },
+    fixer: {
+      label: "Fixer",
+      routeFlag: "route_fixer",
+      personaKey: "fixer",
+      relationship: "Convoy",
+      relationshipDelta: 6,
+      moralityTilt: [1, 0, -2],
+      stressTilt: [2, 2, 3],
+      tags: ["social", "stealth"],
+      verbs: ["Broker", "Leverage", "Promise", "Trade", "Spin"],
+      narrative: {
+        actions: [
+          "slide IOUs across rain-slick tables",
+          "splice hijacked frequencies into the radio mesh",
+          "trade secrets between desperate faction envoys",
+          "catalog debts in a ledger only you can read",
+          "bury favors inside coded convoy manifests"
+        ],
+        environments: [
+          "neon flickers through cracked office glass",
+          "convoy engines idle like patient beasts",
+          "raider spotlights sweep for signs of betrayal",
+          "hacked drones relay whispers along the skyline",
+          "Alex juggles handheld radios until their voice goes hoarse"
+        ],
+        pressures: [
+          "every deal threatens to collapse the others",
+          "one wrong promise and a faction turns hostile",
+          "rumors of your double-cross ripple through the docks",
+          "Alex wonders if any truth remains in your voice",
+          "the convoy dispatcher times your answers with suspicion"
+        ],
+        reflections: [
+          "Influence is fragile glass; you balance it in both hands.",
+          "Alex studies your lies, unsure whether to admire or fear you.",
+          "Leverage tastes sweeter than honesty tonight.",
+          "The Long Siren becomes a metronome for your bargains.",
+          "Someone has to weave the factions together, even if it frays your soul."
+        ]
+      },
+      acts: [
+        {
+          act: 1,
+          slug: "hallway_contract",
+          title: "Weave hallway contracts",
+          entryPrompt: "Coach Alex through hallway deals (Fixer)",
+          summary: "Panicked tenants offer anything for safety. You can bundle their promises into leverage for later acts.",
+          focus: ["rainy hallway", "makeshift desk", "ledger pile"],
+          stakes: [
+            "Overcommit and you'll owe more than you can pay.",
+            "Let Alex see the angles so they learn how influence flows."],
+          loot: "signed_marker",
+          proofFlag: ROUTE_PROOFS.fixer[0],
+          returnHub: "neutral_act1_hub_main",
+          exitForward: "neutral_act1_bridge_rooftop",
+          personaShift: 2
+        },
+        {
+          act: 2,
+          slug: "conduit_exchange",
+          title: "Control the conduit",
+          entryPrompt: "Send Alex to mediate the conduit exchange (Fixer)",
+          summary: "A fuel conduit between the convoy and stadium is failing; whoever controls the repair controls the lifeline.",
+          focus: ["refuel bay", "storm-drenched catwalk", "control console"],
+          stakes: [
+            "Promise protection and the convoy owes you forever.",
+            "Sell access to raiders and the stadium cuts you off."],
+          loot: "fuel_chip",
+          proofFlag: ROUTE_PROOFS.fixer[1],
+          returnHub: "neutral_act2_hub_main",
+          exitForward: "neutral_act2_bridge_curfew",
+          personaShift: 2
+        },
+        {
+          act: 3,
+          slug: "ledger_web",
+          title: "Complete the ledger web",
+          entryPrompt: "Have Alex finalize the ledger web (Fixer)",
+          summary: "Your secret ledger now binds three factions. One misstep, and you lose every favor you've stacked.",
+          focus: ["abandoned bank", "encrypted terminal", "sealed vault"],
+          stakes: [
+            "Reveal too much and they'll burn you.",
+            "Hide everything and the alliances collapse."],
+          loot: "encrypted_drive",
+          proofFlag: ROUTE_PROOFS.fixer[2],
+          returnHub: "neutral_act3_hub_main",
+          exitForward: "neutral_act3_bridge_signal",
+          personaShift: 2
+        },
+        {
+          act: 4,
+          slug: "triple_cross",
+          title: "Pull the triple-cross",
+          entryPrompt: "Coach Alex through a triple-cross (Fixer)",
+          summary: "Raiders, convoy, and stadium all expect you to betray the others tonight. You'll try to let them all believe they won.",
+          focus: ["signal tower", "sealed lounge", "encrypted earpiece"],
+          stakes: [
+            "Slip once and the city feeds you to the mobs.",
+            "Alex keeps track of who you really saved."],
+          loot: "bribe_chits",
+          finalFlag: "fixer_final_network",
+          returnHub: "neutral_act4_hub_main",
+          exitForward: "neutral_act4_bridge_finale",
+          personaShift: 3
+        },
+        {
+          act: 5,
+          slug: "whisper_market",
+          title: "Broker the whisper market",
+          entryPrompt: "Lead Alex into the whisper market (Fixer)",
+          summary: "The Long Siren falls quiet enough that every whisper counts. Finalize which debts get erased and which consume the city.",
+          focus: ["shadow bazaar", "promise vault", "crowded radio loft"],
+          stakes: [
+            "Pay the wrong debt and a faction burns you in effigy.",
+            "Alex weighs whether trust survives your bargains."],
+          loot: "sealed_contract",
+          returnHub: "neutral_act5_hub_main",
+          exitForward: "neutral_act5_hub_main",
+          personaShift: 3,
+          endings: [
+            {
+              slug: "whispered_ledger",
+              endingType: "manipulator",
+              text: "You balance every favor owed and ensure each faction depends on Alex to reach you. The siren becomes the pulse of your quiet economy."
+            },
+            {
+              slug: "burned_accounts",
+              endingType: "bad",
+              text: "The ledger catches fire when two factions compare notes. Alex drags you out as the whisper market riots, debts collapsing into smoke." 
+            }
+          ]
+        }
+      ]
+    },
+    killer: {
+      label: "Killer",
+      routeFlag: "route_killer",
+      personaKey: "killer",
+      relationship: "Raiders",
+      relationshipDelta: 5,
+      moralityTilt: [-4, -2, -5],
+      stressTilt: [1, 2, 3],
+      tags: ["combat", "stealth"],
+      verbs: ["Hunt", "Cull", "Stalk", "Ambush", "Silence"],
+      narrative: {
+        actions: [
+          "map corpse trails to predict the next swarm",
+          "plant piano wire along choke points",
+          "collect trophies to warn rival predators",
+          "stalk rooftops with scavenged rifle scopes",
+          "wipe blades clean in the rain to reset your focus"
+        ],
+        environments: [
+          "emergency strobes paint everything scarlet",
+          "the stairwell smells of copper and bleach",
+          "thunder rolls over gutted high-rises",
+          "Alex's breath fogs in the cold night air",
+          "shadows bend like teeth along the alley walls"
+        ],
+        pressures: [
+          "the infected learn your patterns and evolve",
+          "raider rivals set traps just for you",
+          "Alex fears the grin you wear after every kill",
+          "each body you drop buys another hour for the floor",
+          "silence becomes addictive and dangerous"
+        ],
+        reflections: [
+          "Killing keeps the survivors breathing tonight.",
+          "Alex studies the monster you wield like a knife.",
+          "Mercy rots faster than corpses in this rain.",
+          "Predators fall to the hungrier predator.",
+          "You hope someone remembers why you started hunting."
+        ]
+      },
+      acts: [
+        {
+          act: 1,
+          slug: "stairwell_hunt",
+          title: "Hunt the stairwell pack",
+          entryPrompt: "Let Alex bait the stairwell pack (Killer)",
+          summary: "A feral pack claws up the stairwell; you can lure them into a kill zone or risk them hitting the barricade.",
+          focus: ["narrow landing", "tripped wires", "blood-slick steps"],
+          stakes: [
+            "Miss the timing and families die.",
+            "Teach Alex how to bait monsters without breaking."],
+          loot: "bone_charm",
+          proofFlag: ROUTE_PROOFS.killer[0],
+          returnHub: "neutral_act1_hub_main",
+          exitForward: "neutral_act1_bridge_rooftop",
+          personaShift: 3
+        },
+        {
+          act: 2,
+          slug: "ghost_migration",
+          title: "Track the ghost migration",
+          entryPrompt: "Send Alex to map the ghost migration (Killer)",
+          summary: "The infected migrate along the riverfront. Culling them quietly keeps the convoy route open.",
+          focus: ["fogged riverwalk", "collapsed pier", "dripping tunnel"],
+          stakes: [
+            "Spill too much blood and raiders hunt you next.",
+            "Alex must move like a shadow or die."],
+          loot: "silent_boots",
+          proofFlag: ROUTE_PROOFS.killer[1],
+          returnHub: "neutral_act2_hub_main",
+          exitForward: "neutral_act2_bridge_curfew",
+          personaShift: 3
+        },
+        {
+          act: 3,
+          slug: "fear_tithe",
+          title: "Collect the fear tithe",
+          entryPrompt: "Have Alex collect the fear tithe (Killer)",
+          summary: "Rival killers demand tribute. You'll either erase them or force them into your pattern.",
+          focus: ["graffiti-tagged alley", "rooftop perch", "abandoned theatre"],
+          stakes: [
+            "Spare them and they undermine your terror.",
+            "Kill them and Alex wonders if you're still human."],
+          loot: "nightblade",
+          proofFlag: ROUTE_PROOFS.killer[2],
+          returnHub: "neutral_act3_hub_main",
+          exitForward: "neutral_act3_bridge_signal",
+          personaShift: 3
+        },
+        {
+          act: 4,
+          slug: "apex_creed",
+          title: "Write the apex creed",
+          entryPrompt: "Teach Alex the apex creed (Killer)",
+          summary: "Your legend terrifies every corridor. Decide who lives under your protection and who feeds the dark.",
+          focus: ["sealed killroom", "trophy rack", "observation deck"],
+          stakes: [
+            "Choose wrong and fear turns against you.",
+            "Alex needs to know whether you hunt for them or for yourself."],
+          loot: "scarred_mask",
+          finalFlag: "killer_final_reign",
+          returnHub: "neutral_act4_hub_main",
+          exitForward: "neutral_act4_bridge_finale",
+          personaShift: 4
+        },
+        {
+          act: 5,
+          slug: "midnight_creed",
+          title: "Seal the midnight creed",
+          entryPrompt: "Bring Alex into the midnight creed (Killer)",
+          summary: "Only one hunter walks away tonight. Decide whether you become the myth or bury it.",
+          focus: ["floodlit rooftop", "silent stairwell", "pool of rain"],
+          stakes: [
+            "Let the killings stop and the infected return.",
+            "Continue and Alex might never look at you again."],
+          loot: "blood_token",
+          returnHub: "neutral_act5_hub_main",
+          exitForward: "neutral_act5_hub_main",
+          personaShift: 4,
+          endings: [
+            {
+              slug: "midnight_creed",
+              endingType: "ruthless",
+              text: "You leave trophies on every threshold. Alex covers for you, believing the killings keep the district alive, even as their eyes darken."
+            },
+            {
+              slug: "quiet_grave",
+              endingType: "bad",
+              text: "Alex shatters your knives and walks into the dawn. You bury the creed beside the river, wondering if silence can forgive you."
+            }
+          ]
+        }
+      ]
+    },
+    sociopath: {
+      label: "Sociopath",
+      routeFlag: "route_sociopath",
+      personaKey: "sociopath",
+      relationship: "Free Crews",
+      relationshipDelta: 6,
+      moralityTilt: [-1, -3, -2],
+      stressTilt: [1, 2, 2],
+      tags: ["social", "leader"],
+      verbs: ["Stage", "Manipulate", "Confide", "Gaslight", "Perform"],
+      narrative: {
+        actions: [
+          "script tears for the audience you gather",
+          "mirror back fears until people cling to you",
+          "plant rumors that knot factions around your voice",
+          "turn Alex into a prop in your carefully staged empathy",
+          "invent confessions that bind strangers together"
+        ],
+        environments: [
+          "emergency lanterns warm the improvised stage",
+          "rain taps a beat on the stadium tarp",
+          "hushed spectators hang on every dramatic pause",
+          "the Long Siren becomes a low violin beneath your words",
+          "Alex watches from the wings, unsure who you really are"
+        ],
+        pressures: [
+          "lie too well and even you forget the truth",
+          "show weakness and the crowd moves on",
+          "each emotional reveal must pay off later",
+          "Alex wonders whether any comfort you give is real",
+          "factions crave the script only you can deliver"
+        ],
+        reflections: [
+          "Influence is theatre and the apocalypse your stage.",
+          "Alex doesn't know which version of you to trust.",
+          "Empathy can be weaponized into obedience.",
+          "You choreograph grief so no one sees your own.",
+          "If the siren stops, will anyone remember who you are?"
+        ]
+      },
+      acts: [
+        {
+          act: 1,
+          slug: "mirror_act",
+          title: "Run the mirror act",
+          entryPrompt: "Pull Alex into your mirror act (Sociopath)",
+          summary: "You can redirect panic by reflecting people's worst fears back at them until they follow your lead.",
+          focus: ["makeshift stage", "crowded hallway", "broken mirror"],
+          stakes: [
+            "Overplay it and they turn on you.",
+            "Alex may learn to fake feelings better than you do."],
+          loot: "mirror_shard",
+          proofFlag: ROUTE_PROOFS.sociopath[0],
+          returnHub: "neutral_act1_hub_main",
+          exitForward: "neutral_act1_bridge_rooftop",
+          personaShift: 2
+        },
+        {
+          act: 2,
+          slug: "mask_market",
+          title: "Curate the mask market",
+          entryPrompt: "Send Alex to curate the mask market (Sociopath)",
+          summary: "A night market trades favors for curated emotions. You can set the tone everyone copies tomorrow.",
+          focus: ["candlelit tunnel", "mask stall", "whisper dome"],
+          stakes: [
+            "Lose control and rumor-mongers hijack the scene.",
+            "Alex wonders whether authenticity survived the outbreak."],
+          loot: "silk_mask",
+          proofFlag: ROUTE_PROOFS.sociopath[1],
+          returnHub: "neutral_act2_hub_main",
+          exitForward: "neutral_act2_bridge_curfew",
+          personaShift: 2
+        },
+        {
+          act: 3,
+          slug: "trial_stage",
+          title: "Host the whisper trials",
+          entryPrompt: "Have Alex host the whisper trials (Sociopath)",
+          summary: "You orchestrate confessions in a gutted theatre, deciding who earns forgiveness and who becomes an example.",
+          focus: ["spotlit chair", "hanging mic", "row of candles"],
+          stakes: [
+            "If forgiveness feels fake, the mob drags you out.",
+            "If punishment feels real, Alex recoils."],
+          loot: "confession_tape",
+          proofFlag: ROUTE_PROOFS.sociopath[2],
+          returnHub: "neutral_act3_hub_main",
+          exitForward: "neutral_act3_bridge_signal",
+          personaShift: 2
+        },
+        {
+          act: 4,
+          slug: "empathy_purge",
+          title: "Conduct the empathy purge",
+          entryPrompt: "Rehearse Alex for the empathy purge (Sociopath)",
+          summary: "You promise to purge despair with choreographed catharsis; secretly, you decide whose emotions get erased.",
+          focus: ["ritual circle", "projected montage", "standing ovation"],
+          stakes: [
+            "Pick the wrong target and your audience revolts.",
+            "Alex must perform the hurt you hand them."],
+          loot: "stage_lights",
+          finalFlag: "sociopath_final_stage",
+          returnHub: "neutral_act4_hub_main",
+          exitForward: "neutral_act4_bridge_finale",
+          personaShift: 3
+        },
+        {
+          act: 5,
+          slug: "cold_requiem",
+          title: "Debut the cold requiem",
+          entryPrompt: "Stage the cold requiem with Alex (Sociopath)",
+          summary: "Your final performance will decide whether the city believes in hope, fear, or nothing at all.",
+          focus: ["collapsed theatre", "torchlit balcony", "silent crowd"],
+          stakes: [
+            "If the show flops, chaos returns instantly.",
+            "If it succeeds, Alex may never know you meant any of it."],
+          loot: "marble_mask",
+          returnHub: "neutral_act5_hub_main",
+          exitForward: "neutral_act5_hub_main",
+          personaShift: 3,
+          endings: [
+            {
+              slug: "cold_reckoning",
+              endingType: "secret",
+              text: "The city moves to the rhythm you script. Alex smiles through staged tears, unsure whether the salvation you sell is real."
+            },
+            {
+              slug: "empty_stage",
+              endingType: "bad",
+              text: "Your performance collapses into awkward silence. Alex drops the mask and walks into the rain while the crowd turns feral." 
+            }
+          ]
         }
       ]
-    },
-
-    socio_act5_ending_void: {
-      id: "socio_act5_ending_void",
-      text: "They trust no god but you. Hope, fear, and every confession now orbit your whispered promises.",
-      isEnding: true,
-      endingType: "sociopath"
     }
-  });
-  delete window.STORY_DATABASE.intro;
+  };
+  const HUB_BLUEPRINTS = [
+    {
+      act: 1,
+      id: "neutral_act1_hub_main",
+      text: "Rain needles shattered windows as Alex paces the mezzanine, asking whether you will save these families, exploit them, or weaponize their fear.",
+      timeDelta: 1,
+      tags: ["hub", "act1"],
+      bridgeEntryText: "Climb with Alex to the roof and survey the district",
+      bridge: {
+        id: "neutral_act1_bridge_rooftop",
+        text: "From the rooftop, sirens blur into the rainfall. Stadium flares, convoy headlights, and raider bonfires paint competing futures across the skyline.",
+        tags: ["bridge", "act1"],
+        choices: [
+          {
+            id: "bridge1_signal_stadium",
+            text: "Signal the stadium wardens for aid",
+            goTo: "neutral_act2_hub_main",
+            effects: { time: 1, flagsSet: ["plan_stadium"], relationships: { Stadium: 4 } },
+            tags: ["leader", "social"]
+          },
+          {
+            id: "bridge1_call_convoy",
+            text: "Patch into the convoy dispatcher",
+            goTo: "neutral_act2_hub_main",
+            effects: { time: 1, flagsSet: ["plan_convoy"], relationships: { Convoy: 4 } },
+            tags: ["social", "stealth"]
+          },
+          {
+            id: "bridge1_hold",
+            text: "Grant Alex one more hour on the floor",
+            goTo: "neutral_act1_hub_main",
+            effects: { stats: { stress: 3 }, relationships: { Alex: 2 } },
+            tags: ["leader", "survival"]
+          }
+        ]
+      },
+      sideScenes: [
+        {
+          id: "neutral_act1_side_generator",
+          entryText: "Check the flickering generator with Alex",
+          text: "The maintenance closet hums with ozone as the generator coughs smoke. Alex begs for a fix before the lights die.",
+          tags: ["side", "act1"],
+          choices: [
+            {
+              id: "act1_fix_generator",
+              text: "Rip open the casing and reroute power (−1 STA)",
+              goTo: "neutral_act1_hub_main",
+              cost: { stats: { stamina: 1 }, time: 1 },
+              effects: { stats: { stress: -2 }, inventoryAdd: ["spare_parts"], relationships: { Volunteers: 4 } },
+              tags: ["survival", "leader"]
+            },
+            {
+              id: "act1_divert_power",
+              text: "Divert power to your apartment only",
+              goTo: "neutral_act1_hub_main",
+              effects: { stats: { morality: -2, stress: -1 }, relationships: { Volunteers: -5 }, flagsSet: ["wall_breached"] },
+              tags: ["stealth", "moral"]
+            }
+          ]
+        },
+        {
+          id: "neutral_act1_side_rations",
+          entryText: "Inspect the ration queue",
+          text: "Families barter heirlooms for stale crackers in the hallway. Alex looks to you for fairness.",
+          tags: ["side", "act1"],
+          choices: [
+            {
+              id: "act1_share_rations",
+              text: "Donate your hidden snacks",
+              goTo: "neutral_act1_hub_main",
+              effects: { stats: { morality: 2, stress: -1 }, relationships: { Volunteers: 5 }, flagsSet: ["shared_rations"] },
+              tags: ["moral", "leader"]
+            },
+            {
+              id: "act1_sell_rations",
+              text: "Sell portions for favors",
+              goTo: "neutral_act1_hub_main",
+              effects: { stats: { morality: -3, stress: -2 }, relationships: { FreeCrews: 3, Volunteers: -4 } },
+              tags: ["social", "stealth"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      act: 2,
+      id: "neutral_act2_hub_main",
+      text: "Curfew drones sweep the interstate. Alex clutches maps and asks whether you will reinforce the stadium, exploit convoys, or sell safety to raiders.",
+      timeDelta: 1,
+      tags: ["hub", "act2"],
+      bridgeEntryText: "Slip through the curfew lines toward dawn",
+      bridge: {
+        id: "neutral_act2_bridge_curfew",
+        text: "Checkpoint sirens and floodlights dance along the overpass. Every faction watches to see who you protect next.",
+        tags: ["bridge", "act2"],
+        choices: [
+          {
+            id: "bridge2_stage_stadium",
+            text: "Escort medics toward the stadium",
+            goTo: "neutral_act3_hub_main",
+            effects: { time: 1, relationships: { Stadium: 5 }, stats: { stress: 2 } },
+            tags: ["leader", "survival"]
+          },
+          {
+            id: "bridge2_feed_convoy",
+            text: "Load Alex onto a convoy run",
+            goTo: "neutral_act3_hub_main",
+            effects: { time: 1, relationships: { Convoy: 5 }, flagsSet: ["rescued_convoy"] },
+            tags: ["social", "leader"]
+          },
+          {
+            id: "bridge2_stall",
+            text: "Delay and gather more intel",
+            goTo: "neutral_act2_hub_main",
+            effects: { stats: { stress: 1 }, inventoryAdd: ["cipher_codes"] },
+            tags: ["stealth", "survival"]
+          }
+        ]
+      },
+      sideScenes: [
+        {
+          id: "neutral_act2_side_checkpoint",
+          entryText: "Sneak beneath the checkpoint",
+          text: "Floodlights search the rain as militia shout over the curfew loudspeakers.",
+          tags: ["side", "act2"],
+          choices: [
+            {
+              id: "act2_bribe_guard",
+              text: "Bribe the guard with convoy gossip",
+              goTo: "neutral_act2_hub_main",
+              effects: { stats: { stress: -2 }, relationships: { Convoy: 3, Raiders: -2 } },
+              tags: ["social", "stealth"]
+            },
+            {
+              id: "act2_cut_power",
+              text: "Cut the checkpoint power",
+              goTo: "neutral_act2_hub_main",
+              effects: { stats: { morality: -2 }, flagsSet: ["convoy_betrayed"], relationships: { Raiders: 4 } },
+              tags: ["combat", "stealth"]
+            }
+          ]
+        },
+        {
+          id: "neutral_act2_side_infirmary",
+          entryText: "Check the shattered infirmary",
+          text: "Stretchers line the loading bay. Alex wants to know if you heal or prioritize leverage.",
+          tags: ["side", "act2"],
+          choices: [
+            {
+              id: "act2_treat_wounded",
+              text: "Treat the worst wounds",
+              goTo: "neutral_act2_hub_main",
+              effects: { stats: { morality: 3, stress: 2 }, relationships: { Volunteers: 4 }, inventoryRemove: ["antibiotics"] },
+              tags: ["moral", "leader"]
+            },
+            {
+              id: "act2_skimp_supplies",
+              text: "Pocket the best meds",
+              goTo: "neutral_act2_hub_main",
+              effects: { stats: { morality: -3 }, inventoryAdd: ["antibiotics"], relationships: { Volunteers: -4 } },
+              tags: ["stealth", "survival"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      act: 3,
+      id: "neutral_act3_hub_main",
+      text: "Dawn ash smears the skyline purple. Alex balances flare codes and asks whether you guide convoys, weaponize raiders, or sell secrets.",
+      timeDelta: 1,
+      tags: ["hub", "act3"],
+      bridgeEntryText: "Cross the shattered skybridge with Alex",
+      bridge: {
+        id: "neutral_act3_bridge_signal",
+        text: "A fractured skybridge sways above burning streets. The next choices decide who reaches the finale.",
+        tags: ["bridge", "act3"],
+        choices: [
+          {
+            id: "bridge3_evacuate",
+            text: "Evacuate families toward the stadium",
+            goTo: "neutral_act4_hub_main",
+            effects: { time: 1, relationships: { Volunteers: 4 }, stats: { stress: 3 } },
+            tags: ["leader", "survival"]
+          },
+          {
+            id: "bridge3_cutdeal",
+            text: "Broker safe passage with raider scouts",
+            goTo: "neutral_act4_hub_main",
+            effects: { flagsSet: ["joined_raiders"], relationships: { Raiders: 5 }, stats: { morality: -2 } },
+            tags: ["social", "stealth"]
+          },
+          {
+            id: "bridge3_delay",
+            text: "Delay to gather more proof",
+            goTo: "neutral_act3_hub_main",
+            effects: { stats: { stress: 2 }, inventoryAdd: ["evidence_case"] },
+            tags: ["stealth", "survival"]
+          }
+        ]
+      },
+      sideScenes: [
+        {
+          id: "neutral_act3_side_beacon",
+          entryText: "Repair a failing beacon",
+          text: "One rooftop beacon sputters. Alex grips the ladder waiting for your call.",
+          tags: ["side", "act3"],
+          choices: [
+            {
+              id: "act3_fix_beacon",
+              text: "Risk the climb with Alex",
+              goTo: "neutral_act3_hub_main",
+              effects: { stats: { stress: 2 }, relationships: { Convoy: 4 }, inventoryAdd: ["signal_core"] },
+              tags: ["survival", "leader"]
+            },
+            {
+              id: "act3_remote_shutdown",
+              text: "Shut it down to save time",
+              goTo: "neutral_act3_hub_main",
+              effects: { stats: { morality: -1 }, relationships: { Convoy: -3, Raiders: 3 } },
+              tags: ["stealth", "combat"]
+            }
+          ]
+        },
+        {
+          id: "neutral_act3_side_rescue",
+          entryText: "Respond to a trapped signal",
+          text: "A trapped convoy driver begs for extraction over a cracked radio.",
+          tags: ["side", "act3"],
+          choices: [
+            {
+              id: "act3_pull_driver",
+              text: "Pull the driver out yourself",
+              goTo: "neutral_act3_hub_main",
+              effects: { stats: { stress: 3, morality: 2 }, relationships: { Convoy: 5 } },
+              tags: ["leader", "moral"]
+            },
+            {
+              id: "act3_use_driver",
+              text: "Leverage them for intel",
+              goTo: "neutral_act3_hub_main",
+              effects: { stats: { morality: -3 }, relationships: { Convoy: -4, Raiders: 4 }, inventoryAdd: ["raider_codes"] },
+              tags: ["social", "stealth"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      act: 4,
+      id: "neutral_act4_hub_main",
+      text: "Night sirens spool up again. Alex studies faction leaders waiting for your final gambit and wonders whose future you cash in.",
+      timeDelta: 1,
+      tags: ["hub", "act4"],
+      bridgeEntryText: "Face the final council with Alex",
+      bridge: {
+        id: "neutral_act4_bridge_finale",
+        text: "All factions crowd the stadium floor. Proofs you gathered decide who follows you into the finale.",
+        tags: ["bridge", "act4"],
+        choices: [
+          {
+            id: "bridge4_to_finale",
+            text: "Announce the final plan",
+            goTo: "neutral_act5_hub_main",
+            effects: { time: 1, stats: { stress: 4 }, relationships: { Alex: 3 } },
+            tags: ["leader", "social"]
+          },
+          {
+            id: "bridge4_delay",
+            text: "Delay and reconsider alliances",
+            goTo: "neutral_act4_hub_main",
+            effects: { stats: { stress: 2 }, inventoryAdd: ["council_notes"] },
+            tags: ["stealth", "survival"]
+          }
+        ]
+      },
+      sideScenes: [
+        {
+          id: "neutral_act4_side_command",
+          entryText: "Review siege drills",
+          text: "Volunteers rehearse breach drills in the rain. Alex needs your verdict.",
+          tags: ["side", "act4"],
+          choices: [
+            {
+              id: "act4_tighten_drills",
+              text: "Tighten the drills",
+              goTo: "neutral_act4_hub_main",
+              effects: { stats: { stress: 2 }, relationships: { Volunteers: 4 } },
+              tags: ["leader", "combat"]
+            },
+            {
+              id: "act4_relax_drills",
+              text: "Give them rest",
+              goTo: "neutral_act4_hub_main",
+              effects: { stats: { stress: -3 }, relationships: { Volunteers: 2, Raiders: 2 } },
+              tags: ["moral", "survival"]
+            }
+          ]
+        },
+        {
+          id: "neutral_act4_side_spy",
+          entryText: "Interrogate the captured spy",
+          text: "A captured raider messenger refuses to talk until you involve Alex.",
+          tags: ["side", "act4"],
+          choices: [
+            {
+              id: "act4_show_mercy",
+              text: "Offer mercy for intel",
+              goTo: "neutral_act4_hub_main",
+              effects: { stats: { morality: 2 }, relationships: { Raiders: 2, Volunteers: -2 }, inventoryAdd: ["spy_report"] },
+              tags: ["social", "moral"]
+            },
+            {
+              id: "act4_break_spy",
+              text: "Break them in front of Alex",
+              goTo: "neutral_act4_hub_main",
+              effects: { stats: { morality: -4, stress: -1 }, relationships: { Raiders: -3, Alex: -2 } },
+              tags: ["combat", "stealth"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      act: 5,
+      id: "neutral_act5_hub_main",
+      text: "The siren fades to a heartbeat thrum. Alex stands beside you while convoys idle, raiders sharpen blades, and exhausted families beg for verdicts.",
+      timeDelta: 1,
+      tags: ["hub", "act5"],
+      bridgeEntryText: "Take a breath before the epilogue",
+      bridge: {
+        id: "neutral_act5_bridge_reflection",
+        text: "In a quiet broadcast booth, you and Alex replay every promise you made.",
+        tags: ["bridge", "act5"],
+        choices: [
+          {
+            id: "bridge5_reflect",
+            text: "Reflect on the cost",
+            goTo: "neutral_act5_hub_main",
+            effects: { stats: { stress: -3 }, relationships: { Alex: 4 } },
+            tags: ["moral", "leader"]
+          },
+          {
+            id: "bridge5_press",
+            text: "Press forward without pause",
+            goTo: "neutral_act5_hub_main",
+            effects: { stats: { stress: 3 }, relationships: { Alex: -2 } },
+            tags: ["survival", "stealth"]
+          }
+        ]
+      },
+      sideScenes: [
+        {
+          id: "neutral_act5_side_breathe",
+          entryText: "Share a rare quiet moment with Alex",
+          text: "In a darkened radio booth, Alex asks what kind of ending you deserve.",
+          tags: ["side", "act5"],
+          choices: [
+            {
+              id: "act5_confide",
+              text: "Confide the truth",
+              goTo: "neutral_act5_hub_main",
+              effects: { stats: { stress: -4 }, relationships: { Alex: 5 } },
+              tags: ["moral", "social"]
+            },
+            {
+              id: "act5_deflect",
+              text: "Deflect with gallows humor",
+              goTo: "neutral_act5_hub_main",
+              effects: { stats: { stress: -1 }, relationships: { Alex: -2, Raiders: 2 } },
+              tags: ["social", "stealth"]
+            }
+          ]
+        }
+      ]
+    }
+  ];
+  function buildStoryWorld() {
+    const scenes = {};
+    Object.assign(scenes, createActZeroScenes());
+    const { scenes: routeScenes, endings, entryMap } = generateRouteScenes();
+    Object.assign(scenes, routeScenes);
+    Object.assign(scenes, endings);
+    Object.assign(scenes, createHubAndSideScenes(entryMap));
+    return scenes;
+  }
+
+  function createActZeroScenes() {
+    return {
+      neutral_act0_intro_apartment: {
+        id: "neutral_act0_intro_apartment",
+        text: "Sirens fade into rain hammering the apartment windows. Alex pounds on your door and whispers that the neighbor turned.",
+        tags: ["intro", "act0"],
+        choices: [
+          {
+            id: "act0_peek",
+            text: "Slide the dresser enough to check on Alex",
+            goTo: "neutral_act0_contact_alex",
+            effects: { stats: { stress: -1 }, relationships: { Alex: 2 } },
+            tags: ["survival", "leader"]
+          },
+          {
+            id: "act0_brace",
+            text: "Grip your knife and brace the door",
+            goTo: "neutral_act0_contact_alex",
+            effects: { stats: { stamina: -1, stress: 1 } },
+            tags: ["combat", "survival"]
+          },
+          {
+            id: "act0_call",
+            text: "Call out through the door to calm Alex",
+            goTo: "neutral_act0_contact_alex",
+            effects: { relationships: { Alex: 3 }, stats: { stress: -2 } },
+            tags: ["social", "leader"]
+          }
+        ]
+      },
+      neutral_act0_contact_alex: {
+        id: "neutral_act0_contact_alex",
+        text: "Alex presses their forehead to the chain and begs you to open up. You can set the tone of who {{name}} will be tonight.",
+        tags: ["intro", "act0"],
+        choices: [
+          {
+            id: "act0_open",
+            text: "Open the door and let Alex in",
+            goTo: "neutral_act0_background_select",
+            assignName: true,
+            effects: { relationships: { Alex: 3 }, stats: { stress: -1 } },
+            tags: ["social", "leader"]
+          },
+          {
+            id: "act0_chain",
+            text: "Keep the chain and talk",
+            goTo: "neutral_act0_background_select",
+            effects: { relationships: { Alex: 1 }, stats: { stress: -1 } },
+            tags: ["social", "survival"]
+          },
+          {
+            id: "act0_direct",
+            text: "Order Alex to gather the floor while you gear up",
+            goTo: "neutral_act0_background_select",
+            effects: { relationships: { Alex: 2 }, persona: { leader: 1 } },
+            tags: ["leader", "combat"]
+          }
+        ]
+      },
+      neutral_act0_background_select: {
+        id: "neutral_act0_background_select",
+        text: "Alex studies {{name}} and asks what history you bring to this building.",
+        tags: ["intro", "act0"],
+        choices: [
+          {
+            id: "background_medic",
+            text: "Confess you're a field medic",
+            goTo: "neutral_act0_pact",
+            setBackground: "medic",
+            effects: { persona: { protector: 1 }, relationships: { Alex: 1 }, flagsSet: ["background_medic"] },
+            tags: ["moral", "leader"]
+          },
+          {
+            id: "background_fighter",
+            text: "Admit you were a union brawler",
+            goTo: "neutral_act0_pact",
+            setBackground: "fighter",
+            effects: { persona: { warlord: 1 }, flagsSet: ["background_fighter"] },
+            tags: ["combat", "leader"]
+          },
+          {
+            id: "background_hacker",
+            text: "Explain your network skills",
+            goTo: "neutral_act0_pact",
+            setBackground: "hacker",
+            effects: { persona: { fixer: 1 }, flagsSet: ["background_hacker"] },
+            tags: ["social", "stealth"]
+          },
+          {
+            id: "background_thief",
+            text: "Smirk about your thief past",
+            goTo: "neutral_act0_pact",
+            setBackground: "thief",
+            effects: { persona: { sociopath: 1 }, flagsSet: ["background_thief"] },
+            tags: ["stealth", "survival"]
+          }
+        ]
+      },
+      neutral_act0_pact: {
+        id: "neutral_act0_pact",
+        text: "Sirens fade beneath rain slamming broken windows. Alex paces between sobbing neighbors while smoke coils in the stairwell. {{name}}—the {{background}} of this block—must decide whether to steady Alex, weaponize their fear, or drag everyone into your plan.",
+        tags: ["intro", "act0"],
+        choices: [
+          {
+            id: "act0_reassure",
+            text: "Promise Alex you'll protect the floor",
+            goTo: "neutral_act1_hub_main",
+            effects: { persona: { protector: 1 }, relationships: { Alex: 4 }, stats: { morality: 2 } },
+            tags: ["moral", "leader"]
+          },
+          {
+            id: "act0_pragmatic",
+            text: "Tell Alex survival means hard bargains",
+            goTo: "neutral_act1_hub_main",
+            effects: { persona: { fixer: 1 }, relationships: { Alex: 1 }, stats: { stress: 1 } },
+            tags: ["social", "survival"]
+          },
+          {
+            id: "act0_ruthless",
+            text: "Warn Alex that fear will keep people obedient",
+            goTo: "neutral_act1_hub_main",
+            effects: { persona: { warlord: 1, sociopath: 1 }, relationships: { Alex: -1 }, stats: { morality: -2 } },
+            tags: ["combat", "stealth"]
+          }
+        ]
+      }
+    };
+  }
+
+  function createHubAndSideScenes(entryMap) {
+    const scenes = {};
+    for (const blueprint of HUB_BLUEPRINTS) {
+      const hub = {
+        id: blueprint.id,
+        text: blueprint.text,
+        timeDelta: blueprint.timeDelta,
+        tags: blueprint.tags.slice(),
+        choices: []
+      };
+      const actEntries = entryMap[blueprint.act] || {};
+      for (const [routeKey, rootId] of Object.entries(actEntries)) {
+        const routeDef = ROUTE_BLUEPRINTS[routeKey];
+        const theme = routeDef ? routeDef.acts.find((t) => t.act === blueprint.act) : null;
+        if (!routeDef || !theme) continue;
+        hub.choices.push(buildEntryChoice(routeKey, routeDef, theme, rootId));
+      }
+      for (const side of blueprint.sideScenes) {
+        const entryChoice = {
+          id: `${side.id}_entry`,
+          text: side.entryText,
+          goTo: side.id,
+          tags: side.tags.slice(),
+          effects: { stats: { stress: -1 } }
+        };
+        hub.choices.push(entryChoice);
+        const sideScene = {
+          id: side.id,
+          text: side.text,
+          tags: side.tags.slice(),
+          choices: side.choices.map((choice) => {
+            const copy = deepClone(choice);
+            if (!copy.goTo) copy.goTo = blueprint.id;
+            if (!copy.tags) copy.tags = side.tags.slice();
+            return copy;
+          })
+        };
+        scenes[side.id] = sideScene;
+      }
+      const bridgeEntry = {
+        id: `${blueprint.bridge.id}_entry`,
+        text: blueprint.bridgeEntryText,
+        goTo: blueprint.bridge.id,
+        tags: ["leader", "social"],
+        effects: { stats: { stress: 2 } }
+      };
+      hub.choices.push(bridgeEntry);
+      scenes[blueprint.id] = hub;
+      scenes[blueprint.bridge.id] = {
+        id: blueprint.bridge.id,
+        text: blueprint.bridge.text,
+        tags: blueprint.bridge.tags.slice(),
+        choices: blueprint.bridge.choices.map((choice) => deepClone(choice))
+      };
+    }
+    return scenes;
+  }
+
+  function buildEntryChoice(routeKey, routeDef, theme, goTo) {
+    const choice = {
+      id: `${routeKey}_act${theme.act}_entry`,
+      text: theme.entryPrompt,
+      goTo,
+      tags: routeDef.tags.slice(),
+      effects: {
+        flagsSet: [routeDef.routeFlag],
+        persona: { [routeDef.personaKey]: 1 },
+        relationships: { Alex: 3, [routeDef.relationship]: routeDef.relationshipDelta }
+      },
+      popupText: `${routeDef.label} route engaged.`
+    };
+    if (theme.act === 5) {
+      choice.req = { flags: ROUTE_PROOFS[routeKey] };
+      choice.effects.stats = { stress: 2 };
+    }
+    return choice;
+  }
+
+  function generateRouteScenes() {
+    const scenes = {};
+    const endings = {};
+    const entryMap = {};
+    const maxDepth = 3;
+    for (const [routeKey, routeDef] of Object.entries(ROUTE_BLUEPRINTS)) {
+      for (const theme of routeDef.acts) {
+        const exitTargets = [];
+        if (Array.isArray(theme.endings) && theme.endings.length) {
+          const generatedEndings = [];
+          for (const endingDef of theme.endings) {
+            const endingId = `${routeKey}_act${theme.act}_ending_${endingDef.slug}`;
+            endings[endingId] = {
+              id: endingId,
+              text: endingDef.text,
+              isEnding: true,
+              endingType: endingDef.endingType,
+              tags: ["ending", routeKey, `act${theme.act}`]
+            };
+            generatedEndings.push(endingId);
+          }
+          exitTargets.push(...generatedEndings);
+        } else {
+          exitTargets.push(theme.exitForward, theme.returnHub);
+        }
+        const rootId = createSetpieceTree(routeKey, routeDef, theme, scenes, exitTargets, maxDepth);
+        entryMap[theme.act] = entryMap[theme.act] || {};
+        entryMap[theme.act][routeKey] = rootId;
+      }
+    }
+    return { scenes, endings, entryMap };
+  }
+
+  function createSetpieceTree(routeKey, routeDef, theme, scenes, exitTargets, maxDepth, depth = 0, path = []) {
+    const suffix = path.length ? path.join("_") : "root";
+    const id = `${routeKey}_act${theme.act}_setpiece_${theme.slug}_d${depth}_${suffix}`;
+    if (scenes[id]) return id;
+    const scene = {
+      id,
+      text: composeSetpieceText(routeKey, routeDef, theme, depth, path),
+      tags: ["setpiece", routeKey, `act${theme.act}`],
+      choices: []
+    };
+    scenes[id] = scene;
+    for (let branch = 0; branch < 3; branch += 1) {
+      const choice = buildSetpieceChoice(routeKey, routeDef, theme, depth, path, branch, exitTargets, maxDepth, scenes);
+      scene.choices.push(choice);
+    }
+    return id;
+  }
+
+  function buildSetpieceChoice(routeKey, routeDef, theme, depth, path, branch, exitTargets, maxDepth, scenes) {
+    const nextPath = path.concat(branch);
+    const choice = {
+      id: `choice_${depth}_${path.length ? path.join("_") : "root"}_${branch}`,
+      text: createChoiceLabel(routeDef, theme, depth, branch, path),
+      tags: routeDef.tags.slice()
+    };
+    const effects = computeChoiceEffects(routeDef, theme, depth, branch);
+    let goTo;
+    if (depth >= maxDepth - 1) {
+      const index = (branch + sumPath(path)) % exitTargets.length;
+      goTo = exitTargets[index];
+      if (theme.proofFlag) {
+        effects.flagsSet = effects.flagsSet || [];
+        if (!effects.flagsSet.includes(theme.proofFlag)) effects.flagsSet.push(theme.proofFlag);
+      }
+      if (theme.finalFlag) {
+        effects.flagsSet = effects.flagsSet || [];
+        if (!effects.flagsSet.includes(theme.finalFlag)) effects.flagsSet.push(theme.finalFlag);
+      }
+      if (theme.loot && branch === 0) {
+        effects.inventoryAdd = effects.inventoryAdd || [];
+        if (!effects.inventoryAdd.includes(theme.loot)) effects.inventoryAdd.push(theme.loot);
+      }
+    } else {
+      goTo = createSetpieceTree(routeKey, routeDef, theme, scenes, exitTargets, maxDepth, depth + 1, nextPath);
+    }
+    choice.goTo = goTo;
+    choice.effects = effects;
+    choice.popupText = `${routeDef.label} consequence recorded.`;
+    return choice;
+  }
+
+  function composeSetpieceText(routeKey, routeDef, theme, depth, path) {
+    const sum = sumPath(path);
+    const narrative = routeDef.narrative;
+    const action = narrative.actions[(depth + sum) % narrative.actions.length];
+    const environment = narrative.environments[(depth * 2 + sum) % narrative.environments.length];
+    const focus = theme.focus[(depth + sum) % theme.focus.length];
+    const pressure = narrative.pressures[(depth + path.length) % narrative.pressures.length];
+    const reflection = narrative.reflections[(depth + sum) % narrative.reflections.length];
+    const intro = depth === 0 ? theme.summary : theme.stakes[(depth + sum) % theme.stakes.length];
+    const closing = "Alex studies {{name}} to see which promise survives.";
+    return `${intro} You ${action} while ${environment}. The ${focus} becomes the hinge as ${pressure}. ${reflection} ${closing}`;
+  }
+
+  function createChoiceLabel(routeDef, theme, depth, branch, path) {
+    const verb = routeDef.verbs[(depth + branch) % routeDef.verbs.length];
+    const focus = theme.focus[(branch + sumPath(path)) % theme.focus.length];
+    if (branch === 0) return `${verb} the ${focus} alongside Alex (+Morality)`;
+    if (branch === 1) return `${verb} the ${focus} with calculated poise (+Stress)`;
+    return `${verb} the ${focus} without mercy (−Morality)`;
+  }
+
+  function computeChoiceEffects(routeDef, theme, depth, branch) {
+    const effects = { time: 1 };
+    const stats = {};
+    const stress = (routeDef.stressTilt[branch] || 0) + depth;
+    if (stress) stats.stress = stress;
+    const morality = (routeDef.moralityTilt[branch] || 0) - Math.floor(depth / 2);
+    if (morality) stats.morality = morality;
+    if (Object.keys(stats).length) effects.stats = stats;
+
+    if (routeDef.personaKey) {
+      const personaValue = Math.max(1, (theme.personaShift || 1) - depth);
+      effects.persona = { [routeDef.personaKey]: personaValue };
+    }
+
+    const relationships = {};
+    const relDelta = branch === 2 ? -routeDef.relationshipDelta : routeDef.relationshipDelta;
+    if (relDelta) relationships[routeDef.relationship] = relDelta;
+    if (branch === 0) {
+      relationships.Alex = 3;
+    } else if (branch === 2) {
+      relationships.Alex = -3;
+    }
+    if (Object.keys(relationships).length) effects.relationships = relationships;
+
+    effects.pushEvent = branch === 2
+      ? "Fear ripples through the corridor."
+      : branch === 0
+      ? "Hope swells among the survivors."
+      : "Tension hums as you balance the line.";
+
+    return effects;
+  }
+
+  function sumPath(path = []) {
+    return path.reduce((sum, value) => sum + value, 0);
+  }
+
+  const STORY_WORLD = buildStoryWorld();
+  Object.assign(window.STORY_DATABASE, STORY_WORLD);
 
   function wordCount(text = "") {
     if (Array.isArray(text)) {
