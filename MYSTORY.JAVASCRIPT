@@ -861,6 +861,106 @@
       ]
     },
 
+    neutral_act1_side_alex_comfort: {
+      id: "neutral_act1_side_alex_comfort",
+      text: "Alex's knuckles are split and their breathing shudders in the gloom. The families watch from cracked doorways to see whether kindness still survives this floor.",
+      tags: ["side", "alex", "act1"],
+      choices: [
+        {
+          id: "alex_bind_wounds",
+          text: "Clean Alex's wounds and wrap their hands (spend field kit)",
+          goTo: "neutral_act1_hub_apartment",
+          req: { items: ["field_kit"] },
+          blockedReason: "Need a field kit.",
+          cost: { items: ["field_kit"], time: 1 },
+          effects: {
+            stats: { morality: 2, stress: -2 },
+            persona: { protector: 1 },
+            relationships: { Alex: 7 },
+            flagsSet: ["alex_act1_resolved", "alex_trust_builder"],
+            pushEvent: "You patch Alex up; their grip steadies on your shoulder."
+          },
+          tags: ["moral", "leader"]
+        },
+        {
+          id: "alex_plan_together",
+          text: "Map escape routes with Alex until the hallway quiets",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            time: 1,
+            stats: { stress: -1 },
+            persona: { fixer: 1 },
+            relationships: { Alex: 4 },
+            flagsSet: ["alex_act1_resolved", "alex_trust_builder"],
+            pushEvent: "You and Alex chart stairs, roofs, and who needs carrying."
+          },
+          tags: ["social", "leader"]
+        },
+        {
+          id: "alex_guard_rest",
+          text: "Stand guard so Alex can finally sleep for an hour",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            time: 2,
+            stats: { stress: -3, morality: 1 },
+            relationships: { Alex: 3 },
+            flagsSet: ["alex_act1_resolved", "alex_guardian"],
+            pushEvent: "You watch the hall while Alex dreams of better days."
+          },
+          tags: ["survival", "moral"]
+        }
+      ]
+    },
+
+    neutral_act1_side_alex_dominate: {
+      id: "neutral_act1_side_alex_dominate",
+      text: "You pin Alex between the flickering EXIT sign and the rain-smeared window. Everyone else sees whether compassion or control will rule this block.",
+      tags: ["side", "alex", "act1"],
+      choices: [
+        {
+          id: "alex_take_supply",
+          text: "Rifle Alex's pack and pocket their painkillers",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            time: 1,
+            stats: { morality: -2, stress: -1 },
+            persona: { sociopath: 1 },
+            relationships: { Alex: -6 },
+            inventoryAdd: ["painkillers"],
+            flagsSet: ["alex_act1_resolved", "alex_exploited"],
+            pushEvent: "Alex watches you walk off with their lifeline."
+          },
+          tags: ["stealth", "moral"]
+        },
+        {
+          id: "alex_issue_threat",
+          text: "Threaten to dump Alex outside unless they obey",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            stats: { morality: -3, stress: 1 },
+            persona: { warlord: 1 },
+            relationships: { Alex: -5 },
+            flagsSet: ["alex_act1_resolved", "alex_controlled"],
+            pushEvent: "Alex nods through tears, promising to do anything you say."
+          },
+          tags: ["combat", "moral"]
+        },
+        {
+          id: "alex_break_trust",
+          text: "Strike Alex to prove your word is law",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            stats: { morality: -4, stress: 2 },
+            persona: { killer: 1 },
+            relationships: { Alex: -8 },
+            flagsSet: ["alex_act1_resolved", "alex_abused"],
+            pushEvent: "Gasps ripple as Alex crumples, clutching their cheek."
+          },
+          tags: ["combat", "moral"]
+        }
+      ]
+    },
+
     neutral_act0_contact_alex: {
       id: "neutral_act0_contact_alex",
       text: "Alex shakes, soaked in alley rain. Their brother turned downstairs, the infection spreading door to door. They beg you to choose: hide together, share supplies, or keep distance.",
@@ -873,6 +973,7 @@
           effects: {
             stats: { morality: 2, stress: -2 },
             relationships: { Alex: 6 },
+            flagsSet: ["alex_alive"],
             pushEvent: "You haul Alex over the threshold and slam the deadbolt."
           },
           tags: ["leader"]
@@ -884,6 +985,7 @@
           effects: {
             stats: { morality: 1 },
             inventoryRemove: ["old_radio"],
+            flagsSet: ["alex_alive"],
             pushEvent: "You slide supplies through the gap while the hallway wails."
           },
           tags: ["moral"]
@@ -895,6 +997,7 @@
           effects: {
             persona: { fixer: 1 },
             stats: { stress: -1 },
+            flagsSet: ["alex_alive"],
             pushEvent: "You map the outbreak street by street as Alex talks."
           },
           tags: ["stealth"]
@@ -972,66 +1075,96 @@
 
     neutral_act1_hub_apartment: {
       id: "neutral_act1_hub_apartment",
-      text: "Sirens fade beneath rain slamming broken windows. Smoke coils in the stairwell; frightened voices crowd the hall. {{name}}—the {{background}} of this block—has to decide how the first stand plays out.",
+      text: "Sirens fade beneath rain slamming broken windows. Alex paces between sobbing neighbors while smoke coils in the stairwell. {{name}}—the {{background}} of this block—must decide whether to steady Alex, weaponize their fear, or drag everyone into your plan.",
       tags: ["hub", "act1"],
       choices: [
         {
+          id: "alex_check_in",
+          text: "Sit with Alex and slow their breathing",
+          goTo: "neutral_act1_side_alex_comfort",
+          req: { flags: ["alex_alive"], flagsNone: ["alex_act1_resolved"] },
+          blockedReason: "Alex must still be with you.",
+          effects: {
+            stats: { stress: -1 },
+            time: 1,
+            pushEvent: "You take Alex's shaking hands and promise they're not alone."
+          },
+          tags: ["moral", "alex"]
+        },
+        {
+          id: "alex_dominate",
+          text: "Corner Alex and turn their panic into leverage",
+          goTo: "neutral_act1_side_alex_dominate",
+          req: { flags: ["alex_alive"], flagsNone: ["alex_act1_resolved"] },
+          blockedReason: "Alex must still be with you.",
+          effects: {
+            stats: { morality: -1 },
+            time: 1,
+            pushEvent: "You crowd Alex against the window while the hall watches."
+          },
+          tags: ["moral", "alex"]
+        },
+        {
           id: "pick_protector",
-          text: "Shield the families on your floor (Protector)",
+          text: "Stand with Alex and organize a floor watch (Protector)",
           goTo: "good_act1_setpiece_stairwell_rescue",
           effects: {
             flagsSet: ["route_protector"],
             persona: { protector: 2 },
             stats: { morality: 2, stress: 2 },
-            pushEvent: "You swore to keep them safe."
+            relationships: { Alex: 2 },
+            pushEvent: "You and Alex start assigning posts and promises."
           },
           tags: ["leader"]
         },
         {
           id: "pick_warlord",
-          text: "Seize the blackout and demand obedience (Warlord)",
+          text: "Force Alex to drag the frightened into formation (Warlord)",
           goTo: "ant_act1_setpiece_blackout_trap",
           effects: {
             flagsSet: ["route_warlord"],
             persona: { warlord: 2 },
             stats: { morality: -2, stress: -1 },
-            pushEvent: "Fear becomes your loudspeaker."
+            relationships: { Alex: -3 },
+            pushEvent: "You bark orders through Alex's clenched jaw."
           },
           tags: ["combat"]
         },
         {
           id: "pick_fixer",
-          text: "Cut deals with the stranded convoy (Fixer)",
+          text: "Send Alex to broker with the stranded convoy (Fixer)",
           goTo: "man_act1_setpiece_convoy_deal",
           effects: {
             flagsSet: ["route_fixer"],
             persona: { fixer: 2 },
-            relationships: { Convoy: 5 },
-            pushEvent: "A handshake replaces a gun."
+            relationships: { Convoy: 5, Alex: 1 },
+            pushEvent: "You hand Alex your radio and a script to follow."
           },
           tags: ["social"]
         },
         {
           id: "pick_killer",
-          text: "Hunt the corridor's threats in the dark (Killer)",
+          text: "Use Alex as bait to clear the corridor (Killer)",
           goTo: "killer_act1_setpiece_corridor_hunt",
           effects: {
             flagsSet: ["route_killer"],
             persona: { killer: 2 },
             stats: { morality: -3, stress: -2 },
-            pushEvent: "You melt into the shadows with a blade."
+            relationships: { Alex: -5 },
+            pushEvent: "You point Alex toward the dark and ready your knife."
           },
           tags: ["stealth"]
         },
         {
           id: "pick_sociopath",
-          text: "Exploit every panic to make them depend on you (Sociopath)",
+          text: "Promise Alex safety while you tighten invisible strings (Sociopath)",
           goTo: "socio_act1_setpiece_gaslight",
           effects: {
             flagsSet: ["route_sociopath"],
             persona: { sociopath: 2 },
             stats: { morality: -1, stress: 1 },
-            pushEvent: "You spin fear into leverage."
+            relationships: { Alex: -1 },
+            pushEvent: "You whisper comfort in Alex's ear and pocket their spare keys."
           },
           tags: ["moral"]
         }
