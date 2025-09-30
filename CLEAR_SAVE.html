@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Clear Save</title></head>
+<body style="background:#000;color:#0f0;font-family:monospace;padding:40px;text-align:center;">
+<h1>🔥 CLEAR OLD SAVE DATA 🔥</h1>
+<p>Clearing localStorage...</p>
+<script>
+localStorage.removeItem('consequence_save_v1');
+document.body.innerHTML += '<h2 style="color:#0f0;">✅ OLD SAVE CLEARED!</h2>';
+document.body.innerHTML += '<p>Now open <a href="index.html" style="color:#0ff;">index.html</a> for a fresh start!</p>';
+console.log('✅ Cleared consequence_save_v1 from localStorage');
+</script>
+</body></html>
