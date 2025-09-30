@@ -893,7 +893,8 @@
     }
   };
 
-  window.STORY_DATABASE = STORY_DATABASE;
+  window.STORY_DATABASE = window.STORY_DATABASE || {};
+  Object.assign(window.STORY_DATABASE, STORY_DATABASE);
 
   function hasItem(state, item) {
     return state.inventory.includes(item);
@@ -1077,20 +1078,21 @@
         warnings.push(`${id}: id does not match expected pattern`);
       }
       if (Array.isArray(scene.choices)) {
-        let goToCount = 0;
+        let exitCount = 0;
         for (const choice of scene.choices) {
           if (!choice) continue;
           const hasEffect = choice.effects && Object.keys(choice.effects).length > 0;
-          if (!choice.goTo && !hasEffect) {
+          const destination = choice.goTo ?? choice.next;
+          if (!destination && !hasEffect) {
             errors.push(`${id}: choice "${choice.text}" lacks goTo and effects`);
           }
-          if (choice.goTo === id) {
+          if (destination === id) {
             warnings.push(`${id}: choice "${choice.text}" self-loops`);
           }
-          if (choice.goTo) {
-            goToCount += 1;
-            if (!story[choice.goTo]) {
-              errors.push(`${id}: choice "${choice.text}" targets missing scene ${choice.goTo}`);
+          if (destination) {
+            exitCount += 1;
+            if (!story[destination]) {
+              errors.push(`${id}: choice "${choice.text}" targets missing scene ${destination}`);
             }
           }
           if (choice.effects?.flagsSet) {
@@ -1113,7 +1115,7 @@
             }
           }
         }
-        if (id.includes("_hub_") && goToCount < 2 && !story[id].isEnding) {
+        if (id.includes("_hub_") && exitCount < 2 && !story[id].isEnding) {
           warnings.push(`${id}: hub scenes should offer at least two exits`);
         }
       }
@@ -1126,8 +1128,9 @@
       const scene = story[current];
       if (!scene || !scene.choices) continue;
       for (const choice of scene.choices) {
-        if (choice?.goTo && story[choice.goTo]) {
-          queue.push(choice.goTo);
+        const destination = choice?.goTo ?? choice?.next;
+        if (destination && story[destination]) {
+          queue.push(destination);
         }
       }
     }
@@ -1168,17 +1171,22 @@
           if (step < currentShortest) shortestToEnding.set(scene.id, step);
           break;
         }
-        const enabled = (scene.choices || []).filter((choice) => {
-          const { ok } = evaluateRequirements(state, choice);
-          return ok;
-        });
+        const enabled = (scene.choices || [])
+          .filter((choice) => choice && (choice.goTo || choice.next || choice.effects))
+          .filter((choice) => {
+            const { ok } = evaluateRequirements(state, choice);
+            return ok;
+          });
         if (enabled.length === 0) break;
         const choice = enabled[Math.floor(rng() * enabled.length)];
         applyCost(state, choice.cost);
         applyEffects(state, choice.effects);
-        if (!choice.goTo) break;
         state.decisionTrace.push(`${scene.id}::${choice.id || choice.text}`);
-        state.sceneId = choice.goTo;
+        const destination = (choice.goTo ?? choice.next) ?? state.sceneId;
+        if (destination === state.sceneId && !choice.effects) {
+          break;
+        }
+        state.sceneId = destination;
       }
     }
 
@@ -1347,7 +1355,9 @@
         <div class="status-pill timer-neutral">${timeFmt.absolute}</div>
       `;
       if (this.dom.dayHour) this.dom.dayHour.textContent = timeFmt.label;
-      if (this.dom.worldTime) this.dom.worldTime.textContent = timeFmt.absolute;
+      if (this.dom.worldTime) {
+        this.dom.worldTime.textContent = `T+${this.state.time}h`;
+      }
     }
 
     displayStory(text) {
@@ -1367,8 +1377,11 @@
         return;
       }
 
+      const renderableChoices = (scene.choices || []).filter(
+        (choice) => choice && (choice.goTo || choice.next || choice.effects)
+      );
       const enabledButtons = [];
-      for (const choice of scene.choices || []) {
+      for (const choice of renderableChoices) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "choice";
@@ -1409,11 +1422,8 @@
         this.showPopup();
       }
       this.pushEvent(choice.effects?.log || `Chose: ${choice.text}`);
-      if (choice.goTo) {
-        this.renderScene(choice.goTo);
-      } else {
-        this.renderScene(scene.id);
-      }
+      const destination = (choice.goTo ?? choice.next) ?? scene.id;
+      this.renderScene(destination);
     }
 
     pushEvent(text) {
@@ -1482,3 +1492,9 @@
   window.THE_LONG_SIREN_WORLD_BIBLE = WORLD_BIBLE;
   window.runConsequenceCoverage = () => runRandomWalkCoverage(STORY_DATABASE, { runs: 500, maxSteps: 200 });
 })();
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (typeof window.ConsequenceGame === "function") {
+    window.game = new window.ConsequenceGame();
+  }
+});
