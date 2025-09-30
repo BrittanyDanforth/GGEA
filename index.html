@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>CONSEQUENCE — AAA Story Game</title>
+  <link rel="stylesheet" href="MYSTORY.CSS">
+</head>
+<body>
+  <a class="skip-link" href="#scene-text">Skip to story</a>
+  
+  <header class="game-header" role="banner">
+    <h1>CONSEQUENCE</h1>
+    <p class="game-subtitle">Every choice echoes. Every decision matters. 4,869 unique scenes. 64 endings. Your story.</p>
+  </header>
+
+  <main id="game-container" role="application">
+    
+    <div id="stats" class="status-bar" role="status" aria-live="polite"></div>
+
+    <section class="game-interface">
+      <div class="game-content">
+        
+        <section class="story-section" aria-label="Story and choices">
+          <div id="scene-text" class="story-display" role="region" aria-live="polite" aria-atomic="true">
+            <p>Loading game...</p>
+          </div>
+          <div id="choices" class="choices-display" role="group" aria-label="Available choices"></div>
+        </section>
+
+        <aside class="info-panels" aria-label="Character info and game state">
+          
+          <section id="character-panel" class="info-panel" aria-labelledby="char-h">
+            <div class="panel-header">
+              <h3 id="char-h">Character</h3>
+              <div class="panel-time" id="dayhour-indicator">Day 0 · 00:00</div>
+            </div>
+            <div class="panel-content character-info">
+              <div class="character-name" id="char-name">—</div>
+              <div class="character-background" id="char-background">—</div>
+              <div class="character-inventory">
+                <strong>Inventory</strong>
+                <div id="inventory-list" class="inventory-list" aria-live="polite"></div>
+              </div>
+              <div class="character-trauma">
+                <strong>Stress Level</strong>
+                <div class="trauma-bar-container" aria-hidden="true">
+                  <div class="trauma-bar" id="trauma-bar" style="width:0%"></div>
+                </div>
+                <div class="trauma-warning moderate" id="trauma-warning">Stable</div>
+              </div>
+              <div class="persona-breakdown">
+                <strong>Persona</strong>
+                <div class="persona-grid" id="persona-grid"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="journal-panel" class="info-panel" aria-labelledby="journal-h">
+            <div class="panel-header">
+              <h3 id="journal-h">Journal</h3>
+              <div class="consequence-count" id="objective-count">0 objectives</div>
+            </div>
+            <div class="panel-content" id="journal-list"></div>
+          </section>
+
+          <section id="events-panel" class="info-panel" aria-labelledby="events-h">
+            <div class="panel-header">
+              <h3 id="events-h">Event Log</h3>
+              <div class="panel-time" id="world-time">T+0h</div>
+            </div>
+            <div class="panel-content event-log" id="event-log" aria-live="polite"></div>
+          </section>
+
+          <section id="relationships-panel" class="info-panel" aria-labelledby="relations-h">
+            <div class="panel-header">
+              <h3 id="relations-h">Relationships</h3>
+              <div class="relationship-count" id="relationship-count">0 contacts</div>
+            </div>
+            <div class="panel-content relationships-list" id="relationships-list"></div>
+          </section>
+
+          <section id="backend-panel" class="info-panel" aria-labelledby="backend-h">
+            <div class="panel-header">
+              <h3 id="backend-h">Debug</h3>
+              <button class="mini-button" id="toggle-backend" type="button" aria-expanded="true">Toggle</button>
+            </div>
+            <div class="panel-content backend-content" id="backend-content">
+              <div class="backend-section">
+                <h4>Active Flags</h4>
+                <div class="flag-display" id="flag-display"></div>
+              </div>
+              <div class="backend-section">
+                <h4>Decision History</h4>
+                <div class="decision-tree" id="decision-tree"></div>
+              </div>
+              <div class="backend-section">
+                <h4>State Hash</h4>
+                <div class="state-hash" id="state-hash">—</div>
+              </div>
+            </div>
+          </section>
+          
+        </aside>
+      </div>
+
+      <div class="game-controls" aria-label="Game controls">
+        <button id="new-game" class="primary-button" type="button">New Game</button>
+        <button id="continue-game" class="secondary-button" type="button">Continue</button>
+        <button id="save-game" class="control-button" type="button">💾 Save</button>
+        <button id="load-game" class="control-button" type="button">📂 Load</button>
+        <button id="export-game" class="control-button" type="button">📤 Export</button>
+        <input id="file-loader" type="file" accept=".json" style="display:none">
+      </div>
+    </section>
+  </main>
+
+  <div id="consequence-popup" class="consequence-popup hidden" role="dialog" aria-modal="true">
+    <div class="consequence-content">
+      <p id="consequence-text">This will be remembered.</p>
+      <button id="consequence-ok" class="primary-button" type="button">OK</button>
+    </div>
+  </div>
+
+  <script src="MYSTORY.JAVASCRIPT"></script>
+  
+</body>
+</html>
