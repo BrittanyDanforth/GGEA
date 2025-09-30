@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Test</title></head><body>
+<div id="stats"></div>
+<div id="scene-text"></div>
+<div id="choices"></div>
+<div id="inventory-list"></div>
+<div id="char-name"></div>
+<div id="char-background"></div>
+<div id="trauma-bar"></div>
+<div id="trauma-warning"></div>
+<div id="persona-grid"></div>
+<div id="journal-list"></div>
+<div id="event-log"></div>
+<div id="relationships-list"></div>
+<div id="relationship-count"></div>
+<div id="objective-count"></div>
+<div id="decision-tree"></div>
+<div id="flag-display"></div>
+<div id="state-hash"></div>
+<div id="world-time"></div>
+<div id="dayhour-indicator"></div>
+<div id="consequence-popup" class="hidden"></div>
+<div id="consequence-text"></div>
+<button id="consequence-ok"></button>
+<button id="new-game">New</button>
+<button id="save-game">Save</button>
+<input id="file-loader" type="file">
+
+<script src="MYSTORY.JAVASCRIPT"></script>
+<script>
+console.log('Testing game load...');
+setTimeout(() => {
+    console.log('STORY_DATABASE:', typeof window.STORY_DATABASE);
+    console.log('ConsequenceGame:', typeof window.ConsequenceGame);
+    if (window.STORY_DATABASE) {
+        console.log('Scenes:', Object.keys(window.STORY_DATABASE).length);
+        console.log('First scene ID:', Object.keys(window.STORY_DATABASE)[0]);
+        const first = window.STORY_DATABASE[Object.keys(window.STORY_DATABASE)[0]];
+        console.log('First scene valid:', !!first);
+        console.log('Has choices:', first?.choices?.length || 0);
+    }
+    if (window.game) {
+        console.log('Game instance:', !!window.game);
+        console.log('Current scene:', window.game.state.sceneId);
+    }
+}, 1000);
+</script>
+</body></html>
