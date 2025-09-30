@@ -1,0 +1,55 @@
+<!-- CONSEQUENCE GAME - HTML PANEL FOR CODEPEN -->
+
+<div id="game-container">
+  <!-- Header -->
+  <header class="game-header">
+    <h1>CONSEQUENCE</h1>
+    <p class="game-subtitle">Every choice has consequences</p>
+  </header>
+  
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <h2>⏳ Loading Story Database...</h2>
+    <p>Downloading 2159 scenes...</p>
+    <p style="font-size: 0.8em; color: #666; margin-top: 20px;">
+      This may take a moment. The story file is 5.4 MB.
+    </p>
+  </div>
+  
+  <!-- Game Interface (hidden until loaded) -->
+  <div id="game-interface" class="hidden game-interface">
+    
+    <!-- Status Bar -->
+    <div class="status-bar" id="stats">
+      <!-- Stats will be rendered here by JavaScript -->
+    </div>
+    
+    <!-- Main Game Content -->
+    <div class="game-content">
+      <!-- Story Section -->
+      <div class="story-section">
+        <div class="story-display" id="scene-text">
+          <!-- Story text will appear here -->
+        </div>
+        
+        <div class="choices-display" id="choices">
+          <!-- Choices will appear here -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Game Controls -->
+    <div class="game-controls">
+      <button class="control-button" onclick="game.saveGame()">
+        💾 Save Game
+      </button>
+      <button class="control-button" onclick="game.loadGame()">
+        📂 Load Game
+      </button>
+      <button class="control-button" onclick="debugGame()">
+        🔍 Debug Info
+      </button>
+    </div>
+    
+  </div>
+</div>
