@@ -4,7 +4,7 @@ Offline interactive fiction prototype for a grounded outbreak drama. This reposi
 
 ## Running locally
 
-Open `debug_test.html` in any modern browser. The page loads `MYSTORY.JAVASCRIPT` and `MYSTORY.CSS` directly without network calls. Use the control buttons in the UI to start a new game, continue from autosave, or import/export save files.
+Open `debug_test.html` in any modern browser. The page loads `MYSTORY.js` and `MYSTORY.CSS` directly without network calls. Use the control buttons in the UI to start a new game, continue from autosave, or import/export save files.
 
 ## Narrative architecture
 
