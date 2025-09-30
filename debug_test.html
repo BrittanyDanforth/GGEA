@@ -180,17 +180,6 @@
     </div>
   </template>
 
-  <!-- Minimal bootstrapping: keep everything offline -->
-  <script>
-    // Optional: placeholder story so the shell shows something before your engine loads
-    window.STORY_DATABASE = window.STORY_DATABASE || {
-      intro: {
-        text: "Welcome to THE LONG SIREN (offline shell). Add your engine + full story to play.",
-        choices: [ { text: "Begin", goTo: "intro" } ]
-      }
-    };
-  </script>
-  
   <!-- Your single local bundle with engine + story goes here. No CDNs, no fetch. -->
   <script src="MYSTORY.js"></script>
 

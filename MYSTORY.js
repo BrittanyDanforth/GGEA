@@ -841,21 +841,21 @@
           id: "protector_finale",
           text: "Rally the protector route (needs 3 proofs)",
           req: { flags: ROUTE_PROOFS.good },
-          goTo: "good_act5_ending_theLongWatch",
+          goTo: "good_act5_ending_the_long_watch",
           tags: ["leader"]
         },
         {
           id: "warlord_finale",
           text: "Cement warlord rule (needs 3 proofs)",
           req: { flags: ROUTE_PROOFS.ant },
-          goTo: "ant_act5_ending_ironReign",
+          goTo: "ant_act5_ending_iron_reign",
           tags: ["combat", "leader"]
         },
         {
           id: "fixer_finale",
           text: "Pull every string (needs 3 proofs)",
           req: { flags: ROUTE_PROOFS.man },
-          goTo: "man_act5_ending_whisperedDeals",
+          goTo: "man_act5_ending_whispered_deals",
           tags: ["social"]
         },
         {
@@ -868,24 +868,24 @@
       ]
     },
 
-    good_act5_ending_theLongWatch: {
-      id: "good_act5_ending_theLongWatch",
+    good_act5_ending_the_long_watch: {
+      id: "good_act5_ending_the_long_watch",
       text: "You chain rooftop beacons across the district. Civilians guide columns through the night, whispering your name with relief.",
       isEnding: true,
       endingType: "good",
       tags: ["leader"]
     },
 
-    ant_act5_ending_ironReign: {
-      id: "ant_act5_ending_ironReign",
+    ant_act5_ending_iron_reign: {
+      id: "ant_act5_ending_iron_reign",
       text: "Checkpoint fires burn while you ration water to the obedient. The city bows under sirens tuned to your command.",
       isEnding: true,
       endingType: "ruthless",
       tags: ["combat"]
     },
 
-    man_act5_ending_whisperedDeals: {
-      id: "man_act5_ending_whisperedDeals",
+    man_act5_ending_whispered_deals: {
+      id: "man_act5_ending_whispered_deals",
       text: "Convoy engines idle under your balcony as envoys trade sealed promises. No door opens without your quiet nod.",
       isEnding: true,
       endingType: "manipulator",
@@ -1074,8 +1074,8 @@
       if (scene.text && wordCount(scene.text) > 140) {
         warnings.push(`${id}: text exceeds 140 words`);
       }
-      if (scene.id !== "intro" && !scene.isEnding && !idPattern.test(id)) {
-        warnings.push(`${id}: id does not match expected pattern`);
+      if (id !== "intro" && !idPattern.test(id)) {
+        errors.push(`${id}: id does not match expected pattern <route>_actN_<type>_<slug>`);
       }
       if (Array.isArray(scene.choices)) {
         let exitCount = 0;
