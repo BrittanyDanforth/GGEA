@@ -9001,54 +9001,746 @@
 },
 "apology_deeper_accepted": {
  "id": "apology_deeper_accepted",
- "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
+ "text": "Your deeper apology lands. Alex exhales. The tension breaks. 'Okay. I get it. Fear makes us into people we don't recognize.' They pause. 'I'm sorry too. For expecting you to just trust. In this world.' A moment of mutual understanding. The hurt isn't gone but it's... acknowledged. You both move forward. Alex extends a hand. 'Start over? Hi. I'm Alex. I survive apocalypses and fix fuse boxes. Apparently in that order now.' A weak smile. Real though.",
  "choices": [
   {
-   "id": "apology_de_a",
-   "text": "Choose pragmatism",
-   "goTo": "act1_family_hub",
+   "id": "ada_start_over",
+   "text": "Start over. Clean slate.",
+   "goTo": "apology_relationship_rebuilt",
    "effects": {
-    "persona": {
-     "chill": 1
+    "stats": {
+     "stress": -3
     },
-    "pushEvent": "apology_deeper_accepted resolved pragmatically."
-   },
-   "tags": [
-    "chill"
-   ]
-  },
-  {
-   "id": "apology_de_b",
-   "text": "Choose compassion",
-   "goTo": "act1_family_hub",
-   "effects": {
     "persona": {
-     "nice": 1
+     "nice": 2
     },
-    "pushEvent": "apology_deeper_accepted resolved with kindness."
+    "relationships": {
+     "Alex": 8
+    },
+    "flagsSet": [
+     "relationship_rebuilt"
+    ],
+    "pushEvent": "'Clean slate. I like that.' Alex's smile grows. Trust begins to heal."
    },
    "tags": [
     "nice"
    ]
   },
   {
-   "id": "apology_de_c",
-   "text": "Choose efficiency",
-   "goTo": "act1_family_hub",
+   "id": "ada_cautious_forward",
+   "text": "Move forward, but cautiously.",
+   "goTo": "apology_cautious_trust",
    "effects": {
     "persona": {
-     "rude": 1
+     "chill": 1
     },
-    "pushEvent": "apology_deeper_accepted resolved efficiently."
+    "relationships": {
+     "Alex": 6
+    },
+    "flagsSet": [
+     "cautious_trust"
+    ],
+    "pushEvent": "'Fair enough. Trust takes time.' Alex nods. They understand."
    },
    "tags": [
-    "rude"
+    "chill"
+   ]
+  },
+  {
+   "id": "ada_professional",
+   "text": "Keep it professional. Partners, not friends.",
+   "goTo": "apology_professional_only",
+   "effects": {
+    "persona": {
+     "chill": 2
+    },
+    "relationships": {
+     "Alex": 4
+    },
+    "flagsSet": [
+     "professional_only"
+    ],
+    "pushEvent": "'Partners. I can work with that.' Alex's expression becomes neutral. Business mode."
+   },
+   "tags": [
+    "chill"
    ]
   }
  ],
  "tags": [
-  "generated"
+  "apology_resolved",
+  "act1"
  ]
+},
+"apology_relationship_rebuilt": {
+ "id": "apology_relationship_rebuilt",
+ "text": "Day 2. The morning after. Alex is making coffee—real coffee, from their emergency stash. 'Figured we earned it,' they say. The apartment feels different. Warmer. Less like a bunker, more like... home. 'So,' Alex says, 'what's the plan? We can't stay here forever.' They're right. The building won't hold. But for now, you have each other. And that's something.",
+ "choices": [
+  {
+   "id": "arr_plan_together",
+   "text": "Let's plan together. What do you think?",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["collaborative_planning"],
+    "pushEvent": "'I like that. Two heads better than one.' Alex pulls out a map. Planning begins."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "arr_secure_building",
+   "text": "First, let's secure this building properly.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["building_secured"],
+    "pushEvent": "'Smart. Home base first.' Alex nods. 'I know this building's weak points.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "arr_scout_area",
+   "text": "We need to scout the area. See what's out there.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["area_scouted"],
+    "pushEvent": "'Reconnaissance. Good call.' Alex grabs their gear. 'I'll go with you.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "relationship_strong"]
+},
+"apology_cautious_trust": {
+ "id": "apology_cautious_trust",
+ "text": "Day 2. Alex is cautious but present. They've set up their own corner of the apartment—not hiding, but maintaining distance. 'I appreciate the apology,' they say. 'But trust... that takes time.' Fair enough. The world taught them that lesson hard. 'So what's next?' they ask. 'We can't just... wait here.'",
+ "choices": [
+  {
+   "id": "act_build_trust",
+   "text": "Let's build trust through action.",
+   "goTo": "day2_trust_building",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["trust_building"],
+    "pushEvent": "'Actions. I can respect that.' Alex's guard lowers slightly."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "act_practical_first",
+   "text": "Focus on practical survival first.",
+   "goTo": "day2_practical_focus",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["practical_focus"],
+    "pushEvent": "'Practical. I like practical.' Alex relaxes. Less pressure."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "act_give_space",
+   "text": "Give them space. Let them come to you.",
+   "goTo": "day2_give_space",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["respects_boundaries"],
+    "pushEvent": "'Thank you. For understanding.' Alex's expression softens."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "cautious_trust"]
+},
+"apology_professional_only": {
+ "id": "apology_professional_only",
+ "text": "Day 2. Alex has set up a professional distance. They're efficient, helpful, but emotionally guarded. 'Partners,' they say. 'That works.' They've organized the supplies, checked the perimeter, made themselves useful. But there's a wall there. Respectful, but present. 'So what's the operational plan?' they ask. Business mode.",
+ "choices": [
+  {
+   "id": "apo_accept_dynamic",
+   "text": "Accept the professional dynamic.",
+   "goTo": "day2_professional_partnership",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["professional_dynamic"],
+    "pushEvent": "'Understood. Professional partnership.' Alex nods. Clear boundaries established."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "apo_try_warmth",
+   "text": "Try to add some warmth to the partnership.",
+   "goTo": "day2_warmth_attempt",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["warmth_attempted"],
+    "pushEvent": "'I... appreciate that.' Alex's guard wavers slightly."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "apo_keep_distance",
+   "text": "Keep the distance. It's safer this way.",
+   "goTo": "day2_maintain_distance",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 0},
+    "flagsSet": ["distance_maintained"],
+    "pushEvent": "'Right. Safer.' Alex's expression remains neutral."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "professional"]
+},
+"day2_planning_session": {
+ "id": "day2_planning_session",
+ "text": "Day 2, 10:00 AM. Alex spreads a city map on the table. 'Okay, here's what I know,' they say, pointing. 'The building's structural weak points are here, here, and here.' They mark spots with a pen. 'There's a supply cache three blocks east—pharmacy that might still have meds. And...' they pause. 'There's a family on floor 4. Martinez family. Two kids, elderly grandmother. They're... they're not doing well.'",
+ "choices": [
+  {
+   "id": "d2ps_help_family",
+   "text": "We should help the Martinez family.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["help_martinez"],
+    "pushEvent": "'I was hoping you'd say that.' Alex's eyes light up. 'They're good people.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2ps_pharmacy_first",
+   "text": "Let's hit the pharmacy first. Get supplies.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["pharmacy_priority"],
+    "pushEvent": "'Smart. Supplies first, then we can help others.' Alex nods approvingly."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2ps_secure_building",
+   "text": "First, let's secure this building properly.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["building_secured"],
+    "pushEvent": "'Home base first. Good call.' Alex grabs tools. 'I know this building's weak points.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "planning"]
+},
+"day2_secure_building": {
+ "id": "day2_secure_building",
+ "text": "Day 2, 11:00 AM. Alex leads you through the building's weak points. 'This door needs reinforcement,' they say, pointing to the main entrance. 'And these windows on the second floor—they're the biggest vulnerability.' They've brought tools, materials. 'I used to fix everything in this building. Know it like the back of my hand.' The work is methodical, calming. Building something together.",
+ "choices": [
+  {
+   "id": "d2sb_thorough_job",
+   "text": "Let's do this right. Thorough job.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 3,
+    "persona": {"chill": 2},
+    "stats": {"stress": -2, "stamina": -1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["building_well_secured"],
+    "pushEvent": "'This is good work.' Alex smiles. 'Feels like we're building something real.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2sb_quick_job",
+   "text": "Quick job. We have other priorities.",
+   "goTo": "day2_building_secured_basic",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": -1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["building_basic_secured"],
+    "pushEvent": "'Efficient. I like that.' Alex nods. 'What's next?'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2sb_teach_me",
+   "text": "Teach me. I want to learn.",
+   "goTo": "day2_learning_building",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 1},
+    "stats": {"stress": -1},
+    "relationships": {"Alex": 3},
+    "flagsSet": ["learning_building"],
+    "pushEvent": "'I like teaching.' Alex's face brightens. 'You're a good student.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day2", "building"]
+},
+"day2_scout_area": {
+ "id": "day2_scout_area",
+ "text": "Day 2, 12:00 PM. You and Alex gear up for reconnaissance. 'Stay close,' Alex says. 'And quiet.' The building's lobby is a mess—broken glass, scattered papers, the smell of decay. Through the front door, the street is eerily quiet. 'They're out there,' Alex whispers. 'But not here. Not right now.' You can see other buildings, some with lights, some dark. Signs of life. Signs of death.",
+ "choices": [
+  {
+   "id": "d2sa_pharmacy_approach",
+   "text": "Let's check out that pharmacy Alex mentioned.",
+   "goTo": "day2_pharmacy_scout",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["pharmacy_scouted"],
+    "pushEvent": "'Good call. Let's see what we're dealing with.' Alex leads the way."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2sa_other_buildings",
+   "text": "Let's check other buildings. See who's alive.",
+   "goTo": "day2_other_buildings",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "stats": {"stress": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["other_buildings_scouted"],
+    "pushEvent": "'Could be survivors. Could be trouble.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2sa_return_safe",
+   "text": "Let's head back. We've seen enough.",
+   "goTo": "day2_return_safe",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": -1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["scout_complete"],
+    "pushEvent": "'Smart. No need to push our luck.' Alex nods. 'Back to base.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "scouting"]
+},
+"day2_help_martinez": {
+ "id": "day2_help_martinez",
+ "text": "Day 2, 1:00 PM. Floor 4, apartment 4B. The Martinez family's door is barricaded with furniture. You knock gently. 'It's Alex,' Alex calls out. 'From 3B. I brought help.' The door opens a crack. Mrs. Martinez—early 30s, exhausted—peeks out. Behind her, two children, maybe 8 and 10, and an elderly woman in a wheelchair. 'Alex... thank God,' she whispers. 'We're running out of food. And... and my mother needs medicine.'",
+ "choices": [
+  {
+   "id": "d2hm_share_supplies",
+   "text": "Share our supplies with them.",
+   "goTo": "day2_martinez_helped",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 3},
+    "stats": {"stress": -1},
+    "flagsSet": ["martinez_helped"],
+    "pushEvent": "'Thank you. Thank you so much.' Mrs. Martinez's eyes fill with tears."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2hm_pharmacy_first",
+   "text": "Let's get medicine first, then come back.",
+   "goTo": "day2_pharmacy_for_martinez",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["pharmacy_for_martinez"],
+    "pushEvent": "'We'll be back. With medicine.' Alex's voice is determined."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2hm_evacuate_them",
+   "text": "We should evacuate them to our apartment.",
+   "goTo": "day2_evacuate_martinez",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 3},
+    "stats": {"stress": 2},
+    "flagsSet": ["martinez_evacuated"],
+    "pushEvent": "'Safety in numbers.' Alex nods. 'Let's get them out of here.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day2", "martinez"]
+},
+"day2_pharmacy_raid": {
+ "id": "day2_pharmacy_raid",
+ "text": "Day 2, 2:00 PM. The pharmacy is three blocks east. You and Alex approach cautiously. The building is intact, but the front door is shattered. 'Looks like someone's been here already,' Alex whispers. Inside, shelves are mostly empty, but there are still some supplies. 'Let's be quick,' Alex says. 'In and out.' You can hear sounds from the back—maybe infected, maybe survivors. The choice is yours.",
+ "choices": [
+  {
+   "id": "d2pr_quick_grab",
+   "text": "Quick grab. Take what we can and go.",
+   "goTo": "day2_pharmacy_quick",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": 1},
+    "relationships": {"Alex": 1},
+    "inventoryAdd": ["bandages", "painkillers"],
+    "flagsSet": ["pharmacy_quick"],
+    "pushEvent": "'Efficient. Let's go.' Alex grabs supplies and heads for the door."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2pr_thorough_search",
+   "text": "Thorough search. Check the back room.",
+   "goTo": "day2_pharmacy_thorough",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "stats": {"stress": 2},
+    "relationships": {"Alex": 1},
+    "inventoryAdd": ["antibiotics", "morphine", "surgical_kit"],
+    "flagsSet": ["pharmacy_thorough"],
+    "pushEvent": "'Found the good stuff.' Alex's eyes light up. 'This could save lives.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2pr_check_sounds",
+   "text": "Check those sounds. Could be survivors.",
+   "goTo": "day2_pharmacy_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "stats": {"stress": 2},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["pharmacy_survivors"],
+    "pushEvent": "'Could be someone who needs help.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day2", "pharmacy"]
+},
+"day2_building_secured_well": {
+ "id": "day2_building_secured_well",
+ "text": "Day 2, 3:00 PM. The building is now a fortress. Alex has reinforced every weak point, set up early warning systems, even rigged a simple communication system between floors. 'This is good work,' Alex says, wiping sweat from their brow. 'We've got a real chance here.' The building feels secure, safe. A proper home base. 'So what's next?' Alex asks. 'We've got options now.'",
+ "choices": [
+  {
+   "id": "d2bsw_help_others",
+   "text": "Let's help other survivors in the building.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["help_others"],
+    "pushEvent": "'Good call. We're stronger together.' Alex nods approvingly."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2bsw_scout_area",
+   "text": "Let's scout the area. See what's out there.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["area_scouted"],
+    "pushEvent": "'Reconnaissance. Smart.' Alex grabs their gear."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2bsw_rest_plan",
+   "text": "Let's rest and plan. We've earned it.",
+   "goTo": "day2_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "stats": {"stress": -2, "stamina": 2},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["rest_plan"],
+    "pushEvent": "'You're right. We've done good work today.' Alex smiles."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day2", "building_secure"]
+},
+"day2_hub": {
+ "id": "day2_hub",
+ "text": "Day 2, Evening. The sun is setting, casting long shadows across the apartment. Alex is cooking something simple—canned food, but it smells like a feast. 'We made it through another day,' they say. 'That's something.' The building feels different now. More like home. Less like a prison. 'Tomorrow,' Alex says, 'we decide what kind of people we want to be in this world.' The choice is yours.",
+ "choices": [
+  {
+   "id": "d2h_hero_path",
+   "text": "We help others. That's who we are.",
+   "goTo": "day3_to_act1_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["hero_path_chosen"],
+    "pushEvent": "'I was hoping you'd say that.' Alex's eyes light up. 'Let's be the good guys.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d2h_survivor_path",
+   "text": "We survive. That's what matters.",
+   "goTo": "day3_to_act1_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "flagsSet": ["survivor_path_chosen"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Survival first.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d2h_leader_path",
+   "text": "We lead. We build something here.",
+   "goTo": "day3_to_act1_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "flagsSet": ["leader_path_chosen"],
+    "pushEvent": "'Ambitious. I like it.' Alex's expression becomes determined. 'Let's build something.'"
+   },
+   "tags": ["protector"]
+  }
+ ],
+ "tags": ["day2", "hub"]
+},
+"day3_hero_path": {
+ "id": "day3_hero_path",
+ "text": "Day 3, Morning. You wake to the sound of knocking. Alex is already up, peering through the peephole. 'It's Mrs. Martinez,' they whisper. 'She looks... scared.' You open the door. Mrs. Martinez is there, her children behind her. 'Please,' she says. 'There are more families. On the other floors. They need help. Food. Medicine. Protection.' Her voice trembles. 'We can't do this alone.'",
+ "choices": [
+  {
+   "id": "d3hp_help_all",
+   "text": "We'll help everyone we can.",
+   "goTo": "day3_help_all_families",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 3, "protector": 2},
+    "relationships": {"Alex": 3},
+    "stats": {"stress": 3, "stamina": -2},
+    "flagsSet": ["help_all_families"],
+    "pushEvent": "'Thank you. Thank you so much.' Mrs. Martinez's eyes fill with tears."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d3hp_organize_effort",
+   "text": "Let's organize this properly. Systematically.",
+   "goTo": "day3_organize_effort",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "chill": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["organize_effort"],
+    "pushEvent": "'Smart. Let's do this right.' Alex nods approvingly."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d3hp_limited_help",
+   "text": "We'll help, but we have limits.",
+   "goTo": "day3_limited_help",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["limited_help"],
+    "pushEvent": "'I understand. Thank you for what you can do.' Mrs. Martinez's expression becomes guarded."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day3", "hero"]
+},
+"day3_survivor_path": {
+ "id": "day3_survivor_path",
+ "text": "Day 3, Morning. Alex is checking the perimeter. 'Building's holding,' they report. 'But we need to think long-term.' They spread a map on the table. 'Food won't last forever. Medicine will run out. We need a plan.' They point to various locations. 'Supply caches. Safe routes. Fallback positions.' Their voice is practical, methodical. 'Survival is about preparation.'",
+ "choices": [
+  {
+   "id": "d3sp_supply_runs",
+   "text": "Let's plan supply runs. Systematic approach.",
+   "goTo": "day3_supply_runs",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["supply_runs_planned"],
+    "pushEvent": "'Good thinking. Let's map out the best routes.' Alex's eyes light up."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d3sp_fortify_position",
+   "text": "Let's fortify our position. Make it unassailable.",
+   "goTo": "day3_fortify_position",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["position_fortified"],
+    "pushEvent": "'Defense in depth. I like it.' Alex grabs tools."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d3sp_scout_escape",
+   "text": "Let's scout escape routes. Plan for the worst.",
+   "goTo": "day3_scout_escape",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["escape_routes_scouted"],
+    "pushEvent": "'Always have a backup plan.' Alex nods. 'Smart.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day3", "survivor"]
+},
+"day3_leader_path": {
+ "id": "day3_leader_path",
+ "text": "Day 3, Morning. Alex is organizing supplies. 'We've got something here,' they say. 'A real opportunity.' They look at you. 'This building. These people. We could build something. A community. A safe zone.' Their voice is excited, determined. 'But it takes leadership. Someone to make the hard calls. Someone people can trust.' They pause. 'I think that's you.'",
+ "choices": [
+  {
+   "id": "d3lp_accept_leadership",
+   "text": "I'll lead. We'll build something here.",
+   "goTo": "day3_accept_leadership",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 3},
+    "stats": {"stress": 2},
+    "flagsSet": ["leadership_accepted"],
+    "pushEvent": "'Good. We need someone to step up.' Alex's expression becomes determined."
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d3lp_shared_leadership",
+   "text": "We lead together. Equal partners.",
+   "goTo": "day3_shared_leadership",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 1, "nice": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["shared_leadership"],
+    "pushEvent": "'Partners. I like that.' Alex's eyes light up."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d3lp_not_ready",
+   "text": "I'm not ready for that kind of responsibility.",
+   "goTo": "day3_not_ready_leadership",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["leadership_declined"],
+    "pushEvent": "'Fair enough. Maybe later.' Alex's expression becomes neutral."
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day3", "leader"]
+},
+"day3_to_act1_hub": {
+ "id": "day3_to_act1_hub",
+ "text": "Day 3, Evening. The sun sets on another day of survival. You and Alex sit in the apartment, planning tomorrow. 'We've come a long way,' Alex says. 'From strangers to... whatever we are now.' They look at you. 'Partners. Friends. Family. Whatever you want to call it.' The building feels alive now. People moving between floors. Children's laughter echoing in the halls. 'We're building something here,' Alex says. 'Something real.'",
+ "choices": [
+  {
+   "id": "d3tah_continue_building",
+   "text": "Let's keep building. This is just the beginning.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": -1},
+    "flagsSet": ["continue_building"],
+    "pushEvent": "'I like the sound of that.' Alex's eyes light up. 'Let's see what we can build.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d3tah_consolidate_gains",
+   "text": "Let's consolidate what we have. Make it solid.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["consolidate_gains"],
+    "pushEvent": "'Smart. Build on what works.' Alex nods approvingly."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d3tah_expand_influence",
+   "text": "Let's expand. Reach out to other buildings.",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 1, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["expand_influence"],
+    "pushEvent": "'Ambitious. I like it.' Alex's expression becomes determined."
+   },
+   "tags": ["protector"]
+  }
+ ],
+ "tags": ["day3", "transition"]
 },
 "apology_justified": {
  "id": "apology_justified",
