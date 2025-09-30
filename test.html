@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Test</title>
+<style>body{background:#000;color:#0f0;font-family:monospace;padding:20px;}</style>
+</head><body>
+<h1>🔥 CONSEQUENCE TEST 🔥</h1>
+<div id="stats"></div>
+<div id="scene-text"></div>
+<div id="choices"></div>
+<div id="inventory-list"></div>
+<div id="char-name"></div><div id="char-background"></div>
+<div id="trauma-bar"></div><div id="trauma-warning"></div>
+<div id="persona-grid"></div><div id="journal-list"></div>
+<div id="event-log"></div><div id="relationships-list"></div>
+<div id="relationship-count"></div><div id="objective-count"></div>
+<div id="decision-tree"></div><div id="flag-display"></div>
+<div id="state-hash"></div><div id="world-time"></div>
+<div id="dayhour-indicator"></div>
+<div id="consequence-popup" class="hidden"></div>
+<div id="consequence-text"></div>
+<button id="consequence-ok">OK</button>
+<button id="new-game">New</button>
+<button id="save-game">Save</button>
+<button id="export-game">Export</button>
+<button id="toggle-backend">Toggle</button>
+<div id="backend-content"></div>
+<input id="file-loader" type="file">
+
+<script src="MYSTORY.JAVASCRIPT"></script>
+<script>
+setTimeout(() => {
+    console.log("=== GAME TEST ===");
+    console.log("STORY_DATABASE:", typeof window.STORY_DATABASE);
+    console.log("ConsequenceGame:", typeof window.ConsequenceGame);
+    
+    if (window.STORY_DATABASE) {
+        const scenes = Object.keys(window.STORY_DATABASE);
+        console.log("Total scenes:", scenes.length);
+        console.log("Has 'intro':", scenes.includes('intro'));
+        console.log("First 5 scenes:", scenes.slice(0, 5));
+        
+        const intro = window.STORY_DATABASE['intro'];
+        if (intro) {
+            console.log("✓ 'intro' exists!");
+            console.log("  Text:", intro.text.substring(0, 50));
+            console.log("  Choices:", intro.choices.length);
+            console.log("  First choice goes to:", intro.choices[0].goTo);
+        }
+    }
+    
+    if (window.game) {
+        console.log("Game instance:", !!window.game);
+        console.log("Current scene:", window.game.state.sceneId);
+        console.log("Scene exists:", !!window.STORY_DATABASE[window.game.state.sceneId]);
+    }
+    
+    console.log("\n=== ENDINGS ===");
+    const endings = Object.keys(window.STORY_DATABASE).filter(k => k.startsWith('ending_'));
+    console.log("Total endings:", endings.length);
+    console.log("Ending names:", endings);
+}, 1000);
+</script>
+</body></html>
