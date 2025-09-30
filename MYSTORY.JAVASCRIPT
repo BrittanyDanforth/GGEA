@@ -7766,9 +7766,5778 @@
   "tags": [
    "ending"
   ],
-  "isEnding": true,
-  "endingType": "ashes"
- }
+ "isEnding": true,
+ "endingType": "ashes"
+ },
+"alex_bond_hard": {
+ "id": "alex_bond_hard",
+ "text": "Alex doesn't sugarcoat. 'We survive. Period. Not friends. Not family. Partners who keep each other breathing.' They're right. This world doesn't reward sentiment. But their eyes betray them—there's care beneath the callousness. 'You pulled me in when you could've left me to die. I remember that. But don't expect me to go soft.' Fair enough.",
+ "choices": [
+  {
+   "id": "bh_agree",
+   "text": "Agree. Survival comes first.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"chill": 2}, "relationships": {"Alex": 3}, "flagsSet": ["bond_hardened"], "pushEvent": "'Works for me. No illusions.' Alex nods. Partnership formed on brutal honesty."},
+   "tags": ["chill"]
+  },
+  {
+   "id": "bh_soften",
+   "text": "Try to soften them. We can care AND survive.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"nice": 1}, "relationships": {"Alex": 4}, "flagsSet": ["tried_softening"], "pushEvent": "'Maybe. Don't push it.' They don't reject it entirely. Progress."},
+   "tags": ["nice"]
+  },
+  {
+   "id": "bh_colder",
+   "text": "Even colder. Pure transaction.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"rude": 2}, "relationships": {"Alex": 1}, "flagsSet": ["transaction_only"], "pushEvent": "'Right. Just tools to each other.' Alex's face hardens. Message received."},
+   "tags": ["rude"]
+  }
+ ],
+ "tags": ["bond_path"]
+},
+"alex_bond_purpose": {
+ "id": "alex_bond_purpose",
+ "text": "Alex looks at you with newfound intensity. 'Before this, I fixed fuse boxes. Small problems, small solutions. But this? We're building something. A reason to survive beyond just... surviving.' They're searching for meaning in the chaos. You recognize that look—it's the same one you see in the mirror.",
+ "choices": [
+  {
+   "id": "bp_build_together",
+   "text": "Let's build something that matters.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"nice": 2, "protector": 1}, "relationships": {"Alex": 6}, "flagsSet": ["shared_purpose"], "pushEvent": "'Together then. Not just surviving. Living.' Alex extends hand. You shake. Pact made."},
+   "tags": ["nice"]
+  },
+  {
+   "id": "bp_dont_need_meaning",
+   "text": "Don't need meaning. Just need to survive.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"chill": 1}, "relationships": {"Alex": 3}, "pushEvent": "'Fair enough. Maybe I'm overthinking.' They back off. Practical wins."},
+   "tags": ["chill"]
+  },
+  {
+   "id": "bp_use_drive",
+   "text": "Use that drive. Channel it into action.",
+   "goTo": "act1_family_hub",
+   "effects": {"persona": {"protector": 1}, "relationships": {"Alex": 5}, "flagsSet": ["purpose_channeled"], "pushEvent": "'Yes. Action. Not philosophy.' Alex is energized. Ready to move."},
+   "tags": ["protector"]
+  }
+ ],
+ "tags": ["bond_path"]
+}
+,
+"alex_bond_hard": {
+ "id": "alex_bond_hard",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_bond__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_bond_hard resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_bond__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_bond_hard resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_bond__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_bond_hard resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_bond_purpose": {
+ "id": "alex_bond_purpose",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_bond__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_bond_purpose resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_bond__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_bond_purpose resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_bond__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_bond_purpose resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_cautious": {
+ "id": "alex_cautious",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_cauti_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_cautious resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_cauti_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_cautious resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_cauti_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_cautious resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_debt": {
+ "id": "alex_debt",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_debt_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_debt resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_debt_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_debt resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_debt_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_debt resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_dependent_tool": {
+ "id": "alex_dependent_tool",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_depen_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_dependent_tool resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_depen_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_dependent_tool resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_depen_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_dependent_tool resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_dies_after_proof": {
+ "id": "alex_dies_after_proof",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_dies__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_dies_after_proof resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_dies__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_dies_after_proof resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_dies__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_dies_after_proof resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_grateful_conditional": {
+ "id": "alex_grateful_conditional",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_grate_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_grateful_conditional resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_grate_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_grateful_conditional resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_grate_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_grateful_conditional resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_grateful_lucky": {
+ "id": "alex_grateful_lucky",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_grate_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_grateful_lucky resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_grate_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_grateful_lucky resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_grate_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_grateful_lucky resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_grateful_selfish": {
+ "id": "alex_grateful_selfish",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_grate_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_grateful_selfish resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_grate_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_grateful_selfish resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_grate_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_grateful_selfish resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_guilt_lever": {
+ "id": "alex_guilt_lever",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_guilt_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_guilt_lever resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_guilt_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_guilt_lever resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_guilt_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_guilt_lever resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_learns_independence": {
+ "id": "alex_learns_independence",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_learn_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_learns_independence resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_learn_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_learns_independence resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_learn_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_learns_independence resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_professional": {
+ "id": "alex_professional",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_profe_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_professional resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_profe_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_professional resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_profe_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_professional resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_respect": {
+ "id": "alex_respect",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_respe_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_respect resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_respe_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_respect resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_respe_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_respect resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_clinical_killer": {
+ "id": "alex_sees_clinical_killer",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_clinical_killer resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_clinical_killer resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_clinical_killer resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_darkness": {
+ "id": "alex_sees_darkness",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_darkness resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_darkness resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_darkness resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_necessary_violence": {
+ "id": "alex_sees_necessary_violence",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_necessary_violence resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_necessary_violence resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_necessary_violence resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_personal": {
+ "id": "alex_sees_personal",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_personal resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_personal resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_personal resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_reactive": {
+ "id": "alex_sees_reactive",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_reactive resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_reactive resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_reactive resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_sees_transactional": {
+ "id": "alex_sees_transactional",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_sees__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_sees_transactional resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_sees__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_sees_transactional resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_sees__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_sees_transactional resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_test_solo": {
+ "id": "alex_test_solo",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_test__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_test_solo resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_test__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_test_solo resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_test__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_test_solo resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_traumatized_harsh": {
+ "id": "alex_traumatized_harsh",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_traum_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_traumatized_harsh resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_traum_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_traumatized_harsh resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_traum_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_traumatized_harsh resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_uncertain": {
+ "id": "alex_uncertain",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_uncer_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_uncertain resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_uncer_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_uncertain resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_uncer_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_uncertain resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"alex_uncomfortable_silence": {
+ "id": "alex_uncomfortable_silence",
+ "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "choices": [
+  {
+   "id": "alex_uncom_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "alex_uncomfortable_silence resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "alex_uncom_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "alex_uncomfortable_silence resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "alex_uncom_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "alex_uncomfortable_silence resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"apology_deeper_accepted": {
+ "id": "apology_deeper_accepted",
+ "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
+ "choices": [
+  {
+   "id": "apology_de_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "apology_deeper_accepted resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "apology_de_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "apology_deeper_accepted resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "apology_de_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "apology_deeper_accepted resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"apology_justified": {
+ "id": "apology_justified",
+ "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
+ "choices": [
+  {
+   "id": "apology_ju_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "apology_justified resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "apology_ju_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "apology_justified resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "apology_ju_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "apology_justified resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"apology_make_amends": {
+ "id": "apology_make_amends",
+ "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
+ "choices": [
+  {
+   "id": "apology_ma_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "apology_make_amends resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "apology_ma_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "apology_make_amends resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "apology_ma_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "apology_make_amends resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"apology_no_further": {
+ "id": "apology_no_further",
+ "text": "Apology path resolution. You apologized while opening the door. Alex is inside but hurt. Can you mend the relationship?",
+ "choices": [
+  {
+   "id": "apology_no_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "apology_no_further resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "apology_no_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "apology_no_further resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "apology_no_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "apology_no_further resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_abandoned_guilt_double": {
+ "id": "chen_abandoned_guilt_double",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_aband_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_abandoned_guilt_double resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_aband_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_abandoned_guilt_double resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_aband_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_abandoned_guilt_double resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_accepts_honesty": {
+ "id": "chen_accepts_honesty",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_accep_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_accepts_honesty resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_accep_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_accepts_honesty resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_accep_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_accepts_honesty resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_accepts_practice": {
+ "id": "chen_accepts_practice",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_accep_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_accepts_practice resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_accep_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_accepts_practice resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_accep_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_accepts_practice resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_accepts_pragmatic": {
+ "id": "chen_accepts_pragmatic",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_accep_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_accepts_pragmatic resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_accep_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_accepts_pragmatic resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_accep_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_accepts_pragmatic resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_distraction_play": {
+ "id": "chen_distraction_play",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_distr_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_distraction_play resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_distr_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_distraction_play resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_distr_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_distraction_play resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_forced_save": {
+ "id": "chen_forced_save",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_force_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_forced_save resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_force_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_forced_save resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_force_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_forced_save resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_hero_humble": {
+ "id": "chen_hero_humble",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_hero_humble resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_hero_humble resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_hero_humble resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_hero_redemption": {
+ "id": "chen_hero_redemption",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_hero_redemption resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_hero_redemption resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_hero_redemption resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_hero_self_proof": {
+ "id": "chen_hero_self_proof",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_hero_self_proof resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_hero_self_proof resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_hero_self_proof resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_hide_together": {
+ "id": "chen_hide_together",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_hide__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_hide_together resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_hide__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_hide_together resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_hide__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_hide_together resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_left_behind": {
+ "id": "chen_left_behind",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_left__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_left_behind resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_left__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_left_behind resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_left__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_left_behind resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"chen_trusts_logic": {
+ "id": "chen_trusts_logic",
+ "text": "Mrs. Chen storyline. An elderly survivor who challenges your moral compass. Your treatment of her reveals your true character.",
+ "choices": [
+  {
+   "id": "chen_trust_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "chen_trusts_logic resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "chen_trust_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "chen_trusts_logic resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "chen_trust_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "chen_trusts_logic resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_demands_control": {
+ "id": "cold_demands_control",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_deman_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_demands_control resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_deman_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_demands_control resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_deman_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_demands_control resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_doubled_down": {
+ "id": "cold_doubled_down",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_doubl_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_doubled_down resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_doubl_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_doubled_down resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_doubl_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_doubled_down resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_doubt_grows": {
+ "id": "cold_doubt_grows",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_doubt_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_doubt_grows resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_doubt_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_doubt_grows resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_doubt_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_doubt_grows resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_leverage_position": {
+ "id": "cold_leverage_position",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_lever_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_leverage_position resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_lever_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_leverage_position resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_lever_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_leverage_position resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_logic_cracks": {
+ "id": "cold_logic_cracks",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_logic_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_logic_cracks resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_logic_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_logic_cracks resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_logic_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_logic_cracks resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_random_fair": {
+ "id": "cold_random_fair",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_rando_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_random_fair resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_rando_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_random_fair resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_rando_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_random_fair resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_refuses_power": {
+ "id": "cold_refuses_power",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_refus_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_refuses_power resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_refus_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_refuses_power resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_refus_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_refuses_power resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_silent": {
+ "id": "cold_silent",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_silen_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_silent resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_silen_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_silent resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_silen_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_silent resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_triage_master": {
+ "id": "cold_triage_master",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_triag_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_triage_master resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_triag_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_triage_master resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_triag_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_triage_master resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"cold_value_calc": {
+ "id": "cold_value_calc",
+ "text": "Cold logic path. You've embraced utilitarian calculus. Emotions are weakness. Survival is mathematics. But at what cost?",
+ "choices": [
+  {
+   "id": "cold_value_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "cold_value_calc resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "cold_value_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "cold_value_calc resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "cold_value_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "cold_value_calc resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"convoy_alex_second": {
+ "id": "convoy_alex_second",
+ "text": "Convoy encounter. Survivors heading to rumored safe zone. Join them? Help them? Rob them? Trust is currency here.",
+ "choices": [
+  {
+   "id": "convoy_ale_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "convoy_alex_second resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "convoy_ale_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "convoy_alex_second resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "convoy_ale_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "convoy_alex_second resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"convoy_fire_escape": {
+ "id": "convoy_fire_escape",
+ "text": "Convoy encounter. Survivors heading to rumored safe zone. Join them? Help them? Rob them? Trust is currency here.",
+ "choices": [
+  {
+   "id": "convoy_fir_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "convoy_fire_escape resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "convoy_fir_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "convoy_fire_escape resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "convoy_fir_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "convoy_fire_escape resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"convoy_wait_thin": {
+ "id": "convoy_wait_thin",
+ "text": "Convoy encounter. Survivors heading to rumored safe zone. Join them? Help them? Rob them? Trust is currency here.",
+ "choices": [
+  {
+   "id": "convoy_wai_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "convoy_wait_thin resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "convoy_wai_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "convoy_wait_thin resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "convoy_wai_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "convoy_wait_thin resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_cautious_trust": {
+ "id": "demand_cautious_trust",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_cau_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_cautious_trust resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_cau_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_cautious_trust resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_cau_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_cautious_trust resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_hierarchy_set": {
+ "id": "demand_hierarchy_set",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_hie_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_hierarchy_set resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_hie_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_hierarchy_set resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_hie_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_hierarchy_set resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_justified": {
+ "id": "demand_justified",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_jus_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_justified resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_jus_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_justified resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_jus_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_justified resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_make_amends": {
+ "id": "demand_make_amends",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_mak_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_make_amends resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_mak_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_make_amends resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_mak_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_make_amends resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_no_apology": {
+ "id": "demand_no_apology",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_no__a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_no_apology resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_no__b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_no_apology resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_no__c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_no_apology resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_professional_only": {
+ "id": "demand_professional_only",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_pro_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_professional_only resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_pro_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_professional_only resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_pro_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_professional_only resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"demand_relationship_rebuilt": {
+ "id": "demand_relationship_rebuilt",
+ "text": "Continuation of demanding proof path. Trust damaged, must be rebuilt or abandoned. Alex remembers your harsh treatment.",
+ "choices": [
+  {
+   "id": "demand_rel_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "demand_relationship_rebuilt resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "demand_rel_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "demand_relationship_rebuilt resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "demand_rel_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "demand_relationship_rebuilt resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"ending_ghost_stair": {
+ "id": "ending_ghost_stair",
+ "text": "ENDING: Your journey concludes. Every choice mattered. Every relationship counted. This is your consequence.",
+ "choices": [
+  {
+   "id": "ending_gho_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "ending_ghost_stair resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "ending_gho_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "ending_ghost_stair resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "ending_gho_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "ending_ghost_stair resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"ending_overlord": {
+ "id": "ending_overlord",
+ "text": "ENDING: Your journey concludes. Every choice mattered. Every relationship counted. This is your consequence.",
+ "choices": [
+  {
+   "id": "ending_ove_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "ending_overlord resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "ending_ove_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "ending_overlord resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "ending_ove_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "ending_overlord resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"fight_alex_bait": {
+ "id": "fight_alex_bait",
+ "text": "Combat scenario. Infected swarm. Decisions made in seconds. Violence reveals character more than words ever could.",
+ "choices": [
+  {
+   "id": "fight_alex_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "fight_alex_bait resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "fight_alex_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "fight_alex_bait resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "fight_alex_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "fight_alex_bait resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"fight_tactical": {
+ "id": "fight_tactical",
+ "text": "Combat scenario. Infected swarm. Decisions made in seconds. Violence reveals character more than words ever could.",
+ "choices": [
+  {
+   "id": "fight_tact_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "fight_tactical resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "fight_tact_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "fight_tactical resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "fight_tact_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "fight_tactical resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"fight_together": {
+ "id": "fight_together",
+ "text": "Combat scenario. Infected swarm. Decisions made in seconds. Violence reveals character more than words ever could.",
+ "choices": [
+  {
+   "id": "fight_toge_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "fight_together resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "fight_toge_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "fight_together resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "fight_toge_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "fight_together resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"fortify_building_path": {
+ "id": "fortify_building_path",
+ "text": "Fortification path. Dig in. Make a stand. The building is home now. Defend it or die trying.",
+ "choices": [
+  {
+   "id": "fortify_bu_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "fortify_building_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "fortify_bu_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "fortify_building_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "fortify_bu_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "fortify_building_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"gather_survivors_path": {
+ "id": "gather_survivors_path",
+ "text": "Gathering survivors. Strength in numbers\u2014or more mouths to feed? Leadership emerges. Are you ready?",
+ "choices": [
+  {
+   "id": "gather_sur_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "gather_survivors_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "gather_sur_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "gather_survivors_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "gather_sur_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "gather_survivors_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"guilt_savior_kids_first": {
+ "id": "guilt_savior_kids_first",
+ "text": "Guilt path. Alex's death haunts you. Every face is theirs. Redemption through saving others\u2014or self-destruction?",
+ "choices": [
+  {
+   "id": "guilt_savi_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "guilt_savior_kids_first resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "guilt_savi_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "guilt_savior_kids_first resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "guilt_savi_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "guilt_savior_kids_first resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"guilt_savior_systematic": {
+ "id": "guilt_savior_systematic",
+ "text": "Guilt path. Alex's death haunts you. Every face is theirs. Redemption through saving others\u2014or self-destruction?",
+ "choices": [
+  {
+   "id": "guilt_savi_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "guilt_savior_systematic resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "guilt_savi_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "guilt_savior_systematic resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "guilt_savi_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "guilt_savior_systematic resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"guilt_savior_team_build": {
+ "id": "guilt_savior_team_build",
+ "text": "Guilt path. Alex's death haunts you. Every face is theirs. Redemption through saving others\u2014or self-destruction?",
+ "choices": [
+  {
+   "id": "guilt_savi_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "guilt_savior_team_build resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "guilt_savi_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "guilt_savior_team_build resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "guilt_savi_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "guilt_savior_team_build resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_alex_test": {
+ "id": "hero_alex_test",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_alex__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_alex_test resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_alex__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_alex_test resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_alex__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_alex_test resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_rest_continue": {
+ "id": "hero_rest_continue",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_rest__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_rest_continue resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_rest__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_rest_continue resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_rest__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_rest_continue resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_returns_building": {
+ "id": "hero_returns_building",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_retur_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_returns_building resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_retur_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_returns_building resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_retur_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_returns_building resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_scout_solo": {
+ "id": "hero_scout_solo",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_scout_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_scout_solo resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_scout_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_scout_solo resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_scout_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_scout_solo resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"hero_train_alex": {
+ "id": "hero_train_alex",
+ "text": "Hero path progression. You're trying to save everyone. Noble, exhausting, impossible. Alex watches you burn yourself out.",
+ "choices": [
+  {
+   "id": "hero_train_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "hero_train_alex resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "hero_train_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "hero_train_alex resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "hero_train_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "hero_train_alex resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_destroy_evidence": {
+ "id": "loot_destroy_evidence",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_destr_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_destroy_evidence resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_destr_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_destroy_evidence resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_destr_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_destroy_evidence resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_documents_everything": {
+ "id": "loot_documents_everything",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_docum_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_documents_everything resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_docum_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_documents_everything resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_docum_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_documents_everything resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_guilt_surfaces": {
+ "id": "loot_guilt_surfaces",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_guilt_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_guilt_surfaces resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_guilt_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_guilt_surfaces resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_guilt_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_guilt_surfaces resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_marcus_left": {
+ "id": "loot_marcus_left",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_marcu_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_marcus_left resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_marcu_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_marcus_left resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_marcu_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_marcus_left resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_marcus_studied": {
+ "id": "loot_marcus_studied",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_marcu_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_marcus_studied resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_marcu_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_marcus_studied resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_marcu_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_marcus_studied resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_marcus_talk_attempt": {
+ "id": "loot_marcus_talk_attempt",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_marcu_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_marcus_talk_attempt resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_marcu_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_marcus_talk_attempt resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_marcu_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_marcus_talk_attempt resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_radio_intel": {
+ "id": "loot_radio_intel",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_radio_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_radio_intel resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_radio_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_radio_intel resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_radio_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_radio_intel resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_respects_marcus": {
+ "id": "loot_respects_marcus",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_respe_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_respects_marcus resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_respe_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_respects_marcus resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_respe_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_respects_marcus resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_selective_morality": {
+ "id": "loot_selective_morality",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_selec_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_selective_morality resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_selec_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_selective_morality resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_selec_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_selective_morality resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"loot_takes_all_cold": {
+ "id": "loot_takes_all_cold",
+ "text": "Looting aftermath. Resources vs humanity. Take from the dead? Study them? Honor them? Each choice costs something.",
+ "choices": [
+  {
+   "id": "loot_takes_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "loot_takes_all_cold resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "loot_takes_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "loot_takes_all_cold resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "loot_takes_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "loot_takes_all_cold resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"numb_path": {
+ "id": "numb_path",
+ "text": "Numbness sets in. You watched Alex die. Feel nothing. Emotions are luxury. Survival is all. You're becoming something else.",
+ "choices": [
+  {
+   "id": "numb_path_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "numb_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "numb_path_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "numb_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "numb_path_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "numb_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"partners_alex_choice": {
+ "id": "partners_alex_choice",
+ "text": "Partnership dynamics. You and Alex as equals. Disagreements happen. How you resolve them shapes everything.",
+ "choices": [
+  {
+   "id": "partners_a_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "partners_alex_choice resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "partners_a_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "partners_alex_choice resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "partners_a_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "partners_alex_choice resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"partners_coin_flip": {
+ "id": "partners_coin_flip",
+ "text": "Partnership dynamics. You and Alex as equals. Disagreements happen. How you resolve them shapes everything.",
+ "choices": [
+  {
+   "id": "partners_c_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "partners_coin_flip resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "partners_c_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "partners_coin_flip resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "partners_c_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "partners_coin_flip resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"partners_first_conflict": {
+ "id": "partners_first_conflict",
+ "text": "Partnership dynamics. You and Alex as equals. Disagreements happen. How you resolve them shapes everything.",
+ "choices": [
+  {
+   "id": "partners_f_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "partners_first_conflict resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "partners_f_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "partners_first_conflict resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "partners_f_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "partners_first_conflict resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"partners_split_up": {
+ "id": "partners_split_up",
+ "text": "Partnership dynamics. You and Alex as equals. Disagreements happen. How you resolve them shapes everything.",
+ "choices": [
+  {
+   "id": "partners_s_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "partners_split_up resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "partners_s_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "partners_split_up resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "partners_s_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "partners_split_up resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_cold_doubt": {
+ "id": "path_cold_doubt",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_cold__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_cold_doubt resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_cold__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_cold_doubt resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_cold__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_cold_doubt resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_cold_statistics": {
+ "id": "path_cold_statistics",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_cold__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_cold_statistics resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_cold__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_cold_statistics resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_cold__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_cold_statistics resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_cold_testing": {
+ "id": "path_cold_testing",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_cold__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_cold_testing resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_cold__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_cold_testing resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_cold__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_cold_testing resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_guilt_rage": {
+ "id": "path_guilt_rage",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_guilt_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_guilt_rage resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_guilt_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_guilt_rage resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_guilt_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_guilt_rage resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_guilt_self_harm": {
+ "id": "path_guilt_self_harm",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_guilt_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_guilt_self_harm resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_guilt_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_guilt_self_harm resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_guilt_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_guilt_self_harm resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_hero_grounded": {
+ "id": "path_hero_grounded",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_hero_grounded resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_hero_grounded resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_hero_grounded resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_hero_manipulative": {
+ "id": "path_hero_manipulative",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_hero_manipulative resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_hero_manipulative resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_hero_manipulative resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_hero_rejects_label": {
+ "id": "path_hero_rejects_label",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_hero__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_hero_rejects_label resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_hero__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_hero_rejects_label resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_hero__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_hero_rejects_label resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_loot_conflicted": {
+ "id": "path_loot_conflicted",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_loot__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_loot_conflicted resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_loot__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_loot_conflicted resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_loot__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_loot_conflicted resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_loot_pragmatic": {
+ "id": "path_loot_pragmatic",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_loot__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_loot_pragmatic resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_loot__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_loot_pragmatic resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_loot__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_loot_pragmatic resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_loot_selective": {
+ "id": "path_loot_selective",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_loot__a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_loot_selective resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_loot__b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_loot_selective resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_loot__c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_loot_selective resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_watcher_cold": {
+ "id": "path_watcher_cold",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_watch_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_watcher_cold resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_watch_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_watcher_cold resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_watch_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_watcher_cold resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_watcher_delayed": {
+ "id": "path_watcher_delayed",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_watch_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_watcher_delayed resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_watch_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_watcher_delayed resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_watch_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_watcher_delayed resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_watcher_justified": {
+ "id": "path_watcher_justified",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_watch_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_watcher_justified resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_watch_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_watcher_justified resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_watch_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_watcher_justified resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"path_watcher_study": {
+ "id": "path_watcher_study",
+ "text": "Major story path decision. Your choices have led you here. This decision will shape the narrative arc and determine available endings.",
+ "choices": [
+  {
+   "id": "path_watch_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "path_watcher_study resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "path_watch_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "path_watcher_study resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "path_watch_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "path_watcher_study resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"quest_direct_route": {
+ "id": "quest_direct_route",
+ "text": "Quest path. You're searching for something specific. Family? Redemption? Supplies? The journey defines you.",
+ "choices": [
+  {
+   "id": "quest_dire_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "quest_direct_route resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "quest_dire_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "quest_direct_route resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "quest_dire_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "quest_direct_route resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"quest_find_group": {
+ "id": "quest_find_group",
+ "text": "Quest path. You're searching for something specific. Family? Redemption? Supplies? The journey defines you.",
+ "choices": [
+  {
+   "id": "quest_find_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "quest_find_group resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "quest_find_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "quest_find_group resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "quest_find_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "quest_find_group resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"quest_raid_first": {
+ "id": "quest_raid_first",
+ "text": "Quest path. You're searching for something specific. Family? Redemption? Supplies? The journey defines you.",
+ "choices": [
+  {
+   "id": "quest_raid_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "quest_raid_first resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "quest_raid_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "quest_raid_first resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "quest_raid_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "quest_raid_first resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"quest_stealth_route": {
+ "id": "quest_stealth_route",
+ "text": "Quest path. You're searching for something specific. Family? Redemption? Supplies? The journey defines you.",
+ "choices": [
+  {
+   "id": "quest_stea_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "quest_stealth_route resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "quest_stea_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "quest_stealth_route resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "quest_stea_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "quest_stealth_route resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"raid_supply_path": {
+ "id": "raid_supply_path",
+ "text": "Raid scenario. Take what you need by force. Resources are survival. Morality is weakness. Or is it?",
+ "choices": [
+  {
+   "id": "raid_suppl_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "raid_supply_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "raid_suppl_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "raid_supply_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "raid_suppl_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "raid_supply_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"rush_convoy_path": {
+ "id": "rush_convoy_path",
+ "text": "Rushed decision. No time to think. Action over analysis. Sometimes survival demands speed over wisdom.",
+ "choices": [
+  {
+   "id": "rush_convo_a",
+   "text": "Choose pragmatism",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "rush_convoy_path resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "rush_convo_b",
+   "text": "Choose compassion",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "rush_convoy_path resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "rush_convo_c",
+   "text": "Choose efficiency",
+   "goTo": "hub_convergence",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "rush_convoy_path resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"saved_verify": {
+ "id": "saved_verify",
+ "text": "Alex saved. They're alive. But the method matters. Instinct? Verification? Demand? Each creates different foundations.",
+ "choices": [
+  {
+   "id": "saved_veri_a",
+   "text": "Choose pragmatism",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "saved_verify resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "saved_veri_b",
+   "text": "Choose compassion",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "saved_verify resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "saved_veri_c",
+   "text": "Choose efficiency",
+   "goTo": "act1_family_hub",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "saved_verify resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+},
+"supplies_through_door": {
+ "id": "supplies_through_door",
+ "text": "Supplies through door. You didn't let Alex in\u2014just passed supplies. They're alive but alone. The sounds outside fade to screaming, then silence.",
+ "choices": [
+  {
+   "id": "supplies_t_a",
+   "text": "Choose pragmatism",
+   "goTo": "alex_dies_watched",
+   "effects": {
+    "persona": {
+     "chill": 1
+    },
+    "pushEvent": "supplies_through_door resolved pragmatically."
+   },
+   "tags": [
+    "chill"
+   ]
+  },
+  {
+   "id": "supplies_t_b",
+   "text": "Choose compassion",
+   "goTo": "alex_dies_watched",
+   "effects": {
+    "persona": {
+     "nice": 1
+    },
+    "pushEvent": "supplies_through_door resolved with kindness."
+   },
+   "tags": [
+    "nice"
+   ]
+  },
+  {
+   "id": "supplies_t_c",
+   "text": "Choose efficiency",
+   "goTo": "alex_dies_watched",
+   "effects": {
+    "persona": {
+     "rude": 1
+    },
+    "pushEvent": "supplies_through_door resolved efficiently."
+   },
+   "tags": [
+    "rude"
+   ]
+  }
+ ],
+ "tags": [
+  "generated"
+ ]
+}
 });
 
 })();
