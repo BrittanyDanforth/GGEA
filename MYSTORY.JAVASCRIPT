@@ -4320,6 +4320,18 @@
       "health": -5,
       "stress": 3
      },
+     "persona": {
+      "psycho": 2
+     },
+     "flags": {
+      "route_psycho": true
+     },
+     "pushEvent": "Chose aggressive combat approach."
+    },
+    "tags": [
+     "psycho"
+    ]
+   },
    {
     "id": "fb0_b",
     "text": "Find alternative escape route - rooftop access",
@@ -4329,6 +4341,18 @@
       "stamina": -2,
       "stress": -1
      },
+     "persona": {
+      "chill": 2
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose strategic escape route."
+    },
+    "tags": [
+     "chill"
+    ]
+   },
    {
     "id": "fb0_c",
     "text": "Help other survivors escape first",
@@ -4369,6 +4393,18 @@
       "stress": 2,
       "morality": 3
      },
+     "persona": {
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
+    },
+    "tags": [
+     "protector"
+    ]
+   },
    {
     "id": "fb1_b",
     "text": "Negotiate with the pilot for more time",
@@ -4378,6 +4414,18 @@
       "stamina": -1,
       "stress": 1
      },
+     "persona": {
+      "fixer": 2
+     },
+     "flags": {
+      "route_fixer": true
+     },
+     "pushEvent": "Attempted negotiation for more time."
+    },
+    "tags": [
+     "fixer"
+    ]
+   },
    {
     "id": "fb1_c",
     "text": "Secure your own escape first",
@@ -4467,12 +4515,25 @@
    "quarantine"
   ]
  },
+ "filler_branch_2": {
+  "id": "filler_branch_2",
+  "text": "The helicopter lands, but the pilot reveals they're from a military quarantine zone. They can only take people who pass medical screening. Several survivors show signs of infection. The pilot insists on testing everyone before boarding. You must decide how to handle this situation.",
+  "choices": [
+   {
+    "id": "fb2_a",
+    "text": "Demand fair testing for all",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": 1
+     },
      "persona": {
-      "chill": 1
-     }
+      "protector": 1
+     },
+     "pushEvent": "Demanded fair testing for all."
     },
     "tags": [
-     "chill"
+     "protector"
     ]
    },
    {
@@ -4482,7 +4543,14 @@
     "effects": {
      "stats": {
       "stamina": -1
-     }
+     },
+     "persona": {
+      "chill": 1
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose careful approach."
     },
     "tags": [
      "chill"
@@ -4495,7 +4563,14 @@
     "effects": {
      "relationships": {
       "Survivors": 1
-     }
+     },
+     "persona": {
+      "nice": 1
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Chose social approach."
     },
     "tags": [
      "nice"
@@ -4506,7 +4581,14 @@
     "text": "Selfish action",
     "goTo": "filler_branch_3",
     "effects": {
-     "inventoryAdd": "resource"
+     "inventoryAdd": "resource",
+     "persona": {
+      "rude": 1
+     },
+     "flags": {
+      "route_rude": true
+     },
+     "pushEvent": "Chose selfish approach."
     },
     "tags": [
      "rude"
@@ -4582,12 +4664,29 @@
    "skills"
   ]
  },
+ "filler_branch_3": {
+  "id": "filler_branch_3",
+  "text": "The pilot agrees to wait, but demands proof of your value. They want you to demonstrate leadership skills by organizing the survivors. Several people are panicking, and the infected are getting closer. You must decide how to handle this situation.",
+  "choices": [
+   {
+    "id": "fb3_a",
+    "text": "Take command and organize evacuation by priority",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": 2,
+      "morality": 3
+     },
      "persona": {
-      "rude": 1
-     }
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
     },
     "tags": [
-     "rude"
+     "protector"
     ]
    },
    {
@@ -4610,7 +4709,14 @@
     "effects": {
      "relationships": {
       "Survivors": 1
-     }
+     },
+     "persona": {
+      "nice": 1
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Chose social approach."
     },
     "tags": [
      "nice"
@@ -4621,7 +4727,14 @@
     "text": "Selfish action",
     "goTo": "filler_branch_4",
     "effects": {
-     "inventoryAdd": "resource"
+     "inventoryAdd": "resource",
+     "persona": {
+      "rude": 1
+     },
+     "flags": {
+      "route_rude": true
+     },
+     "pushEvent": "Chose selfish approach."
     },
     "tags": [
      "rude"
@@ -4663,6 +4776,18 @@
       "stress": 3,
       "morality": 5
      },
+     "persona": {
+      "nice": 2
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Prioritized helping others escape."
+    },
+    "tags": [
+     "nice"
+    ]
+   },
    {
     "id": "fb4_c",
     "text": "Ask about the research facility",
@@ -4686,12 +4811,29 @@
    "research"
   ]
  },
+ "filler_branch_4": {
+  "id": "filler_branch_4",
+  "text": "You've escaped to a research facility, but guilt weighs heavily on your conscience. The facility is well-stocked but isolated. You learn that the researchers were studying the infection, but most of them are dead or missing. You must decide how to handle this situation.",
+  "choices": [
+   {
+    "id": "fb4_a",
+    "text": "Take command and organize evacuation by priority",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": 2,
+      "morality": 3
+     },
      "persona": {
-      "psycho": 1
-     }
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
     },
     "tags": [
-     "psycho"
+     "protector"
     ]
    },
    {
@@ -4701,7 +4843,14 @@
     "effects": {
      "stats": {
       "stamina": -1
-     }
+     },
+     "persona": {
+      "chill": 1
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose careful approach."
     },
     "tags": [
      "chill"
@@ -4714,7 +4863,14 @@
     "effects": {
      "relationships": {
       "Survivors": 1
-     }
+     },
+     "persona": {
+      "nice": 1
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Chose social approach."
     },
     "tags": [
      "nice"
@@ -4725,7 +4881,14 @@
     "text": "Selfish action",
     "goTo": "filler_branch_5",
     "effects": {
-     "inventoryAdd": "resource"
+     "inventoryAdd": "resource",
+     "persona": {
+      "rude": 1
+     },
+     "flags": {
+      "route_rude": true
+     },
+     "pushEvent": "Chose selfish approach."
     },
     "tags": [
      "rude"
@@ -4790,12 +4953,29 @@
    "adaptation"
   ]
  },
+ "filler_branch_5": {
+  "id": "filler_branch_5",
+  "text": "You've reached a safe zone, but the consequences of your choices weigh heavily on your mind. The safe zone is well-protected but overcrowded. You learn that resources are running low and tensions are high. You must decide how to handle this situation.",
+  "choices": [
+   {
+    "id": "fb5_a",
+    "text": "Take command and organize evacuation by priority",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": 2,
+      "morality": 3
+     },
      "persona": {
-      "nice": 1
-     }
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
     },
     "tags": [
-     "nice"
+     "protector"
     ]
    },
    {
@@ -4805,7 +4985,14 @@
     "effects": {
      "stats": {
       "stamina": -1
-     }
+     },
+     "persona": {
+      "chill": 1
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose careful approach."
     },
     "tags": [
      "chill"
@@ -4818,7 +5005,14 @@
     "effects": {
      "relationships": {
       "Survivors": 1
-     }
+     },
+     "persona": {
+      "nice": 1
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Chose social approach."
     },
     "tags": [
      "nice"
@@ -4829,7 +5023,14 @@
     "text": "Selfish action",
     "goTo": "filler_branch_6",
     "effects": {
-     "inventoryAdd": "resource"
+     "inventoryAdd": "resource",
+     "persona": {
+      "rude": 1
+     },
+     "flags": {
+      "route_rude": true
+     },
+     "pushEvent": "Chose selfish approach."
     },
     "tags": [
      "rude"
@@ -4894,12 +5095,29 @@
    "adaptation"
   ]
  },
+ "filler_branch_6": {
+  "id": "filler_branch_6",
+  "text": "You've reached a research facility, but the consequences of your choices weigh heavily on your mind. The facility is well-equipped but isolated. You learn that the researchers were studying the infection, but most of them are dead or missing. You must decide how to handle this situation.",
+  "choices": [
+   {
+    "id": "fb6_a",
+    "text": "Take command and organize evacuation by priority",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": 2,
+      "morality": 3
+     },
      "persona": {
-      "chill": 1
-     }
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
     },
     "tags": [
-     "chill"
+     "protector"
     ]
    },
    {
@@ -4909,7 +5127,14 @@
     "effects": {
      "stats": {
       "stamina": -1
-     }
+     },
+     "persona": {
+      "chill": 1
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose careful approach."
     },
     "tags": [
      "chill"
@@ -4922,7 +5147,14 @@
     "effects": {
      "relationships": {
       "Survivors": 1
-     }
+     },
+     "persona": {
+      "nice": 1
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Chose social approach."
     },
     "tags": [
      "nice"
@@ -4933,7 +5165,14 @@
     "text": "Selfish action",
     "goTo": "filler_branch_7",
     "effects": {
-     "inventoryAdd": "resource"
+     "inventoryAdd": "resource",
+     "persona": {
+      "rude": 1
+     },
+     "flags": {
+      "route_rude": true
+     },
+     "pushEvent": "Chose selfish approach."
     },
     "tags": [
      "rude"
@@ -4998,12 +5237,29 @@
    "adaptation"
   ]
  },
+ "filler_branch_7": {
+  "id": "filler_branch_7",
+  "text": "You've reached a safe zone, but the consequences of your choices weigh heavily on your mind. The safe zone is well-protected but overcrowded. You learn that resources are running low and tensions are high. You must decide how to handle this situation.",
+  "choices": [
+   {
+    "id": "fb7_a",
+    "text": "Take command and organize evacuation by priority",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": 2,
+      "morality": 3
+     },
      "persona": {
-      "rude": 1
-     }
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
     },
     "tags": [
-     "rude"
+     "protector"
     ]
    },
    {
@@ -5013,7 +5269,14 @@
     "effects": {
      "stats": {
       "stamina": -1
-     }
+     },
+     "persona": {
+      "chill": 1
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose careful approach."
     },
     "tags": [
      "chill"
@@ -5026,7 +5289,14 @@
     "effects": {
      "relationships": {
       "Survivors": 1
-     }
+     },
+     "persona": {
+      "nice": 1
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Chose social approach."
     },
     "tags": [
      "nice"
@@ -5037,7 +5307,14 @@
     "text": "Selfish action",
     "goTo": "filler_branch_8",
     "effects": {
-     "inventoryAdd": "resource"
+     "inventoryAdd": "resource",
+     "persona": {
+      "rude": 1
+     },
+     "flags": {
+      "route_rude": true
+     },
+     "pushEvent": "Chose selfish approach."
     },
     "tags": [
      "rude"
@@ -5102,12 +5379,29 @@
    "adaptation"
   ]
  },
+ "filler_branch_8": {
+  "id": "filler_branch_8",
+  "text": "You've reached a research facility, but the consequences of your choices weigh heavily on your mind. The facility is well-equipped but isolated. You learn that the researchers were studying the infection, but most of them are dead or missing. You must decide how to handle this situation.",
+  "choices": [
+   {
+    "id": "fb8_a",
+    "text": "Take command and organize evacuation by priority",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": 2,
+      "morality": 3
+     },
      "persona": {
-      "psycho": 1
-     }
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
     },
     "tags": [
-     "psycho"
+     "protector"
     ]
    },
    {
@@ -5117,7 +5411,14 @@
     "effects": {
      "stats": {
       "stamina": -1
-     }
+     },
+     "persona": {
+      "chill": 1
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose careful approach."
     },
     "tags": [
      "chill"
@@ -5130,7 +5431,14 @@
     "effects": {
      "relationships": {
       "Survivors": 1
-     }
+     },
+     "persona": {
+      "nice": 1
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Chose social approach."
     },
     "tags": [
      "nice"
@@ -5141,7 +5449,14 @@
     "text": "Selfish action",
     "goTo": "filler_branch_9",
     "effects": {
-     "inventoryAdd": "resource"
+     "inventoryAdd": "resource",
+     "persona": {
+      "rude": 1
+     },
+     "flags": {
+      "route_rude": true
+     },
+     "pushEvent": "Chose selfish approach."
     },
     "tags": [
      "rude"
@@ -5206,12 +5521,29 @@
    "adaptation"
   ]
  },
+ "filler_branch_9": {
+  "id": "filler_branch_9",
+  "text": "You've reached a safe zone, but the consequences of your choices weigh heavily on your mind. The safe zone is well-protected but overcrowded. You learn that resources are running low and tensions are high. You must decide how to handle this situation.",
+  "choices": [
+   {
+    "id": "fb9_a",
+    "text": "Take command and organize evacuation by priority",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": 2,
+      "morality": 3
+     },
      "persona": {
-      "nice": 1
-     }
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
     },
     "tags": [
-     "nice"
+     "protector"
     ]
    },
    {
@@ -5221,7 +5553,14 @@
     "effects": {
      "stats": {
       "stamina": -1
-     }
+     },
+     "persona": {
+      "chill": 1
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose careful approach."
     },
     "tags": [
      "chill"
@@ -5234,7 +5573,14 @@
     "effects": {
      "relationships": {
       "Survivors": 1
-     }
+     },
+     "persona": {
+      "nice": 1
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Chose social approach."
     },
     "tags": [
      "nice"
@@ -5245,7 +5591,14 @@
     "text": "Selfish action",
     "goTo": "filler_branch_10",
     "effects": {
-     "inventoryAdd": "resource"
+     "inventoryAdd": "resource",
+     "persona": {
+      "rude": 1
+     },
+     "flags": {
+      "route_rude": true
+     },
+     "pushEvent": "Chose selfish approach."
     },
     "tags": [
      "rude"
@@ -5310,10 +5663,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "chill": 1
-     }
-    },
     "tags": [
      "chill"
     ]
@@ -5414,10 +5763,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "rude": 1
-     }
-    },
     "tags": [
      "rude"
     ]
@@ -5518,10 +5863,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "psycho": 1
-     }
-    },
     "tags": [
      "psycho"
     ]
@@ -5622,10 +5963,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "nice": 1
-     }
-    },
     "tags": [
      "nice"
     ]
@@ -5726,10 +6063,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "chill": 1
-     }
-    },
     "tags": [
      "chill"
     ]
@@ -5830,10 +6163,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "rude": 1
-     }
-    },
     "tags": [
      "rude"
     ]
@@ -5934,10 +6263,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "psycho": 1
-     }
-    },
     "tags": [
      "psycho"
     ]
@@ -6038,10 +6363,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "nice": 1
-     }
-    },
     "tags": [
      "nice"
     ]
@@ -6142,10 +6463,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "chill": 1
-     }
-    },
     "tags": [
      "chill"
     ]
@@ -6246,10 +6563,6 @@
    "adaptation"
   ]
  },
-     "persona": {
-      "rude": 1
-     }
-    },
     "tags": [
      "rude"
     ]
