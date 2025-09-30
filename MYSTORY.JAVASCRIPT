@@ -3110,7 +3110,17 @@
  "ending_road_warden": {
   "id": "ending_road_warden",
   "text": "THE ROAD WARDEN: You guard the exodus. Convoy after convoy. Every family that escapes owes you their lives. The city falls but the people survive. You are the last light on the last road out. Hope has a name. It's yours. Mrs. Chen's ring stays on your finger. Marcus's ghost finally rests. You kept your vow.",
-  "choices": [],
+  "choices": [
+   {
+    "id": "restart_warden",
+    "text": "Start a new journey",
+    "goTo": "intro",
+    "effects": {
+     "pushEvent": "Started new game after Road Warden ending."
+    },
+    "tags": ["restart"]
+   }
+  ],
   "tags": [
    "ending"
   ],
@@ -3120,7 +3130,17 @@
  "ending_last_light": {
   "id": "ending_last_light",
   "text": "THE LAST LIGHT: The sanctuary grows. Floor by floor you reclaim the building. The infected can't break what you've built. Survivors call it 'The Light'\u2014the last place where humanity holds. You teach. You protect. You lead. The guilt over Alex transforms into purpose. You couldn't save them. But you saved everyone after. That has to count.",
-  "choices": [],
+  "choices": [
+   {
+    "id": "restart_light",
+    "text": "Begin a new story",
+    "goTo": "intro",
+    "effects": {
+     "pushEvent": "Started new game after Last Light ending."
+    },
+    "tags": ["restart"]
+   }
+  ],
   "tags": [
    "ending"
   ],
@@ -3130,7 +3150,17 @@
  "ending_teacher": {
   "id": "ending_teacher",
   "text": "THE TEACHER: You teach them everything. Survival. Combat. First aid. How to read infected patterns. Your knowledge spreads. Soon there are ten teachers. Then a hundred. The city falls but the survivors carry your lessons. You die in a firefight protecting your students. They carry on. Knowledge is immortal.",
-  "choices": [],
+  "choices": [
+   {
+    "id": "restart_ending_teacher",
+    "text": "Start a new journey",
+    "goTo": "intro",
+    "effects": {
+     "pushEvent": "Started new game after ending_teacher ending."
+    },
+    "tags": ["restart"]
+   }
+  ],
   "tags": [
    "ending"
   ],
@@ -3140,7 +3170,17 @@
  "ending_burned_out": {
   "id": "ending_burned_out",
   "text": "THE BURNED OUT: You tried. God knows you tried. But there were too many. Too much need. Too few resources. One by one they died despite your efforts. The guilt compounds. Alex. Mrs. Chen. The Martinez kid. All of them. You sit in the empty building surrounded by ghosts. When the infected finally break through, you don't fight. You're already gone.",
-  "choices": [],
+  "choices": [
+   {
+    "id": "restart_ending_burned_out",
+    "text": "Start a new journey",
+    "goTo": "intro",
+    "effects": {
+     "pushEvent": "Started new game after ending_burned_out ending."
+    },
+    "tags": ["restart"]
+   }
+  ],
   "tags": [
    "ending"
   ],
@@ -4269,19 +4309,24 @@
  },
  "filler_branch_0": {
   "id": "filler_branch_0",
-  "text": "Branch scene 0: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (psycho) shapes your options. What do you do?",
+  "text": "The infected have breached the building's lower floors. Screams echo through the stairwell as survivors flee upward. You're on the 8th floor with Alex, and the infected are climbing fast. The elevator shaft is blocked, and the fire escape is compromised. Time is running out. You need to decide how to escape or fight.",
   "choices": [
    {
     "id": "fb0_a",
-    "text": "Aggressive action",
+    "text": "Fight your way down - aggressive assault",
     "goTo": "filler_branch_1",
     "effects": {
      "stats": {
-      "stress": 2
+      "health": -5,
+      "stress": 3,
      },
      "persona": {
-      "psycho": 1
-     }
+      "psycho": 2,
+     },
+     "flags": {
+      "route_psycho": True,
+     },
+     "pushEvent": "Chose aggressive combat approach."
     },
     "tags": [
      "psycho"
@@ -4289,12 +4334,20 @@
    },
    {
     "id": "fb0_b",
-    "text": "Careful action",
+    "text": "Find alternative escape route - rooftop access",
     "goTo": "filler_branch_2",
     "effects": {
      "stats": {
-      "stamina": -1
-     }
+      "stamina": -2,
+      "stress": -1,
+     },
+     "persona": {
+      "chill": 2,
+     },
+     "flags": {
+      "route_chill": True,
+     },
+     "pushEvent": "Chose strategic escape route."
     },
     "tags": [
      "chill"
@@ -4302,12 +4355,80 @@
    },
    {
     "id": "fb0_c",
-    "text": "Social action",
+    "text": "Help other survivors escape first",
     "goTo": "filler_branch_3",
     "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
+     "stats": {
+      "health": -3,
+      "morality": 5,
+     },
+     "persona": {
+      "nice": 2,
+     },
+     "flags": {
+      "route_nice": True,
+     },
+     "pushEvent": "Prioritized helping others escape."
+    },
+    "tags": [
+     "nice"
+    ]
+   },
+  ],
+  "tags": [
+   "combat"
+   "escape"
+  ]
+ },
+     "persona": {
+      "psycho": 2
+     },
+     "flags": {
+      "route_psycho": true
+     },
+     "pushEvent": "Chose aggressive combat approach."
+    },
+    "tags": [
+     "psycho"
+    ]
+   },
+   {
+    "id": "fb0_b",
+    "text": "Find alternative escape route - rooftop access",
+    "goTo": "filler_branch_2",
+    "effects": {
+     "stats": {
+      "stamina": -2,
+      "stress": -1
+     },
+     "persona": {
+      "chill": 2
+     },
+     "flags": {
+      "route_chill": true
+     },
+     "pushEvent": "Chose strategic escape route."
+    },
+    "tags": [
+     "chill"
+    ]
+   },
+   {
+    "id": "fb0_c",
+    "text": "Help other survivors escape first",
+    "goTo": "filler_branch_3",
+    "effects": {
+     "stats": {
+      "health": -3,
+      "morality": 5
+     },
+     "persona": {
+      "nice": 2
+     },
+     "flags": {
+      "route_nice": true
+     },
+     "pushEvent": "Prioritized helping others escape."
     },
     "tags": [
      "nice"
@@ -4315,7 +4436,7 @@
    },
    {
     "id": "fb0_d",
-    "text": "Selfish action",
+    "text": "Secure supplies and abandon others",
     "goTo": "filler_branch_1",
     "effects": {
      "inventoryAdd": "resource"
@@ -4331,27 +4452,91 @@
  },
  "filler_branch_1": {
   "id": "filler_branch_1",
-  "text": "Branch scene 1: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (nice) shapes your options. What do you do?",
+  "text": "You've reached the rooftop, but the situation is dire. The building is surrounded by infected, and other survivors are panicking. A helicopter approaches in the distance - your only chance for escape. But there are more people than seats available. You must decide who gets to live and who gets left behind.",
   "choices": [
    {
     "id": "fb1_a",
-    "text": "Aggressive action",
+    "text": "Take command and organize evacuation by priority",
     "goTo": "filler_branch_2",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 2,
+      "morality": 3,
      },
      "persona": {
-      "nice": 1
-     }
+      "protector": 2,
+     },
+     "flags": {
+      "route_protector": True,
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
     },
     "tags": [
-     "nice"
+     "protector"
     ]
    },
    {
     "id": "fb1_b",
-    "text": "Careful action",
+    "text": "Negotiate with the pilot for more time",
+    "goTo": "filler_branch_3",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": 1,
+     },
+     "persona": {
+      "fixer": 2,
+     },
+     "flags": {
+      "route_fixer": True,
+     },
+     "pushEvent": "Attempted negotiation for more time."
+    },
+    "tags": [
+     "fixer"
+    ]
+   },
+   {
+    "id": "fb1_c",
+    "text": "Secure your own escape first",
+    "goTo": "filler_branch_4",
+    "effects": {
+     "stats": {
+      "morality": -5,
+     },
+     "persona": {
+      "rude": 2,
+     },
+     "flags": {
+      "route_rude": True,
+     },
+     "pushEvent": "Prioritized personal survival."
+    },
+    "tags": [
+     "rude"
+    ]
+   },
+  ],
+  "tags": [
+   "evacuation"
+   "moral_choice"
+  ]
+ },
+     "persona": {
+      "protector": 2
+     },
+     "flags": {
+      "route_protector": true
+     },
+     "pushEvent": "Organized evacuation with difficult choices."
+    },
+    "tags": [
+     "protector"
+    ]
+   },
+   {
+    "id": "fb1_b",
+    "text": "Negotiate with the pilot for more time",
     "goTo": "filler_branch_3",
     "effects": {
      "stats": {
@@ -4393,16 +4578,67 @@
  },
  "filler_branch_2": {
   "id": "filler_branch_2",
-  "text": "Branch scene 2: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (chill) shapes your options. What do you do?",
+  "text": "The helicopter lands, but the pilot reveals they're from a military quarantine zone. They can only take people who pass medical screening. Several survivors show signs of infection. The pilot insists on testing everyone before boarding. You must decide how to handle this situation.",
   "choices": [
    {
     "id": "fb2_a",
-    "text": "Aggressive action",
-    "goTo": "filler_branch_3",
+    "text": "Submit to medical screening honestly",
+    "goTo": "filler_branch_5",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": -1,
+      "morality": 3,
      },
+     "persona": {
+      "nice": 1,
+     },
+     "pushEvent": "Chose honest medical screening."
+    },
+    "tags": [
+     "nice"
+    ]
+   },
+   {
+    "id": "fb2_b",
+    "text": "Try to hide any symptoms",
+    "goTo": "filler_branch_6",
+    "effects": {
+     "stats": {
+      "stress": 2,
+      "morality": -3,
+     },
+     "persona": {
+      "rude": 1,
+     },
+     "pushEvent": "Attempted to hide symptoms."
+    },
+    "tags": [
+     "rude"
+    ]
+   },
+   {
+    "id": "fb2_c",
+    "text": "Demand everyone gets tested equally",
+    "goTo": "filler_branch_7",
+    "effects": {
+     "stats": {
+      "stress": 1,
+     },
+     "persona": {
+      "protector": 1,
+     },
+     "pushEvent": "Demanded fair testing for all."
+    },
+    "tags": [
+     "protector"
+    ]
+   },
+  ],
+  "tags": [
+   "medical"
+   "quarantine"
+  ]
+ },
      "persona": {
       "chill": 1
      }
@@ -4455,16 +4691,69 @@
  },
  "filler_branch_3": {
   "id": "filler_branch_3",
-  "text": "Branch scene 3: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (rude) shapes your options. What do you do?",
+  "text": "The negotiation fails. The pilot reveals they're part of a military operation and can only take people with specific skills or knowledge. They're looking for engineers, doctors, or people with information about the outbreak. You must prove your worth or find another way.",
   "choices": [
    {
     "id": "fb3_a",
-    "text": "Aggressive action",
-    "goTo": "filler_branch_4",
+    "text": "Claim to have medical knowledge",
+    "goTo": "filler_branch_8",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 2,
      },
+     "persona": {
+      "fixer": 1,
+     },
+     "pushEvent": "Claimed medical expertise."
+    },
+    "tags": [
+     "fixer"
+    ]
+   },
+   {
+    "id": "fb3_b",
+    "text": "Offer information about the building's layout",
+    "goTo": "filler_branch_9",
+    "effects": {
+     "stats": {
+      "stress": -1,
+     },
+     "persona": {
+      "chill": 1,
+     },
+     "pushEvent": "Provided tactical information."
+    },
+    "tags": [
+     "chill"
+    ]
+   },
+   {
+    "id": "fb3_c",
+    "text": "Threaten to expose their location to infected",
+    "goTo": "filler_branch_10",
+    "effects": {
+     "stats": {
+      "stress": 3,
+      "morality": -5,
+     },
+     "persona": {
+      "psycho": 2,
+     },
+     "flags": {
+      "route_psycho": True,
+     },
+     "pushEvent": "Used threats to gain leverage."
+    },
+    "tags": [
+     "psycho"
+    ]
+   },
+  ],
+  "tags": [
+   "negotiation"
+   "skills"
+  ]
+ },
      "persona": {
       "rude": 1
      }
@@ -4517,16 +4806,70 @@
  },
  "filler_branch_4": {
   "id": "filler_branch_4",
-  "text": "Branch scene 4: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (psycho) shapes your options. What do you do?",
+  "text": "You've secured your escape, but Alex and others are left behind. As the helicopter takes off, you see the infected swarm the building. The guilt is overwhelming, but you're alive. The pilot explains they're heading to a research facility where survivors are being studied.",
   "choices": [
    {
     "id": "fb4_a",
-    "text": "Aggressive action",
-    "goTo": "filler_branch_5",
+    "text": "Accept the guilt and focus on survival",
+    "goTo": "filler_branch_11",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 2,
+      "morality": -3,
      },
+     "persona": {
+      "rude": 1,
+     },
+     "pushEvent": "Accepted guilt but prioritized survival."
+    },
+    "tags": [
+     "rude"
+    ]
+   },
+   {
+    "id": "fb4_b",
+    "text": "Demand to go back for the others",
+    "goTo": "filler_branch_12",
+    "effects": {
+     "stats": {
+      "stress": 3,
+      "morality": 5,
+     },
+     "persona": {
+      "protector": 2,
+     },
+     "flags": {
+      "route_protector": True,
+     },
+     "pushEvent": "Demanded return to save others."
+    },
+    "tags": [
+     "protector"
+    ]
+   },
+   {
+    "id": "fb4_c",
+    "text": "Ask about the research facility",
+    "goTo": "filler_branch_13",
+    "effects": {
+     "stats": {
+      "stress": -1,
+     },
+     "persona": {
+      "chill": 1,
+     },
+     "pushEvent": "Focused on gathering information."
+    },
+    "tags": [
+     "chill"
+    ]
+   },
+  ],
+  "tags": [
+   "guilt"
+   "research"
+  ]
+ },
      "persona": {
       "psycho": 1
      }
@@ -4579,16 +4922,58 @@
  },
  "filler_branch_5": {
   "id": "filler_branch_5",
-  "text": "Branch scene 5: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (nice) shapes your options. What do you do?",
+  "text": "Scene 5: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb5_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_6",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 5."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb5_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_7",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 5."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb5_c",
+    "text": "Help others",
+    "goTo": "filler_branch_8",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 5."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "nice": 1
      }
@@ -4641,16 +5026,58 @@
  },
  "filler_branch_6": {
   "id": "filler_branch_6",
-  "text": "Branch scene 6: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (chill) shapes your options. What do you do?",
+  "text": "Scene 6: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb6_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_7",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 6."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb6_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_8",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 6."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb6_c",
+    "text": "Help others",
+    "goTo": "filler_branch_9",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 6."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "chill": 1
      }
@@ -4703,16 +5130,58 @@
  },
  "filler_branch_7": {
   "id": "filler_branch_7",
-  "text": "Branch scene 7: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (rude) shapes your options. What do you do?",
+  "text": "Scene 7: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb7_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_8",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 7."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb7_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_9",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 7."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb7_c",
+    "text": "Help others",
+    "goTo": "filler_branch_10",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 7."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "rude": 1
      }
@@ -4765,16 +5234,58 @@
  },
  "filler_branch_8": {
   "id": "filler_branch_8",
-  "text": "Branch scene 8: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (psycho) shapes your options. What do you do?",
+  "text": "Scene 8: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb8_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_9",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 8."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb8_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_10",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 8."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb8_c",
+    "text": "Help others",
+    "goTo": "filler_branch_11",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 8."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "psycho": 1
      }
@@ -4827,16 +5338,58 @@
  },
  "filler_branch_9": {
   "id": "filler_branch_9",
-  "text": "Branch scene 9: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (nice) shapes your options. What do you do?",
+  "text": "Scene 9: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb9_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_10",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 9."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb9_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_11",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 9."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb9_c",
+    "text": "Help others",
+    "goTo": "filler_branch_12",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 9."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "nice": 1
      }
@@ -4889,16 +5442,58 @@
  },
  "filler_branch_10": {
   "id": "filler_branch_10",
-  "text": "Branch scene 10: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (chill) shapes your options. What do you do?",
+  "text": "Scene 10: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb10_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_11",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 10."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb10_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_12",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 10."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb10_c",
+    "text": "Help others",
+    "goTo": "filler_branch_13",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 10."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "chill": 1
      }
@@ -4951,16 +5546,58 @@
  },
  "filler_branch_11": {
   "id": "filler_branch_11",
-  "text": "Branch scene 11: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (rude) shapes your options. What do you do?",
+  "text": "Scene 11: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb11_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_12",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 11."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb11_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_13",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 11."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb11_c",
+    "text": "Help others",
+    "goTo": "filler_branch_14",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 11."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "rude": 1
      }
@@ -5013,16 +5650,58 @@
  },
  "filler_branch_12": {
   "id": "filler_branch_12",
-  "text": "Branch scene 12: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (psycho) shapes your options. What do you do?",
+  "text": "Scene 12: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb12_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_13",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 12."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb12_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_14",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 12."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb12_c",
+    "text": "Help others",
+    "goTo": "filler_branch_15",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 12."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "psycho": 1
      }
@@ -5075,16 +5754,58 @@
  },
  "filler_branch_13": {
   "id": "filler_branch_13",
-  "text": "Branch scene 13: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (nice) shapes your options. What do you do?",
+  "text": "Scene 13: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb13_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_14",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 13."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb13_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_15",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 13."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb13_c",
+    "text": "Help others",
+    "goTo": "filler_branch_16",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 13."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "nice": 1
      }
@@ -5137,16 +5858,58 @@
  },
  "filler_branch_14": {
   "id": "filler_branch_14",
-  "text": "Branch scene 14: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (chill) shapes your options. What do you do?",
+  "text": "Scene 14: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb14_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_15",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 14."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb14_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_16",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 14."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb14_c",
+    "text": "Help others",
+    "goTo": "filler_branch_17",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 14."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "chill": 1
      }
@@ -5199,16 +5962,58 @@
  },
  "filler_branch_15": {
   "id": "filler_branch_15",
-  "text": "Branch scene 15: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (rude) shapes your options. What do you do?",
+  "text": "Scene 15: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb15_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_16",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 15."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb15_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_17",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 15."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb15_c",
+    "text": "Help others",
+    "goTo": "filler_branch_18",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 15."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "rude": 1
      }
@@ -5261,16 +6066,58 @@
  },
  "filler_branch_16": {
   "id": "filler_branch_16",
-  "text": "Branch scene 16: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (psycho) shapes your options. What do you do?",
+  "text": "Scene 16: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb16_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_17",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 16."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb16_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_18",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 16."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb16_c",
+    "text": "Help others",
+    "goTo": "filler_branch_19",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 16."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "psycho": 1
      }
@@ -5323,16 +6170,58 @@
  },
  "filler_branch_17": {
   "id": "filler_branch_17",
-  "text": "Branch scene 17: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (nice) shapes your options. What do you do?",
+  "text": "Scene 17: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb17_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_18",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 17."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb17_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_19",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 17."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb17_c",
+    "text": "Help others",
+    "goTo": "filler_branch_0",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 17."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "nice": 1
      }
@@ -5385,16 +6274,58 @@
  },
  "filler_branch_18": {
   "id": "filler_branch_18",
-  "text": "Branch scene 18: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (chill) shapes your options. What do you do?",
+  "text": "Scene 18: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb18_a",
-    "text": "Aggressive action",
+    "text": "Take decisive action",
     "goTo": "filler_branch_19",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 18."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb18_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_0",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 18."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb18_c",
+    "text": "Help others",
+    "goTo": "filler_branch_1",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 18."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "chill": 1
      }
@@ -5447,16 +6378,58 @@
  },
  "filler_branch_19": {
   "id": "filler_branch_19",
-  "text": "Branch scene 19: Complex situation requiring decision. Lives hang in balance. Resources are scarce. Time is running out. Your persona (rude) shapes your options. What do you do?",
+  "text": "Scene 19: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
   "choices": [
    {
     "id": "fb19_a",
-    "text": "Aggressive action",
-    "goTo": "hub_convergence",
+    "text": "Take decisive action",
+    "goTo": "filler_branch_0",
     "effects": {
      "stats": {
-      "stress": 2
+      "stress": 1,
      },
+     "pushEvent": "Took decisive action in scene 19."
+    },
+    "tags": [
+     "action"
+    ]
+   },
+   {
+    "id": "fb19_b",
+    "text": "Plan carefully",
+    "goTo": "filler_branch_1",
+    "effects": {
+     "stats": {
+      "stamina": -1,
+      "stress": -1,
+     },
+     "pushEvent": "Planned carefully in scene 19."
+    },
+    "tags": [
+     "planning"
+    ]
+   },
+   {
+    "id": "fb19_c",
+    "text": "Help others",
+    "goTo": "filler_branch_2",
+    "effects": {
+     "stats": {
+      "health": -2,
+      "morality": 3,
+     },
+     "pushEvent": "Helped others in scene 19."
+    },
+    "tags": [
+     "help"
+    ]
+   },
+  ],
+  "tags": [
+   "consequence"
+   "adaptation"
+  ]
+ },
      "persona": {
       "rude": 1
      }
@@ -5572,7 +6545,17 @@
  "ending_escaped": {
   "id": "ending_escaped",
   "text": "ESCAPED: You got out. The city burns behind you. Convoy rolls to safety. You survived. That's all that matters. Or is it? The faces of those left behind haunt the road ahead.",
-  "choices": [],
+  "choices": [
+   {
+    "id": "restart_ending_escaped",
+    "text": "Start a new journey",
+    "goTo": "intro",
+    "effects": {
+     "pushEvent": "Started new game after ending_escaped ending."
+    },
+    "tags": ["restart"]
+   }
+  ],
   "tags": [
    "ending"
   ],
@@ -5582,7 +6565,17 @@
  "ending_stayed": {
   "id": "ending_stayed",
   "text": "THE LAST LIGHT: You stayed when everyone ran. Built sanctuary from ruins. The infected couldn't break what you protected. Months later: survivors call your building 'The Light.' Last beacon of hope in the dead city.",
-  "choices": [],
+  "choices": [
+   {
+    "id": "restart_ending_stayed",
+    "text": "Start a new journey",
+    "goTo": "intro",
+    "effects": {
+     "pushEvent": "Started new game after ending_stayed ending."
+    },
+    "tags": ["restart"]
+   }
+  ],
   "tags": [
    "ending"
   ],
@@ -7762,12 +8755,22 @@
  "ending_ashes": {
   "id": "ending_ashes",
   "text": "ASHES & ASHES: The city fell. You fell with it. Every choice led here. The infected won. Or maybe no one won. Just ashes. Just silence. Just the end.",
-  "choices": [],
+  "choices": [
+   {
+    "id": "restart_ending_ashes",
+    "text": "Start a new journey",
+    "goTo": "intro",
+    "effects": {
+     "pushEvent": "Started new game after ending_ashes ending."
+    },
+    "tags": ["restart"]
+   }
+  ],
   "tags": [
    "ending"
   ],
- "isEnding": true,
- "endingType": "ashes"
+  "isEnding": true,
+  "endingType": "ashes"
  },
 "alex_bond_hard": {
  "id": "alex_bond_hard",
@@ -7828,7 +8831,7 @@
 ,
 "alex_cautious": {
  "id": "alex_cautious",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex approaches you with a serious expression. 'I've been thinking about what happened back there. We need to talk about trust, about what we're willing to do to survive. I'm not sure I can keep going like this.'",
  "choices": [
   {
    "id": "alex_cauti_a",
@@ -7879,7 +8882,7 @@
 },
 "alex_debt": {
  "id": "alex_debt",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex sits across from you, cleaning a weapon. 'You know, I used to think I knew who I was. But this outbreak... it's changed everything. I've done things I never thought I'd do. Have you?'",
  "choices": [
   {
    "id": "alex_debt_a",
@@ -7930,7 +8933,7 @@
 },
 "alex_dependent_tool": {
  "id": "alex_dependent_tool",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex looks at you with concern. 'I've been watching you make decisions. Some of them... they scare me. But I understand why you do them. I just need to know - are we still on the same side?'",
  "choices": [
   {
    "id": "alex_depen_a",
@@ -7981,7 +8984,7 @@
 },
 "alex_dies_after_proof": {
  "id": "alex_dies_after_proof",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex confronts you directly. 'I saw what you did to those infected. The way you handled it... it was efficient, but it was also cold. I need to know - is this who you really are now?'",
  "choices": [
   {
    "id": "alex_dies__a",
@@ -8032,7 +9035,7 @@
 },
 "alex_grateful_conditional": {
  "id": "alex_grateful_conditional",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex approaches cautiously. 'I've been thinking about our partnership. We've survived this long together, but I'm starting to wonder if we're still compatible. Your methods... they're getting darker.'",
  "choices": [
   {
    "id": "alex_grate_a",
@@ -8083,7 +9086,7 @@
 },
 "alex_grateful_lucky": {
  "id": "alex_grateful_lucky",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex sits in silence for a moment, then speaks. 'I've been having nightmares about the people we've left behind. The choices we've made. Do you ever wonder if we're becoming the monsters we're fighting?'",
  "choices": [
   {
    "id": "alex_grate_a",
@@ -8134,7 +9137,7 @@
 },
 "alex_grateful_selfish": {
  "id": "alex_grateful_selfish",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex looks at you with a mix of respect and fear. 'You've kept us alive, I'll give you that. But at what cost? I'm starting to question whether survival is worth losing our humanity.'",
  "choices": [
   {
    "id": "alex_grate_a",
@@ -8185,7 +9188,7 @@
 },
 "alex_guilt_lever": {
  "id": "alex_guilt_lever",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex approaches with a determined look. 'I've decided something. I'm not going to let this world change who I am. I want to help people, not just survive. Can you understand that?'",
  "choices": [
   {
    "id": "alex_guilt_a",
@@ -8236,7 +9239,7 @@
 },
 "alex_learns_independence": {
  "id": "alex_learns_independence",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex sits down heavily. 'I've been thinking about the future. If we make it out of this, what kind of people will we be? Will we be able to go back to normal life after everything we've done?'",
  "choices": [
   {
    "id": "alex_learn_a",
@@ -8287,7 +9290,7 @@
 },
 "alex_professional": {
  "id": "alex_professional",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex looks at you with new understanding. 'I've been watching you protect us, make the hard choices. I realize now that leadership isn't about being liked - it's about keeping people alive. I respect that.'",
  "choices": [
   {
    "id": "alex_profe_a",
@@ -8338,7 +9341,7 @@
 },
 "alex_respect": {
  "id": "alex_respect",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex approaches with a small smile. 'You know, despite everything, I'm glad we're in this together. You've taught me that sometimes you have to be ruthless to be kind. I get it now.'",
  "choices": [
   {
    "id": "alex_respe_a",
@@ -8389,7 +9392,7 @@
 },
 "alex_sees_clinical_killer": {
  "id": "alex_sees_clinical_killer",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex sits quietly, then speaks softly. 'I've been thinking about trust. In this world, trust is everything. I trust you to make the right decisions, even when they're hard. Do you trust me?'",
  "choices": [
   {
    "id": "alex_sees__a",
@@ -8440,7 +9443,7 @@
 },
 "alex_sees_darkness": {
  "id": "alex_sees_darkness",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex looks at you with admiration. 'You've become someone I never expected. Strong, decisive, willing to do what needs to be done. I'm proud to be your partner in this.'",
  "choices": [
   {
    "id": "alex_sees__a",
@@ -8491,7 +9494,7 @@
 },
 "alex_sees_necessary_violence": {
  "id": "alex_sees_necessary_violence",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex approaches with concern. 'I've been worried about you. You've been carrying so much responsibility, making all the hard choices. You don't have to do this alone - I'm here too.'",
  "choices": [
   {
    "id": "alex_sees__a",
@@ -8542,7 +9545,7 @@
 },
 "alex_sees_personal": {
  "id": "alex_sees_personal",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex sits across from you, studying your face. 'I've been thinking about what makes a person good or evil. Is it their actions, or their intentions? You've made me question everything I thought I knew.'",
  "choices": [
   {
    "id": "alex_sees__a",
@@ -8593,7 +9596,7 @@
 },
 "alex_sees_reactive": {
  "id": "alex_sees_reactive",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex looks at you with newfound respect. 'I used to think I knew what was right and wrong. But you've shown me that in this world, sometimes the right thing is the hardest thing. I understand now.'",
  "choices": [
   {
    "id": "alex_sees__a",
@@ -8644,7 +9647,7 @@
 },
 "alex_sees_transactional": {
  "id": "alex_sees_transactional",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex approaches with a serious expression. 'I've been watching you make impossible choices. I realize now that leadership means accepting the burden of those decisions. I'm ready to share that burden with you.'",
  "choices": [
   {
    "id": "alex_sees__a",
@@ -8695,7 +9698,7 @@
 },
 "alex_test_solo": {
  "id": "alex_test_solo",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex sits quietly, then speaks with conviction. 'I've decided that I want to be more like you. Strong, decisive, willing to do what's necessary. Will you teach me how to be a better survivor?'",
  "choices": [
   {
    "id": "alex_test__a",
@@ -8746,7 +9749,7 @@
 },
 "alex_traumatized_harsh": {
  "id": "alex_traumatized_harsh",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex looks at you with understanding. 'I've been thinking about our relationship. We've been through so much together. I realize now that we're not just partners - we're family. And family protects each other.'",
  "choices": [
   {
    "id": "alex_traum_a",
@@ -8797,7 +9800,7 @@
 },
 "alex_uncertain": {
  "id": "alex_uncertain",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex approaches with a determined look. 'I've been reflecting on everything we've been through. You've shown me what real strength looks like. I want to be worthy of your trust and partnership.'",
  "choices": [
   {
    "id": "alex_uncer_a",
@@ -8848,7 +9851,7 @@
 },
 "alex_uncomfortable_silence": {
  "id": "alex_uncomfortable_silence",
- "text": "Alex scene placeholder. This is a branching narrative moment with Alex that affects your relationship and future choices.",
+ "text": "Alex sits down next to you. 'I've been thinking about the future. Whatever happens next, I want you to know that I believe in you. I believe in us. We'll get through this together.'",
  "choices": [
   {
    "id": "alex_uncom_a",
@@ -15846,7 +16849,150 @@
  "tags": [
   "generated"
  ]
-}
+},
+
+// Missing scenes added for completeness
+ "day4_avoid_survivors": {
+  "id": "day4_avoid_survivors",
+  "text": "Day 4: You've decided to avoid other survivors for now. The risk of betrayal or infection is too high. You focus on securing your own survival and building your resources. This isolation comes with its own challenges and opportunities.",
+  "choices": [
+   {
+    "id": "day4_avoid_a",
+    "text": "Continue solo survival",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"stress": 1, "morality": -2},
+     "pushEvent": "Continued solo survival approach."
+    },
+    "tags": ["solo"]
+   },
+   {
+    "id": "day4_avoid_b",
+    "text": "Reconsider and seek allies",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"stress": -1, "morality": 2},
+     "pushEvent": "Reconsidered solo approach."
+    },
+    "tags": ["social"]
+   }
+  ],
+  "tags": ["day4", "survival"]
+ },
+
+ "day2_trust_building": {
+  "id": "day2_trust_building",
+  "text": "Day 2: Building trust with other survivors is crucial for long-term survival. You work on establishing relationships, sharing resources, and creating bonds that will help everyone survive. Trust is earned through actions, not words.",
+  "choices": [
+   {
+    "id": "day2_trust_a",
+    "text": "Share resources generously",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"morality": 5, "health": -2},
+     "relationships": {"Survivors": 3},
+     "pushEvent": "Shared resources to build trust."
+    },
+    "tags": ["generous"]
+   },
+   {
+    "id": "day2_trust_b",
+    "text": "Be cautious but fair",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"morality": 2},
+     "relationships": {"Survivors": 1},
+     "pushEvent": "Built trust cautiously."
+    },
+    "tags": ["cautious"]
+   }
+  ],
+  "tags": ["day2", "trust"]
+ },
+
+ "day4_compassionate_rules": {
+  "id": "day4_compassionate_rules",
+  "text": "Day 4: You establish rules for your group that prioritize compassion and mutual aid. Everyone contributes what they can, and everyone receives what they need. This approach builds strong community bonds but may not be sustainable in the long term.",
+  "choices": [
+   {
+    "id": "day4_compassion_a",
+    "text": "Maintain compassionate approach",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"morality": 5, "stress": 2},
+     "pushEvent": "Maintained compassionate rules."
+    },
+    "tags": ["compassion"]
+   },
+   {
+    "id": "day4_compassion_b",
+    "text": "Adjust rules for sustainability",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"morality": 1, "stress": -1},
+     "pushEvent": "Adjusted rules for sustainability."
+    },
+    "tags": ["pragmatic"]
+   }
+  ],
+  "tags": ["day4", "rules"]
+ },
+
+ "day5_resource_management": {
+  "id": "day5_resource_management",
+  "text": "Day 5: Resource management becomes critical as supplies dwindle. You must decide how to allocate food, water, medical supplies, and other essentials. Fair distribution is important, but so is ensuring the group's survival.",
+  "choices": [
+   {
+    "id": "day5_resource_a",
+    "text": "Equal distribution for all",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"morality": 3, "stress": 1},
+     "pushEvent": "Chose equal resource distribution."
+    },
+    "tags": ["equal"]
+   },
+   {
+    "id": "day5_resource_b",
+    "text": "Priority to essential workers",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"morality": 1, "stress": -1},
+     "pushEvent": "Prioritized essential workers."
+    },
+    "tags": ["priority"]
+   }
+  ],
+  "tags": ["day5", "resources"]
+ },
+
+ "day4_study_infected": {
+  "id": "day4_study_infected",
+  "text": "Day 4: You take time to study the infected, observing their behavior patterns, weaknesses, and strengths. Understanding your enemy is crucial for survival. This knowledge could save lives and help you avoid dangerous situations.",
+  "choices": [
+   {
+    "id": "day4_study_a",
+    "text": "Observe from safe distance",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"stress": -1},
+     "pushEvent": "Studied infected safely."
+    },
+    "tags": ["observation"]
+   },
+   {
+    "id": "day4_study_b",
+    "text": "Take calculated risks for better data",
+    "goTo": "intro",
+    "effects": {
+     "stats": {"health": -2, "stress": 2},
+     "pushEvent": "Took risks for better intelligence."
+    },
+    "tags": ["risky"]
+   }
+  ],
+  "tags": ["day4", "research"]
+ }
 });
 
 })();
