@@ -47,11 +47,18 @@
     ]
   };
 
+  const BACKGROUND_LABELS = {
+    medic: "Field Medic",
+    fighter: "Union Brawler",
+    hacker: "Network Tech",
+    thief: "Street Thief"
+  };
+
   const MAX_STAT = 100;
   const MIN_STAT = -100;
 
   const DEFAULT_STATE = {
-    sceneId: "neutral_act1_hub_apartment",
+    sceneId: "neutral_act0_intro_apartment",
     time: 0,
     stats: { health: 90, stamina: 12, stress: 8, morality: 0 },
     persona: {
@@ -62,6 +69,8 @@
       sociopath: 0
     },
     inventory: ["pocketknife", "old_radio", "flare"],
+    playerName: "Survivor",
+    background: null,
     flags: {},
     relationships: {},
     rngSeed: 1776,
@@ -259,6 +268,8 @@
         sceneText: document.getElementById("scene-text"),
         choices: document.getElementById("choices"),
         inventory: document.getElementById("inventory-list"),
+        charName: document.getElementById("char-name"),
+        charBackground: document.getElementById("char-background"),
         traumaBar: document.getElementById("trauma-bar"),
         traumaWarning: document.getElementById("trauma-warning"),
         personaGrid: document.getElementById("persona-grid"),
@@ -425,6 +436,25 @@
       if (!reqMet) return;
 
       const nextState = deepClone(this.state);
+      let nameEvent = null;
+      let backgroundEvent = null;
+      if (choice.assignName) {
+        const current = this.state.playerName || "Survivor";
+        let name = "";
+        if (typeof window.prompt === "function") {
+          name = window.prompt("What should Alex call you?", current) || "";
+        }
+        name = name.trim().slice(0, 40);
+        if (!name) name = current;
+        nextState.playerName = name;
+        nameEvent = `You tell Alex to call you ${name}.`;
+      }
+      if (choice.setBackground) {
+        nextState.background = choice.setBackground;
+        const label = BACKGROUND_LABELS[choice.setBackground] || choice.setBackground;
+        backgroundEvent = `You lean into your ${label.toLowerCase()} instincts.`;
+      }
+
       applyCost(nextState, choice.cost);
       applyEffects(nextState, choice.effects);
       resolveSchedule(nextState);
@@ -441,6 +471,13 @@
       this.state = nextState;
       this.random = mulberry32(this.state.rngSeed || 1337);
       this.save();
+
+      if (nameEvent) {
+        this.pushEvent(nameEvent, "world_event");
+      }
+      if (backgroundEvent) {
+        this.pushEvent(backgroundEvent, "world_event");
+      }
 
       if (shouldPopup(choice)) {
         this.showPopup(choice.popupText || "They will remember this.");
@@ -479,15 +516,30 @@
         applyEffects(this.state, { flagsSet: scene.flagsSet });
       }
 
-      this.displayStory(scene.text, scene);
+      const storyText = Array.isArray(scene.text)
+        ? scene.text.map((line) => this.interpolateText(line))
+        : this.interpolateText(scene.text || "");
+
+      this.displayStory(storyText, scene);
       this.displayChoices(scene);
       this.renderStats();
       this.renderInventory();
+      this.renderCharacter();
       this.renderPersona();
       this.renderRelationships();
       this.renderDebug();
       this.updateTime();
       this.autosaveJournal(scene);
+    }
+
+    interpolateText(text) {
+      if (typeof text !== "string") return text;
+      const name = this.state.playerName || "Survivor";
+      const backgroundKey = this.state.background;
+      const backgroundLabel = BACKGROUND_LABELS[backgroundKey] || (backgroundKey ? backgroundKey : "survivor");
+      return text
+        .replace(/\{\{name\}\}/gi, name)
+        .replace(/\{\{background\}\}/gi, backgroundLabel);
     }
 
     autosaveJournal(scene) {
@@ -531,7 +583,8 @@
         button.className = "choice";
         button.type = "button";
         button.dataset.type = (choice.tags && choice.tags[0]) || choice.type || "";
-        button.innerHTML = `<span class="choice-text">${choice.text}</span>`;
+        const choiceLabel = this.interpolateText(choice.text || "");
+        button.innerHTML = `<span class="choice-text">${choiceLabel}</span>`;
 
         const met = meetsRequirement(this.state, choice.req);
         if (!met) {
@@ -602,6 +655,16 @@
         chip.className = "inventory-chip";
         chip.textContent = item;
         this.dom.inventory.appendChild(chip);
+      }
+    }
+
+    renderCharacter() {
+      if (this.dom.charName) {
+        this.dom.charName.textContent = this.state.playerName || "—";
+      }
+      if (this.dom.charBackground) {
+        const key = this.state.background;
+        this.dom.charBackground.textContent = key ? BACKGROUND_LABELS[key] || key : "—";
       }
     }
 
@@ -760,9 +823,156 @@
   window.STORY_DATABASE = window.STORY_DATABASE || {};
 
   Object.assign(window.STORY_DATABASE, {
+    neutral_act0_intro_apartment: {
+      id: "neutral_act0_intro_apartment",
+      text: "Your apartment walls tremble as sirens fade into rain. Someone hammers on your door and whispers your name: Alex, the neighbor who always fixes the fuse box.",
+      tags: ["intro", "act0"],
+      choices: [
+        {
+          id: "intro_peek",
+          text: "Check the peephole before touching the locks",
+          goTo: "neutral_act0_contact_alex",
+          effects: {
+            stats: { stress: -1 },
+            pushEvent: "You study Alex's panic through the fisheye glass."
+          },
+          tags: ["survival"]
+        },
+        {
+          id: "intro_barricade",
+          text: "Drag the dresser toward the door just in case",
+          goTo: "neutral_act0_contact_alex",
+          effects: {
+            stats: { stamina: -1, stress: 1 },
+            pushEvent: "Wood scrapes the tile as you brace the entryway."
+          },
+          tags: ["combat"]
+        },
+        {
+          id: "intro_callout",
+          text: "Call out to Alex through the door",
+          goTo: "neutral_act0_contact_alex",
+          effects: {
+            relationships: { Alex: 2 },
+            pushEvent: "Alex answers with breathless relief."
+          },
+          tags: ["social"]
+        }
+      ]
+    },
+
+    neutral_act0_contact_alex: {
+      id: "neutral_act0_contact_alex",
+      text: "Alex shakes, soaked in alley rain. Their brother turned downstairs, the infection spreading door to door. They beg you to choose: hide together, share supplies, or keep distance.",
+      tags: ["scene", "act0"],
+      choices: [
+        {
+          id: "let_alex_in",
+          text: "Undo the locks and pull Alex inside",
+          goTo: "neutral_act0_background_select",
+          effects: {
+            stats: { morality: 2, stress: -2 },
+            relationships: { Alex: 6 },
+            pushEvent: "You haul Alex over the threshold and slam the deadbolt."
+          },
+          tags: ["leader"]
+        },
+        {
+          id: "pass_supplies",
+          text: "Pass gauze and water through the chain",
+          goTo: "neutral_act0_background_select",
+          effects: {
+            stats: { morality: 1 },
+            inventoryRemove: ["old_radio"],
+            pushEvent: "You slide supplies through the gap while the hallway wails."
+          },
+          tags: ["moral"]
+        },
+        {
+          id: "keep_distance",
+          text: "Keep the chain tight and gather every detail",
+          goTo: "neutral_act0_background_select",
+          effects: {
+            persona: { fixer: 1 },
+            stats: { stress: -1 },
+            pushEvent: "You map the outbreak street by street as Alex talks."
+          },
+          tags: ["stealth"]
+        }
+      ]
+    },
+
+    neutral_act0_background_select: {
+      id: "neutral_act0_background_select",
+      text: "Alex asks what to do next. The answer depends on who you are. Choose the skills you'll lean on when the city falls.",
+      tags: ["scene", "act0"],
+      choices: [
+        {
+          id: "background_medic",
+          text: "\"I'm the medic on this floor. Let me triage.\"",
+          assignName: true,
+          setBackground: "medic",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            stats: { health: 5, stress: -2, morality: 2 },
+            persona: { protector: 1 },
+            inventoryAdd: ["field_kit"],
+            flagsSet: ["background_medic"],
+            pushEvent: "Your medic bag hits the floor ready to open."
+          },
+          tags: ["social"]
+        },
+        {
+          id: "background_fighter",
+          text: "\"I'm the union muscle. I keep us standing.\"",
+          assignName: true,
+          setBackground: "fighter",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            stats: { stamina: 3, stress: -1, morality: -1 },
+            persona: { warlord: 1 },
+            inventoryAdd: ["crowbar"],
+            flagsSet: ["background_fighter"],
+            pushEvent: "Metal groans as you pry a locker open for gear."
+          },
+          tags: ["combat"]
+        },
+        {
+          id: "background_hacker",
+          text: "\"I'm the building's network tech. I keep us linked.\"",
+          assignName: true,
+          setBackground: "hacker",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            stats: { morality: 1, stress: -1 },
+            persona: { fixer: 1 },
+            inventoryAdd: ["signal_deck"],
+            flagsSet: ["background_hacker"],
+            pushEvent: "You boot a battered laptop and reroute the rooftop antenna."
+          },
+          tags: ["leader"]
+        },
+        {
+          id: "background_thief",
+          text: "\"I'm the one who slips locks and keeps us stocked.\"",
+          assignName: true,
+          setBackground: "thief",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            stats: { stress: -2, morality: -2 },
+            persona: { sociopath: 1 },
+            inventoryAdd: ["lockpicks"],
+            flagsSet: ["background_thief"],
+            pushEvent: "Lockpicks clink in your palm; Alex eyes you with wary trust."
+          },
+          tags: ["stealth"]
+        }
+      ]
+    },
+
     neutral_act1_hub_apartment: {
       id: "neutral_act1_hub_apartment",
-      text: "Sirens fade beneath rain slamming broken windows. Smoke coils in the stairwell; frightened voices crowd the hall. Whatever you choose will ripple for days.",
+      text: "Sirens fade beneath rain slamming broken windows. Smoke coils in the stairwell; frightened voices crowd the hall. {{name}}—the {{background}} of this block—has to decide how the first stand plays out.",
       tags: ["hub", "act1"],
       choices: [
         {
@@ -3036,6 +3246,7 @@
         {
           id: "tend_wounds",
           text: "Tend wounds and stabilize morale",
+          req: { flagsNone: ["act4_signal_done"] },
           goTo: "neutral_act4_side_signal",
           effects: {
             stats: { stress: -3 },
@@ -3046,11 +3257,23 @@
         {
           id: "interrogate_spy",
           text: "Interrogate a captured spy",
+          req: { flagsNone: ["act4_spy_done"] },
           goTo: "neutral_act4_side_triad",
           effects: {
             persona: { fixer: 1 }
           },
           tags: ["moral"]
+        },
+        {
+          id: "walk_lines",
+          text: "Walk the barricades so every volunteer sees you steady",
+          req: { flags: ["act4_signal_done", "act4_spy_done"] },
+          goTo: "neutral_act4_bridge_to_act5",
+          effects: {
+            stats: { stress: -2 },
+            relationships: { Volunteers: 3 }
+          },
+          tags: ["leader"]
         }
       ]
     },
@@ -3065,7 +3288,8 @@
           text: "Boost allied frequencies",
           goTo: "neutral_act4_hub_main",
           effects: {
-            relationships: { Stadium: 2, Convoy: 2 }
+            relationships: { Stadium: 2, Convoy: 2 },
+            flagsSet: ["act4_signal_done"]
           },
           tags: ["social"]
         },
@@ -3075,7 +3299,8 @@
           goTo: "neutral_act4_hub_main",
           effects: {
             relationships: { Raiders: -4 },
-            stats: { stress: -1 }
+            stats: { stress: -1 },
+            flagsSet: ["act4_signal_done"]
           },
           tags: ["combat"]
         }
@@ -3093,7 +3318,8 @@
           goTo: "neutral_act4_hub_main",
           effects: {
             inventoryAdd: ["curfew_roster"],
-            stats: { morality: -1 }
+            stats: { morality: -1 },
+            flagsSet: ["act4_spy_done"]
           },
           tags: ["moral"]
         },
@@ -3102,7 +3328,8 @@
           text: "Refuse and detain them",
           goTo: "neutral_act4_hub_main",
           effects: {
-            stats: { morality: 1 }
+            stats: { morality: 1 },
+            flagsSet: ["act4_spy_done"]
           },
           tags: ["leader"]
         }
