@@ -527,7 +527,7 @@
   Object.assign(window.STORY_DATABASE, {
  "intro": {
   "id": "intro",
-  "text": "Day 47 of the outbreak. Your apartment building has held\u2014barely. Infected fill the streets below like a living sea. The government is gone. Radio is just static and screams. You hear hammering on your door. Through the peephole: Alex, from 3B, who used to fix everyone's fuse boxes. Their hands are covered in blood. Behind them, shadows move in the stairwell. Infected. Climbing. This moment defines everything.",
+  "text": "Day 1 of the outbreak. Your apartment building has held\u2014barely. Infected fill the streets below like a living sea. The government is gone. Radio is just static and screams. You hear hammering on your door. Through the peephole: Alex, from 3B, who used to fix everyone's fuse boxes. Their hands are covered in blood. Behind them, shadows move in the stairwell. Infected. Climbing. This moment defines everything.",
   "choices": [
    {
     "id": "i_peek",
@@ -1220,7 +1220,7 @@
    },
    {
     "id": "dm_not_enough",
-    "text": "Not enough\u2014close door",
+    "text": "Not enough\u2014keep door closed",
     "goTo": "alex_dies_after_proof",
     "effects": {
      "stats": {
@@ -3902,6 +3902,101 @@
   ],
   "tags": [
    "demand_saved",
+   "act1"
+  ]
+ },
+ "saved_after_apology": {
+  "id": "saved_after_apology",
+  "text": "Alex is inside. Alive. The apology helped, but there's still tension. They sit near the door, not quite comfortable. 'I understand why you had to be sure,' they say quietly. 'But it still hurt. Being treated like... like a threat first, a person second.' They look at you. 'I've known you for two years. Fixed your fuse box six times. Helped you move furniture. And you treated me like one of THEM.' The pain in their voice is raw. Can you fix this?",
+  "choices": [
+   {
+    "id": "sa_apologize_deeper",
+    "text": "Apologize more deeply. Explain the fear.",
+    "goTo": "apology_deeper_accepted",
+    "effects": {
+     "stats": {
+      "stress": -2
+     },
+     "persona": {
+      "nice": 2
+     },
+     "relationships": {
+      "Alex": 6
+     },
+     "flagsSet": [
+      "apology_deeper"
+     ],
+     "pushEvent": "'I'm sorry. Fear makes us cruel. I was afraid. Not of you. Of being wrong.' Alex softens. 'I get it. This world is fear.'"
+    },
+    "tags": [
+     "nice"
+    ]
+   },
+   {
+    "id": "sa_actions_not_words",
+    "text": "Actions, not words. Let me make it up to you.",
+    "goTo": "apology_make_amends",
+    "effects": {
+     "time": 1,
+     "persona": {
+      "nice": 1,
+      "chill": 1
+     },
+     "relationships": {
+      "Alex": 5
+     },
+     "flagsSet": [
+      "making_amends"
+     ],
+     "pushEvent": "'Let me show you. Not just words.' Spend the day helping them. Slowly, walls come down."
+    },
+    "tags": [
+     "nice"
+    ]
+   },
+   {
+    "id": "sa_justify_caution",
+    "text": "Justify it—caution kept us both alive",
+    "goTo": "apology_justified",
+    "effects": {
+     "persona": {
+      "chill": 2
+     },
+     "relationships": {
+      "Alex": 3
+     },
+     "flagsSet": [
+      "apology_justified"
+     ],
+     "pushEvent": "'Caution kept us alive. Can't apologize for that.' Alex: 'I guess.' But the hurt remains."
+    },
+    "tags": [
+     "chill"
+    ]
+   },
+   {
+    "id": "sa_no_further_apology",
+    "text": "Don't apologize further. You were right to verify.",
+    "goTo": "apology_no_further",
+    "effects": {
+     "persona": {
+      "rude": 1
+     },
+     "relationships": {
+      "Alex": 1
+     },
+     "flagsSet": [
+      "no_further_apology"
+     ],
+     "pushEvent": "'Did what I had to. No further apology.' Alex's eyes go cold. 'Right. Good to know where we stand.'"
+    },
+    "tags": [
+     "rude"
+    ]
+   }
+  ],
+  "tags": [
+   "apology_saved",
    "act1"
   ]
  },
