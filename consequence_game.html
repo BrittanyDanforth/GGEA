@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consequence Game - Massive Branching Story</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .main-content {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 25px;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .scene-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .stat-bar {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        .stat-bar span {
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+        
+        .choices-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .choice-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        
+        .choice-button:hover {
+            background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .choice-button:active {
+            transform: translateY(0);
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .inventory-item {
+            background: rgba(78, 205, 196, 0.2);
+            padding: 8px 12px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+        
+        .flags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .flag {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .controls {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .control-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        h2, h3 {
+            color: #4ecdc4;
+            margin-top: 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 CONSEQUENCE GAME 🎮</h1>
+        <div class="loading" id="loading">Loading the massive branching story...</div>
+        
+        <div class="game-layout" id="gameLayout" style="display: none;">
+            <div class="main-content">
+                <div id="scene"></div>
+                <div id="choices"></div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="panel">
+                    <h3>Stats</h3>
+                    <div id="stats"></div>
+                </div>
+                
+                <div class="panel">
+                    <div id="inventory"></div>
+                </div>
+                
+                <div class="panel">
+                    <div id="flags"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-button" onclick="resetGame()">New Game</button>
+            <button class="control-button" onclick="saveGame()">Save Game</button>
+            <button class="control-button" onclick="loadGame()">Load Game</button>
+        </div>
+    </div>
+
+    <script>
+(() => {
+  const STORAGE_KEY = "consequence_save_v1";
+  const CONSEQUENCE_FLAGS = new Set([
+    "alex_alive","alex_dead","alex_abused","alex_controlled","alex_exploited",
+    "route_psycho","route_nice","route_chill","route_rude",
+    "route_protector","route_warlord","route_fixer","route_killer","route_sociopath",
+    "proof_killer_mark","proof_killer_cull","proof_killer_fear","proof_killer_apex",
+    "proof_warlord_blackout","proof_warlord_tithe","proof_warlord_stomp","proof_warlord_supremacy",
+    "proof_fixer_web","proof_fixer_omnimarket",
+    "proof_sociopath_dominion",
+    "proof_creep_watch","proof_creep_keys","proof_creep_silence",
+    "proof_split_echoes","proof_split_masks",
+    "proof_chem_binge","proof_chem_trade","proof_chem_shake",
+    "bloom_exposed","wall_breached"
+  ]);
+
+  const MUTEX = {
+    route: ["route_psycho","route_nice","route_chill","route_rude","route_protector","route_warlord","route_fixer","route_killer","route_sociopath"]
+  };
+
+  const MAX_STAT = 100;
+  const MIN_STAT = -100;
+
+  const DEFAULT_STATE = {
+    sceneId: "intro",
+    time: 0,
+    stats: { health: 90, stamina: 12, stress: 8, morality: 0, viralLoad: 0, chemCraving: 0 },
+    persona: { psycho: 0, nice: 0, chill: 0, rude: 0, protector: 0, warlord: 0, fixer: 0, killer: 0, sociopath: 0 },
+    inventory: ["pocketknife", "old_radio", "flare"],
+    playerName: "Survivor",
+    background: null,
+    flags: {},
+    relationships: {},
+    rngSeed: 1776,
+    decisionTrace: [],
+    schedule: []
+  };
+
+  function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+  function clamp(value) { return Math.max(MIN_STAT, Math.min(MAX_STAT, value)); }
+  
+  function setMutexFlag(state, group, flag) {
+    if (!MUTEX[group]) return;
+    for (const f of MUTEX[group]) { if (f !== flag) delete state.flags[f]; }
+    state.flags[flag] = true;
+  }
+
+  function getChoiceTarget(choice) {
+    if (!choice) return null;
+    const destination = choice.goTo ?? choice.next;
+    return typeof destination === "string" && destination.length ? destination : null;
+  }
+
+  function ensureStats(state) {
+    for (const key of Object.keys(state.stats)) { state.stats[key] = clamp(state.stats[key]); }
+  }
+
+  function resolveSchedule(state) {
+    const next = [];
+    for (const entry of state.schedule) {
+      const updated = { ...entry, steps: entry.steps - 1 };
+      if (updated.steps <= 0) { applyEffects(state, updated.apply || {}); }
+      else { next.push(updated); }
+    }
+    state.schedule = next;
+  }
+
+  function applyCost(state, cost) {
+    if (!cost) return;
+    if (typeof cost.time === "number") { state.time = Math.max(0, state.time + cost.time); }
+    if (cost.stats) {
+      for (const [k, v] of Object.entries(cost.stats)) { state.stats[k] = clamp((state.stats[k] || 0) - v); }
+    }
+  }
+
+  function applyEffects(state, effects) {
+    if (!effects) return;
+    if (typeof effects.time === "number") { state.time = Math.max(0, state.time + effects.time); }
+    if (effects.stats) {
+      for (const [k, v] of Object.entries(effects.stats)) { state.stats[k] = clamp((state.stats[k] || 0) + v); }
+    }
+    if (effects.persona) {
+      for (const [k, v] of Object.entries(effects.persona)) { state.persona[k] = clamp((state.persona[k] || 0) + v); }
+    }
+    if (effects.inventory) {
+      if (Array.isArray(effects.inventory)) {
+        for (const item of effects.inventory) {
+          if (typeof item === "string" && !state.inventory.includes(item)) {
+            state.inventory.push(item);
+          }
+        }
+      }
+    }
+    if (effects.removeInventory) {
+      if (Array.isArray(effects.removeInventory)) {
+        state.inventory = state.inventory.filter(item => !effects.removeInventory.includes(item));
+      }
+    }
+    if (effects.flags) {
+      for (const [k, v] of Object.entries(effects.flags)) {
+        if (CONSEQUENCE_FLAGS.has(k)) {
+          if (v === true) state.flags[k] = true;
+          else if (v === false) delete state.flags[k];
+        }
+      }
+    }
+    if (effects.relationships) {
+      for (const [k, v] of Object.entries(effects.relationships)) {
+        state.relationships[k] = (state.relationships[k] || 0) + v;
+      }
+    }
+    if (effects.schedule) {
+      if (Array.isArray(effects.schedule)) {
+        state.schedule.push(...effects.schedule);
+      }
+    }
+    ensureStats(state);
+  }
+
+  function processChoice(state, choice) {
+    if (!choice) return false;
+    
+    // Record the decision
+    state.decisionTrace.push({
+      sceneId: state.sceneId,
+      choice: choice.text || choice.label || "Unknown choice",
+      timestamp: state.time
+    });
+    
+    // Apply costs
+    if (choice.cost) applyCost(state, choice.cost);
+    
+    // Apply effects
+    if (choice.effects) applyEffects(state, choice.effects);
+    
+    // Handle mutex flags
+    if (choice.mutexFlag) {
+      const [group, flag] = choice.mutexFlag.split(":");
+      if (group && flag) setMutexFlag(state, group, flag);
+    }
+    
+    // Move to next scene
+    const target = getChoiceTarget(choice);
+    if (target) {
+      state.sceneId = target;
+      return true;
+    }
+    
+    return false;
+  }
+
+  function loadScene(sceneId) {
+    // This will be populated with the actual scene data
+    const scenes = window.CONSEQUENCE_SCENES || {};
+    return scenes[sceneId] || {
+      id: sceneId,
+      title: "Unknown Scene",
+      text: "This scene could not be loaded.",
+      choices: []
+    };
+  }
+
+  function getAvailableChoices(state, scene) {
+    if (!scene || !scene.choices) return [];
+    
+    return scene.choices.filter(choice => {
+      // Check requirements
+      if (choice.requires) {
+        for (const [key, value] of Object.entries(choice.requires)) {
+          if (key === "flags") {
+            for (const [flag, required] of Object.entries(value)) {
+              if (required && !state.flags[flag]) return false;
+              if (!required && state.flags[flag]) return false;
+            }
+          } else if (key === "stats") {
+            for (const [stat, threshold] of Object.entries(value)) {
+              if (state.stats[stat] < threshold) return false;
+            }
+          } else if (key === "inventory") {
+            for (const item of value) {
+              if (!state.inventory.includes(item)) return false;
+            }
+          }
+        }
+      }
+      
+      // Check exclusions
+      if (choice.excludes) {
+        for (const [key, value] of Object.entries(choice.excludes)) {
+          if (key === "flags") {
+            for (const flag of value) {
+              if (state.flags[flag]) return false;
+            }
+          }
+        }
+      }
+      
+      return true;
+    });
+  }
+
+  function saveGame(state) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      return true;
+    } catch (e) {
+      console.error("Failed to save game:", e);
+      return false;
+    }
+  }
+
+  function loadGame() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return null;
+      
+      const state = JSON.parse(saved);
+      
+      // Validate and fix state
+      if (!state.sceneId) state.sceneId = "intro";
+      if (!state.stats) state.stats = { ...DEFAULT_STATE.stats };
+      if (!state.persona) state.persona = { ...DEFAULT_STATE.persona };
+      if (!state.inventory) state.inventory = [...DEFAULT_STATE.inventory];
+      if (!state.flags) state.flags = {};
+      if (!state.relationships) state.relationships = {};
+      if (!state.decisionTrace) state.decisionTrace = [];
+      if (!state.schedule) state.schedule = [];
+      
+      ensureStats(state);
+      return state;
+    } catch (e) {
+      console.error("Failed to load game:", e);
+      return null;
+    }
+  }
+
+  function newGame() {
+    return deepClone(DEFAULT_STATE);
+  }
+
+  // Game state management
+  let currentState = null;
+  let currentScene = null;
+
+  function initializeGame() {
+    currentState = loadGame() || newGame();
+    currentScene = loadScene(currentState.sceneId);
+    updateUI();
+  }
+
+  function updateUI() {
+    if (!currentState || !currentScene) return;
+    
+    // Hide loading screen and show game
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("gameLayout").style.display = "grid";
+    
+    // Update scene display
+    const sceneElement = document.getElementById("scene");
+    if (sceneElement) {
+      sceneElement.innerHTML = `
+        <h2>${currentScene.title || "Scene"}</h2>
+        <div class="scene-text">${currentScene.text || ""}</div>
+      `;
+    }
+    
+    // Update stats display
+    const statsElement = document.getElementById("stats");
+    if (statsElement) {
+      statsElement.innerHTML = `
+        <div class="stat-bar">
+          <span>Health: ${currentState.stats.health}</span>
+          <span>Stamina: ${currentState.stats.stamina}</span>
+          <span>Stress: ${currentState.stats.stress}</span>
+          <span>Morality: ${currentState.stats.morality}</span>
+        </div>
+        <div class="stat-bar">
+          <span>Viral Load: ${currentState.stats.viralLoad}</span>
+          <span>Chem Craving: ${currentState.stats.chemCraving}</span>
+        </div>
+      `;
+    }
+    
+    // Update inventory display
+    const inventoryElement = document.getElementById("inventory");
+    if (inventoryElement) {
+      inventoryElement.innerHTML = `
+        <h3>Inventory</h3>
+        <div class="inventory-grid">
+          ${currentState.inventory.map(item => `<span class="inventory-item">${item}</span>`).join("")}
+        </div>
+      `;
+    }
+    
+    // Update choices display
+    const choicesElement = document.getElementById("choices");
+    if (choicesElement) {
+      const availableChoices = getAvailableChoices(currentState, currentScene);
+      choicesElement.innerHTML = `
+        <h3>Choices</h3>
+        <div class="choices-list">
+          ${availableChoices.map((choice, index) => `
+            <button class="choice-button" onclick="makeChoice(${index})">
+              ${choice.text || choice.label || "Unknown choice"}
+            </button>
+          `).join("")}
+        </div>
+      `;
+    }
+    
+    // Update flags display (for debugging)
+    const flagsElement = document.getElementById("flags");
+    if (flagsElement) {
+      const activeFlags = Object.keys(currentState.flags).filter(flag => currentState.flags[flag]);
+      flagsElement.innerHTML = `
+        <h3>Active Flags</h3>
+        <div class="flags-list">
+          ${activeFlags.map(flag => `<span class="flag">${flag}</span>`).join("")}
+        </div>
+      `;
+    }
+  }
+
+  function makeChoice(choiceIndex) {
+    if (!currentState || !currentScene) return;
+    
+    const availableChoices = getAvailableChoices(currentState, currentScene);
+    const choice = availableChoices[choiceIndex];
+    
+    if (!choice) return;
+    
+    // Process the choice
+    const moved = processChoice(currentState, choice);
+    
+    // Resolve any scheduled effects
+    resolveSchedule(currentState);
+    
+    // Load new scene if we moved
+    if (moved) {
+      currentScene = loadScene(currentState.sceneId);
+    }
+    
+    // Save game state
+    saveGame(currentState);
+    
+    // Update UI
+    updateUI();
+  }
+
+  function resetGame() {
+    if (confirm("Are you sure you want to start a new game? This will delete your current progress.")) {
+      currentState = newGame();
+      currentScene = loadScene(currentState.sceneId);
+      saveGame(currentState);
+      updateUI();
+    }
+  }
+
+  // Expose functions to global scope
+  window.makeChoice = makeChoice;
+  window.resetGame = resetGame;
+  window.initializeGame = initializeGame;
+  window.saveGame = () => saveGame(currentState);
+  window.loadGame = () => {
+    currentState = loadGame();
+    if (currentState) {
+      currentScene = loadScene(currentState.sceneId);
+      updateUI();
+    }
+  };
+
+  // Initialize when page loads
+  document.addEventListener("DOMContentLoaded", initializeGame);
+})();
+
+// Massive Branching Story Data
+window.CONSEQUENCE_SCENES = {
+  intro: {
+    id: "intro",
+    title: "The Awakening",
+    text: "You wake up in a dimly lit room, your head pounding. The air is thick with the smell of chemicals and decay. Through the cracked window, you can see the cityscape - but something's wrong. The buildings are covered in strange growths, and the sky has an unnatural purple hue. Your radio crackles with static, occasionally picking up fragments of voices. You need to figure out what happened and how to survive.",
+    choices: [
+      {
+        text: "Check the radio for more information",
+        effects: { stats: { stress: -2 } },
+        goTo: "radio_check"
+      },
+      {
+        text: "Look out the window to assess the situation",
+        effects: { stats: { stress: 1 } },
+        goTo: "window_view"
+      },
+      {
+        text: "Search the room for supplies",
+        effects: { stats: { stamina: -1 } },
+        goTo: "room_search"
+      }
+    ]
+  },
+  
+  radio_check: {
+    id: "radio_check",
+    title: "Radio Signals",
+    text: "You fiddle with the radio dials, trying to find a clear signal. After some static, you catch fragments of broadcasts: '...quarantine zone...' '...avoid the infected...' '...safe zones at...' The signal cuts out frequently, but you manage to piece together that there's been some kind of outbreak. The city is divided into zones, and there are safe areas if you can reach them.",
+    choices: [
+      {
+        text: "Try to find more specific information about safe zones",
+        effects: { stats: { stress: -1 }, flags: { "proof_creep_watch": true } },
+        goTo: "safe_zones_info"
+      },
+      {
+        text: "Focus on understanding the nature of the outbreak",
+        effects: { stats: { stress: 2 } },
+        goTo: "outbreak_info"
+      },
+      {
+        text: "Leave the radio and prepare to venture out",
+        effects: { stats: { stamina: -1 } },
+        goTo: "prepare_exit"
+      }
+    ]
+  },
+  
+  window_view: {
+    id: "window_view",
+    title: "Cityscape Observation",
+    text: "From your vantage point, you can see the city has been transformed. Strange fungal growths cover many buildings, pulsing with an eerie bioluminescence. In the distance, you spot what looks like a massive wall dividing the city. There are signs of recent violence - broken windows, abandoned vehicles, and dark stains on the streets. You notice some movement in the shadows below, but can't make out what it is.",
+    choices: [
+      {
+        text: "Focus on the wall - it might be important",
+        effects: { flags: { "wall_breached": false } },
+        goTo: "wall_observation"
+      },
+      {
+        text: "Study the fungal growths more carefully",
+        effects: { stats: { stress: 1 }, flags: { "bloom_exposed": true } },
+        goTo: "fungal_study"
+      },
+      {
+        text: "Look for signs of other survivors",
+        effects: { stats: { stress: -1 } },
+        goTo: "survivor_signs"
+      }
+    ]
+  },
+  
+  room_search: {
+    id: "room_search",
+    title: "Room Investigation",
+    text: "You methodically search the room. In a drawer, you find some medical supplies and a note that reads: 'If you're reading this, the outbreak has begun. The spores are airborne - avoid large crowds. The wall is your best bet for safety, but getting there won't be easy. Trust no one completely. - Dr. Chen' You also discover a small cache of food and water, plus some tools that might be useful.",
+    choices: [
+      {
+        text: "Take everything and prepare to leave immediately",
+        effects: { 
+          inventory: ["medical_supplies", "food_rations", "water_bottles", "tools"],
+          stats: { stamina: -2 }
+        },
+        goTo: "immediate_exit"
+      },
+      {
+        text: "Study the note more carefully for clues",
+        effects: { stats: { stress: -1 } },
+        goTo: "note_analysis"
+      },
+      {
+        text: "Rest and plan your next move",
+        effects: { stats: { health: 5, stamina: 3, stress: -2 } },
+        goTo: "planning_rest"
+      }
+    ]
+  },
+  
+  safe_zones_info: {
+    id: "safe_zones_info",
+    title: "Safe Zone Intelligence",
+    text: "After more radio tuning, you piece together crucial information. There are three main safe zones: The Wall (heavily fortified), The Market (trading hub), and The Tower (research facility). Each has different entry requirements and rules. The Wall is the safest but most restrictive. The Market allows trade but is dangerous. The Tower offers knowledge but requires specific skills.",
+    choices: [
+      {
+        text: "Head for The Wall - safety first",
+        effects: { flags: { "route_protector": true } },
+        goTo: "wall_route"
+      },
+      {
+        text: "Make for The Market - opportunities await",
+        effects: { flags: { "route_fixer": true } },
+        goTo: "market_route"
+      },
+      {
+        text: "Seek The Tower - knowledge is power",
+        effects: { flags: { "route_killer": true } },
+        goTo: "tower_route"
+      }
+    ]
+  },
+  
+  wall_route: {
+    id: "wall_route",
+    title: "The Protector's Path",
+    text: "You decide to head for The Wall, prioritizing safety over everything else. As you make your way through the infected streets, you encounter other survivors. Some are injured, some are desperate. Your protective instincts kick in - you can't just leave them behind, but helping them will slow you down and put you at risk.",
+    choices: [
+      {
+        text: "Help everyone you can - no one left behind",
+        effects: { 
+          stats: { health: -5, stamina: -3, morality: 10 },
+          flags: { "route_protector": true, "proof_protector_hero": true }
+        },
+        goTo: "protector_hero"
+      },
+      {
+        text: "Help only those who can contribute to the group",
+        effects: { 
+          stats: { health: -2, stamina: -1, morality: 5 },
+          flags: { "route_protector": true }
+        },
+        goTo: "protector_pragmatic"
+      },
+      {
+        text: "Focus on your own survival - others will have to fend for themselves",
+        effects: { 
+          stats: { morality: -5 },
+          flags: { "route_protector": false }
+        },
+        goTo: "survival_focus"
+      }
+    ]
+  },
+  
+  market_route: {
+    id: "market_route",
+    title: "The Fixer's Path",
+    text: "You head toward The Market, seeing opportunity in the chaos. Along the way, you discover that information and resources are the new currency. You can trade what you know, what you have, and what you can do. But The Market is also a dangerous place where trust is rare and betrayal is common.",
+    choices: [
+      {
+        text: "Build a network of contacts and allies",
+        effects: { 
+          stats: { stress: 2 },
+          flags: { "route_fixer": true, "proof_fixer_web": true }
+        },
+        goTo: "network_building"
+      },
+      {
+        text: "Focus on acquiring valuable resources",
+        effects: { 
+          inventory: ["rare_components", "information_chips"],
+          flags: { "route_fixer": true }
+        },
+        goTo: "resource_acquisition"
+      },
+      {
+        text: "Establish yourself as a broker of information",
+        effects: { 
+          stats: { stress: 1 },
+          flags: { "route_fixer": true, "proof_fixer_omnimarket": true }
+        },
+        goTo: "information_broker"
+      }
+    ]
+  },
+  
+  tower_route: {
+    id: "tower_route",
+    title: "The Killer's Path",
+    text: "You make your way to The Tower, drawn by the promise of knowledge and understanding. The research facility is heavily guarded and requires specific skills to enter. You realize that to gain access, you'll need to prove your worth - and that might mean doing things you never thought you'd do.",
+    choices: [
+      {
+        text: "Prove your worth through combat and elimination",
+        effects: { 
+          stats: { health: -3, stress: 3, morality: -10 },
+          flags: { "route_killer": true, "proof_killer_mark": true }
+        },
+        goTo: "combat_proof"
+      },
+      {
+        text: "Demonstrate your strategic thinking and planning",
+        effects: { 
+          stats: { stress: 1 },
+          flags: { "route_killer": true, "proof_killer_cull": true }
+        },
+        goTo: "strategic_proof"
+      },
+      {
+        text: "Show your ability to inspire fear and respect",
+        effects: { 
+          stats: { stress: 2, morality: -5 },
+          flags: { "route_killer": true, "proof_killer_fear": true }
+        },
+        goTo: "fear_proof"
+      }
+    ]
+  },
+  
+  // Additional scenes for different paths
+  protector_hero: {
+    id: "protector_hero",
+    title: "Hero's Burden",
+    text: "Your selfless actions have saved several lives, but at great cost to yourself. The survivors look to you as their leader, but you're exhausted and injured. You've reached The Wall, but the guards are suspicious of your group. They want to know why you're bringing so many people.",
+    choices: [
+      {
+        text: "Vouch for everyone - they're all innocent",
+        effects: { stats: { health: -3, stress: 2 } },
+        goTo: "wall_negotiation"
+      },
+      {
+        text: "Be honest about the risks but ask for mercy",
+        effects: { stats: { stress: 1 } },
+        goTo: "wall_honest"
+      },
+      {
+        text: "Let the guards decide who stays and who goes",
+        effects: { stats: { morality: -5 } },
+        goTo: "wall_delegation"
+      }
+    ]
+  },
+  
+  network_building: {
+    id: "network_building",
+    title: "Web of Connections",
+    text: "You've begun building a network of contacts throughout The Market. Each person has their own agenda, but you're learning to navigate the complex web of relationships. Information flows through your network, and you're becoming a central hub for trade and communication.",
+    choices: [
+      {
+        text: "Expand the network to include more dangerous contacts",
+        effects: { stats: { stress: 3 }, flags: { "proof_fixer_web": true } },
+        goTo: "dangerous_expansion"
+      },
+      {
+        text: "Focus on quality over quantity in your contacts",
+        effects: { stats: { stress: -1 } },
+        goTo: "quality_focus"
+      },
+      {
+        text: "Use the network to gather information about the outbreak",
+        effects: { stats: { stress: 1 } },
+        goTo: "outbreak_intel"
+      }
+    ]
+  },
+  
+  combat_proof: {
+    id: "combat_proof",
+    title: "Proof of Strength",
+    text: "You've demonstrated your combat prowess to The Tower's guards, eliminating several threats with ruthless efficiency. The guards are impressed by your skills, but they're also wary of your methods. You've proven you can kill, but can you be trusted?",
+    choices: [
+      {
+        text: "Show that you can follow orders and work as part of a team",
+        effects: { stats: { stress: -1 }, flags: { "proof_killer_apex": true } },
+        goTo: "team_player"
+      },
+      {
+        text: "Demonstrate your independence and self-reliance",
+        effects: { stats: { stress: 1 } },
+        goTo: "independent_operator"
+      },
+      {
+        text: "Prove your loyalty through a test of commitment",
+        effects: { stats: { health: -2, stress: 2 } },
+        goTo: "loyalty_test"
+      }
+    ]
+  },
+  
+  // Additional scenes to complete the story branches
+  wall_negotiation: {
+    id: "wall_negotiation",
+    title: "Negotiating Entry",
+    text: "You stand before The Wall's gate, advocating for your group. The guards are skeptical but impressed by your leadership. They agree to let everyone in, but on probation. You've saved lives, but now you're responsible for them all.",
+    choices: [
+      {
+        text: "Accept the responsibility and lead your group",
+        effects: { stats: { stress: 2, morality: 5 } },
+        goTo: "wall_leader"
+      },
+      {
+        text: "Ask for help managing the group",
+        effects: { stats: { stress: -1 } },
+        goTo: "wall_support"
+      }
+    ]
+  },
+  
+  wall_leader: {
+    id: "wall_leader",
+    title: "The Wall's Protector",
+    text: "You've become a respected leader within The Wall. Your group looks to you for guidance, and the guards trust your judgment. You've found safety, but with it comes responsibility. The outbreak continues outside, and you must decide how to help.",
+    choices: [
+      {
+        text: "Organize rescue missions for other survivors",
+        effects: { stats: { health: -2, stress: 3, morality: 10 } },
+        goTo: "rescue_missions"
+      },
+      {
+        text: "Focus on strengthening The Wall's defenses",
+        effects: { stats: { stress: 1 } },
+        goTo: "defense_focus"
+      },
+      {
+        text: "Work on finding a cure for the outbreak",
+        effects: { stats: { stress: 2 } },
+        goTo: "cure_research"
+      }
+    ]
+  },
+  
+  dangerous_expansion: {
+    id: "dangerous_expansion",
+    title: "Playing with Fire",
+    text: "You've expanded your network to include some of The Market's most dangerous elements. The information flow is incredible, but so are the risks. You're walking a fine line between power and destruction.",
+    choices: [
+      {
+        text: "Embrace the danger - power comes with risk",
+        effects: { stats: { stress: 4, morality: -5 } },
+        goTo: "embrace_danger"
+      },
+      {
+        text: "Pull back and focus on safer contacts",
+        effects: { stats: { stress: -2 } },
+        goTo: "safer_contacts"
+      },
+      {
+        text: "Use the dangerous contacts to eliminate threats",
+        effects: { stats: { stress: 2, morality: -3 } },
+        goTo: "eliminate_threats"
+      }
+    ]
+  },
+  
+  team_player: {
+    id: "team_player",
+    title: "The Tower's Asset",
+    text: "You've proven yourself as a valuable team member at The Tower. The researchers trust you with sensitive information, and you're given access to their most important projects. You're learning about the true nature of the outbreak.",
+    choices: [
+      {
+        text: "Dive deep into the research - knowledge is power",
+        effects: { stats: { stress: 1 } },
+        goTo: "deep_research"
+      },
+      {
+        text: "Use your position to help other survivors",
+        effects: { stats: { stress: 2, morality: 5 } },
+        goTo: "help_survivors"
+      },
+      {
+        text: "Focus on your own survival and advancement",
+        effects: { stats: { stress: -1, morality: -2 } },
+        goTo: "self_advancement"
+      }
+    ]
+  },
+  
+  // Ending scenes
+  rescue_missions: {
+    id: "rescue_missions",
+    title: "The Hero's Legacy",
+    text: "You've organized successful rescue missions, saving dozens of lives. Your reputation as a protector has spread throughout the city. You've become a symbol of hope in a dark time. The Wall stands strong, and you've helped make it a beacon of safety.",
+    choices: [
+      {
+        text: "Continue leading rescue missions",
+        effects: { stats: { health: -5, stress: 5, morality: 15 } },
+        goTo: "hero_ending"
+      }
+    ]
+  },
+  
+  hero_ending: {
+    id: "hero_ending",
+    title: "The Protector's End",
+    text: "You've become a legend. Your selfless actions have saved countless lives and inspired others to help. The Wall has become a symbol of hope, and you've played a crucial role in humanity's survival. Your legacy will live on long after the outbreak ends.",
+    choices: [
+      {
+        text: "Start a new game",
+        effects: {},
+        goTo: "intro"
+      }
+    ]
+  },
+  
+  embrace_danger: {
+    id: "embrace_danger",
+    title: "The Fixer's Gambit",
+    text: "You've embraced the dangerous elements of The Market and used them to your advantage. You've become a powerful figure, controlling information flows and influencing events throughout the city. You're playing a dangerous game, but you're winning.",
+    choices: [
+      {
+        text: "Consolidate your power",
+        effects: { stats: { stress: 3, morality: -10 } },
+        goTo: "fixer_ending"
+      }
+    ]
+  },
+  
+  fixer_ending: {
+    id: "fixer_ending",
+    title: "The Information Broker",
+    text: "You've become the most powerful information broker in the city. Your network spans all factions, and you control the flow of crucial information. You've survived by being indispensable to everyone. The outbreak continues, but you've found your place in the new world order.",
+    choices: [
+      {
+        text: "Start a new game",
+        effects: {},
+        goTo: "intro"
+      }
+    ]
+  },
+  
+  deep_research: {
+    id: "deep_research",
+    title: "The Tower's Knowledge",
+    text: "You've gained access to The Tower's deepest secrets. You understand the true nature of the outbreak and have the knowledge to potentially end it. But with this knowledge comes great responsibility. You must decide how to use what you've learned.",
+    choices: [
+      {
+        text: "Share the knowledge to help everyone",
+        effects: { stats: { stress: 2, morality: 10 } },
+        goTo: "killer_ending"
+      }
+    ]
+  },
+  
+  killer_ending: {
+    id: "killer_ending",
+    title: "The Knowledge Keeper",
+    text: "You've used your position at The Tower to gain crucial knowledge about the outbreak. By sharing this information strategically, you've helped coordinate efforts across all factions. Your ruthless efficiency has been channeled into saving humanity. You've become a different kind of killer - one who eliminates threats to survival itself.",
+    choices: [
+      {
+        text: "Start a new game",
+        effects: {},
+        goTo: "intro"
+      }
+    ]
+  }
+};
+
+    </script>
+</body>
+</html>
