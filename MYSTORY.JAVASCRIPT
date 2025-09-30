@@ -762,7 +762,7 @@
         {
           id: "pick_protector",
           text: "Shield the families on your floor (Protector)",
-          goTo: "good_act1_setpiece_stairwellRescue",
+          goTo: "good_act1_setpiece_stairwell_rescue",
           effects: {
             flagsSet: ["route_protector"],
             persona: { protector: 2 },
@@ -774,7 +774,7 @@
         {
           id: "pick_warlord",
           text: "Seize the blackout and demand obedience (Warlord)",
-          goTo: "ant_act1_setpiece_blackoutTrap",
+          goTo: "ant_act1_setpiece_blackout_trap",
           effects: {
             flagsSet: ["route_warlord"],
             persona: { warlord: 2 },
@@ -786,7 +786,7 @@
         {
           id: "pick_fixer",
           text: "Cut deals with the stranded convoy (Fixer)",
-          goTo: "man_act1_setpiece_convoyDeal",
+          goTo: "man_act1_setpiece_convoy_deal",
           effects: {
             flagsSet: ["route_fixer"],
             persona: { fixer: 2 },
@@ -798,7 +798,7 @@
         {
           id: "pick_killer",
           text: "Hunt the corridor's threats in the dark (Killer)",
-          goTo: "killer_act1_setpiece_corridorHunt",
+          goTo: "killer_act1_setpiece_corridor_hunt",
           effects: {
             flagsSet: ["route_killer"],
             persona: { killer: 2 },
@@ -821,15 +821,15 @@
         }
       ]
     },
-    good_act1_setpiece_stairwellRescue: {
-      id: "good_act1_setpiece_stairwellRescue",
+    good_act1_setpiece_stairwell_rescue: {
+      id: "good_act1_setpiece_stairwell_rescue",
       text: "The stairwell barricade bows inward. Soot-streaked kids cling to banisters while the groan of the horde builds from below.",
       tags: ["setpiece", "act1", "leader"],
       choices: [
         {
           id: "brace_wall",
           text: "Brace the door with your own body (−2 STA)",
-          goTo: "good_act1_branch_holdLine",
+          goTo: "good_act1_branch_hold_line",
           cost: { stats: { stamina: 2 } },
           effects: {
             stats: { stress: 3, morality: 2 },
@@ -841,7 +841,7 @@
         {
           id: "stage_decoy",
           text: "Stage a decoy with blaring radios",
-          goTo: "good_act1_branch_holdLine",
+          goTo: "good_act1_branch_hold_line",
           effects: {
             inventoryRemove: ["old_radio"],
             stats: { stress: 1 },
@@ -877,8 +877,8 @@
       ]
     },
 
-    good_act1_branch_holdLine: {
-      id: "good_act1_branch_holdLine",
+    good_act1_branch_hold_line: {
+      id: "good_act1_branch_hold_line",
       text: "Sweat and splinters. You and the neighbors form a living shield until the pounding quiets and the youngest are ushered out.",
       tags: ["act1", "moral"],
       choices: [
@@ -933,8 +933,8 @@
         }
       ]
     },
-    ant_act1_setpiece_blackoutTrap: {
-      id: "ant_act1_setpiece_blackoutTrap",
+    ant_act1_setpiece_blackout_trap: {
+      id: "ant_act1_setpiece_blackout_trap",
       text: "Flickering emergency lights paint the lobby red. Raiders slam their makeshift battering ram as tenants huddle around you, waiting for orders.",
       tags: ["setpiece", "act1", "combat"],
       choices: [
@@ -1045,8 +1045,8 @@
         }
       ]
     },
-    man_act1_setpiece_convoyDeal: {
-      id: "man_act1_setpiece_convoyDeal",
+    man_act1_setpiece_convoy_deal: {
+      id: "man_act1_setpiece_convoy_deal",
       text: "Convoy engines idle below, fuel fumes thick. Drivers argue over maps while militia spotters watch from shattered balconies.",
       tags: ["setpiece", "act1", "social"],
       choices: [
@@ -1183,8 +1183,8 @@
         }
       ]
     },
-    killer_act1_setpiece_corridorHunt: {
-      id: "killer_act1_setpiece_corridorHunt",
+    killer_act1_setpiece_corridor_hunt: {
+      id: "killer_act1_setpiece_corridor_hunt",
       text: "The hallway reeks of bleach and fear. Predators prowl the blackout, and every scream could be silenced—by you.",
       tags: ["setpiece", "act1", "stealth"],
       choices: [
@@ -1400,7 +1400,7 @@
         {
           id: "act2_protector",
           text: "Mobilize a haven convoy (Protector)",
-          goTo: "good_act2_setpiece_havenShield",
+          goTo: "good_act2_setpiece_haven_shield",
           req: { flags: ["route_protector", "proof_protector_rescue"] },
           blockedReason: "Protector path only",
           effects: {
@@ -1412,7 +1412,7 @@
         {
           id: "act2_warlord",
           text: "Press your advantage and tax the block (Warlord)",
-          goTo: "ant_act2_setpiece_titheMarch",
+          goTo: "ant_act2_setpiece_tithe_march",
           req: { flags: ["route_warlord", "proof_warlord_blackout"] },
           blockedReason: "Warlord path only",
           effects: {
@@ -1458,8 +1458,8 @@
         }
       ]
     },
-    good_act2_setpiece_havenShield: {
-      id: "good_act2_setpiece_havenShield",
+    good_act2_setpiece_haven_shield: {
+      id: "good_act2_setpiece_haven_shield",
       text: "A garage becomes a refugee staging ground. Weather reports warn of an inbound horde shift within hours.",
       tags: ["setpiece", "act2", "leader"],
       choices: [
@@ -1565,8 +1565,8 @@
         }
       ]
     },
-    ant_act2_setpiece_titheMarch: {
-      id: "ant_act2_setpiece_titheMarch",
+    ant_act2_setpiece_tithe_march: {
+      id: "ant_act2_setpiece_tithe_march",
       text: "Your enforcers fan across the block collecting tribute. Rumors say the Raiders eye your territory enviously.",
       tags: ["setpiece", "act2", "combat"],
       choices: [
@@ -2153,7 +2153,7 @@
         {
           id: "storm_gates",
           text: "Storm the gates with your enforcers",
-          goTo: "ant_act3_resolution_ironRule",
+          goTo: "ant_act3_resolution_iron_rule",
           req: { flags: ["proof_warlord_blackout", "proof_warlord_tithe"] },
           effects: {
             flagsSet: ["refinery_burned"],
@@ -2165,7 +2165,7 @@
         {
           id: "execute_foreman",
           text: "Execute the foreman on live radio",
-          goTo: "ant_act3_resolution_ironRule",
+          goTo: "ant_act3_resolution_iron_rule",
           req: { flags: ["proof_warlord_blackout", "proof_warlord_tithe"] },
           effects: {
             flagsSet: ["refinery_burned"],
@@ -2176,7 +2176,7 @@
         {
           id: "enslave_workers",
           text: "Enslave the workers and brand them",
-          goTo: "ant_act3_resolution_ironRule",
+          goTo: "ant_act3_resolution_iron_rule",
           req: { flags: ["proof_warlord_blackout", "proof_warlord_tithe"] },
           effects: {
             flagsSet: ["refinery_burned"],
@@ -2187,7 +2187,7 @@
         {
           id: "broadcast_rule",
           text: "Broadcast your rule to the city",
-          goTo: "ant_act3_resolution_ironRule",
+          goTo: "ant_act3_resolution_iron_rule",
           req: { flags: ["proof_warlord_blackout", "proof_warlord_tithe"] },
           effects: {
             flagsSet: ["refinery_burned"],
@@ -2198,8 +2198,8 @@
       ]
     },
 
-    ant_act3_resolution_ironRule: {
-      id: "ant_act3_resolution_ironRule",
+    ant_act3_resolution_iron_rule: {
+      id: "ant_act3_resolution_iron_rule",
       text: "Fuel drums blaze with your sigil while frightened lieutenants await orders. The refinery is yours—but holding it demands constant pressure.",
       tags: ["resolution", "act3", "combat"],
       choices: [
@@ -3112,7 +3112,7 @@
         {
           id: "act5_protector",
           text: "Guard the evac column to the interstate (Protector)",
-          goTo: "good_act5_setpiece_finalStand",
+          goTo: "good_act5_setpiece_final_stand",
           req: { flags: ["route_protector", "proof_protector_rescue", "proof_protector_stand", "proof_protector_beacon", "proof_protector_safeconvoy"] },
           blockedReason: "Protector capstone required",
           effects: {
@@ -3168,8 +3168,8 @@
       ]
     },
 
-    good_act5_setpiece_finalStand: {
-      id: "good_act5_setpiece_finalStand",
+    good_act5_setpiece_final_stand: {
+      id: "good_act5_setpiece_final_stand",
       text: "The interstate ramps are jammed with fleeing buses. A final wave of infected pours from the tunnels.",
       tags: ["setpiece", "act5", "leader"],
       choices: [
@@ -3391,6 +3391,7 @@
       endingType: "sociopath"
     }
   });
+  delete window.STORY_DATABASE.intro;
 
   function wordCount(text = "") {
     if (Array.isArray(text)) {
