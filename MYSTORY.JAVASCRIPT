@@ -33,7 +33,10 @@
     "shared_rations",
     "wall_breached",
     "convoy_betrayed",
-    "refinery_burned"
+    "refinery_burned",
+    "alex_trust_earned",
+    "alex_supplied_from_door",
+    "alex_denied_entry"
   ]);
 
   const MUTEX = {
@@ -1921,36 +1924,154 @@
       },
       neutral_act0_contact_alex: {
         id: "neutral_act0_contact_alex",
-        text: "Alex presses their forehead to the chain and begs you to open up. You can set the tone of who {{name}} will be tonight.",
+        text: "Alex presses their forehead to the chain and begs you to open up. You can decide whether trust, caution, or cold leverage defines {{name}} tonight.",
         tags: ["intro", "act0"],
         choices: [
           {
             id: "act0_open",
-            text: "Open the door and let Alex in",
+            text: "Throw the locks and pull Alex inside",
             goTo: "neutral_act0_background_select",
             assignName: true,
-            effects: { relationships: { Alex: 3 }, stats: { stress: -1 } },
+            effects: { relationships: { Alex: 3 }, stats: { stress: -1 }, flagsSet: ["alex_trust_earned"] },
             tags: ["social", "leader"]
           },
           {
             id: "act0_chain",
-            text: "Keep the chain and talk",
+            text: "Keep the chain latched and steady them",
             goTo: "neutral_act0_background_select",
             effects: { relationships: { Alex: 1 }, stats: { stress: -1 } },
             tags: ["social", "survival"]
           },
           {
+            id: "act0_proof",
+            text: "Crack the chain and demand proof they aren't bitten",
+            goTo: "neutral_act0_verification",
+            effects: { stats: { stress: 1 } },
+            tags: ["survival", "leader"]
+          },
+          {
             id: "act0_direct",
-            text: "Order Alex to gather the floor while you gear up",
+            text: "Order Alex to rally the floor while you gear up",
             goTo: "neutral_act0_background_select",
             effects: { relationships: { Alex: 2 }, persona: { leader: 1 } },
             tags: ["leader", "combat"]
           }
         ]
       },
+      neutral_act0_verification: {
+        id: "neutral_act0_verification",
+        text: "You slide the door to the limit of the chain. Hallway light spills over Alex's shaking hands as they show clean arms and the bite-free back of their neck while infected thud up the stairs.",
+        tags: ["intro", "act0"],
+        choices: [
+          {
+            id: "act0_verify_open",
+            text: "Satisfied—open the door now",
+            goTo: "neutral_act0_background_select",
+            assignName: true,
+            effects: {
+              relationships: { Alex: 4 },
+              stats: { stress: -2 },
+              flagsSet: ["alex_trust_earned"]
+            },
+            tags: ["moral", "leader"]
+          },
+          {
+            id: "act0_verify_gap",
+            text: "Still risky—pass supplies through the gap",
+            goTo: "neutral_act0_supply_gap",
+            effects: {
+              relationships: { Alex: 1 },
+              stats: { stress: -1 },
+              flagsSet: ["alex_supplied_from_door"]
+            },
+            tags: ["survival", "social"]
+          },
+          {
+            id: "act0_verify_close",
+            text: "Not enough—slam the door shut",
+            goTo: "neutral_act0_lockout",
+            effects: {
+              relationships: { Alex: -5 },
+              stats: { stress: 2 },
+              flagsSet: ["alex_denied_entry"]
+            },
+            tags: ["stealth", "combat"]
+          },
+          {
+            id: "act0_verify_apology",
+            text: "Apologize while undoing the locks",
+            goTo: "neutral_act0_background_select",
+            assignName: true,
+            effects: {
+              relationships: { Alex: 3 },
+              stats: { stress: -1 },
+              flagsSet: ["alex_trust_earned"]
+            },
+            tags: ["moral", "leader"]
+          }
+        ]
+      },
+      neutral_act0_supply_gap: {
+        id: "neutral_act0_supply_gap",
+        text: "You hand gauze, painkillers, and a flare through the chained gap. Alex nods, glances at the shadows below, and asks what you want them to do next before the infected reach the landing.",
+        tags: ["intro", "act0"],
+        choices: [
+          {
+            id: "act0_gap_invite",
+            text: "Invite Alex inside after all",
+            goTo: "neutral_act0_background_select",
+            assignName: true,
+            effects: {
+              relationships: { Alex: 2 },
+              stats: { stress: -1 }
+            },
+            tags: ["social", "leader"]
+          },
+          {
+            id: "act0_gap_direct",
+            text: "Keep the door barred—send Alex to warn the others",
+            goTo: "neutral_act0_background_select",
+            effects: {
+              relationships: { Alex: -1 },
+              stats: { stress: 1 },
+              flagsSet: ["alex_supplied_from_door"]
+            },
+            tags: ["survival", "leader"]
+          }
+        ]
+      },
+      neutral_act0_lockout: {
+        id: "neutral_act0_lockout",
+        text: "You slam the door and slide every bolt. Alex keeps knocking, voice shaking between gratitude and fury as claws scrape closer down the stairwell.",
+        tags: ["intro", "act0"],
+        choices: [
+          {
+            id: "act0_lockout_reopen",
+            text: "Undo the locks before the infected arrive",
+            goTo: "neutral_act0_background_select",
+            assignName: true,
+            effects: {
+              relationships: { Alex: -1 },
+              stats: { stress: 1 }
+            },
+            tags: ["moral", "survival"]
+          },
+          {
+            id: "act0_lockout_hold",
+            text: "Hold position and shout instructions through the door",
+            goTo: "neutral_act0_background_select",
+            effects: {
+              relationships: { Alex: -3 },
+              stats: { stress: 2 },
+              flagsSet: ["alex_denied_entry"]
+            },
+            tags: ["leader", "combat"]
+          }
+        ]
+      },
       neutral_act0_background_select: {
         id: "neutral_act0_background_select",
-        text: "Alex studies {{name}} and asks what history you bring to this building.",
+        text: "Whether Alex squeezes past the chain or shouts from the hall, they size up {{name}} and ask what history you bring to this building.",
         tags: ["intro", "act0"],
         choices: [
           {
