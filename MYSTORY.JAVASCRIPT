@@ -86,6 +86,12 @@
     return Math.max(MIN_STAT, Math.min(MAX_STAT, value));
   }
 
+  function getChoiceTarget(choice) {
+    if (!choice) return null;
+    const destination = choice.goTo ?? choice.next;
+    return typeof destination === "string" && destination.length ? destination : null;
+  }
+
   function setMutexFlag(state, group, flag) {
     if (!MUTEX[group]) return;
     for (const f of MUTEX[group]) {
@@ -428,7 +434,7 @@
         this.pushEvent(choice.effects.pushEvent, "consequence");
       }
 
-      const goTo = choice.goTo || nextState.sceneId;
+      const goTo = getChoiceTarget(choice) ?? nextState.sceneId;
       nextState.sceneId = goTo;
       nextState.decisionTrace = [...nextState.decisionTrace, `${scene.id}::${choice.id || choice.text}`];
 
@@ -517,7 +523,7 @@
     displayChoices(scene) {
       if (!this.dom.choices) return;
       this.dom.choices.innerHTML = "";
-      const choices = (scene.choices || []).filter((choice) => choice && (choice.goTo || choice.effects));
+      const choices = (scene.choices || []).filter((choice) => choice && (getChoiceTarget(choice) || choice.effects));
       const enabledChoices = [];
 
       for (const choice of choices) {
@@ -3419,11 +3425,12 @@
       if (scene.isEnding && scene.choices && scene.choices.length) {
         errors.push(`Ending scene ${id} must not contain choices.`);
       }
-      const validChoices = (scene.choices || []).filter((choice) => choice && (choice.goTo || choice.effects));
+      const validChoices = (scene.choices || []).filter((choice) => choice && (getChoiceTarget(choice) || choice.effects));
       if (scene.tags && scene.tags.includes("hub") && !scene.isEnding) {
         const exits = new Set();
         for (const choice of validChoices) {
-          if (choice.goTo) exits.add(choice.goTo);
+          const target = getChoiceTarget(choice);
+          if (target) exits.add(target);
         }
         if (exits.size < 2) {
           warnings.push(`Hub ${id} exposes fewer than two exits.`);
@@ -3433,14 +3440,15 @@
         warnings.push(`Scene ${id} exceeds 140 words.`);
       }
       for (const choice of validChoices) {
-        if (!choice.goTo && !choice.effects) {
+        const target = getChoiceTarget(choice);
+        if (!target && !choice.effects) {
           errors.push(`Choice in ${id} lacks goTo/effects.`);
         }
-        if (choice.goTo) {
-          if (!db[choice.goTo]) {
-            errors.push(`Choice from ${id} targets missing scene ${choice.goTo}.`);
+        if (target) {
+          if (!db[target]) {
+            errors.push(`Choice from ${id} targets missing scene ${target}.`);
           }
-          if (choice.goTo === id && !scene.allowSelfLoop) {
+          if (target === id && !scene.allowSelfLoop) {
             errors.push(`Choice in ${id} loops to itself without allowSelfLoop.`);
           }
         }
@@ -3470,9 +3478,10 @@
       const scene = db[current];
       if (!scene) continue;
       for (const choice of scene.choices || []) {
-        if (choice && choice.goTo && !reachable.has(choice.goTo)) {
-          reachable.add(choice.goTo);
-          queue.push(choice.goTo);
+        const target = getChoiceTarget(choice);
+        if (target && !reachable.has(target)) {
+          reachable.add(target);
+          queue.push(target);
         }
       }
     }
@@ -3512,7 +3521,7 @@
           }
           break;
         }
-        const candidates = (scene.choices || []).filter((choice) => choice && (choice.goTo || choice.effects));
+        const candidates = (scene.choices || []).filter((choice) => choice && (getChoiceTarget(choice) || choice.effects));
         const available = candidates.filter((choice) => meetsRequirement(state, choice.req));
         if (available.length === 0) {
           break;
@@ -3523,7 +3532,7 @@
         applyEffects(state, pick.effects);
         resolveSchedule(state);
         ensureStats(state);
-        state.sceneId = pick.goTo || state.sceneId;
+        state.sceneId = getChoiceTarget(pick) ?? state.sceneId;
       }
     }
 
@@ -3563,3 +3572,9 @@
   runQAReports();
 
 })();
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (typeof window.ConsequenceGame === "function" && window.STORY_DATABASE) {
+    window.game = new window.ConsequenceGame();
+  }
+});

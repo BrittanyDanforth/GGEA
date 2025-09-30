@@ -194,18 +194,5 @@
   <!-- Your single local bundle with engine + story goes here. No CDNs, no fetch. -->
   <script src="MYSTORY.JAVASCRIPT"></script>
 
-  <!-- Safe boot: try to render if engine is present; otherwise the shell just sits idle -->
-  <script>
-    (function(){
-      const ok = typeof window.ConsequenceGame === 'function' && window.STORY_DATABASE;
-      if (!ok) return; // engine not present yet
-      try {
-        window.__GAME__ = new window.ConsequenceGame();
-        window.__GAME__.renderScene(window.__GAME__.state.sceneId);
-      } catch (e) {
-        console.warn('Engine error:', e);
-      }
-    })();
-  </script>
 </body>
 </html>
