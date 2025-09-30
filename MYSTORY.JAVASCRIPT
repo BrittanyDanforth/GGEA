@@ -22,7 +22,7 @@
   const MAX_STAT = 100; const MIN_STAT = -100;
 
   const DEFAULT_STATE = {
-    sceneId: "neutral_act0_intro_apartment", time: 0,
+    sceneId: "start", time: 0,
     stats: { health: 90, stamina: 12, stress: 8, morality: 0 },
     persona: { protector: 0, warlord: 0, fixer: 0, killer: 0, sociopath: 0 },
     inventory: ["pocketknife", "old_radio", "flare"],
