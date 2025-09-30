@@ -67,14 +67,48 @@
             border-radius: 3px;
         }
     </style>
+    <link rel="stylesheet" href="MYSTORY.CSS">
 </head>
 <body>
     <h1>⚠️ CONSEQUENCE - Integration Test ⚠️</h1>
     <div id="test-results" class="test-results"></div>
     <div id="summary" class="summary"></div>
 
-    <!-- Load the story database -->
-    <script src="FINAL_STORY.json"></script>
+    <!-- Load the story database (via fetch to avoid MIME issues); supports JSON or JS assignment -->
+    <script>
+        (function() {
+            function tryParseJson(text) {
+                try { return JSON.parse(text); } catch (e) { return null; }
+            }
+            function tryEvalJsAssignment(text) {
+                try {
+                    var transformed = text.replace(/^(\s*)(const|let|var)\s+STORY_DATABASE\s*=\s*/,
+                        'window.STORY_DATABASE = ');
+                    new Function(transformed)();
+                    return window.STORY_DATABASE || null;
+                } catch (e) {
+                    console.error('Eval fallback failed:', e);
+                    return null;
+                }
+            }
+            window.STORY_DATABASE = undefined;
+            window.STORY_DATABASE_PROMISE = fetch('FINAL_STORY.json')
+                .then(function(resp) {
+                    if (!resp.ok) throw new Error('Failed to load FINAL_STORY.json');
+                    return resp.text();
+                })
+                .then(function(text) {
+                    var db = tryParseJson(text);
+                    if (!db) db = tryEvalJsAssignment(text);
+                    if (!db) throw new Error('Could not parse FINAL_STORY.json as JSON or JS');
+                    window.STORY_DATABASE = db;
+                    return db;
+                })
+                .catch(function(err) {
+                    console.error('Failed to load STORY_DATABASE:', err);
+                });
+        })();
+    </script>
     
     <!-- Load the game engine -->
     <script src="MYSTORY.JAVASCRIPT"></script>
@@ -293,9 +327,16 @@
             }
         }
 
-        // Run tests when page loads
+        // Run tests when page loads (wait for STORY_DATABASE to load)
         window.addEventListener('load', () => {
-            setTimeout(runTests, 100);
+            const start = () => setTimeout(runTests, 0);
+            if (window.STORY_DATABASE_PROMISE && typeof window.STORY_DATABASE_PROMISE.then === 'function') {
+                window.STORY_DATABASE_PROMISE.then(start).catch(start);
+            } else if (typeof STORY_DATABASE !== 'undefined') {
+                start();
+            } else {
+                start();
+            }
         });
     </script>
 </body>
