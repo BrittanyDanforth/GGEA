@@ -1,343 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CONSEQUENCE - Integration Test</title>
-    <style>
-        body {
-            font-family: 'Courier New', monospace;
-            background: #0a0a0a;
-            color: #00ff00;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        
-        h1 {
-            color: #ff6b6b;
-            text-align: center;
-            font-size: 2em;
-            margin-bottom: 30px;
-        }
-        
-        .test-results {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .test-item {
-            padding: 10px;
-            margin: 5px 0;
-            border-left: 3px solid #333;
-            background: #111;
-        }
-        
-        .test-item.pass {
-            border-left-color: #00ff00;
-            color: #00ff00;
-        }
-        
-        .test-item.fail {
-            border-left-color: #ff0000;
-            color: #ff6b6b;
-        }
-        
-        .summary {
-            margin-top: 30px;
-            padding: 20px;
-            background: #1a1a1a;
-            border: 2px solid #ff6b6b;
-            text-align: center;
-            font-size: 1.2em;
-        }
-        
-        .summary.all-pass {
-            border-color: #00ff00;
-            color: #00ff00;
-        }
-        
-        .summary.some-fail {
-            border-color: #ff6b6b;
-            color: #ff6b6b;
-        }
-        
-        code {
-            background: #222;
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-    </style>
-    <link rel="stylesheet" href="MYSTORY.CSS">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>CONSEQUENCE — Offline Story Game</title>
+
+  <!-- Optional: drop your CSS in this local file later -->
+  <link rel="stylesheet" href="MYSTORY.CSS" />
+
+  <!-- App metadata (purely local) -->
+  <meta name="application-name" content="CONSEQUENCE" />
+  <meta name="description" content="Offline story/choice engine with strong consequence logic" />
 </head>
 <body>
-    <h1>⚠️ CONSEQUENCE - Integration Test ⚠️</h1>
-    <div id="test-results" class="test-results"></div>
-    <div id="summary" class="summary"></div>
+  <!-- Accessibility helpers -->
+  <a class="skip-link" href="#scene-text">Skip to story</a>
+  <noscript>
+    <div class="summary some-fail" role="alert" style="padding:1rem; margin:1rem; border:2px solid;">
+      This game requires JavaScript to run offline.
+    </div>
+  </noscript>
 
-    <!-- Load the story database (via fetch to avoid MIME issues); supports JSON or JS assignment -->
-    <script>
-        (function() {
-            function tryParseJson(text) {
-                try { return JSON.parse(text); } catch (e) { return null; }
-            }
-            function tryEvalJsAssignment(text) {
-                try {
-                    var transformed = text.replace(/^(\s*)(const|let|var)\s+STORY_DATABASE\s*=\s*/,
-                        'window.STORY_DATABASE = ');
-                    new Function(transformed)();
-                    return window.STORY_DATABASE || null;
-                } catch (e) {
-                    console.error('Eval fallback failed:', e);
-                    return null;
-                }
-            }
-            window.STORY_DATABASE = undefined;
-            window.STORY_DATABASE_PROMISE = fetch('FINAL_STORY.json')
-                .then(function(resp) {
-                    if (!resp.ok) throw new Error('Failed to load FINAL_STORY.json');
-                    return resp.text();
-                })
-                .then(function(text) {
-                    var db = tryParseJson(text);
-                    if (!db) db = tryEvalJsAssignment(text);
-                    if (!db) throw new Error('Could not parse FINAL_STORY.json as JSON or JS');
-                    window.STORY_DATABASE = db;
-                    return db;
-                })
-                .catch(function(err) {
-                    console.error('Failed to load STORY_DATABASE:', err);
-                });
-        })();
-    </script>
-    
-    <!-- Load the game engine -->
-    <script src="MYSTORY.JAVASCRIPT"></script>
+  <!-- Header -->
+  <header class="game-header" role="banner">
+    <h1>CONSEQUENCE</h1>
+    <p class="game-subtitle">Every choice changes something.</p>
+  </header>
 
-    <script>
-        // Test Suite
-        const tests = [];
-        let passCount = 0;
-        let failCount = 0;
+  <!-- Main container -->
+  <main id="game-container" role="application" aria-label="Game interface">
 
-        function test(name, condition) {
-            const result = {
-                name: name,
-                pass: condition,
-                message: condition ? '✓' : '✗'
-            };
-            tests.push(result);
-            
-            if (condition) {
-                passCount++;
-            } else {
-                failCount++;
-            }
-            
-            return condition;
-        }
+    <!-- Status / Stats bar (populated by engine) -->
+    <div id="stats" class="status-bar" role="status" aria-live="polite">
+      <!-- stat pills + timers injected here -->
+    </div>
 
-        function runTests() {
-            console.log('🧪 Running Integration Tests...\n');
+    <!-- Core layout: story on the left, info panels on the right -->
+    <section class="game-interface">
+      <div class="game-content">
+        <!-- STORY COLUMN -->
+        <section class="story-section" aria-label="Story and choices">
+          <div id="scene-text" class="story-display" role="region" aria-live="polite" aria-atomic="true">
+            <!-- current scene text injected here -->
+          </div>
+          <div id="choices" class="choices-display" role="group" aria-label="Available choices">
+            <!-- choice buttons injected here -->
+          </div>
+        </section>
 
-            // Test 1: STORY_DATABASE loaded
-            test('STORY_DATABASE loaded', typeof STORY_DATABASE !== 'undefined' && STORY_DATABASE !== null);
+        <!-- INFO PANELS COLUMN -->
+        <aside class="info-panels" aria-label="Character, journal, events, relationships">
+          <!-- Character Panel -->
+          <section id="character-panel" class="info-panel" aria-labelledby="character-h">
+            <div class="panel-header">
+              <h3 id="character-h">Character</h3>
+              <div class="panel-time" id="dayhour-indicator">Day 0 · 00:00</div>
+            </div>
+            <div class="panel-content character-info">
+              <div class="character-name" id="char-name">—</div>
+              <div class="character-background" id="char-background">—</div>
 
-            // Test 2: Start scene exists
-            test('Start scene exists', STORY_DATABASE && STORY_DATABASE.intro !== undefined);
+              <div class="character-inventory">
+                <strong>Inventory</strong>
+                <div id="inventory-list" class="inventory-list" aria-live="polite">
+                  <span class="empty-inventory">(empty)</span>
+                </div>
+              </div>
 
-            // Test 3: Start scene has text
-            test('Start scene has text', STORY_DATABASE && STORY_DATABASE.intro && STORY_DATABASE.intro.text && STORY_DATABASE.intro.text.length > 0);
+              <div class="character-trauma">
+                <strong>Trauma / Stress</strong>
+                <div class="trauma-bar-container" aria-hidden="true"><div class="trauma-bar" id="trauma-bar" style="width:0%"></div></div>
+                <div class="trauma-warning moderate" id="trauma-warning">Stable</div>
+              </div>
 
-            // Test 4: Start scene has choices
-            test('Start scene has choices', STORY_DATABASE && STORY_DATABASE.intro && Array.isArray(STORY_DATABASE.intro.choices) && STORY_DATABASE.intro.choices.length > 0);
+              <div class="persona-breakdown">
+                <strong>Persona</strong>
+                <div class="persona-grid" id="persona-grid">
+                  <!-- persona rows injected here -->
+                </div>
+              </div>
+            </div>
+          </section>
 
-            // Test 5: ConsequenceGame class exists
-            test('ConsequenceGame class exists', typeof ConsequenceGame !== 'undefined');
+          <!-- Journal / Objectives Panel -->
+          <section id="journal-panel" class="info-panel" aria-labelledby="journal-h">
+            <div class="panel-header">
+              <h3 id="journal-h">Journal</h3>
+              <div class="consequence-count" id="objective-count">0 objectives</div>
+            </div>
+            <div class="panel-content" id="journal-list">
+              <!-- journal items injected here -->
+            </div>
+          </section>
 
-            // Test 6: Can create game instance
-            let gameInstance = null;
-            try {
-                gameInstance = new ConsequenceGame();
-                test('Can create game instance', gameInstance !== null);
-            } catch (e) {
-                test('Can create game instance', false);
-                console.error('Error creating game instance:', e);
-            }
+          <!-- Event Log Panel -->
+          <section id="events-panel" class="info-panel" aria-labelledby="events-h">
+            <div class="panel-header">
+              <h3 id="events-h">Event Log</h3>
+              <div class="panel-time" id="world-time">T+0h</div>
+            </div>
+            <div class="panel-content event-log" id="event-log" aria-live="polite">
+              <!-- events injected here -->
+            </div>
+          </section>
 
-            // Test 7-11: Game methods exist
-            if (gameInstance) {
-                test('Game has renderScene method', typeof gameInstance.renderScene === 'function');
-                test('Game has updateStats method', typeof gameInstance.updateStats === 'function' || typeof gameInstance.renderStats === 'function');
-                test('Game has displayStory method', typeof gameInstance.displayStory === 'function' || typeof gameInstance.renderScene === 'function');
-                test('Game has displayChoices method', typeof gameInstance.displayChoices === 'function' || typeof gameInstance.renderScene === 'function');
-                test('Game has makeChoice method', typeof gameInstance.makeChoice === 'function');
-            } else {
-                test('Game has renderScene method', false);
-                test('Game has updateStats method', false);
-                test('Game has displayStory method', false);
-                test('Game has displayChoices method', false);
-                test('Game has makeChoice method', false);
-            }
+          <!-- Relationships Panel -->
+          <section id="relationships-panel" class="info-panel" aria-labelledby="relations-h">
+            <div class="panel-header">
+              <h3 id="relations-h">Relationships</h3>
+              <div class="relationship-count" id="relationship-count">0 contacts</div>
+            </div>
+            <div class="panel-content relationships-list" id="relationships-list">
+              <!-- relationship rows injected here -->
+            </div>
+          </section>
 
-            // Test 12: Game state initialized
-            test('Game state initialized', gameInstance && gameInstance.state !== undefined && gameInstance.state !== null);
+          <!-- Backend / Debug Panel (optional) -->
+          <section id="backend-panel" class="info-panel" aria-labelledby="backend-h">
+            <div class="panel-header">
+              <h3 id="backend-h">Backend</h3>
+              <button class="mini-button" id="toggle-backend" type="button" aria-expanded="true">Toggle</button>
+            </div>
+            <div class="panel-content backend-content" id="backend-content">
+              <div class="backend-section">
+                <h4>Flags</h4>
+                <div class="flag-display" id="flag-display"></div>
+              </div>
+              <div class="backend-section">
+                <h4>Decision Trace</h4>
+                <div class="decision-tree" id="decision-tree"></div>
+              </div>
+              <div class="backend-section">
+                <h4>State Hash</h4>
+                <div class="state-hash" id="state-hash">—</div>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
 
-            // Test 13: Count scenes (should be 2159)
-            const sceneCount = STORY_DATABASE ? Object.keys(STORY_DATABASE).length : 0;
-            test(`2159 scenes loaded (found ${sceneCount})`, sceneCount === 2159);
-            
-            if (sceneCount !== 2159) {
-                console.warn(`Expected 2159 scenes, but found ${sceneCount}`);
-            }
+      <!-- Controls -->
+      <div class="game-controls" aria-label="Game controls">
+        <button id="new-game" class="primary-button" type="button">New Game</button>
+        <button id="continue-game" class="secondary-button" type="button">Continue</button>
+        <button id="save-game" class="control-button" type="button">Save</button>
+        <button id="load-game" class="control-button" type="button">Load</button>
+        <button id="export-game" class="control-button" type="button">Export</button>
+        <label for="file-loader" class="sr-only">Load a saved game</label>
+        <input id="file-loader" type="file" accept=".json" hidden />
+      </div>
+    </section>
+  </main>
 
-            // Test 14: Check for endings
-            let endingsFound = 0;
-            if (STORY_DATABASE) {
-                for (const [sceneId, scene] of Object.entries(STORY_DATABASE)) {
-                    if (sceneId.includes('ending') || (scene.choices && scene.choices.length === 0) || scene.isEnding) {
-                        endingsFound++;
-                    }
-                }
-            }
-            test(`${endingsFound} endings found`, endingsFound >= 6);
+  <!-- Consequence / Telltale-style popup -->
+  <div id="consequence-popup" class="consequence-popup hidden" role="dialog" aria-modal="true" aria-labelledby="consequence-text">
+    <div class="consequence-content">
+      <p id="consequence-text">This will be remembered.</p>
+      <div style="margin-top:1rem;">
+        <button id="consequence-ok" class="primary-button" type="button">OK</button>
+      </div>
+    </div>
+  </div>
 
-            // Test 15: Status bar element check
-            // Create required DOM elements for the game
-            if (!document.getElementById('stats')) {
-                const statsBar = document.createElement('div');
-                statsBar.id = 'stats';
-                statsBar.className = 'stats-bar';
-                document.body.appendChild(statsBar);
-            }
-            test('Status bar created', document.getElementById('stats') !== null);
+  <!-- Templates (optional, used by engine if desired) -->
+  <template id="tpl-choice">
+    <button class="choice" type="button"><span class="choice-text"></span></button>
+  </template>
+  <template id="tpl-journal-item">
+    <div class="journal-item">
+      <div class="journal-title"></div>
+      <div class="journal-objective"></div>
+    </div>
+  </template>
+  <template id="tpl-relationship-item">
+    <div class="relationship-item">
+      <span class="relationship-name"></span>
+      <span class="relationship-status relationship-trust-neutral">0</span>
+    </div>
+  </template>
 
-            // Test 16: Story display element check
-            if (!document.getElementById('scene-text')) {
-                const sceneText = document.createElement('div');
-                sceneText.id = 'scene-text';
-                document.body.appendChild(sceneText);
-            }
-            test('Story display created', document.getElementById('scene-text') !== null);
+  <!-- Minimal bootstrapping: keep everything offline -->
+  <script>
+    // Optional: placeholder story so the shell shows something before your engine loads
+    window.STORY_DATABASE = window.STORY_DATABASE || {
+      intro: {
+        text: "Welcome to CONSEQUENCE (offline shell). Add your engine + full story to play.",
+        choices: [ { text: "Begin", goTo: "intro" } ]
+      }
+    };
+  </script>
+  
+  <!-- Your single local bundle with engine + story goes here. No CDNs, no fetch. -->
+  <script src="MYSTORY.JAVASCRIPT"></script>
 
-            // Test 17: Choices container element check
-            if (!document.getElementById('choices')) {
-                const choices = document.createElement('div');
-                choices.id = 'choices';
-                document.body.appendChild(choices);
-            }
-            test('Choices container created', document.getElementById('choices') !== null);
-
-            // Display results
-            displayResults();
-        }
-
-        function displayResults() {
-            const resultsDiv = document.getElementById('test-results');
-            const summaryDiv = document.getElementById('summary');
-
-            // Display individual test results
-            tests.forEach(testResult => {
-                const div = document.createElement('div');
-                div.className = `test-item ${testResult.pass ? 'pass' : 'fail'}`;
-                div.innerHTML = `${testResult.message} ${testResult.name}`;
-                resultsDiv.appendChild(div);
-                
-                // Log to console
-                console.log(`${testResult.message} ${testResult.name}`);
-            });
-
-            // Display summary
-            const total = tests.length;
-            summaryDiv.className = `summary ${failCount === 0 ? 'all-pass' : 'some-fail'}`;
-            summaryDiv.innerHTML = `
-                <strong>${passCount}/${total} tests passed</strong><br>
-                ${failCount > 0 ? `<span style="color: #ff6b6b;">${failCount} tests failed</span>` : '<span style="color: #00ff00;">All tests passed! 🎉</span>'}
-            `;
-
-            console.log(`\n${passCount}/${total} tests passed`);
-            if (failCount > 0) {
-                console.log(`${failCount} tests failed`);
-            }
-
-            // Check for looping issues
-            checkForLoops();
-        }
-
-        function checkForLoops() {
-            console.log('\n🔍 Checking for potential loops...');
-            
-            const visited = new Set();
-            const recursionStack = new Set();
-            const loops = [];
-
-            function detectLoop(sceneId, path = []) {
-                if (!STORY_DATABASE[sceneId]) return;
-                
-                if (recursionStack.has(sceneId)) {
-                    loops.push([...path, sceneId]);
-                    return;
-                }
-                
-                if (visited.has(sceneId)) return;
-                
-                visited.add(sceneId);
-                recursionStack.add(sceneId);
-                path.push(sceneId);
-
-                const scene = STORY_DATABASE[sceneId];
-                if (scene.choices && scene.choices.length > 0) {
-                    for (const choice of scene.choices) {
-                        if (choice.goTo) {
-                            detectLoop(choice.goTo, [...path]);
-                        }
-                    }
-                }
-
-                recursionStack.delete(sceneId);
-            }
-
-            // Start from intro
-            detectLoop('intro');
-
-            if (loops.length > 0) {
-                console.warn(`⚠️ Found ${loops.length} potential loops:`);
-                loops.slice(0, 5).forEach((loop, i) => {
-                    console.warn(`Loop ${i + 1}: ${loop.join(' -> ')}`);
-                });
-            } else {
-                console.log('✓ No obvious loops detected');
-            }
-
-            // Check for scenes that point to themselves
-            const selfLoops = [];
-            for (const [sceneId, scene] of Object.entries(STORY_DATABASE)) {
-                if (scene.choices) {
-                    scene.choices.forEach(choice => {
-                        if (choice.goTo === sceneId) {
-                            selfLoops.push(sceneId);
-                        }
-                    });
-                }
-            }
-
-            if (selfLoops.length > 0) {
-                console.warn(`⚠️ Found ${selfLoops.length} self-referencing scenes:`, selfLoops);
-            } else {
-                console.log('✓ No self-referencing scenes found');
-            }
-        }
-
-        // Run tests when page loads (wait for STORY_DATABASE to load)
-        window.addEventListener('load', () => {
-            const start = () => setTimeout(runTests, 0);
-            if (window.STORY_DATABASE_PROMISE && typeof window.STORY_DATABASE_PROMISE.then === 'function') {
-                window.STORY_DATABASE_PROMISE.then(start).catch(start);
-            } else if (typeof STORY_DATABASE !== 'undefined') {
-                start();
-            } else {
-                start();
-            }
-        });
-    </script>
+  <!-- Safe boot: try to render if engine is present; otherwise the shell just sits idle -->
+  <script>
+    (function(){
+      const ok = typeof window.ConsequenceGame === 'function' && window.STORY_DATABASE;
+      if (!ok) return; // engine not present yet
+      try {
+        window.__GAME__ = new window.ConsequenceGame();
+        window.__GAME__.renderScene('intro');
+      } catch (e) {
+        console.warn('Engine error:', e);
+      }
+    })();
+  </script>
 </body>
 </html>
