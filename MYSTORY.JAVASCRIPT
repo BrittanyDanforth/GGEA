@@ -9079,7 +9079,7 @@
   {
    "id": "arr_plan_together",
    "text": "Let's plan together. What do you think?",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"nice": 1},
@@ -9092,7 +9092,7 @@
   {
    "id": "arr_secure_building",
    "text": "First, let's secure this building properly.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 2,
     "persona": {"chill": 1},
@@ -9105,7 +9105,7 @@
   {
    "id": "arr_scout_area",
    "text": "We need to scout the area. See what's out there.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"chill": 1},
@@ -9217,7 +9217,7 @@
   {
    "id": "d2ps_help_family",
    "text": "We should help the Martinez family.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"nice": 2, "protector": 1},
@@ -9230,7 +9230,7 @@
   {
    "id": "d2ps_pharmacy_first",
    "text": "Let's hit the pharmacy first. Get supplies.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"chill": 1},
@@ -9243,7 +9243,7 @@
   {
    "id": "d2ps_secure_building",
    "text": "First, let's secure this building properly.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 2,
     "persona": {"chill": 1},
@@ -9263,7 +9263,7 @@
   {
    "id": "d2sb_thorough_job",
    "text": "Let's do this right. Thorough job.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 3,
     "persona": {"chill": 2},
@@ -9460,7 +9460,7 @@
   {
    "id": "d2bsw_help_others",
    "text": "Let's help other survivors in the building.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"nice": 2, "protector": 1},
@@ -9473,7 +9473,7 @@
   {
    "id": "d2bsw_scout_area",
    "text": "Let's scout the area. See what's out there.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"chill": 1},
@@ -9486,7 +9486,7 @@
   {
    "id": "d2bsw_rest_plan",
    "text": "Let's rest and plan. We've earned it.",
-   "goTo": "day2_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"chill": 1},
@@ -9507,7 +9507,7 @@
   {
    "id": "d2h_hero_path",
    "text": "We help others. That's who we are.",
-   "goTo": "day3_to_act1_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"nice": 2, "protector": 1},
@@ -9520,7 +9520,7 @@
   {
    "id": "d2h_survivor_path",
    "text": "We survive. That's what matters.",
-   "goTo": "day3_to_act1_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"chill": 2},
@@ -9533,7 +9533,7 @@
   {
    "id": "d2h_leader_path",
    "text": "We lead. We build something here.",
-   "goTo": "day3_to_act1_hub",
+   "goTo": "day4_morning",
    "effects": {
     "time": 1,
     "persona": {"protector": 2, "warlord": 1},
@@ -9741,6 +9741,745 @@
   }
  ],
  "tags": ["day3", "transition"]
+},
+"day4_morning": {
+ "id": "day4_morning",
+ "text": "Day 4, 6:00 AM. The building wakes slowly. You hear footsteps in the halls—survivors moving between apartments, checking on each other. Alex is already up, brewing coffee from their dwindling supply. 'Morning,' they say quietly. 'Sleep okay?' The question is loaded. Last night, you both heard the screams from the street. Infected. Getting closer. 'We need to talk about today,' Alex says. 'About what we're building here.'",
+ "choices": [
+  {
+   "id": "d4m_community_meeting",
+   "text": "Let's call a community meeting. Get everyone on the same page.",
+   "goTo": "day4_community_meeting",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["community_meeting_called"],
+    "pushEvent": "'Good idea. We need to be organized.' Alex nods. 'I'll help you prepare.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4m_supply_assessment",
+   "text": "Let's assess our supplies. See what we're working with.",
+   "goTo": "day4_supply_assessment",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["supply_assessment_done"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex grabs a clipboard. 'Let's be thorough.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4m_security_check",
+   "text": "Let's do a security check. Make sure we're safe.",
+   "goTo": "day4_security_check",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["security_check_done"],
+    "pushEvent": "'Can't be too careful.' Alex grabs their gear. 'Let's check every entrance.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "morning"]
+},
+"day4_community_meeting": {
+ "id": "day4_community_meeting",
+ "text": "Day 4, 10:00 AM. The building's common area is packed. Every surviving family is here—the Martinez family, the elderly couple from 2B, the young mother and child from 5A, and others. 'Thank you all for coming,' you say. 'We need to talk about our situation.' Mrs. Martinez speaks up: 'We're running out of food. My children are hungry.' The elderly man from 2B adds: 'And medicine. My wife needs her heart medication.' The room falls silent. All eyes are on you.",
+ "choices": [
+  {
+   "id": "d4cm_organize_supply_runs",
+   "text": "Let's organize supply runs. We'll work together.",
+   "goTo": "day4_organize_supply_runs",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["supply_runs_organized"],
+    "pushEvent": "'We're stronger together.' Alex's voice is determined. 'Let's make this work.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4cm_establish_rules",
+   "text": "We need rules. Structure. Everyone contributes.",
+   "goTo": "day4_establish_rules",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["rules_established"],
+    "pushEvent": "'Fair enough. We need order.' Alex's expression becomes serious."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4cm_individual_responsibility",
+   "text": "Everyone's responsible for themselves. We help when we can.",
+   "goTo": "day4_individual_responsibility",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["individual_responsibility"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Survival first.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "community"]
+},
+"day4_supply_assessment": {
+ "id": "day4_supply_assessment",
+ "text": "Day 4, 11:00 AM. You and Alex methodically check every apartment, every supply cache. The numbers are... concerning. 'Food: maybe two weeks if we ration carefully,' Alex reports. 'Medicine: three days for critical needs. Water: we're okay for now, but the building's supply won't last forever.' They look up from their notes. 'We need to make some hard decisions. Who gets priority? How do we ration? What happens when supplies run out?'",
+ "choices": [
+  {
+   "id": "d4sa_children_first",
+   "text": "Children and elderly get priority. They're most vulnerable.",
+   "goTo": "day4_children_first_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["children_first_rationing"],
+    "pushEvent": "'Compassionate. I like that.' Alex's eyes soften. 'They need us.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4sa_contributors_first",
+   "text": "Those who contribute most get priority. Fair system.",
+   "goTo": "day4_contributors_first_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["contributors_first_rationing"],
+    "pushEvent": "'Fair. Merit-based system.' Alex nods. 'Makes sense.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4sa_equal_shares",
+   "text": "Equal shares for everyone. We're all in this together.",
+   "goTo": "day4_equal_shares_rationing",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["equal_shares_rationing"],
+    "pushEvent": "'Democratic. I can respect that.' Alex's expression becomes neutral."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day4", "supplies"]
+},
+"day4_security_check": {
+ "id": "day4_security_check",
+ "text": "Day 4, 12:00 PM. You and Alex systematically check every entrance, every window, every weak point. 'Main door: holding, but we need better reinforcement,' Alex reports. 'Fire escape: accessible, but we can block it if needed. Roof access: clear, good for surveillance.' They pause at a second-floor window. 'This is a problem,' they say, pointing to a crack in the glass. 'One good push and they're in.' The choice is yours.",
+ "choices": [
+  {
+   "id": "d4sc_immediate_repair",
+   "text": "Let's fix this now. No time to waste.",
+   "goTo": "day4_immediate_repair",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["immediate_repair_done"],
+    "pushEvent": "'Good call. Security first.' Alex grabs tools. 'Let's make it solid.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4sc_surveillance_system",
+   "text": "Let's set up a surveillance system. Early warning.",
+   "goTo": "day4_surveillance_system",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["surveillance_system_setup"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'I can rig something up.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4sc_evacuation_plan",
+   "text": "Let's plan evacuation routes. Be ready to run.",
+   "goTo": "day4_evacuation_plan",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["evacuation_plan_ready"],
+    "pushEvent": "'Always have a backup plan.' Alex nods. 'Smart thinking.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "security"]
+},
+"day4_organize_supply_runs": {
+ "id": "day4_organize_supply_runs",
+ "text": "Day 4, 2:00 PM. The community meeting continues. 'We need volunteers for supply runs,' you announce. 'It's dangerous, but necessary.' Hands go up—Alex, of course, but also Mr. Martinez, the young mother from 5A, and others. 'We'll work in teams,' you continue. 'Safety in numbers. And we'll share everything we find.' The room buzzes with energy. Hope. 'When do we start?' someone asks.",
+ "choices": [
+  {
+   "id": "d4osr_start_today",
+   "text": "Let's start today. No time to waste.",
+   "goTo": "day4_supply_run_today",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["supply_run_today"],
+    "pushEvent": "'Let's do this.' Alex's voice is determined. 'We're ready.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4osr_plan_first",
+   "text": "Let's plan first. Scout the area, then go.",
+   "goTo": "day4_plan_supply_runs",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["supply_runs_planned"],
+    "pushEvent": "'Smart. Preparation saves lives.' Alex nods approvingly."
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4osr_tomorrow",
+   "text": "Let's start tomorrow. Give everyone time to prepare.",
+   "goTo": "day4_supply_run_tomorrow",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["supply_run_tomorrow"],
+    "pushEvent": "'Good call. Preparation is key.' Alex's expression becomes thoughtful."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day4", "supply_runs"]
+},
+"day4_establish_rules": {
+ "id": "day4_establish_rules",
+ "text": "Day 4, 2:00 PM. The community meeting takes a serious turn. 'We need structure,' you announce. 'Rules. Everyone contributes. Everyone follows them.' The room grows quiet. 'First rule: everyone pulls their weight. No freeloaders.' Mrs. Martinez nods. 'Second rule: we share resources. No hoarding.' The elderly man from 2B speaks up: 'And what about those who can't contribute? The sick? The elderly?' The question hangs in the air.",
+ "choices": [
+  {
+   "id": "d4er_compassionate_rules",
+   "text": "We make exceptions for those who can't contribute. Compassion.",
+   "goTo": "day4_compassionate_rules",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["compassionate_rules"],
+    "pushEvent": "'Thank you.' Mrs. Martinez's eyes fill with tears. 'You understand.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4er_harsh_rules",
+   "text": "No exceptions. Survival is harsh. Everyone contributes or leaves.",
+   "goTo": "day4_harsh_rules",
+   "effects": {
+    "time": 1,
+    "persona": {"warlord": 2, "rude": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["harsh_rules"],
+    "pushEvent": "'I understand.' The elderly man's voice is quiet. 'Survival is harsh.'"
+   },
+   "tags": ["warlord"]
+  },
+  {
+   "id": "d4er_flexible_rules",
+   "text": "Flexible rules. We adapt to each situation.",
+   "goTo": "day4_flexible_rules",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["flexible_rules"],
+    "pushEvent": "'Practical. I like that.' Alex nods. 'Adaptability is key.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "rules"]
+},
+"day4_individual_responsibility": {
+ "id": "day4_individual_responsibility",
+ "text": "Day 4, 2:00 PM. The community meeting takes a different turn. 'Look,' you say, 'we're all adults here. Everyone's responsible for themselves. We help when we can, but we can't save everyone.' The room grows quiet. Mrs. Martinez speaks up: 'What about my children? They can't fend for themselves.' The young mother from 5A adds: 'And what about the elderly? They need help.' The question hangs in the air.",
+ "choices": [
+  {
+   "id": "d4ir_help_children",
+   "text": "We help children and elderly. They're exceptions.",
+   "goTo": "day4_help_children_elderly",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["help_children_elderly"],
+    "pushEvent": "'Thank you.' Mrs. Martinez's voice is filled with relief. 'You understand.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4ir_strict_individual",
+   "text": "No exceptions. Everyone fends for themselves.",
+   "goTo": "day4_strict_individual",
+   "effects": {
+    "time": 1,
+    "persona": {"warlord": 2, "rude": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["strict_individual"],
+    "pushEvent": "'I understand.' The young mother's voice is quiet. 'Survival is harsh.'"
+   },
+   "tags": ["warlord"]
+  },
+  {
+   "id": "d4ir_voluntary_help",
+   "text": "Voluntary help only. No obligations.",
+   "goTo": "day4_voluntary_help",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["voluntary_help"],
+    "pushEvent": "'Fair enough.' Alex nods. 'No pressure, no expectations.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "individual"]
+},
+"day4_supply_run_today": {
+ "id": "day4_supply_run_today",
+ "text": "Day 4, 4:00 PM. You and Alex gear up for the first supply run. 'We'll hit the pharmacy first,' Alex says, checking their weapon. 'Then the grocery store two blocks over.' The other volunteers are nervous but determined. 'Remember,' you tell them, 'stay together. Watch each other's backs. And if things go bad, we run. No heroics.' The building's main door creaks open. Outside, the street is eerily quiet. But you can hear them. The infected. Moving. Hunting.",
+ "choices": [
+  {
+   "id": "d4srt_pharmacy_first",
+   "text": "Let's hit the pharmacy first. Medicine is critical.",
+   "goTo": "day4_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 1, "protector": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["pharmacy_run_attempted"],
+    "pushEvent": "'Medicine first. Smart.' Alex nods. 'Let's move.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4srt_grocery_first",
+   "text": "Let's hit the grocery store first. Food is more important.",
+   "goTo": "day4_evening_hub",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "flagsSet": ["grocery_run_attempted"],
+    "pushEvent": "'Food first. Practical.' Alex nods. 'Let's move.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4srt_scout_first",
+   "text": "Let's scout the area first. See what we're dealing with.",
+   "goTo": "day4_evening_hub",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["scout_run_done"],
+    "pushEvent": "'Smart. Knowledge is power.' Alex's eyes light up. 'Let's see what's out there.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "supply_run"]
+},
+"day4_pharmacy_run": {
+ "id": "day4_pharmacy_run",
+ "text": "Day 4, 4:30 PM. The pharmacy is three blocks away. You move in formation, Alex leading, you watching the rear. The street is littered with abandoned cars, broken glass, and... bodies. 'Stay focused,' Alex whispers. 'Don't look at them.' The pharmacy's front door is shattered. Inside, shelves are mostly empty, but there are still some supplies. 'Let's be quick,' Alex says. 'In and out.' You can hear sounds from the back—maybe infected, maybe survivors.",
+ "choices": [
+  {
+   "id": "d4pr_quick_grab",
+   "text": "Quick grab. Take what we can and go.",
+   "goTo": "day4_pharmacy_quick_success",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "inventoryAdd": ["bandages", "painkillers", "antibiotics"],
+    "flagsSet": ["pharmacy_quick_success"],
+    "pushEvent": "'Good haul. Let's get out of here.' Alex's voice is tense. 'Move.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4pr_thorough_search",
+   "text": "Thorough search. Check the back room.",
+   "goTo": "day4_pharmacy_thorough_search",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "inventoryAdd": ["morphine", "surgical_kit", "insulin"],
+    "flagsSet": ["pharmacy_thorough_success"],
+    "pushEvent": "'Found the good stuff.' Alex's eyes light up. 'This could save lives.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4pr_check_sounds",
+   "text": "Check those sounds. Could be survivors.",
+   "goTo": "day4_pharmacy_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -1},
+    "flagsSet": ["pharmacy_survivors_found"],
+    "pushEvent": "'Could be someone who needs help.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day4", "pharmacy"]
+},
+"day4_grocery_run": {
+ "id": "day4_grocery_run",
+ "text": "Day 4, 4:30 PM. The grocery store is two blocks away. You move in formation, Alex leading, you watching the rear. The street is eerily quiet, but you can feel eyes on you. 'Stay alert,' Alex whispers. 'They're out there.' The grocery store's front door is locked, but the glass is shattered. Inside, most shelves are empty, but there are still some supplies. 'Let's be quick,' Alex says. 'In and out.' You can hear sounds from the back—maybe infected, maybe survivors.",
+ "choices": [
+  {
+   "id": "d4gr_quick_grab",
+   "text": "Quick grab. Take what we can and go.",
+   "goTo": "day4_grocery_quick_success",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "inventoryAdd": ["canned_food", "water_bottles", "crackers"],
+    "flagsSet": ["grocery_quick_success"],
+    "pushEvent": "'Good haul. Let's get out of here.' Alex's voice is tense. 'Move.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4gr_thorough_search",
+   "text": "Thorough search. Check the back room.",
+   "goTo": "day4_grocery_thorough_search",
+   "effects": {
+    "time": 2,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -2},
+    "inventoryAdd": ["rice", "beans", "cooking_oil", "salt"],
+    "flagsSet": ["grocery_thorough_success"],
+    "pushEvent": "'Found the good stuff.' Alex's eyes light up. 'This could feed everyone.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4gr_check_sounds",
+   "text": "Check those sounds. Could be survivors.",
+   "goTo": "day4_grocery_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -1},
+    "flagsSet": ["grocery_survivors_found"],
+    "pushEvent": "'Could be someone who needs help.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day4", "grocery"]
+},
+"day4_scout_run": {
+ "id": "day4_scout_run",
+ "text": "Day 4, 4:30 PM. You and Alex move cautiously through the streets, mapping the area. 'This building looks secure,' Alex whispers, pointing to a nearby apartment complex. 'That one... not so much.' You can see signs of life—lights in windows, movement behind curtains. 'Survivors,' Alex says. 'But are they friendly?' The question hangs in the air. You also notice the infected—small groups, moving in patterns. 'They're getting smarter,' Alex observes. 'Or more desperate.'",
+ "choices": [
+  {
+   "id": "d4sr_approach_survivors",
+   "text": "Let's approach the survivors. See if they're friendly.",
+   "goTo": "day4_approach_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 2, "stamina": -1},
+    "flagsSet": ["survivors_approached"],
+    "pushEvent": "'Could be allies. Could be enemies.' Alex's hand moves to their weapon."
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4sr_avoid_survivors",
+   "text": "Let's avoid the survivors. Too risky.",
+   "goTo": "day4_avoid_survivors",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1, "stamina": -1},
+    "flagsSet": ["survivors_avoided"],
+    "pushEvent": "'Smart. No need to take unnecessary risks.' Alex nods. 'Let's head back.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4sr_study_infected",
+   "text": "Let's study the infected. Learn their patterns.",
+   "goTo": "day4_study_infected",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1, "stamina": -1},
+    "flagsSet": ["infected_studied"],
+    "pushEvent": "'Knowledge is power.' Alex's eyes light up. 'Let's see what we can learn.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "scout"]
+},
+"day4_evening_hub": {
+ "id": "day4_evening_hub",
+ "text": "Day 4, 6:00 PM. The sun is setting, casting long shadows across the building. You and Alex sit in the apartment, reviewing the day's events. 'We made progress,' Alex says. 'Got supplies. Learned about the area. Made contact with other survivors.' They pause. 'But we also saw how dangerous it is out there. The infected are getting smarter. The survivors... some are friendly, some aren't.' They look at you. 'We need to decide what kind of community we want to build here.'",
+ "choices": [
+  {
+   "id": "d4eh_open_community",
+   "text": "Let's build an open community. Welcome everyone.",
+   "goTo": "day6_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["open_community_chosen"],
+    "pushEvent": "'Inclusive. I like that.' Alex's eyes light up. 'We're stronger together.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d4eh_selective_community",
+   "text": "Let's be selective. Only let in those who can contribute.",
+   "goTo": "day6_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["selective_community_chosen"],
+    "pushEvent": "'Practical. I can respect that.' Alex nods. 'Quality over quantity.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d4eh_closed_community",
+   "text": "Let's keep it closed. Just us and the current residents.",
+   "goTo": "day6_morning",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["closed_community_chosen"],
+    "pushEvent": "'Safe. I can respect that.' Alex nods. 'No unnecessary risks.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day4", "evening_hub"]
+},
+"day5_open_community": {
+ "id": "day5_open_community",
+ "text": "Day 5, 8:00 AM. The building buzzes with activity. Word has spread about your open-door policy, and survivors are arriving. 'We need to organize this,' Alex says, watching a family with three children approach the building. 'Food, water, space—we're going to run out of everything if we don't plan.' The building's population has doubled in the last 24 hours. 'We need to make some hard decisions,' Alex continues. 'About resources. About leadership. About what happens when we can't help everyone.'",
+ "choices": [
+  {
+   "id": "d5oc_organize_system",
+   "text": "Let's organize a system. Fair distribution of resources.",
+   "goTo": "day5_organize_system",
+   "effects": {
+    "time": 2,
+    "persona": {"nice": 2, "protector": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 2},
+    "flagsSet": ["system_organized"],
+    "pushEvent": "'Good thinking. We need structure.' Alex nods. 'Let's make this work.'"
+   },
+   "tags": ["nice"]
+  },
+  {
+   "id": "d5oc_establish_leadership",
+   "text": "Let's establish clear leadership. Someone needs to make decisions.",
+   "goTo": "day5_establish_leadership",
+   "effects": {
+    "time": 1,
+    "persona": {"protector": 2, "warlord": 1},
+    "relationships": {"Alex": 2},
+    "stats": {"stress": 1},
+    "flagsSet": ["leadership_established"],
+    "pushEvent": "'Good call. We need someone to step up.' Alex's expression becomes determined."
+   },
+   "tags": ["protector"]
+  },
+  {
+   "id": "d5oc_community_council",
+   "text": "Let's form a community council. Democratic decision-making.",
+   "goTo": "day5_community_council",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["council_formed"],
+    "pushEvent": "'Democratic. I like that.' Alex nods. 'Everyone has a voice.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day5", "open_community"]
+},
+"day5_selective_community": {
+ "id": "day5_selective_community",
+ "text": "Day 5, 8:00 AM. The building maintains its selective approach. 'We need to be smart about who we let in,' Alex says, watching a group of survivors approach the building. 'Skills, resources, contribution potential—we need to evaluate everyone.' The building's population has grown, but slowly. 'We need to make some hard decisions,' Alex continues. 'About criteria. About who gets priority. About what happens when we have to turn people away.'",
+ "choices": [
+  {
+   "id": "d5sc_skill_based",
+   "text": "Let's focus on skills. What can they contribute?",
+   "goTo": "day5_skill_based_selection",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["skill_based_selection"],
+    "pushEvent": "'Practical. I like that.' Alex nods. 'Merit-based system.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d5sc_resource_based",
+   "text": "Let's focus on resources. What can they bring?",
+   "goTo": "day5_resource_based_selection",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1, "warlord": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["resource_based_selection"],
+    "pushEvent": "'Fair. Everyone contributes.' Alex nods. 'Resource-based system.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d5sc_character_based",
+   "text": "Let's focus on character. Are they trustworthy?",
+   "goTo": "day5_character_based_selection",
+   "effects": {
+    "time": 1,
+    "persona": {"nice": 1, "chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": 1},
+    "flagsSet": ["character_based_selection"],
+    "pushEvent": "'Important. Trust is everything.' Alex nods. 'Character-based system.'"
+   },
+   "tags": ["nice"]
+  }
+ ],
+ "tags": ["day5", "selective_community"]
+},
+"day5_closed_community": {
+ "id": "day5_closed_community",
+ "text": "Day 5, 8:00 AM. The building maintains its closed-door policy. 'We need to focus on what we have,' Alex says, watching survivors approach the building and be turned away. 'Resources are limited. Space is limited. We can't help everyone.' The building's population remains stable. 'We need to make some hard decisions,' Alex continues. 'About resources. About security. About what happens when we have to turn people away.'",
+ "choices": [
+  {
+   "id": "d5cc_focus_internal",
+   "text": "Let's focus on internal development. Make what we have work.",
+   "goTo": "day5_focus_internal",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 2},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["internal_focus"],
+    "pushEvent": "'Smart. Work with what we have.' Alex nods. 'Internal development.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d5cc_security_priority",
+   "text": "Let's prioritize security. Make sure we're safe.",
+   "goTo": "day5_security_priority",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["security_priority"],
+    "pushEvent": "'Good call. Security first.' Alex nods. 'Safety is everything.'"
+   },
+   "tags": ["chill"]
+  },
+  {
+   "id": "d5cc_resource_management",
+   "text": "Let's focus on resource management. Make supplies last.",
+   "goTo": "day5_resource_management",
+   "effects": {
+    "time": 1,
+    "persona": {"chill": 1},
+    "relationships": {"Alex": 1},
+    "stats": {"stress": -1},
+    "flagsSet": ["resource_management"],
+    "pushEvent": "'Practical. Make what we have last.' Alex nods. 'Resource management.'"
+   },
+   "tags": ["chill"]
+  }
+ ],
+ "tags": ["day5", "closed_community"]
 },
 "apology_justified": {
  "id": "apology_justified",
