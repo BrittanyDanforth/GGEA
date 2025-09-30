@@ -73,13 +73,26 @@
     <div id="test-results" class="test-results"></div>
     <div id="summary" class="summary"></div>
 
-    <!-- Load the story database -->
+    <!-- Load the story database (it's actually a JS file, not JSON) -->
     <script src="FINAL_STORY.json"></script>
     
     <!-- Load the game engine -->
     <script src="MYSTORY.JAVASCRIPT"></script>
 
     <script>
+        // The database is now loaded from FINAL_STORY.json as a script
+        // It defines: const STORY_DATABASE = { ... };
+        
+        // Wait a moment for the script to load, then initialize
+        if (typeof STORY_DATABASE !== 'undefined') {
+            console.log('✓ Story database loaded:', Object.keys(STORY_DATABASE).length, 'scenes');
+            
+            // Initialize game after database is loaded
+            if (typeof initializeGame === 'function') {
+                initializeGame();
+            }
+        }
+        
         // Test Suite
         const tests = [];
         let passCount = 0;
@@ -293,9 +306,21 @@
             }
         }
 
-        // Run tests when page loads
+        // Run tests when page loads AND database is ready
+        let databaseReady = false;
+        
+        // Check if database is loaded
+        function waitForDatabase() {
+            if (STORY_DATABASE !== null) {
+                databaseReady = true;
+                runTests();
+            } else {
+                setTimeout(waitForDatabase, 100);
+            }
+        }
+        
         window.addEventListener('load', () => {
-            setTimeout(runTests, 100);
+            setTimeout(waitForDatabase, 100);
         });
     </script>
 </body>
