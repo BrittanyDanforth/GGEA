@@ -1,208 +1,733 @@
-// CONSEQUENCE - Complete Offline Game Engine with Embedded Story
-// Three complete routes: Protector, Ruthless, Manipulator
-// Self-contained, no external dependencies
+(() => {
+  const STORAGE_KEY = "consequence_save_v1";
+  const CONSEQUENCE_FLAGS = new Set([
+    "joined_militia","joined_raiders","route_protector","route_warlord","route_fixer","route_killer","route_sociopath",
+    "proof_protector_rescue","proof_protector_stand","proof_protector_beacon","proof_protector_safeconvoy",
+    "proof_warlord_blackout","proof_warlord_tithe","proof_warlord_stomp","proof_warlord_supremacy",
+    "proof_fixer_conduit","proof_fixer_barter","proof_fixer_web","proof_fixer_omnimarket",
+    "proof_killer_mark","proof_killer_cull","proof_killer_fear","proof_killer_apex",
+    "proof_sociopath_mirror","proof_sociopath_isolate","proof_sociopath_purge","proof_sociopath_dominion",
+    "rescued_convoy","held_line","shared_rations","wall_breached","convoy_betrayed","refinery_burned"
+  ]);
 
-;(function(window) {
-  'use strict';
-
-  // Story Database - Embedded directly
-  window.STORY_DATABASE = {
-    intro: {
-      id: 'intro',
-      text: 'The world ended not with a bang, but with a whisper. You wake to sirens and smoke. Your apartment door shudders under heavy pounding.',
-      choices: [
-        {
-          text: 'Open the door and help whoever is there',
-          type: 'moral',
-          consequence: 'major',
-          effects: { setFlags: ['route_protector'], delta: { morality: 5, stress: 2 }, pushEvent: 'You chose compassion' },
-          goTo: 'help_stranger'
-        },
-        {
-          text: 'Barricade and arm yourself',
-          type: 'combat',
-          effects: { setFlags: ['route_ruthless'], delta: { strength: 2, stress: 3 }, pushEvent: 'You chose survival' },
-          goTo: 'barricade_apt'
-        },
-        {
-          text: 'Observe quietly',
-          type: 'stealth',
-          effects: { setFlags: ['route_manipulator'], delta: { willpower: 2, charisma: 1 }, pushEvent: 'You chose control' },
-          goTo: 'observe_situation'
-        }
-      ]
-    }
+  const MUTEX = {
+    faction: ["joined_militia", "joined_raiders", "faction_neutral"],
+    route: ["route_protector","route_warlord","route_fixer","route_killer","route_sociopath"]
   };
 
-  // Game Engine
+  const BACKGROUND_LABELS = {
+    medic: "Field Medic", fighter: "Union Brawler", hacker: "Network Tech", thief: "Street Thief"
+  };
+
+  const MAX_STAT = 100; const MIN_STAT = -100;
+
+  const DEFAULT_STATE = {
+    sceneId: "neutral_act0_intro_apartment", time: 0,
+    stats: { health: 90, stamina: 12, stress: 8, morality: 0 },
+    persona: { protector: 0, warlord: 0, fixer: 0, killer: 0, sociopath: 0 },
+    inventory: ["pocketknife", "old_radio", "flare"],
+    playerName: "Survivor", background: null,
+    flags: {}, relationships: {}, rngSeed: 1776,
+    decisionTrace: [], schedule: []
+  };
+
+  function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+  function mulberry32(a) {
+    return function() {
+      let t = (a += 0x6d2b79f5);
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function clamp(value) { return Math.max(MIN_STAT, Math.min(MAX_STAT, value)); }
+  function getChoiceTarget(choice) {
+    if (!choice) return null;
+    const destination = choice.goTo ?? choice.next;
+    return typeof destination === "string" && destination.length ? destination : null;
+  }
+  function setMutexFlag(state, group, flag) {
+    if (!MUTEX[group]) return;
+    for (const f of MUTEX[group]) { if (f !== flag) delete state.flags[f]; }
+    state.flags[flag] = true;
+  }
+  function ensureStats(state) {
+    for (const key of Object.keys(state.stats)) { state.stats[key] = clamp(state.stats[key]); }
+  }
+  function resolveSchedule(state) {
+    const next = [];
+    for (const entry of state.schedule) {
+      const updated = { ...entry, steps: entry.steps - 1 };
+      if (updated.steps <= 0) { applyEffects(state, updated.apply || {}); }
+      else { next.push(updated); }
+    }
+    state.schedule = next;
+  }
+  function applyCost(state, cost) {
+    if (!cost) return;
+    if (typeof cost.time === "number") { state.time = Math.max(0, state.time + cost.time); }
+    if (cost.stats) {
+      for (const [k, v] of Object.entries(cost.stats)) {
+        state.stats[k] = clamp((state.stats[k] || 0) - v);
+      }
+    }
+    if (Array.isArray(cost.items)) {
+      for (const item of cost.items) {
+        const idx = state.inventory.indexOf(item);
+        if (idx >= 0) state.inventory.splice(idx, 1);
+      }
+    }
+  }
+  function applyEffects(state, effects) {
+    if (!effects) return;
+    if (typeof effects.time === "number") { state.time = Math.max(0, state.time + effects.time); }
+    if (effects.stats) {
+      for (const [k, v] of Object.entries(effects.stats)) {
+        state.stats[k] = clamp((state.stats[k] || 0) + v);
+      }
+    }
+    if (effects.persona) {
+      for (const [k, v] of Object.entries(effects.persona)) {
+        state.persona[k] = clamp((state.persona[k] || 0) + v);
+      }
+    }
+    if (Array.isArray(effects.inventoryAdd)) {
+      for (const item of effects.inventoryAdd) { state.inventory.push(item); }
+    }
+    if (Array.isArray(effects.inventoryRemove)) {
+      for (const item of effects.inventoryRemove) {
+        const idx = state.inventory.indexOf(item);
+        if (idx >= 0) state.inventory.splice(idx, 1);
+      }
+    }
+    if (Array.isArray(effects.flagsSet)) {
+      for (const flag of effects.flagsSet) {
+        if (flag.startsWith("route_")) { setMutexFlag(state, "route", flag); }
+        else if (MUTEX.faction && MUTEX.faction.includes(flag)) { setMutexFlag(state, "faction", flag); }
+        else { state.flags[flag] = true; }
+      }
+    }
+    if (Array.isArray(effects.flagsUnset)) {
+      for (const flag of effects.flagsUnset) { delete state.flags[flag]; }
+    }
+    if (effects.relationships) {
+      for (const [name, delta] of Object.entries(effects.relationships)) {
+        const current = state.relationships[name] || 0;
+        state.relationships[name] = clamp(current + delta);
+      }
+    }
+    if (Array.isArray(effects.schedule)) {
+      for (const sched of effects.schedule) {
+        if (sched && typeof sched.steps === "number" && sched.apply) {
+          state.schedule.push({ steps: Math.max(1, sched.steps), apply: sched.apply });
+        }
+      }
+    }
+    if (effects.decisionTrace) { state.decisionTrace.push(effects.decisionTrace); }
+  }
+
+  function meetsRequirement(state, req) {
+    if (!req) return true;
+    if (Array.isArray(req.items)) {
+      for (const item of req.items) { if (!state.inventory.includes(item)) return false; }
+    }
+    if (Array.isArray(req.flags)) {
+      for (const flag of req.flags) { if (!state.flags[flag]) return false; }
+    }
+    if (Array.isArray(req.flagsNone)) {
+      for (const flag of req.flagsNone) { if (state.flags[flag]) return false; }
+    }
+    if (req.stats) {
+      for (const [key, rule] of Object.entries(req.stats)) {
+        const value = state.stats[key] || 0;
+        if (typeof rule.gte === "number" && value < rule.gte) return false;
+        if (typeof rule.lte === "number" && value > rule.lte) return false;
+      }
+    }
+    return true;
+  }
+
+  function formatRequirement(req) {
+    const parts = [];
+    if (!req) return "";
+    if (req.stats) {
+      for (const [key, rule] of Object.entries(req.stats)) {
+        if (typeof rule.gte === "number") parts.push(`${key} ≥ ${rule.gte}`);
+        if (typeof rule.lte === "number") parts.push(`${key} ≤ ${rule.lte}`);
+      }
+    }
+    if (Array.isArray(req.items) && req.items.length) {
+      parts.push(`Need: ${req.items.join(", ")}`);
+    }
+    if (Array.isArray(req.flags) && req.flags.length) {
+      parts.push(`Flags: ${req.flags.join(", ")}`);
+    }
+    return parts.join(" · ");
+  }
+
+  function shouldPopup(choice) {
+    const fx = choice.effects || {};
+    const rel = fx.relationships || {};
+    const relSpike = Object.values(rel).some((v) => Math.abs(v) >= 5);
+    const flips = (fx.flagsSet || []).some((f) => CONSEQUENCE_FLAGS.has(f));
+    return relSpike || flips;
+  }
+
   class ConsequenceGame {
     constructor() {
-      this.state = {
-        sceneId: 'intro',
-        strength: 40, agility: 40, willpower: 40, charisma: 40,
-        morality: 0, stress: 10, trauma: 0,
-        flags: new Set(), inventory: new Set(), pending: []
+      this.state = deepClone(DEFAULT_STATE);
+      this.random = mulberry32(this.state.rngSeed);
+      this.dom = {
+        stats: document.getElementById("stats"),
+        sceneText: document.getElementById("scene-text"),
+        choices: document.getElementById("choices"),
+        inventory: document.getElementById("inventory-list"),
+        charName: document.getElementById("char-name"),
+        charBackground: document.getElementById("char-background"),
+        traumaBar: document.getElementById("trauma-bar"),
+        traumaWarning: document.getElementById("trauma-warning"),
+        personaGrid: document.getElementById("persona-grid"),
+        journal: document.getElementById("journal-list"),
+        eventLog: document.getElementById("event-log"),
+        relationships: document.getElementById("relationships-list"),
+        relationshipCount: document.getElementById("relationship-count"),
+        objectiveCount: document.getElementById("objective-count"),
+        decisionTree: document.getElementById("decision-tree"),
+        flagDisplay: document.getElementById("flag-display"),
+        stateHash: document.getElementById("state-hash"),
+        worldTime: document.getElementById("world-time"),
+        dayhour: document.getElementById("dayhour-indicator"),
+        consequencePopup: document.getElementById("consequence-popup"),
+        consequenceText: document.getElementById("consequence-text"),
+        consequenceOk: document.getElementById("consequence-ok")
       };
+      this.eventLog = []; this.journal = [];
+      this.bindControls(); this.load(); this.renderScene(this.state.sceneId);
     }
 
-    _applyDelta(delta) {
-      for (const [k, v] of Object.entries(delta || {})) {
-        if (this.state[k] !== undefined) {
-          this.state[k] = Math.max(0, Math.min(100, (this.state[k] || 0) + v));
-        }
+    bindControls() {
+      const newGameBtn = document.getElementById("new-game");
+      if (newGameBtn) { newGameBtn.addEventListener("click", () => { this.reset(); }); }
+      const continueBtn = document.getElementById("continue-game");
+      if (continueBtn) { continueBtn.addEventListener("click", () => { this.load(); this.renderScene(this.state.sceneId); }); }
+      const saveBtn = document.getElementById("save-game");
+      if (saveBtn) { saveBtn.addEventListener("click", () => { this.save(); }); }
+      const loadBtn = document.getElementById("load-game");
+      if (loadBtn) {
+        loadBtn.addEventListener("click", () => {
+          const fileInput = document.getElementById("file-loader");
+          if (fileInput) fileInput.click();
+        });
+      }
+      const exportBtn = document.getElementById("export-game");
+      if (exportBtn) { exportBtn.addEventListener("click", () => { this.export(); }); }
+      const fileLoader = document.getElementById("file-loader");
+      if (fileLoader) {
+        fileLoader.addEventListener("change", (ev) => {
+          const files = ev.target && ev.target.files;
+          const file = files && files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const data = JSON.parse(e.target.result);
+              this.state = { ...deepClone(DEFAULT_STATE), ...data };
+              this.random = mulberry32(this.state.rngSeed || 1337);
+              this.renderScene(this.state.sceneId);
+            } catch (err) { console.warn("Failed to load save", err); }
+          };
+          reader.readAsText(file);
+        });
+      }
+      const toggleBtn = document.getElementById("toggle-backend");
+      if (toggleBtn) {
+        toggleBtn.addEventListener("click", () => {
+          const backend = document.getElementById("backend-content");
+          if (!backend) return;
+          backend.classList.toggle("hidden");
+          const expanded = backend.classList.contains("hidden") ? "false" : "true";
+          toggleBtn.setAttribute("aria-expanded", expanded);
+        });
+      }
+      if (this.dom.consequenceOk) {
+        this.dom.consequenceOk.addEventListener("click", () => { this.hidePopup(); });
       }
     }
 
-    _applyEffects(e) {
-      if (!e) return;
-      if (e.setFlags) e.setFlags.forEach(f => this.state.flags.add(f));
-      if (e.clearFlags) e.clearFlags.forEach(f => this.state.flags.delete(f));
-      if (e.addItems) e.addItems.forEach(i => this.state.inventory.add(i));
-      if (e.removeItems) e.removeItems.forEach(i => this.state.inventory.delete(i));
-      if (e.delta) this._applyDelta(e.delta);
-      if (e.schedule) e.schedule.forEach(j => this.state.pending.push({...j}));
-      if (e.pushEvent) this._logEvent(e.pushEvent);
+    reset() {
+      this.state = deepClone(DEFAULT_STATE);
+      this.random = mulberry32(this.state.rngSeed);
+      this.eventLog = []; this.journal = [];
+      this.save(); this.renderScene(this.state.sceneId);
     }
 
-    _resolvePending() {
-      const keep = [];
-      for (const job of this.state.pending) {
-        job.steps--;
-        if (job.steps <= 0) this._applyEffects(job.apply);
-        else keep.push(job);
-      }
-      this.state.pending = keep;
+    load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        this.state = { ...deepClone(DEFAULT_STATE), ...parsed };
+        this.random = mulberry32(this.state.rngSeed || 1337);
+        this.eventLog = parsed.__eventLog || [];
+        this.journal = parsed.__journal || [];
+      } catch (err) { console.warn("Failed to load save", err); }
     }
 
-    _logEvent(msg) {
-      const div = document.getElementById('summary');
-      if (div) {
-        const e = document.createElement('div');
-        e.className = 'event-log-entry';
-        e.textContent = msg;
-        div.insertBefore(e, div.firstChild);
-      }
-      console.log('[EVENT]', msg);
+    save() {
+      try {
+        const data = { ...this.state, __eventLog: this.eventLog, __journal: this.journal };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (err) { console.warn("Failed to save", err); }
     }
 
-    canChoose(choice) {
-      const pre = choice.pre || {};
-      if (pre.min) {
-        for (const [k, v] of Object.entries(pre.min)) {
-          if ((this.state[k] || 0) < v) return { ok: false, reason: choice.blockedReason || `Need ${k} ≥ ${v}` };
-        }
-      }
-      if (pre.max) {
-        for (const [k, v] of Object.entries(pre.max)) {
-          if ((this.state[k] || 0) > v) return { ok: false, reason: choice.blockedReason || `Need ${k} ≤ ${v}` };
-        }
-      }
-      if (pre.flagsAll) {
-        for (const f of pre.flagsAll) {
-          if (!this.state.flags.has(f)) return { ok: false, reason: choice.blockedReason || `Need: ${f}` };
-        }
-      }
-      if (pre.flagsNone) {
-        for (const f of pre.flagsNone) {
-          if (this.state.flags.has(f)) return { ok: false, reason: choice.blockedReason || `Cannot have: ${f}` };
-        }
-      }
-      if (pre.hasItems) {
-        for (const i of pre.hasItems) {
-          if (!this.state.inventory.has(i)) return { ok: false, reason: choice.blockedReason || `Need: ${i}` };
-        }
-      }
-      return { ok: true };
+    export() {
+      const data = { ...this.state, __eventLog: this.eventLog, __journal: this.journal };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `consequence-save-${Date.now()}.json`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      this.pushEvent("Exported save to file.", "discovery");
     }
 
     makeChoice(choice) {
-      const { ok, reason } = this.canChoose(choice);
-      if (!ok) { this._logEvent('❌ ' + reason); return; }
-      this._applyEffects(choice.effects);
-      if (choice.goTo) this.state.sceneId = choice.goTo;
-      this._resolvePending();
-      this.renderScene();
-    }
+      const scene = window.STORY_DATABASE[this.state.sceneId];
+      if (!scene || !choice) return;
+      const reqMet = meetsRequirement(this.state, choice.req);
+      if (!reqMet) return;
 
-    renderScene(id) {
-      const sceneId = id || this.state.sceneId;
-      const scene = window.STORY_DATABASE[sceneId];
-      if (!scene) { console.error('Scene not found:', sceneId); return; }
-      this.state.sceneId = sceneId;
-      this.displayStory(scene);
-      this.displayChoices(scene);
-      this.updateStats();
-    }
-
-    displayStory(scene) {
-      const el = document.getElementById('scene-text');
-      if (el) {
-        el.textContent = scene.text || '';
-        if (scene.isEnding) {
-          el.innerHTML += '<br><br><strong style="color:var(--brand);">[ENDING]</strong>';
+      const nextState = deepClone(this.state);
+      let nameEvent = null, backgroundEvent = null;
+      if (choice.assignName) {
+        const current = this.state.playerName || "Survivor";
+        let name = "";
+        if (typeof window.prompt === "function") {
+          name = window.prompt("What should Alex call you?", current) || "";
         }
+        name = name.trim().slice(0, 40);
+        if (!name) name = current;
+        nextState.playerName = name;
+        nameEvent = `You tell Alex to call you ${name}.`;
+      }
+      if (choice.setBackground) {
+        nextState.background = choice.setBackground;
+        const label = BACKGROUND_LABELS[choice.setBackground] || choice.setBackground;
+        backgroundEvent = `You lean into your ${label.toLowerCase()} instincts.`;
+      }
+
+      applyCost(nextState, choice.cost);
+      applyEffects(nextState, choice.effects);
+      resolveSchedule(nextState);
+      ensureStats(nextState);
+
+      if (choice.effects && choice.effects.pushEvent) {
+        this.pushEvent(choice.effects.pushEvent, "consequence");
+      }
+
+      const goTo = getChoiceTarget(choice) ?? nextState.sceneId;
+      nextState.sceneId = goTo;
+      nextState.decisionTrace = [...nextState.decisionTrace, `${scene.id}::${choice.id || choice.text}`];
+
+      this.state = nextState;
+      this.random = mulberry32(this.state.rngSeed || 1337);
+      this.save();
+
+      if (nameEvent) { this.pushEvent(nameEvent, "world_event"); }
+      if (backgroundEvent) { this.pushEvent(backgroundEvent, "world_event"); }
+      if (shouldPopup(choice)) { this.showPopup(choice.popupText || "They will remember this."); }
+
+      this.renderScene(goTo);
+    }
+
+    showPopup(text) {
+      if (!this.dom.consequencePopup) return;
+      this.dom.consequenceText.textContent = text;
+      this.dom.consequencePopup.classList.remove("hidden");
+    }
+
+    hidePopup() {
+      if (!this.dom.consequencePopup) return;
+      this.dom.consequencePopup.classList.add("hidden");
+    }
+
+    renderScene(sceneId) {
+      const scene = window.STORY_DATABASE[sceneId];
+      if (!scene) { this.displayStory(`Missing scene: ${sceneId}`); return; }
+
+      this.state.sceneId = sceneId;
+      resolveSchedule(this.state); ensureStats(this.state);
+
+      if (scene.timeDelta) { this.state.time = Math.max(0, this.state.time + scene.timeDelta); }
+      if (scene.flagsSet) { applyEffects(this.state, { flagsSet: scene.flagsSet }); }
+
+      const storyText = Array.isArray(scene.text)
+        ? scene.text.map((line) => this.interpolateText(line))
+        : this.interpolateText(scene.text || "");
+
+      this.displayStory(storyText, scene);
+      this.displayChoices(scene);
+      this.renderStats(); this.renderInventory(); this.renderCharacter();
+      this.renderPersona(); this.renderRelationships(); this.renderDebug();
+      this.updateTime(); this.autosaveJournal(scene);
+    }
+
+    interpolateText(text) {
+      if (typeof text !== "string") return text;
+      const name = this.state.playerName || "Survivor";
+      const backgroundKey = this.state.background;
+      const backgroundLabel = BACKGROUND_LABELS[backgroundKey] || (backgroundKey ? backgroundKey : "survivor");
+      return text.replace(/\{\{name\}\}/gi, name).replace(/\{\{background\}\}/gi, backgroundLabel);
+    }
+
+    autosaveJournal(scene) {
+      if (!scene || !scene.tags) return;
+      const headline = `${scene.tags.includes("setpiece") ? "Set Piece" : "Scene"}: ${scene.text.slice(0, 40)}…`;
+      if (!this.journal.find((j) => j.headline === headline)) {
+        this.journal.push({ headline, note: scene.notes || "" });
+      }
+      this.renderJournal();
+    }
+
+    displayStory(text, scene) {
+      if (!this.dom.sceneText) return;
+      this.dom.sceneText.innerHTML = "";
+      const paragraphs = Array.isArray(text) ? text : [text];
+      for (const line of paragraphs) {
+        const p = document.createElement("p");
+        p.textContent = line;
+        this.dom.sceneText.appendChild(p);
+      }
+      if (scene && scene.personaFlavor) {
+        const flavor = document.createElement("div");
+        flavor.className = "persona-flavor";
+        for (const [key, value] of Object.entries(scene.personaFlavor)) {
+          const span = document.createElement("p");
+          span.textContent = `${key.toUpperCase()}: ${value}`;
+          flavor.appendChild(span);
+        }
+        this.dom.sceneText.appendChild(flavor);
       }
     }
 
     displayChoices(scene) {
-      const el = document.getElementById('choices');
-      if (!el) return;
-      el.innerHTML = '';
-      
-      if (scene.isEnding || !scene.choices || scene.choices.length === 0) {
-        const msg = document.createElement('div');
-        msg.className = 'choice disabled';
-        msg.textContent = 'The End';
-        el.appendChild(msg);
-        return;
-      }
-      
-      scene.choices.forEach(choice => {
-        const btn = document.createElement('button');
-        btn.className = 'choice';
-        btn.textContent = choice.text || 'Continue';
-        if (choice.type) btn.dataset.type = choice.type;
-        if (choice.consequence) btn.dataset.consequence = choice.consequence;
-        
-        const gate = this.canChoose(choice);
-        if (!gate.ok) {
-          btn.classList.add('disabled');
-          btn.title = gate.reason;
-          btn.disabled = true;
+      if (!this.dom.choices) return;
+      this.dom.choices.innerHTML = "";
+      const choices = (scene.choices || []).filter((choice) => choice && (getChoiceTarget(choice) || choice.effects));
+      const enabledChoices = [];
+
+      for (const choice of choices) {
+        const button = document.createElement("button");
+        button.className = "choice"; button.type = "button";
+        button.dataset.type = (choice.tags && choice.tags[0]) || choice.type || "";
+        const choiceLabel = this.interpolateText(choice.text || "");
+        button.innerHTML = `<span class="choice-text">${choiceLabel}</span>`;
+
+        const met = meetsRequirement(this.state, choice.req);
+        if (!met) {
+          button.classList.add("disabled"); button.disabled = true;
+          button.title = choice.blockedReason || formatRequirement(choice.req);
         } else {
-          btn.addEventListener('click', () => this.makeChoice(choice));
-          btn.tabIndex = 0;
+          button.addEventListener("click", () => this.makeChoice(choice));
+          enabledChoices.push(choice);
         }
-        el.appendChild(btn);
-      });
+        this.dom.choices.appendChild(button);
+      }
+
+      if (enabledChoices.length === 0) {
+        const fallback = {
+          id: "fail_forward", text: "Push through the panic (gain stress, +1h)",
+          goTo: this.state.sceneId, effects: { time: 1, stats: { stress: 4, stamina: -1 } },
+          tags: ["survival"], popupText: "You scrape forward despite the odds."
+        };
+        const button = document.createElement("button");
+        button.className = "choice"; button.type = "button";
+        button.textContent = fallback.text;
+        button.addEventListener("click", () => this.makeChoice(fallback));
+        this.dom.choices.appendChild(button);
+      }
+    }
+
+    renderStats() {
+      if (!this.dom.stats) return;
+      this.dom.stats.innerHTML = "";
+      const group = document.createElement("div");
+      group.className = "stats-group";
+      const entries = [
+        { key: "health", label: "HEALTH" },
+        { key: "stamina", label: "STAMINA" },
+        { key: "stress", label: "STRESS" },
+        { key: "morality", label: "MORALITY" }
+      ];
+      for (const entry of entries) {
+        const pill = document.createElement("div");
+        pill.className = "stat-pill";
+        pill.textContent = `${entry.label}: ${Math.round(this.state.stats[entry.key] || 0)}`;
+        group.appendChild(pill);
+      }
+      this.dom.stats.appendChild(group);
     }
 
     updateStats() { this.renderStats(); }
 
-    renderStats() {
-      const el = document.getElementById('stats');
-      if (!el) return;
-      const s = this.state;
-      const moralCls = s.morality >= 10 ? 'morality-good' : s.morality <= -10 ? 'morality-bad' : 'morality-neutral';
-      const stressCls = s.stress >= 70 ? 'stress-high' : s.stress >= 40 ? 'stress-medium' : 'stress-low';
-      const traumaCls = s.trauma >= 60 ? 'trauma-high' : s.trauma >= 30 ? 'trauma-medium' : 'trauma-low';
-      el.innerHTML = `
-        <div class="stats-group">
-          <span class="stat-pill strength">STR ${s.strength}</span>
-          <span class="stat-pill agility">AGI ${s.agility}</span>
-          <span class="stat-pill willpower">WIL ${s.willpower}</span>
-          <span class="stat-pill charisma">CHA ${s.charisma}</span>
-        </div>
-        <div class="status-indicators">
-          <span class="status-pill ${moralCls}">Morality ${s.morality}</span>
-          <span class="status-pill ${stressCls}">Stress ${s.stress}</span>
-          <span class="status-pill ${traumaCls}">Trauma ${s.trauma}</span>
-        </div>
-      `;
+    renderInventory() {
+      if (!this.dom.inventory) return;
+      this.dom.inventory.innerHTML = "";
+      if (!this.state.inventory.length) {
+        const span = document.createElement("span");
+        span.className = "empty-inventory"; span.textContent = "(empty)";
+        this.dom.inventory.appendChild(span);
+        return;
+      }
+      for (const item of this.state.inventory) {
+        const chip = document.createElement("span");
+        chip.className = "inventory-chip"; chip.textContent = item;
+        this.dom.inventory.appendChild(chip);
+      }
+    }
+
+    renderCharacter() {
+      if (this.dom.charName) { this.dom.charName.textContent = this.state.playerName || "—"; }
+      if (this.dom.charBackground) {
+        const key = this.state.background;
+        this.dom.charBackground.textContent = key ? BACKGROUND_LABELS[key] || key : "—";
+      }
+    }
+
+    renderPersona() {
+      if (!this.dom.personaGrid) return;
+      this.dom.personaGrid.innerHTML = "";
+      for (const [key, value] of Object.entries(this.state.persona)) {
+        const row = document.createElement("div"); row.className = "persona-point";
+        const name = document.createElement("span"); name.className = "persona-name"; name.textContent = key;
+        const val = document.createElement("span"); val.className = "persona-value"; val.textContent = value;
+        row.appendChild(name); row.appendChild(val);
+        this.dom.personaGrid.appendChild(row);
+      }
+    }
+
+    renderRelationships() {
+      if (!this.dom.relationships) return;
+      this.dom.relationships.innerHTML = "";
+      const entries = Object.entries(this.state.relationships || {});
+      if (entries.length === 0) {
+        const span = document.createElement("span");
+        span.className = "empty-inventory"; span.textContent = "No known contacts.";
+        this.dom.relationships.appendChild(span);
+      } else {
+        for (const [name, score] of entries) {
+          const item = document.createElement("div"); item.className = "relationship-item";
+          const n = document.createElement("span"); n.className = "relationship-name"; n.textContent = name;
+          const status = document.createElement("span"); status.className = "relationship-status"; status.textContent = score;
+          if (score >= 20) status.classList.add("relationship-trust-positive");
+          else if (score <= -20) status.classList.add("relationship-trust-negative");
+          else status.classList.add("relationship-trust-neutral");
+          item.appendChild(n); item.appendChild(status);
+          this.dom.relationships.appendChild(item);
+        }
+      }
+      if (this.dom.relationshipCount) {
+        this.dom.relationshipCount.textContent = `${entries.length} contacts`;
+      }
+    }
+
+    renderJournal() {
+      if (!this.dom.journal) return;
+      this.dom.journal.innerHTML = "";
+      for (const entry of this.journal) {
+        const node = document.createElement("div"); node.className = "journal-item";
+        const title = document.createElement("div"); title.className = "journal-title"; title.textContent = entry.headline;
+        const objective = document.createElement("div"); objective.className = "journal-objective"; objective.textContent = entry.note || "";
+        node.appendChild(title); node.appendChild(objective);
+        this.dom.journal.appendChild(node);
+      }
+      if (this.dom.objectiveCount) {
+        this.dom.objectiveCount.textContent = `${this.journal.length} objectives`;
+      }
+    }
+
+    renderDebug() {
+      if (this.dom.flagDisplay) {
+        this.dom.flagDisplay.innerHTML = "";
+        for (const flag of Object.keys(this.state.flags)) {
+          const node = document.createElement("div"); node.className = "flag-item"; node.textContent = flag;
+          this.dom.flagDisplay.appendChild(node);
+        }
+      }
+      if (this.dom.decisionTree) {
+        this.dom.decisionTree.innerHTML = "";
+        for (const trace of this.state.decisionTrace.slice(-10)) {
+          const node = document.createElement("div"); node.className = "decision-node"; node.textContent = trace;
+          this.dom.decisionTree.appendChild(node);
+        }
+      }
+      if (this.dom.stateHash) {
+        const raw = JSON.stringify(this.state);
+        let hash = 0;
+        for (let i = 0; i < raw.length; i++) {
+          hash = (hash << 5) - hash + raw.charCodeAt(i); hash |= 0;
+        }
+        this.dom.stateHash.textContent = `#${(hash >>> 0).toString(16)}`;
+      }
+    }
+
+    pushEvent(text, type = "") {
+      this.eventLog.unshift({ text, type, time: this.state.time });
+      if (this.eventLog.length > 20) this.eventLog.pop();
+      this.renderEvents();
+    }
+
+    renderEvents() {
+      if (!this.dom.eventLog) return;
+      this.dom.eventLog.innerHTML = "";
+      for (const entry of this.eventLog) {
+        const node = document.createElement("div"); node.className = "event-log-entry";
+        if (entry.type) node.classList.add(entry.type);
+        node.textContent = `[T+${entry.time}h] ${entry.text}`;
+        this.dom.eventLog.appendChild(node);
+      }
+    }
+
+    updateTime() {
+      if (this.dom.worldTime) { this.dom.worldTime.textContent = `T+${this.state.time}h`; }
+      if (this.dom.dayhour) {
+        const day = Math.floor(this.state.time / 24);
+        const hour = this.state.time % 24;
+        this.dom.dayhour.textContent = `Day ${day} · ${hour.toString().padStart(2, "0")}:00`;
+      }
+      if (this.dom.traumaBar) {
+        const stress = clamp(this.state.stats.stress || 0);
+        const pct = Math.min(100, Math.max(0, (stress / 100) * 100));
+        this.dom.traumaBar.style.width = `${pct}%`;
+      }
+      if (this.dom.traumaWarning) {
+        const stress = this.state.stats.stress || 0;
+        this.dom.traumaWarning.className = "trauma-warning";
+        if (stress < 30) {
+          this.dom.traumaWarning.classList.add("moderate");
+          this.dom.traumaWarning.textContent = "Stable";
+        } else if (stress < 60) {
+          this.dom.traumaWarning.classList.add("high");
+          this.dom.traumaWarning.textContent = "Strained";
+        } else {
+          this.dom.traumaWarning.classList.add("critical");
+          this.dom.traumaWarning.textContent = "Critical";
+        }
+      }
     }
   }
 
   window.ConsequenceGame = ConsequenceGame;
-  console.log('✓ Game engine loaded');
+  window.STORY_DATABASE = window.STORY_DATABASE || {};
 
-})(window);
+  // EMBEDDED STORY DATABASE - Replace with your full story
+  Object.assign(window.STORY_DATABASE, {
+    neutral_act0_intro_apartment: {
+      id: "neutral_act0_intro_apartment",
+      text: "Your apartment walls tremble as sirens fade into rain. Someone hammers on your door and whispers your name: Alex, the neighbor who always fixes the fuse box.",
+      tags: ["intro", "act0"],
+      choices: [
+        {
+          id: "intro_peek", text: "Check the peephole before touching the locks",
+          goTo: "neutral_act0_contact_alex",
+          effects: { stats: { stress: -1 }, pushEvent: "You study Alex's panic through the fisheye glass." },
+          tags: ["survival"]
+        },
+        {
+          id: "intro_barricade", text: "Drag the dresser toward the door just in case",
+          goTo: "neutral_act0_contact_alex",
+          effects: { stats: { stamina: -1, stress: 1 }, pushEvent: "Wood scrapes the tile as you brace the entryway." },
+          tags: ["combat"]
+        },
+        {
+          id: "intro_callout", text: "Call out to Alex through the door",
+          goTo: "neutral_act0_contact_alex",
+          effects: { relationships: { Alex: 2 }, pushEvent: "Alex answers with breathless relief." },
+          tags: ["social"]
+        }
+      ]
+    },
+    neutral_act0_contact_alex: {
+      id: "neutral_act0_contact_alex",
+      text: "Alex shakes, soaked. Their brother turned downstairs. They beg you: hide together, share supplies, or keep distance.",
+      tags: ["scene", "act0"],
+      choices: [
+        {
+          id: "let_alex_in", text: "Undo the locks and pull Alex inside",
+          goTo: "neutral_act0_background_select",
+          effects: { stats: { morality: 2, stress: -2 }, relationships: { Alex: 6 }, flagsSet: ["alex_alive"],
+            pushEvent: "You haul Alex over the threshold and slam the deadbolt." },
+          tags: ["leader"]
+        }
+      ]
+    },
+    neutral_act0_background_select: {
+      id: "neutral_act0_background_select",
+      text: "Alex asks what to do next. Choose the skills you'll lean on when the city falls.",
+      tags: ["scene", "act0"],
+      choices: [
+        {
+          id: "background_medic", text: ""I'm the medic on this floor. Let me triage."",
+          assignName: true, setBackground: "medic",
+          goTo: "neutral_act1_hub_apartment",
+          effects: { stats: { health: 5, stress: -2, morality: 2 }, persona: { protector: 1 },
+            inventoryAdd: ["field_kit"], flagsSet: ["background_medic"],
+            pushEvent: "Your medic bag hits the floor ready to open." },
+          tags: ["social"]
+        },
+        {
+          id: "background_fighter", text: ""I'm the union muscle. I keep us standing."",
+          assignName: true, setBackground: "fighter",
+          goTo: "neutral_act1_hub_apartment",
+          effects: { stats: { stamina: 3, stress: -1, morality: -1 }, persona: { warlord: 1 },
+            inventoryAdd: ["crowbar"], flagsSet: ["background_fighter"],
+            pushEvent: "Metal groans as you pry a locker open for gear." },
+          tags: ["combat"]
+        }
+      ]
+    },
+    neutral_act1_hub_apartment: {
+      id: "neutral_act1_hub_apartment",
+      text: "Sirens fade beneath rain. Alex paces between sobbing neighbors. {{name}}—the {{background}} of this block—must decide.",
+      tags: ["hub", "act1"],
+      choices: [
+        {
+          id: "pick_protector", text: "Stand with Alex and organize a floor watch (Protector)",
+          goTo: "good_act1_ending",
+          effects: { flagsSet: ["route_protector"], persona: { protector: 2 }, stats: { morality: 2, stress: 2 },
+            relationships: { Alex: 2 }, pushEvent: "You and Alex start assigning posts and promises." },
+          tags: ["leader"]
+        },
+        {
+          id: "pick_warlord", text: "Force Alex into formation (Warlord)",
+          goTo: "ant_act1_ending",
+          effects: { flagsSet: ["route_warlord"], persona: { warlord: 2 }, stats: { morality: -2, stress: -1 },
+            relationships: { Alex: -3 }, pushEvent: "You bark orders through Alex's clenched jaw." },
+          tags: ["combat"]
+        }
+      ]
+    },
+    good_act1_ending: {
+      id: "good_act1_ending",
+      text: "You and the volunteers hold the line. Families breathe easier. The protector path has begun.",
+      isEnding: true,
+      endingType: "protector_demo"
+    },
+    ant_act1_ending: {
+      id: "ant_act1_ending",
+      text: "Fear becomes your weapon. The building bows to your will. The warlord path has begun.",
+      isEnding: true,
+      endingType: "warlord_demo"
+    }
+  });
+
+  console.log("✓ CONSEQUENCE game engine loaded");
+  console.log("✓ Story database:", Object.keys(window.STORY_DATABASE).length, "scenes");
+
+})();
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (typeof window.ConsequenceGame === "function" && window.STORY_DATABASE) {
+    window.game = new window.ConsequenceGame();
+  }
+});
