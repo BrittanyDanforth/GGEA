@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CONSEQUENCE - Offline Build</title>
+  <link rel="stylesheet" href="MYSTORY.CSS" />
+</head>
+<body>
+  <a class="skip-link" href="#scene-text">Skip to content</a>
+  
+  <div id="game-container">
+    <header class="game-header">
+      <h1>CONSEQUENCE</h1>
+      <p class="game-subtitle">Every choice has consequences</p>
+    </header>
+
+    <div class="game-interface">
+      <div class="status-bar" id="stats"></div>
+      
+      <div class="game-content">
+        <div class="story-section">
+          <div class="story-display" id="scene-text"></div>
+          <div class="choices-display" id="choices"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="summary" class="summary"></div>
+  </div>
+
+  <!-- Single offline script with embedded story + engine -->
+  <script src="MYSTORY.JAVASCRIPT"></script>
+
+  <script>
+    // Boot game on load
+    window.addEventListener('load', () => {
+      if (window.ConsequenceGame) {
+        const game = new ConsequenceGame();
+        window.game = game; // For debugging
+        game.renderScene('intro');
+      }
+    });
+  </script>
+</body>
+</html>
