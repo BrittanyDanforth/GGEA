@@ -1,2543 +1,2700 @@
-(() => {
-  const STORAGE_KEY = "consequence_save_v1";
-  const CONSEQUENCE_FLAGS = new Set([
-    "joined_militia",
-    "joined_raiders",
-    "route_protector",
-    "route_warlord",
-    "route_fixer",
-    "route_killer",
-    "route_sociopath",
-    "proof_protector_holdline",
-    "proof_protector_convoy",
-    "proof_protector_beacons",
-    "proof_warlord_blackout",
-    "proof_warlord_tithe",
-    "proof_warlord_supremacy",
-    "proof_fixer_network",
-    "proof_fixer_markets",
-    "proof_fixer_ledgers",
-    "proof_killer_hunt",
-    "proof_killer_fear",
-    "proof_killer_cull",
-    "proof_sociopath_mask",
-    "proof_sociopath_trial",
-    "proof_sociopath_requiem",
-    "protector_final_bastion",
-    "warlord_final_tribute",
-    "fixer_final_network",
-    "killer_final_reign",
-    "sociopath_final_stage",
-    "rescued_convoy",
-    "held_line",
-    "shared_rations",
-    "wall_breached",
-    "convoy_betrayed",
-    "refinery_burned",
-    "alex_trust_earned",
-    "alex_supplied_from_door",
-    "alex_denied_entry"
-  ]);
+;(() => {
+  "use strict";
+
+  const WORKING_TITLE = "CONSEQUENCE";
+  const SAVE_KEY = "consequence_offline_save";
+
+  const ROUTES = ["good", "ant", "man", "killer", "socio", "neutral"];
+
+  const ROUTE_TITLES = {
+    good: "Protector",
+    ant: "Warlord",
+    man: "Fixer",
+    killer: "Killer",
+    socio: "Sociopath",
+    neutral: "Neutral"
+  };
+
+  const ROUTE_PROOFS = {
+    good: ["proof_protector_rescue", "proof_protector_shield", "proof_protector_convoy"],
+    ant: ["proof_warlord_fear", "proof_warlord_tithe", "proof_warlord_domination"],
+    man: ["proof_fixer_deal", "proof_fixer_network", "proof_fixer_lock"],
+    killer: ["proof_killer_cull", "proof_killer_extraction", "proof_killer_obedience"],
+    socio: ["proof_socio_stage", "proof_socio_confession", "proof_socio_mirror"]
+  };
 
   const MUTEX = {
     faction: ["joined_militia", "joined_raiders", "faction_neutral"],
-    route: [
-      "route_protector",
-      "route_warlord",
-      "route_fixer",
-      "route_killer",
-      "route_sociopath"
-    ]
+    endgame: ["goal_stadium", "goal_convoy", "goal_refinery"],
+    alex: ["alex_trust", "alex_wary", "alex_dead"]
   };
 
-  const BACKGROUND_LABELS = {
-    medic: "Field Medic",
-    fighter: "Union Brawler",
-    hacker: "Network Tech",
-    thief: "Street Thief"
+  const CONSEQUENCE_FLAGS = new Set([
+    "joined_militia",
+    "joined_raiders",
+    "faction_neutral",
+    "goal_stadium",
+    "goal_convoy",
+    "goal_refinery",
+    "refinery_burned",
+    "convoy_betrayed",
+    "wall_breached",
+    "rescued_convoy",
+    "held_line",
+    "shared_rations",
+    "proof_protector_rescue",
+    "proof_protector_shield",
+    "proof_protector_convoy",
+    "proof_warlord_fear",
+    "proof_warlord_tithe",
+    "proof_warlord_domination",
+    "proof_fixer_deal",
+    "proof_fixer_network",
+    "proof_fixer_lock",
+    "proof_killer_cull",
+    "proof_killer_extraction",
+    "proof_killer_obedience",
+    "proof_socio_stage",
+    "proof_socio_confession",
+    "proof_socio_mirror",
+    "alex_trust",
+    "alex_wary",
+    "alex_dead"
+  ]);
+
+  const STATS_MIN_MAX = {
+    health: [0, 100],
+    stamina: [0, 20],
+    stress: [0, 100],
+    morality: [-20, 20],
+    trauma: [0, 120],
+    strength: [0, 20],
+    agility: [0, 20],
+    willpower: [0, 20],
+    charisma: [0, 20]
   };
 
-  const MAX_STAT = 100;
-  const MIN_STAT = -100;
-
-  const DEFAULT_STATE = {
-    sceneId: "neutral_act0_intro_apartment",
-    time: 0,
-    stats: { health: 90, stamina: 12, stress: 8, morality: 0 },
-    persona: {
-      protector: 0,
-      warlord: 0,
-      fixer: 0,
-      killer: 0,
-      sociopath: 0
-    },
-    inventory: ["pocketknife", "old_radio", "flare"],
-    playerName: "Survivor",
-    background: null,
-    flags: {},
-    relationships: {},
-    rngSeed: 1776,
-    decisionTrace: [],
-    schedule: []
+  const START_INVENTORY = {
+    medic: ["medkit", "bandage_roll"],
+    scrapper: ["crowbar", "flare"],
+    sentinel: ["service_pistol", "ammo_mag"]
   };
 
-  function deepClone(obj) {
-    return JSON.parse(JSON.stringify(obj));
+  const PERSONA_BASE = {
+    protector: 0,
+    warlord: 0,
+    fixer: 0,
+    killer: 0,
+    sociopath: 0
+  };
+
+  function clone(value) {
+    return value ? JSON.parse(JSON.stringify(value)) : value;
   }
 
-  function mulberry32(a) {
-    return function () {
-      let t = (a += 0x6d2b79f5);
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  function createInitialState() {
+    return {
+      sceneId: "neutral_act0_hub_identity",
+      time: 0,
+      stats: {
+        health: 100,
+        stamina: 12,
+        stress: 0,
+        morality: 0,
+        trauma: 0,
+        strength: 6,
+        agility: 6,
+        willpower: 6,
+        charisma: 6
+      },
+      inventory: [],
+      flags: { faction_neutral: true },
+      relationships: { Alex: 0, Volunteers: 0, Raiders: 0, Convoy: 0, Stadium: 0, FreeCrews: 0 },
+      persona: clone(PERSONA_BASE),
+      identity: { name: "Alex's Neighbor", background: "Unknown" },
+      journal: [],
+      decisionTrace: [],
+      rngSeed: 1337
     };
   }
 
-  function clamp(value) {
-    return Math.max(MIN_STAT, Math.min(MAX_STAT, value));
-  }
-
-  function getChoiceTarget(choice) {
-    if (!choice) return null;
-    const destination = choice.goTo ?? choice.next;
-    return typeof destination === "string" && destination.length ? destination : null;
-  }
-
-  function setMutexFlag(state, group, flag) {
-    if (!MUTEX[group]) return;
-    for (const f of MUTEX[group]) {
+  function setMutex(state, group, flag) {
+    const peers = MUTEX[group];
+    if (!peers) return;
+    for (const f of peers) {
       if (f !== flag) delete state.flags[f];
     }
     state.flags[flag] = true;
   }
 
-  function ensureStats(state) {
-    for (const key of Object.keys(state.stats)) {
-      state.stats[key] = clamp(state.stats[key]);
+  function clampStats(stats) {
+    for (const [key, [min, max]] of Object.entries(STATS_MIN_MAX)) {
+      if (!(key in stats)) continue;
+      if (stats[key] < min) stats[key] = min;
+      if (stats[key] > max) stats[key] = max;
     }
   }
 
-  function resolveSchedule(state) {
-    const next = [];
-    for (const entry of state.schedule) {
-      const updated = { ...entry, steps: entry.steps - 1 };
-      if (updated.steps <= 0) {
-        applyEffects(state, updated.apply || {});
-      } else {
-        next.push(updated);
-      }
-    }
-    state.schedule = next;
+  function randFromSeed(seed) {
+    let t = seed + 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
   }
 
-  function applyCost(state, cost) {
-    if (!cost) return;
-    if (typeof cost.time === "number") {
-      state.time = Math.max(0, state.time + cost.time);
+  function shouldPopup(effects = {}) {
+    const rel = effects.relationships || {};
+    const relSpike = Object.values(rel).some((v) => Math.abs(v) >= 5);
+    const flips = (effects.flagsSet || []).some((flag) => CONSEQUENCE_FLAGS.has(flag));
+    return relSpike || flips;
+  }
+
+  function normalizeSceneId(id) {
+    return typeof id === "string" ? id.trim() : id;
+  }
+
+  const STORY_DATABASE = {
+    neutral_act0_hub_identity: {
+      id: "neutral_act0_hub_identity",
+      text: "Day 0, hour 0. Sirens moan outside your apartment door. Alex's fists hammer in panic. Before you unlatch anything, choose who you are in this crumbling tower.",
+      timeDelta: 1,
+      tags: ["social"],
+      choices: [
+        {
+          id: "choose_name_river",
+          text: "Claim the name River (calm under pressure).",
+          goTo: "neutral_act0_setpiece_identity_background",
+          effects: {
+            identity: { name: "River", persona: "calm" },
+            stats: { willpower: +1, stress: -1 },
+            pushEvent: "You steady your breathing and answer to River."
+          }
+        },
+        {
+          id: "choose_name_jules",
+          text: "Answer as Jules (sharp survivor).",
+          goTo: "neutral_act0_setpiece_identity_background",
+          effects: {
+            identity: { name: "Jules", persona: "focused" },
+            stats: { agility: +1, stress: +1 },
+            pushEvent: "You whisper your own name to stay real."
+          }
+        },
+        {
+          id: "choose_name_morgan",
+          text: "Introduce yourself as Morgan (unbreakable).",
+          goTo: "neutral_act0_setpiece_identity_background",
+          effects: {
+            identity: { name: "Morgan", persona: "unyielding" },
+            stats: { strength: +1, willpower: +1, stress: +1 },
+            pushEvent: "Steel settles behind your teeth: you are Morgan."
+          }
+        }
+      ]
+    },
+
+    neutral_act0_setpiece_identity_background: {
+      id: "neutral_act0_setpiece_identity_background",
+      text: "Alex muffles a sob beyond the latch. You grab the emergency locker and remember the skills that carried you before the sirens.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "background_medic",
+          text: "You trained as a medic — pack the trauma kit.",
+          goTo: "neutral_act0_setpiece_apartment_door",
+          effects: {
+            identity: { background: "medic" },
+            stats: { morality: +2, trauma: -2, charisma: +1 },
+            inventoryAdd: START_INVENTORY.medic,
+            pushEvent: "Medical instincts return in a rush."
+          },
+          tags: ["moral", "survival"]
+        },
+        {
+          id: "background_scrapper",
+          text: "You hustled salvage — rig the pry-bars and flares.",
+          goTo: "neutral_act0_setpiece_apartment_door",
+          effects: {
+            identity: { background: "scrapper" },
+            stats: { agility: +1, strength: +1, morality: -1 },
+            inventoryAdd: START_INVENTORY.scrapper,
+            pushEvent: "You sling scavenged tools across your back."
+          },
+          tags: ["survival", "stealth"]
+        },
+        {
+          id: "background_sentinel",
+          text: "You were building security plans — chamber the pistol.",
+          goTo: "neutral_act0_setpiece_apartment_door",
+          effects: {
+            identity: { background: "sentinel" },
+            stats: { willpower: +2, stress: +1, morality: -1 },
+            inventoryAdd: START_INVENTORY.sentinel,
+            pushEvent: "The old duty manual flashes in your mind."
+          },
+          tags: ["combat", "leader"]
+        }
+      ]
+    },
+
+    neutral_act0_setpiece_apartment_door: {
+      id: "neutral_act0_setpiece_apartment_door",
+      text: "Alex gasps through the chain: \"They're turning floors below. Please let me in. I grabbed what I could.\" Your hallway camera shows smears of blood and a shadow rounding the stairwell.",
+      tags: ["social", "moral"],
+      choices: [
+        {
+          id: "verify_blood",
+          text: "Check Alex for bites before anything else.",
+          goTo: "neutral_act0_side_verification",
+          effects: {
+            stats: { stress: +1 },
+            pushEvent: "You demand proof through the chain."
+          },
+          tags: ["leader", "survival"]
+        },
+        {
+          id: "pass_supplies",
+          text: "Pass supplies through the gap to buy time.",
+          goTo: "neutral_act0_side_supply_gap",
+          cost: { items: ["bandage_roll"] },
+          req: { items: ["bandage_roll"] },
+          effects: {
+            stats: { morality: +1, stress: +1 },
+            pushEvent: "You slide bandages through the chain."
+          },
+          tags: ["moral", "social"]
+        },
+        {
+          id: "open_now",
+          text: "Unlatch the door and pull Alex inside.",
+          goTo: "neutral_act0_side_immediate_entry",
+          effects: {
+            flagsSet: ["alex_trust"],
+            relationships: { Alex: +6 },
+            pushEvent: "You drag Alex over the barricade."
+          },
+          tags: ["social", "leader"]
+        }
+      ]
+    },
+
+    neutral_act0_side_verification: {
+      id: "neutral_act0_side_verification",
+      text: "Alex thrusts their wrists through the crack. Trembling fingers, bruised knuckles, a smear of someone else's blood. No bite marks. \"Please, River. I heard them behind me.\"",
+      tags: ["social", "survival"],
+      choices: [
+        {
+          id: "accept_proof",
+          text: "Unlock and reinforce the door together.",
+          goTo: "neutral_act0_side_immediate_entry",
+          effects: {
+            flagsSet: ["alex_trust"],
+            relationships: { Alex: +8 },
+            stats: { stress: +2, morality: +1 }
+          }
+        },
+        {
+          id: "reject_proof",
+          text: "Keep Alex outside and order them to clear the stairwell.",
+          goTo: "neutral_act0_side_lockout",
+          effects: {
+            flagsSet: ["alex_wary"],
+            relationships: { Alex: -6 },
+            stats: { morality: -2, stress: +3 }
+          }
+        }
+      ]
+    },
+
+    neutral_act0_side_supply_gap: {
+      id: "neutral_act0_side_supply_gap",
+      text: "You brace the door while handing off sterile gauze and a ration bar. Alex nods, gratitude mixing with betrayal. \"You won't last alone,\" they warn.",
+      tags: ["social", "survival"],
+      choices: [
+        {
+          id: "invite_after_supply",
+          text: "Let Alex inside after the exchange.",
+          goTo: "neutral_act0_side_immediate_entry",
+          effects: {
+            flagsSet: ["alex_trust"],
+            relationships: { Alex: +4 },
+            stats: { morality: +1 }
+          }
+        },
+        {
+          id: "lock_after_supply",
+          text: "Bolt the door and keep them out.",
+          goTo: "neutral_act0_side_lockout",
+          effects: {
+            flagsSet: ["alex_wary"],
+            relationships: { Alex: -8 },
+            stats: { morality: -3, stress: +2 }
+          }
+        }
+      ]
+    },
+
+    neutral_act0_side_immediate_entry: {
+      id: "neutral_act0_side_immediate_entry",
+      text: "Alex tumbles inside clutching a soaked duffel. Together you ram furniture against the door as a screamer slams from the hall.",
+      tags: ["leader", "combat"],
+      choices: [
+        {
+          id: "share_plan",
+          text: "Share your plan to fortify the floor.",
+          goTo: "neutral_act0_bridge_to_act1",
+          effects: {
+            relationships: { Alex: +4 },
+            stats: { willpower: +1 },
+            pushEvent: "Alex nods, trusting your voice." }
+        },
+        {
+          id: "check_injury",
+          text: "Check Alex's injuries and hand over painkillers.",
+          goTo: "neutral_act0_bridge_to_act1",
+          req: { items: ["bandage_roll"] },
+          effects: {
+            inventoryRemove: ["bandage_roll"],
+            stats: { morality: +1, stress: -1 },
+            relationships: { Alex: +6 }
+          }
+        }
+      ]
+    },
+
+    neutral_act0_side_lockout: {
+      id: "neutral_act0_side_lockout",
+      text: "You seal the door. Alex's fists pound once more, then fade. Moments later a wet shriek answers them. Silence settles heavy.",
+      tags: ["moral", "survival"],
+      choices: [
+        {
+          id: "face_consequence",
+          text: "Stare at the peephole until sunrise.",
+          goTo: "neutral_act0_bridge_to_act1",
+          effects: {
+            flagsSet: ["alex_dead"],
+            stats: { stress: +6, morality: -4, trauma: +8 },
+            relationships: { Alex: -12 },
+            pushEvent: "You feel the building remember your choice." }
+        },
+        {
+          id: "loot_pack",
+          text: "Loot the abandoned hallway for supplies.",
+          goTo: "neutral_act0_bridge_to_act1",
+          effects: {
+            inventoryAdd: ["ration_brick"],
+            stats: { stress: +2, morality: -2 }
+          }
+        }
+      ]
+    },
+
+    neutral_act0_bridge_to_act1: {
+      id: "neutral_act0_bridge_to_act1",
+      text: "Dawn bleeds through the blinds. Whether Alex rests on your couch or stains the hall outside, the building looks to you for the next call.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "step_into_hall",
+          text: "Rally the floor and hold the stairwell (Protector path).",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            personaTilt: { protector: +1 },
+            stats: { stress: +1 }
+          },
+          tags: ["leader", "moral"]
+        },
+        {
+          id: "lean_on_raiders",
+          text: "Signal the raider scouts and seize control (Warlord path).",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            personaTilt: { warlord: +1 },
+            stats: { morality: -1 }
+          },
+          tags: ["combat", "social"]
+        },
+        {
+          id: "raise_dispatch",
+          text: "Patch into convoy frequencies for leverage (Fixer path).",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            personaTilt: { fixer: +1 },
+            stats: { stress: +1 }
+          },
+          tags: ["social", "leader"]
+        },
+        {
+          id: "hunt_corridors",
+          text: "Prowl the dark to clear threats yourself (Killer path).",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            personaTilt: { killer: +1 },
+            stats: { morality: -1, stress: -1 }
+          },
+          tags: ["stealth", "combat"]
+        },
+        {
+          id: "stage_reassurance",
+          text: "Stage a performance that binds everyone to you (Sociopath path).",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            personaTilt: { sociopath: +1 },
+            stats: { charisma: +1, morality: -1 }
+          },
+          tags: ["social"]
+        }
+      ]
+    },
+
+    neutral_act1_hub_apartment: {
+      id: "neutral_act1_hub_apartment",
+      text: "Rain needles cracked windows as neighbors crowd the landing. Generators hiccup. Radios hiss. The first act of survival unfolds on this floor.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "coordinate_barricade",
+          text: "Coordinate the barricade rotation (Protector).",
+          goTo: "good_act1_setpiece_barricade",
+          effects: {
+            stats: { stress: +2 },
+            relationships: { Volunteers: +4 },
+            time: +1,
+            pushEvent: "You assign shifts with clipped clarity."
+          },
+          tags: ["leader", "moral"]
+        },
+        {
+          id: "intimidate_raiders",
+          text: "Summon raider scouts to enforce curfew (Warlord).",
+          goTo: "ant_act1_setpiece_checkpoint",
+          effects: {
+            stats: { morality: -2, stress: -1 },
+            relationships: { Raiders: +6, Volunteers: -3 },
+            time: +1
+          },
+          tags: ["combat", "social"]
+        },
+        {
+          id: "call_convoy",
+          text: "Call the convoy dispatcher for a supply bargain (Fixer).",
+          goTo: "man_act1_setpiece_radio",
+          effects: {
+            stats: { stress: +1, morality: +1 },
+            relationships: { Convoy: +4 },
+            time: +1
+          },
+          tags: ["social"]
+        },
+        {
+          id: "cleanse_corridors",
+          text: "Sweep the corridors alone (Killer).",
+          goTo: "killer_act1_setpiece_cull",
+          effects: {
+            stats: { morality: -2, stress: -2 },
+            time: +1
+          },
+          tags: ["stealth", "combat"]
+        },
+        {
+          id: "spin_story",
+          text: "Spin a reassuring lie to keep everyone compliant (Sociopath).",
+          goTo: "socio_act1_setpiece_stage",
+          effects: {
+            stats: { morality: -1, charisma: +1 },
+            relationships: { Volunteers: +2 },
+            time: +1
+          },
+          tags: ["social", "leader"]
+        },
+        {
+          id: "salvage_garage",
+          text: "Slip to the garage for extra supplies.",
+          goTo: "neutral_act1_side_garage",
+          effects: {
+            stats: { stress: -1 },
+            time: +1
+          },
+          tags: ["survival", "stealth"]
+        }
+      ]
+    },
+
+    neutral_act1_side_garage: {
+      id: "neutral_act1_side_garage",
+      text: "The garage reeks of burnt rubber. Half-toppled shelves hide fuel cans and an old quad drone.",
+      tags: ["survival"],
+      choices: [
+        {
+          id: "siphon_fuel",
+          text: "Siphon fuel into canisters (−1 STA).",
+          goTo: "neutral_act1_hub_apartment",
+          cost: { stamina: 1 },
+          effects: {
+            inventoryAdd: ["fuel_can"],
+            stats: { stress: +1 },
+            pushEvent: "You lug a sloshing can upstairs."
+          },
+          tags: ["survival"]
+        },
+        {
+          id: "repair_drone_med",
+          text: "Repair the drone with your MedKit tools.",
+          goTo: "neutral_act1_hub_apartment",
+          req: { items: ["medkit"] },
+          effects: {
+            inventoryAdd: ["scout_drone"],
+            stats: { willpower: +1 },
+            pushEvent: "The drone's rotors whine back to life."
+          },
+          tags: ["stealth", "leader"]
+        },
+        {
+          id: "pry_for_parts",
+          text: "Pry spare parts loose with your crowbar.",
+          goTo: "neutral_act1_hub_apartment",
+          req: { items: ["crowbar"] },
+          effects: {
+            inventoryAdd: ["scout_drone"],
+            stats: { strength: -1, stress: +1 },
+            pushEvent: "Metal screams, but the drone sputters awake."
+          },
+          tags: ["survival", "stealth"]
+        },
+        {
+          id: "return_empty",
+          text: "Return empty-handed but wiser.",
+          goTo: "neutral_act1_hub_apartment",
+          effects: {
+            stats: { stress: -2 }
+          },
+          tags: ["survival"]
+        }
+      ]
+    },
+    good_act1_setpiece_barricade: {
+      id: "good_act1_setpiece_barricade",
+      text: "Volunteers strain under splintered doors while infected slam below. Alex, if alive, grips a nailgun, waiting for your call.",
+      tags: ["leader", "combat"],
+      choices: [
+        {
+          id: "rotate_shifts",
+          text: "Rotate shifts; keep morale high (−2 STA).",
+          goTo: "neutral_act1_bridge_rooftop",
+          cost: { stamina: 2 },
+          effects: {
+            flagsSet: ["held_line", "proof_protector_rescue"],
+            stats: { stress: +3, morality: +2 },
+            relationships: { Volunteers: +8, Alex: +4 },
+            pushEvent: "The barricade holds because you make it hold."
+          },
+          tags: ["leader", "moral"]
+        },
+        {
+          id: "evacuate_children",
+          text: "Evacuate the children up the fire escape.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: +3, stress: +2 },
+            inventoryRemove: ["scout_drone"],
+            flagsSet: ["proof_protector_rescue"],
+            relationships: { Volunteers: +6 },
+            pushEvent: "Tiny hands cling to your coat as you guide them out." }
+        },
+        {
+          id: "hold_with_fire",
+          text: "Light the stairwell with a flare and force the infected back.",
+          goTo: "neutral_act1_bridge_rooftop",
+          cost: { items: ["flare"] },
+          req: { items: ["flare"] },
+          effects: {
+            stats: { stress: +1, stamina: -1 },
+            flagsSet: ["proof_protector_rescue"],
+            pushEvent: "Flare light paints the hall in molten red." }
+        }
+      ]
+    },
+
+    ant_act1_setpiece_checkpoint: {
+      id: "ant_act1_setpiece_checkpoint",
+      text: "Two raider scouts lounge over crates of ration bricks. They eye you like new stock walking in.",
+      tags: ["combat", "social"],
+      choices: [
+        {
+          id: "tax_residents",
+          text: "Tax every resident a ration to buy the raiders' muscle.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -3, stress: -1 },
+            flagsSet: ["proof_warlord_fear"],
+            relationships: { Raiders: +6, Volunteers: -6 },
+            pushEvent: "You trade fear for a night of order." },
+          tags: ["combat", "moral"]
+        },
+        {
+          id: "threaten_scout",
+          text: "Threaten their scout until they guard your stairwell for free.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -2, stress: -2 },
+            flagsSet: ["proof_warlord_fear"],
+            relationships: { Raiders: +4 },
+            pushEvent: "You leave them bleeding respect on the tiles." }
+        },
+        {
+          id: "sabotage_supply",
+          text: "Sabotage one crate and blame a rival faction.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -4, stress: +1 },
+            flagsSet: ["proof_warlord_fear", "convoy_betrayed"],
+            relationships: { Convoy: -4 },
+            pushEvent: "You seed paranoia in their ranks." }
+        }
+      ]
+    },
+
+    man_act1_setpiece_radio: {
+      id: "man_act1_setpiece_radio",
+      text: "Rain soaks the rooftop while the convoy dispatcher demands leverage for any pickup.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "offer_fuel",
+          text: "Offer fuel for guaranteed evac slots (lose Fuel Can).",
+          goTo: "neutral_act1_bridge_rooftop",
+          req: { items: ["fuel_can"] },
+          cost: { items: ["fuel_can"] },
+          effects: {
+            flagsSet: ["proof_fixer_deal", "shared_rations"],
+            stats: { morality: +1 },
+            relationships: { Convoy: +8 },
+            pushEvent: "The dispatcher softens at the promise of fuel." }
+        },
+        {
+          id: "record_leverage",
+          text: "Record their desperation to blackmail later.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            inventoryAdd: ["blackmail_clip"],
+            stats: { morality: -1, stress: +1 },
+            flagsSet: ["proof_fixer_deal"],
+            pushEvent: "Static hides the fear in their voice you just captured." }
+        },
+        {
+          id: "trade_medical",
+          text: "Trade your medic expertise for supply priority.",
+          goTo: "neutral_act1_bridge_rooftop",
+          req: { flags: ["alex_trust"] },
+          effects: {
+            stats: { morality: +2, stress: +2 },
+            relationships: { Convoy: +6, Volunteers: +2 },
+            flagsSet: ["proof_fixer_deal"],
+            pushEvent: "You promise triage in exchange for fuel routes." }
+        }
+      ]
+    },
+
+    killer_act1_setpiece_cull: {
+      id: "killer_act1_setpiece_cull",
+      text: "The corridor is a slit of shadows. Four shamblers gnash over a fallen volunteer's pack.",
+      tags: ["combat", "stealth"],
+      choices: [
+        {
+          id: "silent_cull",
+          text: "Cull each quietly with your blade.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -2, stress: -2 },
+            flagsSet: ["proof_killer_cull"],
+            relationships: { Raiders: +2 },
+            pushEvent: "You move like the siren's knife." }
+        },
+        {
+          id: "bait_to_stair",
+          text: "Bait them to the stair and drop them four floors.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -1, stress: -1 },
+            flagsSet: ["proof_killer_cull"],
+            pushEvent: "Bone crunch echoes up the shaft." }
+        },
+        {
+          id: "use_neighbor",
+          text: "Use a panicked neighbor as bait to guarantee the kills.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -4, stress: -3 },
+            flagsSet: ["proof_killer_cull"],
+            relationships: { Volunteers: -8 },
+            pushEvent: "Fear cements your legend." }
+        }
+      ]
+    },
+
+    socio_act1_setpiece_stage: {
+      id: "socio_act1_setpiece_stage",
+      text: "You gather survivors in the laundry room, stringing fairy lights from extension cords, spinning hope like silk.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "promise_safety",
+          text: "Promise safety if they obey every order.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -1, stress: -1 },
+            flagsSet: ["proof_socio_stage"],
+            relationships: { Volunteers: +5 },
+            pushEvent: "Their trust tastes like sugar." }
+        },
+        {
+          id: "weaponize_fear",
+          text: "Describe the horrors outside until they cling to you.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -2, stress: -2 },
+            flagsSet: ["proof_socio_stage"],
+            relationships: { Volunteers: +3, Raiders: +2 },
+            pushEvent: "Tears glisten, and you own every one." }
+        },
+        {
+          id: "collect_secrets",
+          text: "Collect confessions to use later.",
+          goTo: "neutral_act1_bridge_rooftop",
+          effects: {
+            stats: { morality: -2, stress: 0 },
+            flagsSet: ["proof_socio_stage"],
+            inventoryAdd: ["trust_ledgers"],
+            pushEvent: "Their secrets fill your ledger." }
+        }
+      ]
+    },
+
+    neutral_act1_bridge_rooftop: {
+      id: "neutral_act1_bridge_rooftop",
+      text: "From the rooftop you count stadium flares to the west and convoy headlights snaking the interstate. The first act bleeds into the second.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "descend_to_streets",
+          text: "Descend to coordinate citywide defense (Act II).",
+          goTo: "neutral_act2_hub_main",
+          effects: {
+            time: +1,
+            stats: { stress: +1 }
+          }
+        },
+        {
+          id: "survey_longer",
+          text: "Survey the skyline for opportunities.",
+          goTo: "neutral_act1_side_rooftop_scan",
+          effects: {
+            stats: { willpower: +1 }
+          },
+          tags: ["leader", "survival"]
+        }
+      ]
+    },
+
+    neutral_act1_side_rooftop_scan: {
+      id: "neutral_act1_side_rooftop_scan",
+      text: "Lightning skates across the river. You spot convoy trucks pinned near the stadium ramp and raiders setting road flares.",
+      tags: ["survival"],
+      choices: [
+        {
+          id: "signal_convoy",
+          text: "Signal the convoy with mirror flashes (needs Scout Drone).",
+          goTo: "neutral_act2_hub_main",
+          req: { items: ["scout_drone"] },
+          effects: {
+            flagsSet: ["rescued_convoy"],
+            relationships: { Convoy: +5 },
+            stats: { morality: +1 }
+          }
+        },
+        {
+          id: "mark_raiders",
+          text: "Mark raider positions for future leverage.",
+          goTo: "neutral_act2_hub_main",
+          effects: {
+            inventoryAdd: ["raider_map"],
+            stats: { stress: -1 }
+          }
+        }
+      ]
+    },
+    neutral_act2_hub_main: {
+      id: "neutral_act2_hub_main",
+      text: "Sirens echo through shuttered streets. Factions broadcast desperate requests while raiders tighten their nets.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "reinforce_stadium",
+          text: "Reinforce the stadium barricades (Protector).",
+          goTo: "good_act2_setpiece_shield",
+          req: { stats: { stamina: { gte: 8 } } },
+          effects: {
+            stats: { stress: +2, stamina: -1 },
+            relationships: { Stadium: +4 },
+            time: +1
+          },
+          tags: ["leader", "combat"]
+        },
+        {
+          id: "collect_tithe",
+          text: "Collect a tithe from traders at the interstate (Warlord).",
+          goTo: "ant_act2_setpiece_tithe",
+          effects: {
+            stats: { morality: -3, stress: -1 },
+            relationships: { Raiders: +6, Convoy: -4 },
+            time: +1
+          },
+          tags: ["combat", "social"]
+        },
+        {
+          id: "broker_passage",
+          text: "Broker safe passage for the convoy (Fixer).",
+          goTo: "man_act2_setpiece_network",
+          effects: {
+            stats: { stress: +1 },
+            relationships: { Convoy: +5, Stadium: +2 },
+            time: +1
+          },
+          tags: ["social", "leader"]
+        },
+        {
+          id: "stalk_blockade",
+          text: "Stalk the blockade and remove the loudest threats (Killer).",
+          goTo: "killer_act2_setpiece_harvest",
+          effects: {
+            stats: { morality: -2, stress: -2 },
+            time: +1
+          },
+          tags: ["stealth", "combat"]
+        },
+        {
+          id: "host_confession",
+          text: "Host a confession circle to bind loyalty (Sociopath).",
+          goTo: "socio_act2_setpiece_confession",
+          effects: {
+            stats: { morality: -1 },
+            relationships: { Volunteers: +3, FreeCrews: +2 },
+            time: +1
+          },
+          tags: ["social"]
+        },
+        {
+          id: "visit_aid",
+          text: "Visit the aid station for supplies and intel.",
+          goTo: "neutral_act2_side_aid",
+          effects: {
+            stats: { stress: -2 }
+          },
+          tags: ["survival"]
+        }
+      ]
+    },
+
+    neutral_act2_side_aid: {
+      id: "neutral_act2_side_aid",
+      text: "An improvised clinic hums under generator light. Shelves groan with dwindling antibiotics guarded by exhausted medics.",
+      tags: ["survival"],
+      choices: [
+        {
+          id: "steal_antibiotics",
+          text: "Pocket antibiotics while no one watches.",
+          goTo: "neutral_act2_hub_main",
+          effects: {
+            stats: { morality: -2, stress: -1 },
+            inventoryAdd: ["antibiotics"],
+            relationships: { Stadium: -4 }
+          }
+        },
+        {
+          id: "tend_wounded",
+          text: "Tend the wounded with your medic skills (needs MedKit).",
+          goTo: "neutral_act2_hub_main",
+          req: { items: ["medkit"] },
+          cost: { items: ["medkit"] },
+          effects: {
+            stats: { morality: +3, stress: +1 },
+            relationships: { Stadium: +6, Volunteers: +2 },
+            pushEvent: "You stitch hope back into tired faces." }
+        },
+        {
+          id: "share_drone",
+          text: "Share drone intel with doctors (needs Scout Drone).",
+          goTo: "neutral_act2_hub_main",
+          req: { items: ["scout_drone"] },
+          effects: {
+            relationships: { Convoy: +2, Stadium: +2 },
+            stats: { stress: -1 },
+            pushEvent: "Routed medevac corridors appear on the map." }
+        }
+      ]
+    },
+
+    good_act2_setpiece_shield: {
+      id: "good_act2_setpiece_shield",
+      text: "The stadium gate buckles under a wave of infected. Families huddle in bleachers clutching glowsticks as you arrive.",
+      tags: ["leader", "combat"],
+      choices: [
+        {
+          id: "anchor_gate",
+          text: "Anchor the gate with cargo haulers (requires Crowbar).",
+          goTo: "neutral_act2_bridge_curfew",
+          req: { items: ["crowbar"] },
+          effects: {
+            flagsSet: ["proof_protector_shield"],
+            stats: { stamina: -1, stress: +2 },
+            relationships: { Stadium: +6, Volunteers: +3 }
+          }
+        },
+        {
+          id: "flare_signal",
+          text: "Signal rooftop archers with a flare (needs Flare).",
+          goTo: "neutral_act2_bridge_curfew",
+          req: { items: ["flare"] },
+          cost: { items: ["flare"] },
+          effects: {
+            flagsSet: ["proof_protector_shield"],
+            stats: { stress: +1 },
+            relationships: { Stadium: +4 }
+          }
+        },
+        {
+          id: "hand_off_med",
+          text: "Hand off antibiotics to keep casualties low (needs Antibiotics).",
+          goTo: "neutral_act2_bridge_curfew",
+          req: { items: ["antibiotics"] },
+          cost: { items: ["antibiotics"] },
+          effects: {
+            flagsSet: ["proof_protector_shield"],
+            stats: { morality: +2, stress: +2 },
+            relationships: { Stadium: +8 }
+          }
+        }
+      ]
+    },
+
+    ant_act2_setpiece_tithe: {
+      id: "ant_act2_setpiece_tithe",
+      text: "Convoy rigs idle at the interstate toll plaza. Merchants grumble as raider muscle watches you approach.",
+      tags: ["combat", "social"],
+      choices: [
+        {
+          id: "demand_half",
+          text: "Demand half their haul for \"protection\".",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            stats: { morality: -4, stress: -2 },
+            flagsSet: ["proof_warlord_tithe"],
+            inventoryAdd: ["ration_crate"],
+            relationships: { Raiders: +8, Convoy: -8 }
+          }
+        },
+        {
+          id: "burn_wagon",
+          text: "Burn one wagon to prove you're serious.",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            stats: { morality: -5, stress: -3 },
+            flagsSet: ["proof_warlord_tithe", "refinery_burned"],
+            relationships: { Raiders: +6, Convoy: -10 },
+            pushEvent: "Flames lick the night and your legend grows." }
+        },
+        {
+          id: "cut_deal_raiders",
+          text: "Share spoils with raider lieutenants to cement loyalty.",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            stats: { morality: -3 },
+            flagsSet: ["proof_warlord_tithe"],
+            relationships: { Raiders: +10, FreeCrews: -4 }
+          }
+        }
+      ]
+    },
+
+    man_act2_setpiece_network: {
+      id: "man_act2_setpiece_network",
+      text: "You split your time between a convoy safehouse and a stadium command post, weaving promises into radio static.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "trade_manifest",
+          text: "Trade the raider map for convoy escort priority (requires Raider Map).",
+          goTo: "neutral_act2_bridge_curfew",
+          req: { items: ["raider_map"] },
+          cost: { items: ["raider_map"] },
+          effects: {
+            flagsSet: ["proof_fixer_network"],
+            relationships: { Convoy: +8, Raiders: -4 }
+          }
+        },
+        {
+          id: "blackmail_dispatch",
+          text: "Use the blackmail clip to force a supply run (needs Blackmail Clip).",
+          goTo: "neutral_act2_bridge_curfew",
+          req: { items: ["blackmail_clip"] },
+          cost: { items: ["blackmail_clip"] },
+          effects: {
+            flagsSet: ["proof_fixer_network"],
+            stats: { morality: -2, stress: +2 },
+            relationships: { Convoy: +10, Volunteers: -2 }
+          }
+        },
+        {
+          id: "mediate_stadium",
+          text: "Mediate stadium and convoy tensions for mutual aid.",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            flagsSet: ["proof_fixer_network"],
+            stats: { stress: +1 },
+            relationships: { Stadium: +4, Convoy: +4 }
+          }
+        }
+      ]
+    },
+
+    killer_act2_setpiece_harvest: {
+      id: "killer_act2_setpiece_harvest",
+      text: "You stalk the shadow of the refinery wall where raider deserters and infected strays gather in hungry packs.",
+      tags: ["combat", "stealth"],
+      choices: [
+        {
+          id: "thin_raiders",
+          text: "Thin deserters to scare the rest back into line.",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            flagsSet: ["proof_killer_extraction"],
+            stats: { morality: -3, stress: -3 },
+            relationships: { Raiders: +4 }
+          }
+        },
+        {
+          id: "harvest_cures",
+          text: "Harvest infected for reagent samples (needs MedKit).",
+          goTo: "neutral_act2_bridge_curfew",
+          req: { items: ["medkit"] },
+          effects: {
+            flagsSet: ["proof_killer_extraction"],
+            stats: { morality: -2, stress: -2 },
+            inventoryAdd: ["viral_reagent"],
+            pushEvent: "You bottle the bloom's secrets." }
+        },
+        {
+          id: "stage_body",
+          text: "Stage a body to frame the Free Crews and spark fear.",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            flagsSet: ["proof_killer_extraction"],
+            stats: { morality: -4, stress: -1 },
+            relationships: { FreeCrews: -6, Raiders: +6 }
+          }
+        }
+      ]
+    },
+
+    socio_act2_setpiece_confession: {
+      id: "socio_act2_setpiece_confession",
+      text: "You turn a shuttered lounge into a confession booth. Survivors queue to spill secrets in exchange for ration cards.",
+      tags: ["social"],
+      choices: [
+        {
+          id: "promise_absolution",
+          text: "Promise absolution only if they betray friends.",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            flagsSet: ["proof_socio_confession"],
+            stats: { morality: -3 },
+            relationships: { Volunteers: +4, FreeCrews: -2 },
+            pushEvent: "Confessions pile higher than rations." }
+        },
+        {
+          id: "sell_reassurance",
+          text: "Sell reassurance sessions for supplies.",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            flagsSet: ["proof_socio_confession"],
+            stats: { morality: -2, stress: -1 },
+            inventoryAdd: ["luxury_cache"],
+            relationships: { Volunteers: +1 }
+          }
+        },
+        {
+          id: "broadcast_fear",
+          text: "Broadcast curated confessions to keep everyone compliant.",
+          goTo: "neutral_act2_bridge_curfew",
+          effects: {
+            flagsSet: ["proof_socio_confession"],
+            stats: { morality: -2, stress: -2 },
+            relationships: { Volunteers: -2, Raiders: +3 }
+          }
+        }
+      ]
+    },
+
+    neutral_act2_bridge_curfew: {
+      id: "neutral_act2_bridge_curfew",
+      text: "Curfew klaxons throb as the city dims. Floodlights sweep rooftops and interstate ramps.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "advance_to_dawn",
+          text: "Advance to dawn operations (Act III).",
+          goTo: "neutral_act3_hub_main",
+          effects: {
+            time: +1,
+            stats: { stress: +1 }
+          }
+        },
+        {
+          id: "inspect_refinery",
+          text: "Inspect the refinery perimeter for vulnerabilities.",
+          goTo: "neutral_act2_side_refinery",
+          effects: {
+            stats: { agility: +1 }
+          }
+        }
+      ]
+    },
+
+    neutral_act2_side_refinery: {
+      id: "neutral_act2_side_refinery",
+      text: "Steam whistles through cracked pipes. You spot sabotage charges planted by desperate Free Crews.",
+      tags: ["survival", "stealth"],
+      choices: [
+        {
+          id: "disarm_charges",
+          text: "Disarm the charges and secure the fuel.",
+          goTo: "neutral_act3_hub_main",
+          effects: {
+            stats: { morality: +1, stress: +2 },
+            relationships: { Stadium: +2 },
+            flagsUnset: ["refinery_burned"],
+            pushEvent: "You keep the refinery alive for another day." }
+        },
+        {
+          id: "let_it_burn",
+          text: "Let the charges stand for leverage later.",
+          goTo: "neutral_act3_hub_main",
+          effects: {
+            stats: { morality: -2 },
+            flagsSet: ["refinery_burned"],
+            relationships: { FreeCrews: +3, Convoy: -2 }
+          }
+        }
+      ]
+    },
+    neutral_act3_hub_main: {
+      id: "neutral_act3_hub_main",
+      text: "Dawn stains the skyline bruise-purple. Convoy horns and stadium sirens intertwine as factions await your third-act move.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "escort_convoy",
+          text: "Escort the final convoy wave (Protector).",
+          goTo: "good_act3_setpiece_convoy",
+          effects: {
+            stats: { stress: +2 },
+            relationships: { Convoy: +4, Volunteers: +3 },
+            time: +1
+          },
+          tags: ["leader", "survival"]
+        },
+        {
+          id: "proclaim_rule",
+          text: "Proclaim warlord rule over the skybridge (Warlord).",
+          goTo: "ant_act3_setpiece_rule",
+          effects: {
+            stats: { morality: -4 },
+            relationships: { Raiders: +6, Volunteers: -4 },
+            time: +1
+          },
+          tags: ["combat", "leader"]
+        },
+        {
+          id: "lockdown_network",
+          text: "Lock down comms to broker final deals (Fixer).",
+          goTo: "man_act3_setpiece_lockdown",
+          effects: {
+            stats: { stress: +1 },
+            relationships: { Convoy: +4, Stadium: +3 },
+            time: +1
+          },
+          tags: ["social"]
+        },
+        {
+          id: "cull_defectors",
+          text: "Cull defectors before they sabotage routes (Killer).",
+          goTo: "killer_act3_setpiece_obedience",
+          effects: {
+            stats: { morality: -3, stress: -2 },
+            time: +1
+          },
+          tags: ["combat", "stealth"]
+        },
+        {
+          id: "mirror_faith",
+          text: "Mirror each faction's faith back at them (Sociopath).",
+          goTo: "socio_act3_setpiece_mirror",
+          effects: {
+            stats: { morality: -2, charisma: +1 },
+            relationships: { Volunteers: +2, FreeCrews: +3 },
+            time: +1
+          },
+          tags: ["social", "leader"]
+        },
+        {
+          id: "scout_rooftops",
+          text: "Scout the rooftops for last-minute advantages.",
+          goTo: "neutral_act3_side_rooftops",
+          effects: {
+            stats: { agility: +1 }
+          },
+          tags: ["survival", "stealth"]
+        }
+      ]
+    },
+
+    neutral_act3_side_rooftops: {
+      id: "neutral_act3_side_rooftops",
+      text: "Wind kicks ash across rooftop gardens. Free Crews stash water barrels under tarps.",
+      tags: ["survival"],
+      choices: [
+        {
+          id: "secure_water",
+          text: "Secure water barrels for the shelter.",
+          goTo: "neutral_act3_hub_main",
+          effects: {
+            inventoryAdd: ["water_cache"],
+            stats: { stress: -1 },
+            relationships: { Volunteers: +2 }
+          }
+        },
+        {
+          id: "promise_refuge",
+          text: "Promise refuge in exchange for intel.",
+          goTo: "neutral_act3_hub_main",
+          effects: {
+            stats: { morality: +1 },
+            relationships: { FreeCrews: +4 },
+            inventoryAdd: ["freecrew_codes"]
+          }
+        }
+      ]
+    },
+
+    good_act3_setpiece_convoy: {
+      id: "good_act3_setpiece_convoy",
+      text: "Convoy buses chug up the interstate ramp under sniper fire. Refugees crowd the bridge praying you clear a path.",
+      tags: ["leader", "combat"],
+      choices: [
+        {
+          id: "shield_with_bus",
+          text: "Shield evacuees with a jackknifed bus.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_protector_convoy"],
+            stats: { stamina: -1, stress: +3, morality: +2 },
+            relationships: { Convoy: +6, Volunteers: +4 }
+          }
+        },
+        {
+          id: "escort_last",
+          text: "Personally escort the last family across.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_protector_convoy"],
+            stats: { stress: +2, morality: +3 },
+            relationships: { Volunteers: +5, Alex: +3 }
+          }
+        },
+        {
+          id: "sacrifice_supplies",
+          text: "Sacrifice your ration crate to feed evacuees (needs Ration Crate).",
+          goTo: "neutral_act3_bridge_dawn",
+          req: { items: ["ration_crate"] },
+          cost: { items: ["ration_crate"] },
+          effects: {
+            flagsSet: ["proof_protector_convoy", "shared_rations"],
+            stats: { morality: +2 },
+            relationships: { Convoy: +8 }
+          }
+        }
+      ]
+    },
+
+    ant_act3_setpiece_rule: {
+      id: "ant_act3_setpiece_rule",
+      text: "You stride onto the fractured skybridge, raider banners snapping overhead. Merchants and refugees line either side under armed guard.",
+      tags: ["leader", "combat"],
+      choices: [
+        {
+          id: "public_execution",
+          text: "Publicly execute a defiant smuggler.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_warlord_domination"],
+            stats: { morality: -6, stress: -2 },
+            relationships: { Raiders: +10, Volunteers: -8 }
+          }
+        },
+        {
+          id: "brand_with_iron",
+          text: "Brand thieves to mark your rule.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_warlord_domination"],
+            stats: { morality: -4 },
+            relationships: { Raiders: +6, Convoy: -4 }
+          }
+        },
+        {
+          id: "force_tribute",
+          text: "Force tribute and promise protection to those who kneel.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_warlord_domination"],
+            stats: { morality: -3 },
+            relationships: { Raiders: +4, Convoy: -2, Volunteers: -3 }
+          }
+        }
+      ]
+    },
+
+    man_act3_setpiece_lockdown: {
+      id: "man_act3_setpiece_lockdown",
+      text: "You route every major signal through your rooftop relay, deciding which pleas reach the wider city.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "prioritize_allies",
+          text: "Prioritize allies and mute rivals.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_fixer_lock"],
+            stats: { stress: +1 },
+            relationships: { Convoy: +4, Stadium: +4, Raiders: -4 }
+          }
+        },
+        {
+          id: "sell_access",
+          text: "Sell signal access for promises of future loyalty.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_fixer_lock"],
+            stats: { morality: -2 },
+            inventoryAdd: ["favor_tokens"],
+            relationships: { Convoy: +2, FreeCrews: +2 }
+          }
+        },
+        {
+          id: "archive_secrets",
+          text: "Archive every plea for later leverage.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_fixer_lock"],
+            stats: { morality: -1, stress: +2 },
+            inventoryAdd: ["signal_archive"],
+            pushEvent: "You hold the city's heartbeat on a drive." }
+        }
+      ]
+    },
+
+    killer_act3_setpiece_obedience: {
+      id: "killer_act3_setpiece_obedience",
+      text: "Rumors of your killings breed both terror and opportunity. A squad of raider hopefuls begs for training in your brutal efficiency.",
+      tags: ["combat"],
+      choices: [
+        {
+          id: "train_with_blood",
+          text: "Train them by hunting Free Crew saboteurs.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_killer_obedience"],
+            stats: { morality: -4, stress: -2 },
+            relationships: { Raiders: +8, FreeCrews: -6 }
+          }
+        },
+        {
+          id: "purge_weak",
+          text: "Cull the weakest to scare the rest straight.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_killer_obedience"],
+            stats: { morality: -5, stress: -3 },
+            relationships: { Raiders: +10, Volunteers: -6 }
+          }
+        },
+        {
+          id: "teach_silent",
+          text: "Teach silent takedowns to protect your territory.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_killer_obedience"],
+            stats: { morality: -3 },
+            relationships: { Raiders: +6 },
+            inventoryAdd: ["raider_mark"]
+          }
+        }
+      ]
+    },
+
+    socio_act3_setpiece_mirror: {
+      id: "socio_act3_setpiece_mirror",
+      text: "You host a dawn summit on the rooftop garden, mirroring each faction's fears until they echo your script.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "promise_miracles",
+          text: "Promise miracles if everyone obeys your timetable.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_socio_mirror"],
+            stats: { morality: -2 },
+            relationships: { Volunteers: +4, Convoy: +2 }
+          }
+        },
+        {
+          id: "stage_betrayal",
+          text: "Stage a fake betrayal to watch loyalties shift.",
+          goTo: "neutral_act3_bridge_dawn",
+          effects: {
+            flagsSet: ["proof_socio_mirror"],
+            stats: { morality: -3, stress: -1 },
+            relationships: { Volunteers: -2, FreeCrews: +4, Raiders: +2 }
+          }
+        },
+        {
+          id: "collect_tithes",
+          text: "Collect emotional tithes and store them in your ledger (needs Trust Ledgers).",
+          goTo: "neutral_act3_bridge_dawn",
+          req: { items: ["trust_ledgers"] },
+          effects: {
+            flagsSet: ["proof_socio_mirror"],
+            stats: { morality: -1 },
+            inventoryAdd: ["devotion_ledger"],
+            relationships: { Volunteers: +3 }
+          }
+        }
+      ]
+    },
+
+    neutral_act3_bridge_dawn: {
+      id: "neutral_act3_bridge_dawn",
+      text: "The sun climbs over a city scarred by your decisions. Act IV looms with converging pressures.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "prepare_act4",
+          text: "Prepare the command mezzanine (Act IV).",
+          goTo: "neutral_act4_hub_main",
+          effects: {
+            time: +1,
+            stats: { stress: +2 }
+          }
+        },
+        {
+          id: "tend_barricade",
+          text: "Tend to the barricade and calm survivors.",
+          goTo: "neutral_act3_side_consolation",
+          effects: {
+            stats: { stress: -2, morality: +1 }
+          }
+        }
+      ]
+    },
+
+    neutral_act3_side_consolation: {
+      id: "neutral_act3_side_consolation",
+      text: "You spend an hour patching wounds and retelling the victories that kept people alive.",
+      tags: ["moral", "social"],
+      choices: [
+        {
+          id: "back_to_mezz",
+          text: "Return to command.",
+          goTo: "neutral_act4_hub_main",
+          effects: {
+            relationships: { Volunteers: +3 },
+            stats: { stress: -1 }
+          }
+        },
+        {
+          id: "leave_guard",
+          text: "Leave a trusted guard with new instructions.",
+          goTo: "neutral_act4_hub_main",
+          effects: {
+            relationships: { Volunteers: +2, Alex: +1 },
+            stats: { willpower: +1 }
+          }
+        }
+      ]
+    },
+    neutral_act4_hub_main: {
+      id: "neutral_act4_hub_main",
+      text: "Rain lashes the stadium mezzanine you now use as command. Allies compare scars while horizon lightning outlines the siege.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "stabilize_morale",
+          text: "Stabilize morale with food and stories (Protector).",
+          goTo: "good_act4_setpiece_mezzanine",
+          effects: {
+            stats: { stress: -2, morality: +1 },
+            relationships: { Volunteers: +4 },
+            time: +1
+          },
+          tags: ["moral", "leader"]
+        },
+        {
+          id: "host_tribunal",
+          text: "Host a tribunal to punish dissent (Warlord).",
+          goTo: "ant_act4_setpiece_tribunal",
+          effects: {
+            stats: { morality: -4 },
+            relationships: { Raiders: +4, Volunteers: -4 },
+            time: +1
+          },
+          tags: ["combat", "leader"]
+        },
+        {
+          id: "balance_factions",
+          text: "Balance faction demands with promises (Fixer).",
+          goTo: "man_act4_setpiece_balance",
+          effects: {
+            stats: { stress: +1 },
+            relationships: { Convoy: +3, Stadium: +3, Raiders: -2 },
+            time: +1
+          },
+          tags: ["social"]
+        },
+        {
+          id: "enforce_obedience",
+          text: "Enforce obedience with midnight patrols (Killer).",
+          goTo: "killer_act4_setpiece_midnight",
+          effects: {
+            stats: { morality: -3, stress: -2 },
+            time: +1
+          },
+          tags: ["combat", "stealth"]
+        },
+        {
+          id: "stage_pageant",
+          text: "Stage a loyalty pageant to cement adoration (Sociopath).",
+          goTo: "socio_act4_setpiece_pageant",
+          effects: {
+            stats: { morality: -2, charisma: +1 },
+            relationships: { Volunteers: +3, FreeCrews: +2 },
+            time: +1
+          },
+          tags: ["social", "leader"]
+        },
+        {
+          id: "jam_raiders",
+          text: "Jam raider comms from the signal booth.",
+          goTo: "neutral_act4_side_signal",
+          effects: {
+            stats: { willpower: +1 }
+          },
+          tags: ["stealth"]
+        }
+      ]
+    },
+
+    neutral_act4_side_signal: {
+      id: "neutral_act4_side_signal",
+      text: "Static crackles as you overload the raider comm tower. Panic spreads through their ranks.",
+      tags: ["stealth", "leader"],
+      choices: [
+        {
+          id: "return_command",
+          text: "Return to command before they triangulate you.",
+          goTo: "neutral_act4_hub_main",
+          effects: {
+            relationships: { Raiders: -4 },
+            stats: { stress: -1 }
+          }
+        },
+        {
+          id: "spoof_orders",
+          text: "Spoof orders to send raiders into an ambush.",
+          goTo: "neutral_act4_hub_main",
+          effects: {
+            stats: { morality: -1, stress: -2 },
+            relationships: { Raiders: -6, FreeCrews: +3 },
+            pushEvent: "Their patrols crash into each other in confusion." }
+        }
+      ]
+    },
+
+    good_act4_setpiece_mezzanine: {
+      id: "good_act4_setpiece_mezzanine",
+      text: "Volunteers warm their hands over barrel fires while evac manifests sprawl across tables.",
+      tags: ["leader", "moral"],
+      choices: [
+        {
+          id: "share_last_water",
+          text: "Share the last water cache to keep morale stable (needs Water Cache).",
+          goTo: "neutral_act4_bridge_finale",
+          req: { items: ["water_cache"] },
+          cost: { items: ["water_cache"] },
+          effects: {
+            stats: { morality: +2, stress: -2 },
+            relationships: { Volunteers: +6 },
+            pushEvent: "Hope tastes like clean water." }
+        },
+        {
+          id: "walk_the_line",
+          text: "Walk the catwalk and praise every defender by name.",
+          goTo: "neutral_act4_bridge_finale",
+          effects: {
+            stats: { stress: -1 },
+            relationships: { Volunteers: +5, Alex: +2 }
+          }
+        },
+        {
+          id: "prep_med_bay",
+          text: "Prep the med bay for the final night.",
+          goTo: "neutral_act4_bridge_finale",
+          effects: {
+            stats: { stress: +1, morality: +1 },
+            relationships: { Stadium: +3 }
+          }
+        }
+      ]
+    },
+
+    ant_act4_setpiece_tribunal: {
+      id: "ant_act4_setpiece_tribunal",
+      text: "Floodlights glare on chained prisoners accused of hoarding and sedition.",
+      tags: ["combat", "leader"],
+      choices: [
+        {
+          id: "sentence_public",
+          text: "Sentence them publicly to instill fear.",
+          goTo: "neutral_act4_bridge_finale",
+          effects: {
+            stats: { morality: -4 },
+            relationships: { Raiders: +6, Volunteers: -6 }
+          }
+        },
+        {
+          id: "offer_dread",
+          text: "Offer clemency if they become dread envoys.",
+          goTo: "neutral_act4_bridge_finale",
+          effects: {
+            stats: { morality: -3 },
+            relationships: { Raiders: +4, FreeCrews: -4 },
+            inventoryAdd: ["envoy_marks"]
+          }
+        },
+        {
+          id: "sacrifice_example",
+          text: "Sacrifice one and release the rest under strict tribute.",
+          goTo: "neutral_act4_bridge_finale",
+          effects: {
+            stats: { morality: -2 },
+            relationships: { Raiders: +2, Volunteers: -3, Convoy: -2 }
+          }
+        }
+      ]
+    },
+
+    man_act4_setpiece_balance: {
+      id: "man_act4_setpiece_balance",
+      text: "You juggle convoy demands, stadium triage, and raider threats across three cracked monitors.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "promise_rotation",
+          text: "Promise rotation schedules that satisfy all sides.",
+          goTo: "neutral_act4_bridge_finale",
+          effects: {
+            stats: { stress: +2 },
+            relationships: { Convoy: +3, Stadium: +3, Raiders: -3 }
+          }
+        },
+        {
+          id: "leverage_tokens",
+          text: "Leverage favor tokens for a united front (needs Favor Tokens).",
+          goTo: "neutral_act4_bridge_finale",
+          req: { items: ["favor_tokens"] },
+          cost: { items: ["favor_tokens"] },
+          effects: {
+            stats: { stress: +1 },
+            relationships: { Convoy: +4, Stadium: +4 },
+            pushEvent: "IOUs become binding oaths." }
+        },
+        {
+          id: "silence_dissent",
+          text: "Silence dissenting channels and archive proof (needs Signal Archive).",
+          goTo: "neutral_act4_bridge_finale",
+          req: { items: ["signal_archive"] },
+          effects: {
+            stats: { morality: -1, stress: -1 },
+            relationships: { Convoy: +2, Raiders: -2 },
+            inventoryAdd: ["sealed_orders"]
+          }
+        }
+      ]
+    },
+
+    killer_act4_setpiece_midnight: {
+      id: "killer_act4_setpiece_midnight",
+      text: "Midnight patrols await your orders. The city knows the killer walks tonight.",
+      tags: ["combat", "stealth"],
+      choices: [
+        {
+          id: "mark_targets",
+          text: "Mark targets that threaten your command (needs Raider Mark).",
+          goTo: "neutral_act4_bridge_finale",
+          req: { items: ["raider_mark"] },
+          effects: {
+            stats: { morality: -3, stress: -1 },
+            relationships: { Raiders: +5 },
+            pushEvent: "Your sigil means survival or death." }
+        },
+        {
+          id: "patrol_solo",
+          text: "Patrol alone to remind everyone who's in charge.",
+          goTo: "neutral_act4_bridge_finale",
+          effects: {
+            stats: { morality: -2, stress: -2 },
+            relationships: { Volunteers: -2, Raiders: +4 }
+          }
+        },
+        {
+          id: "harvest_reagent",
+          text: "Harvest more reagent for leverage (needs Viral Reagent).",
+          goTo: "neutral_act4_bridge_finale",
+          req: { items: ["viral_reagent"] },
+          effects: {
+            stats: { morality: -2 },
+            inventoryAdd: ["nightshade_toxin"],
+            relationships: { Raiders: +3 }
+          }
+        }
+      ]
+    },
+
+    socio_act4_setpiece_pageant: {
+      id: "socio_act4_setpiece_pageant",
+      text: "You turn the mezzanine into a stage. Floodlights halo you as survivors chant your name.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "crown_favorites",
+          text: "Crown favorites to keep rivals scrambling.",
+          goTo: "neutral_act4_bridge_finale",
+          effects: {
+            stats: { morality: -2 },
+            relationships: { Volunteers: +3, FreeCrews: +2, Raiders: +2 }
+          }
+        },
+        {
+          id: "auction_mercy",
+          text: "Auction mercy to the highest bidder (needs Luxury Cache).",
+          goTo: "neutral_act4_bridge_finale",
+          req: { items: ["luxury_cache"] },
+          cost: { items: ["luxury_cache"] },
+          effects: {
+            stats: { morality: -3 },
+            inventoryAdd: ["gilded_masks"],
+            relationships: { Volunteers: -2, FreeCrews: +4 }
+          }
+        },
+        {
+          id: "recite_devotion",
+          text: "Recite the devotion ledger to bind them emotionally (needs Devotion Ledger).",
+          goTo: "neutral_act4_bridge_finale",
+          req: { items: ["devotion_ledger"] },
+          effects: {
+            stats: { morality: -1 },
+            relationships: { Volunteers: +5, FreeCrews: +3 },
+            pushEvent: "Tears shimmer like currency." }
+        }
+      ]
+    },
+
+    neutral_act4_bridge_finale: {
+      id: "neutral_act4_bridge_finale",
+      text: "Night sirens spool up again. Every faction lead watches you, waiting to see which future you demand at dawn.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "protector_finale",
+          text: "Commit to the protector gambit (needs 3 Protector proofs).",
+          goTo: "good_act5_setpiece_final_watch",
+          req: { flags: ROUTE_PROOFS.good },
+          tags: ["leader", "moral"]
+        },
+        {
+          id: "warlord_finale",
+          text: "Crown yourself warlord of the corridors (needs 3 Warlord proofs).",
+          goTo: "ant_act5_setpiece_final_rule",
+          req: { flags: ROUTE_PROOFS.ant },
+          tags: ["combat", "leader"]
+        },
+        {
+          id: "fixer_finale",
+          text: "Pull every string in the network (needs 3 Fixer proofs).",
+          goTo: "man_act5_setpiece_final_weave",
+          req: { flags: ROUTE_PROOFS.man },
+          tags: ["social"]
+        },
+        {
+          id: "killer_finale",
+          text: "Let the killer creed decide the night (needs 3 Killer proofs).",
+          goTo: "killer_act5_setpiece_final_creed",
+          req: { flags: ROUTE_PROOFS.killer },
+          tags: ["combat", "stealth"]
+        },
+        {
+          id: "socio_finale",
+          text: "Curate the sociopath's reckoning (needs 3 Sociopath proofs).",
+          goTo: "socio_act5_setpiece_final_reckoning",
+          req: { flags: ROUTE_PROOFS.socio },
+          tags: ["social", "leader"]
+        },
+        {
+          id: "buy_hour",
+          text: "Buy another hour by reorganizing patrols.",
+          goTo: "neutral_act4_hub_main",
+          effects: {
+            stats: { stress: +2 }
+          },
+          tags: ["survival"]
+        }
+      ]
+    },
+
+    good_act5_setpiece_final_watch: {
+      id: "good_act5_setpiece_final_watch",
+      text: "Beacon towers blaze across rooftops. Civilians await your signal to sprint between havens.",
+      tags: ["leader", "moral"],
+      choices: [
+        {
+          id: "ignite_chain",
+          text: "Ignite the full beacon chain and open the gates.",
+          goTo: "good_act5_ending_the_long_watch",
+          effects: {
+            stats: { morality: +3, stress: +2 },
+            relationships: { Volunteers: +6, Convoy: +4 },
+            pushEvent: "Hope races across the skyline." }
+        },
+        {
+          id: "hold_until_dawn",
+          text: "Hold the line until every evacuee crosses.",
+          goTo: "good_act5_ending_the_long_watch",
+          effects: {
+            stats: { stamina: -2, stress: +3 },
+            relationships: { Volunteers: +8 },
+            pushEvent: "You do not blink, even as night claws at you." }
+        }
+      ]
+    },
+
+    ant_act5_setpiece_final_rule: {
+      id: "ant_act5_setpiece_final_rule",
+      text: "Your banners hang from the stadium rafters. Raiders kneel awaiting your decree for the dawn.",
+      tags: ["combat", "leader"],
+      choices: [
+        {
+          id: "demand_tithe",
+          text: "Demand dawn tithes from every shelter.",
+          goTo: "ant_act5_ending_iron_reign",
+          effects: {
+            stats: { morality: -4, stress: -2 },
+            relationships: { Raiders: +10 },
+            pushEvent: "Fear cements your empire." }
+        },
+        {
+          id: "march_through",
+          text: "March through the mezzanine with armed escorts.",
+          goTo: "ant_act5_ending_iron_reign",
+          effects: {
+            stats: { morality: -5, stress: -3 },
+            relationships: { Volunteers: -8 },
+            pushEvent: "Boots echo like verdicts." }
+        }
+      ]
+    },
+
+    man_act5_setpiece_final_weave: {
+      id: "man_act5_setpiece_final_weave",
+      text: "Every faction envoy fills the broadcast booth. Contracts and blood oaths clutter the console.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "seal_ledgers",
+          text: "Seal the ledgers and dictate the evacuation order.",
+          goTo: "man_act5_ending_whispered_deals",
+          effects: {
+            stats: { stress: -1 },
+            relationships: { Convoy: +6, Stadium: +4 },
+            pushEvent: "No convoy moves without your nod." }
+        },
+        {
+          id: "trade_destinies",
+          text: "Trade future leadership posts for loyalty now.",
+          goTo: "man_act5_ending_whispered_deals",
+          effects: {
+            stats: { morality: -2, stress: +1 },
+            relationships: { Convoy: +4, Raiders: +2 },
+            pushEvent: "Power slips into your open palm." }
+        }
+      ]
+    },
+
+    killer_act5_setpiece_final_creed: {
+      id: "killer_act5_setpiece_final_creed",
+      text: "You stand alone atop the stadium lights. Below, your patrols await the signal to cull anyone who defies curfew.",
+      tags: ["combat", "stealth"],
+      choices: [
+        {
+          id: "whisper_execute",
+          text: "Whisper the execute order across encrypted channels.",
+          goTo: "killer_act5_ending_midnight_creed",
+          effects: {
+            stats: { morality: -5, stress: -3 },
+            relationships: { Raiders: +8, Volunteers: -6 },
+            pushEvent: "The night belongs to predators." }
+        },
+        {
+          id: "walk_bloodline",
+          text: "Walk the perimeter drenched in your enemies' fear.",
+          goTo: "killer_act5_ending_midnight_creed",
+          effects: {
+            stats: { morality: -4, stress: -2 },
+            pushEvent: "The city breathes only when you allow it." }
+        }
+      ]
+    },
+
+    socio_act5_setpiece_final_reckoning: {
+      id: "socio_act5_setpiece_final_reckoning",
+      text: "You choreograph a final ritual in the broadcast hall. Every survivor watches, waiting to be told what their suffering meant.",
+      tags: ["social", "leader"],
+      choices: [
+        {
+          id: "crown_martyrs",
+          text: "Crown martyrs and claim their grief as your power.",
+          goTo: "socio_act5_ending_cold_reckoning",
+          effects: {
+            stats: { morality: -3 },
+            relationships: { Volunteers: +4, FreeCrews: +4 },
+            pushEvent: "Tears glisten in the light you command." }
+        },
+        {
+          id: "sell_salvation",
+          text: "Sell salvation to the desperate.",
+          goTo: "socio_act5_ending_cold_reckoning",
+          effects: {
+            stats: { morality: -4, stress: -2 },
+            inventoryAdd: ["final_donations"],
+            pushEvent: "Their hope becomes your currency." }
+        }
+      ]
+    },
+
+    good_act5_ending_the_long_watch: {
+      id: "good_act5_ending_the_long_watch",
+      text: "Beacon chains knit the district into islands of light. Families whisper your name as they cross under your protection. You kept humanity intact.",
+      isEnding: true,
+      endingType: "good",
+      tags: ["leader", "moral"]
+    },
+
+    ant_act5_ending_iron_reign: {
+      id: "ant_act5_ending_iron_reign",
+      text: "Checkpoint fires burn while ration lines snake beneath your banners. Fear is the tax that keeps your empire fed.",
+      isEnding: true,
+      endingType: "ruthless",
+      tags: ["combat", "leader"]
+    },
+
+    man_act5_ending_whispered_deals: {
+      id: "man_act5_ending_whispered_deals",
+      text: "Convoy engines idle under your balcony as envoys trade sealed promises. No door opens without your quiet consent.",
+      isEnding: true,
+      endingType: "manipulator",
+      tags: ["social"]
+    },
+
+    killer_act5_ending_midnight_creed: {
+      id: "killer_act5_ending_midnight_creed",
+      text: "Spotlights carve your silhouette into the rain. Every heartbeat in the district syncs to the fear you authored.",
+      isEnding: true,
+      endingType: "ruthless",
+      tags: ["combat", "stealth"]
+    },
+
+    socio_act5_ending_cold_reckoning: {
+      id: "socio_act5_ending_cold_reckoning",
+      text: "The city kneels in a hushed theatre of your design. Grief, joy, and dread all orbit the performance you promised would save them.",
+      isEnding: true,
+      endingType: "secret",
+      tags: ["social", "leader"]
     }
-    if (cost.stats) {
-      for (const [k, v] of Object.entries(cost.stats)) {
-        state.stats[k] = clamp((state.stats[k] || 0) - v);
-      }
-    }
-    if (Array.isArray(cost.items)) {
-      for (const item of cost.items) {
-        const idx = state.inventory.indexOf(item);
-        if (idx >= 0) state.inventory.splice(idx, 1);
-      }
+  };
+
+  function applyInventoryAdd(state, items = []) {
+    for (const item of items || []) {
+      if (!item) continue;
+      if (!state.inventory.includes(item)) state.inventory.push(item);
     }
   }
 
-  function applyEffects(state, effects) {
-    if (!effects) return;
-    if (typeof effects.time === "number") {
-      state.time = Math.max(0, state.time + effects.time);
+  function applyInventoryRemove(state, items = []) {
+    for (const item of items || []) {
+      const idx = state.inventory.indexOf(item);
+      if (idx >= 0) state.inventory.splice(idx, 1);
     }
-    if (effects.stats) {
-      for (const [k, v] of Object.entries(effects.stats)) {
-        state.stats[k] = clamp((state.stats[k] || 0) + v);
-      }
+  }
+
+  function applyRelationships(state, deltas = {}) {
+    for (const [name, delta] of Object.entries(deltas || {})) {
+      const current = state.relationships[name] || 0;
+      let next = current + delta;
+      if (next > 100) next = 100;
+      if (next < -100) next = -100;
+      state.relationships[name] = next;
     }
-    if (effects.persona) {
-      for (const [k, v] of Object.entries(effects.persona)) {
-        state.persona[k] = clamp((state.persona[k] || 0) + v);
-      }
+  }
+
+  function applyPersona(state, tilt = {}) {
+    if (!tilt) return;
+    for (const [key, delta] of Object.entries(tilt)) {
+      if (typeof delta !== "number") continue;
+      state.persona[key] = (state.persona[key] || 0) + delta;
     }
-    if (Array.isArray(effects.inventoryAdd)) {
-      for (const item of effects.inventoryAdd) {
-        state.inventory.push(item);
-      }
-    }
-    if (Array.isArray(effects.inventoryRemove)) {
-      for (const item of effects.inventoryRemove) {
-        const idx = state.inventory.indexOf(item);
-        if (idx >= 0) state.inventory.splice(idx, 1);
-      }
-    }
-    if (Array.isArray(effects.flagsSet)) {
-      for (const flag of effects.flagsSet) {
-        if (flag.startsWith("route_")) {
-          setMutexFlag(state, "route", flag);
-        } else if (MUTEX.faction && MUTEX.faction.includes(flag)) {
-          setMutexFlag(state, "faction", flag);
-        } else {
-          state.flags[flag] = true;
+  }
+
+  function evaluateRequirements(state, choice) {
+    const req = choice.req;
+    if (!req) return { ok: true };
+
+    if (req.items) {
+      for (const item of req.items) {
+        if (!state.inventory.includes(item)) {
+          return { ok: false, reason: `Need ${item}` };
         }
       }
     }
-    if (Array.isArray(effects.flagsUnset)) {
+
+    if (req.flags) {
+      for (const flag of req.flags) {
+        if (!state.flags[flag]) {
+          return { ok: false, reason: `Requires ${flag}` };
+        }
+      }
+    }
+
+    if (req.stats) {
+      for (const [stat, limits] of Object.entries(req.stats)) {
+        const value = state.stats[stat] || 0;
+        if (limits.gte !== undefined && value < limits.gte) {
+          return { ok: false, reason: `${stat} ≥ ${limits.gte}` };
+        }
+        if (limits.lte !== undefined && value > limits.lte) {
+          return { ok: false, reason: `${stat} ≤ ${limits.lte}` };
+        }
+      }
+    }
+
+    if (req.flagsNone) {
+      for (const flag of req.flagsNone) {
+        if (state.flags[flag]) {
+          return { ok: false, reason: `Cannot have ${flag}` };
+        }
+      }
+    }
+
+    return { ok: true };
+  }
+
+  function getChoiceTarget(choice) {
+    if (typeof choice.goTo === "string") return choice.goTo;
+    if (typeof choice.next === "string") return choice.next;
+    return undefined;
+  }
+
+  function applyChoiceCost(state, choice) {
+    const cost = choice.cost;
+    if (!cost) return;
+    if (cost.items) applyInventoryRemove(state, cost.items);
+    if (cost.stamina) state.stats.stamina = Math.max(0, state.stats.stamina - cost.stamina);
+    if (cost.time) state.time += cost.time;
+  }
+
+  function applyChoiceEffects(state, effects = {}) {
+    if (effects.identity) {
+      state.identity = Object.assign({}, state.identity, effects.identity);
+    }
+    if (effects.time) state.time += effects.time;
+    if (effects.stats) {
+      for (const [stat, delta] of Object.entries(effects.stats)) {
+        state.stats[stat] = (state.stats[stat] || 0) + delta;
+      }
+      clampStats(state.stats);
+    }
+    if (effects.inventoryAdd) applyInventoryAdd(state, effects.inventoryAdd);
+    if (effects.inventoryRemove) applyInventoryRemove(state, effects.inventoryRemove);
+    if (effects.flagsSet) {
+      for (const flag of effects.flagsSet) {
+        let handled = false;
+        for (const [group, members] of Object.entries(MUTEX)) {
+          if (members.includes(flag)) {
+            setMutex(state, group, flag);
+            handled = true;
+            break;
+          }
+        }
+        if (!handled) state.flags[flag] = true;
+      }
+    }
+    if (effects.flagsUnset) {
       for (const flag of effects.flagsUnset) {
         delete state.flags[flag];
       }
     }
-    if (effects.relationships) {
-      for (const [name, delta] of Object.entries(effects.relationships)) {
-        const current = state.relationships[name] || 0;
-        state.relationships[name] = clamp(current + delta);
-      }
+    if (effects.relationships) applyRelationships(state, effects.relationships);
+    if (effects.personaTilt) applyPersona(state, effects.personaTilt);
+    if (effects.pushEvent) {
+      state.events = state.events || [];
+      state.events.unshift({ text: effects.pushEvent, type: "consequence", time: state.time });
     }
-    if (Array.isArray(effects.schedule)) {
-      for (const sched of effects.schedule) {
-        if (sched && typeof sched.steps === "number" && sched.apply) {
-          state.schedule.push({ steps: Math.max(1, sched.steps), apply: sched.apply });
-        }
+    if (effects.schedule) {
+      state.scheduled = state.scheduled || [];
+      for (const entry of effects.schedule) {
+        if (!entry) continue;
+        state.scheduled.push({ steps: entry.steps || 1, apply: entry.apply || {} });
       }
-    }
-    if (effects.decisionTrace) {
-      state.decisionTrace.push(effects.decisionTrace);
     }
   }
 
-  function meetsRequirement(state, req) {
-    if (!req) return true;
-    if (Array.isArray(req.items)) {
-      for (const item of req.items) {
-        if (!state.inventory.includes(item)) return false;
-      }
-    }
-    if (Array.isArray(req.flags)) {
-      for (const flag of req.flags) {
-        if (!state.flags[flag]) return false;
-      }
-    }
-    if (Array.isArray(req.flagsNone)) {
-      for (const flag of req.flagsNone) {
-        if (state.flags[flag]) return false;
-      }
-    }
-    if (req.stats) {
-      for (const [key, rule] of Object.entries(req.stats)) {
-        const value = state.stats[key] || 0;
-        if (typeof rule.gte === "number" && value < rule.gte) return false;
-        if (typeof rule.lte === "number" && value > rule.lte) return false;
-      }
-    }
-    return true;
-  }
-
-  function formatRequirement(req) {
-    const parts = [];
-    if (!req) return "";
-    if (req.stats) {
-      for (const [key, rule] of Object.entries(req.stats)) {
-        if (typeof rule.gte === "number") parts.push(`${key} ≥ ${rule.gte}`);
-        if (typeof rule.lte === "number") parts.push(`${key} ≤ ${rule.lte}`);
-      }
-    }
-    if (Array.isArray(req.items) && req.items.length) {
-      parts.push(`Need: ${req.items.join(", ")}`);
-    }
-    if (Array.isArray(req.flags) && req.flags.length) {
-      parts.push(`Flags: ${req.flags.join(", ")}`);
-    }
-    return parts.join(" · ");
-  }
-
-  function shouldPopup(choice) {
-    const fx = choice.effects || {};
-    const rel = fx.relationships || {};
-    const relSpike = Object.values(rel).some((v) => Math.abs(v) >= 5);
-    const flips = (fx.flagsSet || []).some((f) => CONSEQUENCE_FLAGS.has(f));
-    return relSpike || flips;
-  }
-
-  class ConsequenceGame {
-    constructor() {
-      this.state = deepClone(DEFAULT_STATE);
-      this.random = mulberry32(this.state.rngSeed);
-      this.dom = {
-        stats: document.getElementById("stats"),
-        sceneText: document.getElementById("scene-text"),
-        choices: document.getElementById("choices"),
-        inventory: document.getElementById("inventory-list"),
-        charName: document.getElementById("char-name"),
-        charBackground: document.getElementById("char-background"),
-        traumaBar: document.getElementById("trauma-bar"),
-        traumaWarning: document.getElementById("trauma-warning"),
-        personaGrid: document.getElementById("persona-grid"),
-        journal: document.getElementById("journal-list"),
-        eventLog: document.getElementById("event-log"),
-        relationships: document.getElementById("relationships-list"),
-        relationshipCount: document.getElementById("relationship-count"),
-        objectiveCount: document.getElementById("objective-count"),
-        decisionTree: document.getElementById("decision-tree"),
-        flagDisplay: document.getElementById("flag-display"),
-        stateHash: document.getElementById("state-hash"),
-        worldTime: document.getElementById("world-time"),
-        dayhour: document.getElementById("dayhour-indicator"),
-        consequencePopup: document.getElementById("consequence-popup"),
-        consequenceText: document.getElementById("consequence-text"),
-        consequenceOk: document.getElementById("consequence-ok")
-      };
-
-      this.eventLog = [];
-      this.journal = [];
-
-      this.bindControls();
-      this.load();
-      this.renderScene(this.state.sceneId);
-    }
-
-    bindControls() {
-      const newGameBtn = document.getElementById("new-game");
-      if (newGameBtn) {
-        newGameBtn.addEventListener("click", () => {
-          this.reset();
-        });
-      }
-
-      const continueBtn = document.getElementById("continue-game");
-      if (continueBtn) {
-        continueBtn.addEventListener("click", () => {
-          this.load();
-          this.renderScene(this.state.sceneId);
-        });
-      }
-
-      const saveBtn = document.getElementById("save-game");
-      if (saveBtn) {
-        saveBtn.addEventListener("click", () => {
-          this.save();
-        });
-      }
-
-      const loadBtn = document.getElementById("load-game");
-      if (loadBtn) {
-        loadBtn.addEventListener("click", () => {
-          const fileInput = document.getElementById("file-loader");
-          if (fileInput) fileInput.click();
-        });
-      }
-
-      const exportBtn = document.getElementById("export-game");
-      if (exportBtn) {
-        exportBtn.addEventListener("click", () => {
-          this.export();
-        });
-      }
-
-      const fileLoader = document.getElementById("file-loader");
-      if (fileLoader) {
-        fileLoader.addEventListener("change", (ev) => {
-          const files = ev.target && ev.target.files;
-          const file = files && files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            try {
-              const data = JSON.parse(e.target.result);
-              this.state = { ...deepClone(DEFAULT_STATE), ...data };
-              this.random = mulberry32(this.state.rngSeed || 1337);
-              this.renderScene(this.state.sceneId);
-            } catch (err) {
-              console.warn("Failed to load save", err);
-            }
-          };
-          reader.readAsText(file);
-        });
-      }
-
-      const toggleBtn = document.getElementById("toggle-backend");
-      if (toggleBtn) {
-        toggleBtn.addEventListener("click", () => {
-          const backend = document.getElementById("backend-content");
-          if (!backend) return;
-          backend.classList.toggle("hidden");
-          const expanded = backend.classList.contains("hidden") ? "false" : "true";
-          toggleBtn.setAttribute("aria-expanded", expanded);
-        });
-      }
-
-      if (this.dom.consequenceOk) {
-        this.dom.consequenceOk.addEventListener("click", () => {
-          this.hidePopup();
-        });
-      }
-    }
-
-    reset() {
-      this.state = deepClone(DEFAULT_STATE);
-      this.random = mulberry32(this.state.rngSeed);
-      this.eventLog = [];
-      this.journal = [];
-      this.save();
-      this.renderScene(this.state.sceneId);
-    }
-
-    load() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        this.state = { ...deepClone(DEFAULT_STATE), ...parsed };
-        this.random = mulberry32(this.state.rngSeed || 1337);
-        this.eventLog = parsed.__eventLog || [];
-        this.journal = parsed.__journal || [];
-      } catch (err) {
-        console.warn("Failed to load save", err);
-      }
-    }
-
-    save() {
-      try {
-        const data = {
-          ...this.state,
-          __eventLog: this.eventLog,
-          __journal: this.journal
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      } catch (err) {
-        console.warn("Failed to save", err);
-      }
-    }
-
-    export() {
-      const data = {
-        ...this.state,
-        __eventLog: this.eventLog,
-        __journal: this.journal
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `consequence-save-${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      this.pushEvent("Exported save to file.", "discovery");
-    }
-
-    makeChoice(choice) {
-      const scene = window.STORY_DATABASE[this.state.sceneId];
-      if (!scene) return;
-      if (!choice) return;
-
-      const reqMet = meetsRequirement(this.state, choice.req);
-      if (!reqMet) return;
-
-      const nextState = deepClone(this.state);
-      let nameEvent = null;
-      let backgroundEvent = null;
-      if (choice.assignName) {
-        const current = this.state.playerName || "Survivor";
-        let name = "";
-        if (typeof window.prompt === "function") {
-          name = window.prompt("What should Alex call you?", current) || "";
-        }
-        name = name.trim().slice(0, 40);
-        if (!name) name = current;
-        nextState.playerName = name;
-        nameEvent = `You tell Alex to call you ${name}.`;
-      }
-      if (choice.setBackground) {
-        nextState.background = choice.setBackground;
-        const label = BACKGROUND_LABELS[choice.setBackground] || choice.setBackground;
-        backgroundEvent = `You lean into your ${label.toLowerCase()} instincts.`;
-      }
-
-      applyCost(nextState, choice.cost);
-      applyEffects(nextState, choice.effects);
-      resolveSchedule(nextState);
-      ensureStats(nextState);
-
-      if (choice.effects && choice.effects.pushEvent) {
-        this.pushEvent(choice.effects.pushEvent, "consequence");
-      }
-
-      const goTo = getChoiceTarget(choice) ?? nextState.sceneId;
-      nextState.sceneId = goTo;
-      nextState.decisionTrace = [...nextState.decisionTrace, `${scene.id}::${choice.id || choice.text}`];
-
-      this.state = nextState;
-      this.random = mulberry32(this.state.rngSeed || 1337);
-      this.save();
-
-      if (nameEvent) {
-        this.pushEvent(nameEvent, "world_event");
-      }
-      if (backgroundEvent) {
-        this.pushEvent(backgroundEvent, "world_event");
-      }
-
-      if (shouldPopup(choice)) {
-        this.showPopup(choice.popupText || "They will remember this.");
-      }
-
-      this.renderScene(goTo);
-    }
-
-    showPopup(text) {
-      if (!this.dom.consequencePopup) return;
-      this.dom.consequenceText.textContent = text;
-      this.dom.consequencePopup.classList.remove("hidden");
-    }
-
-    hidePopup() {
-      if (!this.dom.consequencePopup) return;
-      this.dom.consequencePopup.classList.add("hidden");
-    }
-
-    renderScene(sceneId) {
-      const scene = window.STORY_DATABASE[sceneId];
-      if (!scene) {
-        this.displayStory(`Missing scene: ${sceneId}`);
-        return;
-      }
-
-      this.state.sceneId = sceneId;
-      resolveSchedule(this.state);
-      ensureStats(this.state);
-
-      if (scene.timeDelta) {
-        this.state.time = Math.max(0, this.state.time + scene.timeDelta);
-      }
-
-      if (scene.flagsSet) {
-        applyEffects(this.state, { flagsSet: scene.flagsSet });
-      }
-
-      const storyText = Array.isArray(scene.text)
-        ? scene.text.map((line) => this.interpolateText(line))
-        : this.interpolateText(scene.text || "");
-
-      this.displayStory(storyText, scene);
-      this.displayChoices(scene);
-      this.renderStats();
-      this.renderInventory();
-      this.renderCharacter();
-      this.renderPersona();
-      this.renderRelationships();
-      this.renderDebug();
-      this.updateTime();
-      this.autosaveJournal(scene);
-    }
-
-    interpolateText(text) {
-      if (typeof text !== "string") return text;
-      const name = this.state.playerName || "Survivor";
-      const backgroundKey = this.state.background;
-      const backgroundLabel = BACKGROUND_LABELS[backgroundKey] || (backgroundKey ? backgroundKey : "survivor");
-      return text
-        .replace(/\{\{name\}\}/gi, name)
-        .replace(/\{\{background\}\}/gi, backgroundLabel);
-    }
-
-    autosaveJournal(scene) {
-      if (!scene || !scene.tags) return;
-      const headline = `${scene.tags.includes("setpiece") ? "Set Piece" : "Scene"}: ${scene.text.slice(0, 40)}…`;
-      if (!this.journal.find((j) => j.headline === headline)) {
-        this.journal.push({ headline, note: scene.notes || "" });
-      }
-      this.renderJournal();
-    }
-
-    displayStory(text, scene) {
-      if (!this.dom.sceneText) return;
-      this.dom.sceneText.innerHTML = "";
-      const paragraphs = Array.isArray(text) ? text : [text];
-      for (const line of paragraphs) {
-        const p = document.createElement("p");
-        p.textContent = line;
-        this.dom.sceneText.appendChild(p);
-      }
-      if (scene && scene.personaFlavor) {
-        const flavor = document.createElement("div");
-        flavor.className = "persona-flavor";
-        for (const [key, value] of Object.entries(scene.personaFlavor)) {
-          const span = document.createElement("p");
-          span.textContent = `${key.toUpperCase()}: ${value}`;
-          flavor.appendChild(span);
-        }
-        this.dom.sceneText.appendChild(flavor);
-      }
-    }
-
-    displayChoices(scene) {
-      if (!this.dom.choices) return;
-      this.dom.choices.innerHTML = "";
-      const choices = (scene.choices || []).filter((choice) => choice && (getChoiceTarget(choice) || choice.effects));
-      const enabledChoices = [];
-
-      for (const choice of choices) {
-        const button = document.createElement("button");
-        button.className = "choice";
-        button.type = "button";
-        button.dataset.type = (choice.tags && choice.tags[0]) || choice.type || "";
-        const choiceLabel = this.interpolateText(choice.text || "");
-        button.innerHTML = `<span class="choice-text">${choiceLabel}</span>`;
-
-        const met = meetsRequirement(this.state, choice.req);
-        if (!met) {
-          button.classList.add("disabled");
-          button.disabled = true;
-          button.title = choice.blockedReason || formatRequirement(choice.req);
-        } else {
-          button.addEventListener("click", () => this.makeChoice(choice));
-          enabledChoices.push(choice);
-        }
-
-        this.dom.choices.appendChild(button);
-      }
-
-      if (enabledChoices.length === 0) {
-        const fallback = {
-          id: "fail_forward",
-          text: "Push through the panic (gain stress, +1h)",
-          goTo: this.state.sceneId,
-          effects: {
-            time: 1,
-            stats: { stress: 4, stamina: -1 }
-          },
-          tags: ["survival"],
-          popupText: "You scrape forward despite the odds."
-        };
-        const button = document.createElement("button");
-        button.className = "choice";
-        button.type = "button";
-        button.textContent = fallback.text;
-        button.addEventListener("click", () => this.makeChoice(fallback));
-        this.dom.choices.appendChild(button);
-      }
-    }
-
-    renderStats() {
-      if (!this.dom.stats) return;
-      this.dom.stats.innerHTML = "";
-      const group = document.createElement("div");
-      group.className = "stats-group";
-      const entries = [
-        { key: "health", label: "HEALTH" },
-        { key: "stamina", label: "STAMINA" },
-        { key: "stress", label: "STRESS" },
-        { key: "morality", label: "MORALITY" }
-      ];
-      for (const entry of entries) {
-        const pill = document.createElement("div");
-        pill.className = "stat-pill";
-        pill.textContent = `${entry.label}: ${Math.round(this.state.stats[entry.key] || 0)}`;
-        group.appendChild(pill);
-      }
-      this.dom.stats.appendChild(group);
-    }
-
-    renderInventory() {
-      if (!this.dom.inventory) return;
-      this.dom.inventory.innerHTML = "";
-      if (!this.state.inventory.length) {
-        const span = document.createElement("span");
-        span.className = "empty-inventory";
-        span.textContent = "(empty)";
-        this.dom.inventory.appendChild(span);
-        return;
-      }
-      for (const item of this.state.inventory) {
-        const chip = document.createElement("span");
-        chip.className = "inventory-chip";
-        chip.textContent = item;
-        this.dom.inventory.appendChild(chip);
-      }
-    }
-
-    renderCharacter() {
-      if (this.dom.charName) {
-        this.dom.charName.textContent = this.state.playerName || "—";
-      }
-      if (this.dom.charBackground) {
-        const key = this.state.background;
-        this.dom.charBackground.textContent = key ? BACKGROUND_LABELS[key] || key : "—";
-      }
-    }
-
-    renderPersona() {
-      if (!this.dom.personaGrid) return;
-      this.dom.personaGrid.innerHTML = "";
-      for (const [key, value] of Object.entries(this.state.persona)) {
-        const row = document.createElement("div");
-        row.className = "persona-point";
-        const name = document.createElement("span");
-        name.className = "persona-name";
-        name.textContent = key;
-        const val = document.createElement("span");
-        val.className = "persona-value";
-        val.textContent = value;
-        row.appendChild(name);
-        row.appendChild(val);
-        this.dom.personaGrid.appendChild(row);
-      }
-    }
-
-    renderRelationships() {
-      if (!this.dom.relationships) return;
-      this.dom.relationships.innerHTML = "";
-      const entries = Object.entries(this.state.relationships || {});
-      if (entries.length === 0) {
-        const span = document.createElement("span");
-        span.className = "empty-inventory";
-        span.textContent = "No known contacts.";
-        this.dom.relationships.appendChild(span);
+  function advanceSchedule(state) {
+    if (!state.scheduled) return;
+    const remain = [];
+    for (const job of state.scheduled) {
+      if (!job || !job.apply) continue;
+      job.steps -= 1;
+      if (job.steps <= 0) {
+        applyChoiceEffects(state, job.apply);
       } else {
-        for (const [name, score] of entries) {
-          const item = document.createElement("div");
-          item.className = "relationship-item";
-          const n = document.createElement("span");
-          n.className = "relationship-name";
-          n.textContent = name;
-          const status = document.createElement("span");
-          status.className = "relationship-status";
-          status.textContent = score;
-          if (score >= 20) status.classList.add("relationship-trust-positive");
-          else if (score <= -20) status.classList.add("relationship-trust-negative");
-          else status.classList.add("relationship-trust-neutral");
-          item.appendChild(n);
-          item.appendChild(status);
-          this.dom.relationships.appendChild(item);
-        }
-      }
-      if (this.dom.relationshipCount) {
-        this.dom.relationshipCount.textContent = `${entries.length} contacts`;
+        remain.push(job);
       }
     }
-
-    renderJournal() {
-      if (!this.dom.journal) return;
-      this.dom.journal.innerHTML = "";
-      for (const entry of this.journal) {
-        const node = document.createElement("div");
-        node.className = "journal-item";
-        const title = document.createElement("div");
-        title.className = "journal-title";
-        title.textContent = entry.headline;
-        const objective = document.createElement("div");
-        objective.className = "journal-objective";
-        objective.textContent = entry.note || "";
-        node.appendChild(title);
-        node.appendChild(objective);
-        this.dom.journal.appendChild(node);
-      }
-      if (this.dom.objectiveCount) {
-        this.dom.objectiveCount.textContent = `${this.journal.length} objectives`;
-      }
-    }
-
-    renderDebug() {
-      if (this.dom.flagDisplay) {
-        this.dom.flagDisplay.innerHTML = "";
-        for (const flag of Object.keys(this.state.flags)) {
-          const node = document.createElement("div");
-          node.className = "flag-item";
-          node.textContent = flag;
-          this.dom.flagDisplay.appendChild(node);
-        }
-      }
-      if (this.dom.decisionTree) {
-        this.dom.decisionTree.innerHTML = "";
-        for (const trace of this.state.decisionTrace.slice(-10)) {
-          const node = document.createElement("div");
-          node.className = "decision-node";
-          node.textContent = trace;
-          this.dom.decisionTree.appendChild(node);
-        }
-      }
-      if (this.dom.stateHash) {
-        const raw = JSON.stringify(this.state);
-        let hash = 0;
-        for (let i = 0; i < raw.length; i++) {
-          hash = (hash << 5) - hash + raw.charCodeAt(i);
-          hash |= 0;
-        }
-        this.dom.stateHash.textContent = `#${(hash >>> 0).toString(16)}`;
-      }
-    }
-
-    pushEvent(text, type = "") {
-      this.eventLog.unshift({ text, type, time: this.state.time });
-      if (this.eventLog.length > 20) this.eventLog.pop();
-      this.renderEvents();
-    }
-
-    renderEvents() {
-      if (!this.dom.eventLog) return;
-      this.dom.eventLog.innerHTML = "";
-      for (const entry of this.eventLog) {
-        const node = document.createElement("div");
-        node.className = "event-log-entry";
-        if (entry.type) node.classList.add(entry.type);
-        node.textContent = `[T+${entry.time}h] ${entry.text}`;
-        this.dom.eventLog.appendChild(node);
-      }
-    }
-
-    updateTime() {
-      if (this.dom.worldTime) {
-        this.dom.worldTime.textContent = `T+${this.state.time}h`;
-      }
-      if (this.dom.dayhour) {
-        const day = Math.floor(this.state.time / 24);
-        const hour = this.state.time % 24;
-        this.dom.dayhour.textContent = `Day ${day} · ${hour.toString().padStart(2, "0")}:00`;
-      }
-      if (this.dom.traumaBar) {
-        const stress = clamp(this.state.stats.stress || 0);
-        const pct = Math.min(100, Math.max(0, (stress / 100) * 100));
-        this.dom.traumaBar.style.width = `${pct}%`;
-      }
-      if (this.dom.traumaWarning) {
-        const stress = this.state.stats.stress || 0;
-        this.dom.traumaWarning.className = "trauma-warning";
-        if (stress < 30) {
-          this.dom.traumaWarning.classList.add("moderate");
-          this.dom.traumaWarning.textContent = "Stable";
-        } else if (stress < 60) {
-          this.dom.traumaWarning.classList.add("high");
-          this.dom.traumaWarning.textContent = "Strained";
-        } else {
-          this.dom.traumaWarning.classList.add("critical");
-          this.dom.traumaWarning.textContent = "Critical";
-        }
-      }
-    }
+    state.scheduled = remain;
   }
 
-  window.ConsequenceGame = ConsequenceGame;
-
-  window.STORY_DATABASE = window.STORY_DATABASE || {};
-
-  const ROUTE_PROOFS = {
-    protector: ["proof_protector_holdline", "proof_protector_convoy", "proof_protector_beacons"],
-    warlord: ["proof_warlord_blackout", "proof_warlord_tithe", "proof_warlord_supremacy"],
-    fixer: ["proof_fixer_network", "proof_fixer_markets", "proof_fixer_ledgers"],
-    killer: ["proof_killer_hunt", "proof_killer_fear", "proof_killer_cull"],
-    sociopath: ["proof_sociopath_mask", "proof_sociopath_trial", "proof_sociopath_requiem"]
-  };
-
-  const ROUTE_BLUEPRINTS = {
-    protector: {
-      label: "Protector",
-      routeFlag: "route_protector",
-      personaKey: "protector",
-      relationship: "Volunteers",
-      relationshipDelta: 6,
-      moralityTilt: [3, 1, -3],
-      stressTilt: [2, 3, 4],
-      tags: ["leader", "moral"],
-      verbs: ["Reinforce", "Shield", "Escort", "Anchor", "Guide"],
-      narrative: {
-        actions: [
-          "brace splintered doorframes with scavenged rebar",
-          "stage exhausted volunteers into rotating shifts",
-          "steady trembling shoulders with crisp directives",
-          "chain rooftop beacons into a steady glow",
-          "shepherd families through smoke-choked hallways"
-        ],
-        environments: [
-          "rain needles against blown-out windows",
-          "generator fumes crawl along the tile",
-          "distant sirens pulse like a heart gone feral",
-          "ash drifts down the stairwell like gray snow",
-          "floodlights flicker against slick concrete"
-        ],
-        pressures: [
-          "every scream from below sharpens the panic",
-          "the barricade bows beneath relentless fists",
-          "civilians beg for space beside the barricade",
-          "the power grid threatens another blackout",
-          "Alex's voice shakes as they take roll call"
-        ],
-        reflections: [
-          "You promised Alex this floor would hold.",
-          "Compassion is the only weapon left sharpened.",
-          "If you falter, the block's children vanish.",
-          "Protecting them means rewriting what mercy costs.",
-          "Alex watches to see if hope still matters."
-        ]
-      },
-      acts: [
-        {
-          act: 1,
-          slug: "floor_watch",
-          title: "Steady the floor watch",
-          entryPrompt: "Guide Alex as they steady the seventh-floor watch (Protector)",
-          summary: "Alex begs you to keep the seventh-floor barricade intact while frightened families crowd the hall.",
-          focus: ["seventh-floor barricade", "makeshift infirmary", "families huddled behind doors"],
-          stakes: [
-            "If the door splinters, every child on this level screams into the dark.",
-            "Volunteers will fracture unless someone sets the rhythm."],
-          loot: "ration_brick",
-          proofFlag: ROUTE_PROOFS.protector[0],
-          returnHub: "neutral_act1_hub_main",
-          exitForward: "neutral_act1_bridge_rooftop",
-          personaShift: 2
-        },
-        {
-          act: 2,
-          slug: "convoy_shield",
-          title: "Guard the convoy corridor",
-          entryPrompt: "Send Alex to reinforce the stadium gate (Protector)",
-          summary: "Curfew sirens blare as the stadium gate buckles under survivors desperate for convoy seats.",
-          focus: ["stadium perimeter", "convoy lane", "curfew checkpoints"],
-          stakes: [
-            "Families will be trampled unless you choreograph the extraction.",
-            "The convoy captain only trusts promises kept in blood and fuel."],
-          loot: "flare",
-          proofFlag: ROUTE_PROOFS.protector[1],
-          returnHub: "neutral_act2_hub_main",
-          exitForward: "neutral_act2_bridge_curfew",
-          personaShift: 2
-        },
-        {
-          act: 3,
-          slug: "beacon_chain",
-          title: "Ignite the beacon chain",
-          entryPrompt: "Have Alex ignite the rooftop beacon chain (Protector)",
-          summary: "Dawn smoke chokes the skyline as you race to keep rooftop beacons aligned for evac guidance.",
-          focus: ["signal tower", "wind-scoured catwalk", "ash-clogged antenna"],
-          stakes: [
-            "Without your lights the evac columns crash blind into raider nests.",
-            "The district holds its breath for your signal."],
-          loot: "antibiotics",
-          proofFlag: ROUTE_PROOFS.protector[2],
-          returnHub: "neutral_act3_hub_main",
-          exitForward: "neutral_act3_bridge_signal",
-          personaShift: 2
-        },
-        {
-          act: 4,
-          slug: "siege_command",
-          title: "Command the siege volunteers",
-          entryPrompt: "Direct Alex to coordinate siege drills (Protector)",
-          summary: "Raiders mass outside the stadium while exhausted civilians wait for your final orders.",
-          focus: ["sandbag wall", "triage amphitheater", "command dais"],
-          stakes: [
-            "If morale snaps now, every prior rescue unravels.",
-            "Alex needs proof that compassion can still roar."],
-          loot: "signal_flares",
-          finalFlag: "protector_final_bastion",
-          returnHub: "neutral_act4_hub_main",
-          exitForward: "neutral_act4_bridge_finale",
-          personaShift: 3
-        },
-        {
-          act: 5,
-          slug: "legacy_watch",
-          title: "Hold the last beacon",
-          entryPrompt: "Lead Alex through the final evacuation (Protector)",
-          summary: "The Long Siren keens one last time as you decide which convoys leave and who stays to defend.",
-          focus: ["evac roof", "signal console", "crowded muster line"],
-          stakes: [
-            "Every promise from earlier acts comes due under the floodlights.",
-            "Alex stands beside you, waiting to see what safety costs now."],
-          loot: "relief_cache",
-          returnHub: "neutral_act5_hub_main",
-          exitForward: "neutral_act5_hub_main",
-          personaShift: 3,
-          endings: [
-            {
-              slug: "long_watch",
-              endingType: "good",
-              text: "You and Alex choreograph beacon codes until dawn. Convoys thread the ruins guided by steady pulses that carry your name in whispered gratitude."
-            },
-            {
-              slug: "ashen_vigil",
-              endingType: "good",
-              text: "You stay behind with a skeleton crew, holding the barricade while Alex leads the last evac column. Hope survives because you decided the Long Siren would not fade."
-            }
-          ]
-        }
-      ]
-    },
-    warlord: {
-      label: "Warlord",
-      routeFlag: "route_warlord",
-      personaKey: "warlord",
-      relationship: "Raiders",
-      relationshipDelta: 6,
-      moralityTilt: [-3, -1, -4],
-      stressTilt: [3, 2, 5],
-      tags: ["combat", "leader"],
-      verbs: ["Dominate", "Extort", "Threaten", "Coerce", "Exploit"],
-      narrative: {
-        actions: [
-          "reroute ration lines at knifepoint",
-          "pit rival crews against each other",
-          "broadcast ultimatums over the emergency band",
-          "burn warning sigils into barricade walls",
-          "force tribute collectors to march through the rain"
-        ],
-        environments: [
-          "sirens warp into a slow hunting howl",
-          "floodlights smear blood across concrete",
-          "smoke drifts from looted storefronts",
-          "the convoy horns tremble at your checkpoints",
-          "drones buzz above, relaying your threats"
-        ],
-        pressures: [
-          "refugees cower as you count their offerings",
-          "rival captains test your patience with smug silence",
-          "the militia scrambles to answer your blockade",
-          "Alex flinches at the cruelty you orchestrate",
-          "power shifts with every scream behind closed doors"
-        ],
-        reflections: [
-          "Fear is the only currency people still respect.",
-          "Alex learns what rule by dread truly costs.",
-          "Mercy would dissolve the grip you've earned.",
-          "You tell yourself tyranny is the fastest path to order.",
-          "When the siren stops, your shadow must linger."
-        ]
-      },
-      acts: [
-        {
-          act: 1,
-          slug: "blackout_tithe",
-          title: "Seize the blackout",
-          entryPrompt: "Force Alex to lock down the blackout stairwell (Warlord)",
-          summary: "Power dies across the block, letting you tax anyone who needs your generators to survive.",
-          focus: ["darkened stairwell", "raider checkpoint", "ration queue"],
-          stakes: [
-            "If you hesitate, rival crews seize the tribute.",
-            "Alex has to learn fear is leverage."],
-          loot: "ammo_cache",
-          proofFlag: ROUTE_PROOFS.warlord[0],
-          returnHub: "neutral_act1_hub_main",
-          exitForward: "neutral_act1_bridge_rooftop",
-          personaShift: 3
-        },
-        {
-          act: 2,
-          slug: "tithe_march",
-          title: "March the tithe",
-          entryPrompt: "Send Alex to collect the convoy tithe (Warlord)",
-          summary: "Convoy haulers roll into your territory, demanding passage—if you can pry enough tribute first.",
-          focus: ["tribute square", "fuel depot", "armored blockade"],
-          stakes: [
-            "Squeeze too hard and the convoy guns open fire.",
-            "Let them through free and your crews riot."],
-          loot: "ration_brick",
-          proofFlag: ROUTE_PROOFS.warlord[1],
-          returnHub: "neutral_act2_hub_main",
-          exitForward: "neutral_act2_bridge_curfew",
-          personaShift: 3
-        },
-        {
-          act: 3,
-          slug: "iron_rule",
-          title: "Crush rival captains",
-          entryPrompt: "Make Alex broker your iron rule (Warlord)",
-          summary: "Three raider captains contest your rule; you must break them or bind them in iron contracts.",
-          focus: ["captured overpass", "execution stage", "loot hangar"],
-          stakes: [
-            "Lose focus and a coup flares behind your back.",
-            "Alex fears who you become with this much power."],
-          loot: "skull_ring",
-          proofFlag: ROUTE_PROOFS.warlord[2],
-          returnHub: "neutral_act3_hub_main",
-          exitForward: "neutral_act3_bridge_signal",
-          personaShift: 3
-        },
-        {
-          act: 4,
-          slug: "supremacy_edict",
-          title: "Publish the supremacy edict",
-          entryPrompt: "Order Alex to broadcast your supremacy edict (Warlord)",
-          summary: "You hold the stadium hostage, threatening to vent the stands unless every faction kneels.",
-          focus: ["hijacked broadcast booth", "spotlighted gallows", "looted command truck"],
-          stakes: [
-            "Back down now and every lieutenant deserts.",
-            "Alex wonders if there's a way back from this."],
-          loot: "shock_baton",
-          finalFlag: "warlord_final_tribute",
-          returnHub: "neutral_act4_hub_main",
-          exitForward: "neutral_act4_bridge_finale",
-          personaShift: 4
-        },
-        {
-          act: 5,
-          slug: "iron_reign",
-          title: "Seal the city under iron",
-          entryPrompt: "Command Alex to seal the city under iron (Warlord)",
-          summary: "The Long Siren drops into a growl as you decide which districts burn and which are tithed.",
-          focus: ["floodlit courtyard", "tribute vault", "armored dais"],
-          stakes: [
-            "Every scream tonight will echo your name.",
-            "Alex must either kneel or run."],
-          loot: "gold_tithe",
-          returnHub: "neutral_act5_hub_main",
-          exitForward: "neutral_act5_hub_main",
-          personaShift: 4,
-          endings: [
-            {
-              slug: "iron_reign",
-              endingType: "ruthless",
-              text: "You crown yourself atop the stadium floodlights while Alex enforces your tribute lines. The Long Siren re-tunes to your heartbeat—relentless and merciless."
-            },
-            {
-              slug: "shattered_throne",
-              endingType: "bad",
-              text: "Alex slips a blade between your plans, spiriting refugees away as your lieutenants splinter. You sit alone amid the burning tithe vault, ruler of ash."
-            }
-          ]
-        }
-      ]
-    },
-    fixer: {
-      label: "Fixer",
-      routeFlag: "route_fixer",
-      personaKey: "fixer",
-      relationship: "Convoy",
-      relationshipDelta: 6,
-      moralityTilt: [1, 0, -2],
-      stressTilt: [2, 2, 3],
-      tags: ["social", "stealth"],
-      verbs: ["Broker", "Leverage", "Promise", "Trade", "Spin"],
-      narrative: {
-        actions: [
-          "slide IOUs across rain-slick tables",
-          "splice hijacked frequencies into the radio mesh",
-          "trade secrets between desperate faction envoys",
-          "catalog debts in a ledger only you can read",
-          "bury favors inside coded convoy manifests"
-        ],
-        environments: [
-          "neon flickers through cracked office glass",
-          "convoy engines idle like patient beasts",
-          "raider spotlights sweep for signs of betrayal",
-          "hacked drones relay whispers along the skyline",
-          "Alex juggles handheld radios until their voice goes hoarse"
-        ],
-        pressures: [
-          "every deal threatens to collapse the others",
-          "one wrong promise and a faction turns hostile",
-          "rumors of your double-cross ripple through the docks",
-          "Alex wonders if any truth remains in your voice",
-          "the convoy dispatcher times your answers with suspicion"
-        ],
-        reflections: [
-          "Influence is fragile glass; you balance it in both hands.",
-          "Alex studies your lies, unsure whether to admire or fear you.",
-          "Leverage tastes sweeter than honesty tonight.",
-          "The Long Siren becomes a metronome for your bargains.",
-          "Someone has to weave the factions together, even if it frays your soul."
-        ]
-      },
-      acts: [
-        {
-          act: 1,
-          slug: "hallway_contract",
-          title: "Weave hallway contracts",
-          entryPrompt: "Coach Alex through hallway deals (Fixer)",
-          summary: "Panicked tenants offer anything for safety. You can bundle their promises into leverage for later acts.",
-          focus: ["rainy hallway", "makeshift desk", "ledger pile"],
-          stakes: [
-            "Overcommit and you'll owe more than you can pay.",
-            "Let Alex see the angles so they learn how influence flows."],
-          loot: "signed_marker",
-          proofFlag: ROUTE_PROOFS.fixer[0],
-          returnHub: "neutral_act1_hub_main",
-          exitForward: "neutral_act1_bridge_rooftop",
-          personaShift: 2
-        },
-        {
-          act: 2,
-          slug: "conduit_exchange",
-          title: "Control the conduit",
-          entryPrompt: "Send Alex to mediate the conduit exchange (Fixer)",
-          summary: "A fuel conduit between the convoy and stadium is failing; whoever controls the repair controls the lifeline.",
-          focus: ["refuel bay", "storm-drenched catwalk", "control console"],
-          stakes: [
-            "Promise protection and the convoy owes you forever.",
-            "Sell access to raiders and the stadium cuts you off."],
-          loot: "fuel_chip",
-          proofFlag: ROUTE_PROOFS.fixer[1],
-          returnHub: "neutral_act2_hub_main",
-          exitForward: "neutral_act2_bridge_curfew",
-          personaShift: 2
-        },
-        {
-          act: 3,
-          slug: "ledger_web",
-          title: "Complete the ledger web",
-          entryPrompt: "Have Alex finalize the ledger web (Fixer)",
-          summary: "Your secret ledger now binds three factions. One misstep, and you lose every favor you've stacked.",
-          focus: ["abandoned bank", "encrypted terminal", "sealed vault"],
-          stakes: [
-            "Reveal too much and they'll burn you.",
-            "Hide everything and the alliances collapse."],
-          loot: "encrypted_drive",
-          proofFlag: ROUTE_PROOFS.fixer[2],
-          returnHub: "neutral_act3_hub_main",
-          exitForward: "neutral_act3_bridge_signal",
-          personaShift: 2
-        },
-        {
-          act: 4,
-          slug: "triple_cross",
-          title: "Pull the triple-cross",
-          entryPrompt: "Coach Alex through a triple-cross (Fixer)",
-          summary: "Raiders, convoy, and stadium all expect you to betray the others tonight. You'll try to let them all believe they won.",
-          focus: ["signal tower", "sealed lounge", "encrypted earpiece"],
-          stakes: [
-            "Slip once and the city feeds you to the mobs.",
-            "Alex keeps track of who you really saved."],
-          loot: "bribe_chits",
-          finalFlag: "fixer_final_network",
-          returnHub: "neutral_act4_hub_main",
-          exitForward: "neutral_act4_bridge_finale",
-          personaShift: 3
-        },
-        {
-          act: 5,
-          slug: "whisper_market",
-          title: "Broker the whisper market",
-          entryPrompt: "Lead Alex into the whisper market (Fixer)",
-          summary: "The Long Siren falls quiet enough that every whisper counts. Finalize which debts get erased and which consume the city.",
-          focus: ["shadow bazaar", "promise vault", "crowded radio loft"],
-          stakes: [
-            "Pay the wrong debt and a faction burns you in effigy.",
-            "Alex weighs whether trust survives your bargains."],
-          loot: "sealed_contract",
-          returnHub: "neutral_act5_hub_main",
-          exitForward: "neutral_act5_hub_main",
-          personaShift: 3,
-          endings: [
-            {
-              slug: "whispered_ledger",
-              endingType: "manipulator",
-              text: "You balance every favor owed and ensure each faction depends on Alex to reach you. The siren becomes the pulse of your quiet economy."
-            },
-            {
-              slug: "burned_accounts",
-              endingType: "bad",
-              text: "The ledger catches fire when two factions compare notes. Alex drags you out as the whisper market riots, debts collapsing into smoke." 
-            }
-          ]
-        }
-      ]
-    },
-    killer: {
-      label: "Killer",
-      routeFlag: "route_killer",
-      personaKey: "killer",
-      relationship: "Raiders",
-      relationshipDelta: 5,
-      moralityTilt: [-4, -2, -5],
-      stressTilt: [1, 2, 3],
-      tags: ["combat", "stealth"],
-      verbs: ["Hunt", "Cull", "Stalk", "Ambush", "Silence"],
-      narrative: {
-        actions: [
-          "map corpse trails to predict the next swarm",
-          "plant piano wire along choke points",
-          "collect trophies to warn rival predators",
-          "stalk rooftops with scavenged rifle scopes",
-          "wipe blades clean in the rain to reset your focus"
-        ],
-        environments: [
-          "emergency strobes paint everything scarlet",
-          "the stairwell smells of copper and bleach",
-          "thunder rolls over gutted high-rises",
-          "Alex's breath fogs in the cold night air",
-          "shadows bend like teeth along the alley walls"
-        ],
-        pressures: [
-          "the infected learn your patterns and evolve",
-          "raider rivals set traps just for you",
-          "Alex fears the grin you wear after every kill",
-          "each body you drop buys another hour for the floor",
-          "silence becomes addictive and dangerous"
-        ],
-        reflections: [
-          "Killing keeps the survivors breathing tonight.",
-          "Alex studies the monster you wield like a knife.",
-          "Mercy rots faster than corpses in this rain.",
-          "Predators fall to the hungrier predator.",
-          "You hope someone remembers why you started hunting."
-        ]
-      },
-      acts: [
-        {
-          act: 1,
-          slug: "stairwell_hunt",
-          title: "Hunt the stairwell pack",
-          entryPrompt: "Let Alex bait the stairwell pack (Killer)",
-          summary: "A feral pack claws up the stairwell; you can lure them into a kill zone or risk them hitting the barricade.",
-          focus: ["narrow landing", "tripped wires", "blood-slick steps"],
-          stakes: [
-            "Miss the timing and families die.",
-            "Teach Alex how to bait monsters without breaking."],
-          loot: "bone_charm",
-          proofFlag: ROUTE_PROOFS.killer[0],
-          returnHub: "neutral_act1_hub_main",
-          exitForward: "neutral_act1_bridge_rooftop",
-          personaShift: 3
-        },
-        {
-          act: 2,
-          slug: "ghost_migration",
-          title: "Track the ghost migration",
-          entryPrompt: "Send Alex to map the ghost migration (Killer)",
-          summary: "The infected migrate along the riverfront. Culling them quietly keeps the convoy route open.",
-          focus: ["fogged riverwalk", "collapsed pier", "dripping tunnel"],
-          stakes: [
-            "Spill too much blood and raiders hunt you next.",
-            "Alex must move like a shadow or die."],
-          loot: "silent_boots",
-          proofFlag: ROUTE_PROOFS.killer[1],
-          returnHub: "neutral_act2_hub_main",
-          exitForward: "neutral_act2_bridge_curfew",
-          personaShift: 3
-        },
-        {
-          act: 3,
-          slug: "fear_tithe",
-          title: "Collect the fear tithe",
-          entryPrompt: "Have Alex collect the fear tithe (Killer)",
-          summary: "Rival killers demand tribute. You'll either erase them or force them into your pattern.",
-          focus: ["graffiti-tagged alley", "rooftop perch", "abandoned theatre"],
-          stakes: [
-            "Spare them and they undermine your terror.",
-            "Kill them and Alex wonders if you're still human."],
-          loot: "nightblade",
-          proofFlag: ROUTE_PROOFS.killer[2],
-          returnHub: "neutral_act3_hub_main",
-          exitForward: "neutral_act3_bridge_signal",
-          personaShift: 3
-        },
-        {
-          act: 4,
-          slug: "apex_creed",
-          title: "Write the apex creed",
-          entryPrompt: "Teach Alex the apex creed (Killer)",
-          summary: "Your legend terrifies every corridor. Decide who lives under your protection and who feeds the dark.",
-          focus: ["sealed killroom", "trophy rack", "observation deck"],
-          stakes: [
-            "Choose wrong and fear turns against you.",
-            "Alex needs to know whether you hunt for them or for yourself."],
-          loot: "scarred_mask",
-          finalFlag: "killer_final_reign",
-          returnHub: "neutral_act4_hub_main",
-          exitForward: "neutral_act4_bridge_finale",
-          personaShift: 4
-        },
-        {
-          act: 5,
-          slug: "midnight_creed",
-          title: "Seal the midnight creed",
-          entryPrompt: "Bring Alex into the midnight creed (Killer)",
-          summary: "Only one hunter walks away tonight. Decide whether you become the myth or bury it.",
-          focus: ["floodlit rooftop", "silent stairwell", "pool of rain"],
-          stakes: [
-            "Let the killings stop and the infected return.",
-            "Continue and Alex might never look at you again."],
-          loot: "blood_token",
-          returnHub: "neutral_act5_hub_main",
-          exitForward: "neutral_act5_hub_main",
-          personaShift: 4,
-          endings: [
-            {
-              slug: "midnight_creed",
-              endingType: "ruthless",
-              text: "You leave trophies on every threshold. Alex covers for you, believing the killings keep the district alive, even as their eyes darken."
-            },
-            {
-              slug: "quiet_grave",
-              endingType: "bad",
-              text: "Alex shatters your knives and walks into the dawn. You bury the creed beside the river, wondering if silence can forgive you."
-            }
-          ]
-        }
-      ]
-    },
-    sociopath: {
-      label: "Sociopath",
-      routeFlag: "route_sociopath",
-      personaKey: "sociopath",
-      relationship: "Free Crews",
-      relationshipDelta: 6,
-      moralityTilt: [-1, -3, -2],
-      stressTilt: [1, 2, 2],
-      tags: ["social", "leader"],
-      verbs: ["Stage", "Manipulate", "Confide", "Gaslight", "Perform"],
-      narrative: {
-        actions: [
-          "script tears for the audience you gather",
-          "mirror back fears until people cling to you",
-          "plant rumors that knot factions around your voice",
-          "turn Alex into a prop in your carefully staged empathy",
-          "invent confessions that bind strangers together"
-        ],
-        environments: [
-          "emergency lanterns warm the improvised stage",
-          "rain taps a beat on the stadium tarp",
-          "hushed spectators hang on every dramatic pause",
-          "the Long Siren becomes a low violin beneath your words",
-          "Alex watches from the wings, unsure who you really are"
-        ],
-        pressures: [
-          "lie too well and even you forget the truth",
-          "show weakness and the crowd moves on",
-          "each emotional reveal must pay off later",
-          "Alex wonders whether any comfort you give is real",
-          "factions crave the script only you can deliver"
-        ],
-        reflections: [
-          "Influence is theatre and the apocalypse your stage.",
-          "Alex doesn't know which version of you to trust.",
-          "Empathy can be weaponized into obedience.",
-          "You choreograph grief so no one sees your own.",
-          "If the siren stops, will anyone remember who you are?"
-        ]
-      },
-      acts: [
-        {
-          act: 1,
-          slug: "mirror_act",
-          title: "Run the mirror act",
-          entryPrompt: "Pull Alex into your mirror act (Sociopath)",
-          summary: "You can redirect panic by reflecting people's worst fears back at them until they follow your lead.",
-          focus: ["makeshift stage", "crowded hallway", "broken mirror"],
-          stakes: [
-            "Overplay it and they turn on you.",
-            "Alex may learn to fake feelings better than you do."],
-          loot: "mirror_shard",
-          proofFlag: ROUTE_PROOFS.sociopath[0],
-          returnHub: "neutral_act1_hub_main",
-          exitForward: "neutral_act1_bridge_rooftop",
-          personaShift: 2
-        },
-        {
-          act: 2,
-          slug: "mask_market",
-          title: "Curate the mask market",
-          entryPrompt: "Send Alex to curate the mask market (Sociopath)",
-          summary: "A night market trades favors for curated emotions. You can set the tone everyone copies tomorrow.",
-          focus: ["candlelit tunnel", "mask stall", "whisper dome"],
-          stakes: [
-            "Lose control and rumor-mongers hijack the scene.",
-            "Alex wonders whether authenticity survived the outbreak."],
-          loot: "silk_mask",
-          proofFlag: ROUTE_PROOFS.sociopath[1],
-          returnHub: "neutral_act2_hub_main",
-          exitForward: "neutral_act2_bridge_curfew",
-          personaShift: 2
-        },
-        {
-          act: 3,
-          slug: "trial_stage",
-          title: "Host the whisper trials",
-          entryPrompt: "Have Alex host the whisper trials (Sociopath)",
-          summary: "You orchestrate confessions in a gutted theatre, deciding who earns forgiveness and who becomes an example.",
-          focus: ["spotlit chair", "hanging mic", "row of candles"],
-          stakes: [
-            "If forgiveness feels fake, the mob drags you out.",
-            "If punishment feels real, Alex recoils."],
-          loot: "confession_tape",
-          proofFlag: ROUTE_PROOFS.sociopath[2],
-          returnHub: "neutral_act3_hub_main",
-          exitForward: "neutral_act3_bridge_signal",
-          personaShift: 2
-        },
-        {
-          act: 4,
-          slug: "empathy_purge",
-          title: "Conduct the empathy purge",
-          entryPrompt: "Rehearse Alex for the empathy purge (Sociopath)",
-          summary: "You promise to purge despair with choreographed catharsis; secretly, you decide whose emotions get erased.",
-          focus: ["ritual circle", "projected montage", "standing ovation"],
-          stakes: [
-            "Pick the wrong target and your audience revolts.",
-            "Alex must perform the hurt you hand them."],
-          loot: "stage_lights",
-          finalFlag: "sociopath_final_stage",
-          returnHub: "neutral_act4_hub_main",
-          exitForward: "neutral_act4_bridge_finale",
-          personaShift: 3
-        },
-        {
-          act: 5,
-          slug: "cold_requiem",
-          title: "Debut the cold requiem",
-          entryPrompt: "Stage the cold requiem with Alex (Sociopath)",
-          summary: "Your final performance will decide whether the city believes in hope, fear, or nothing at all.",
-          focus: ["collapsed theatre", "torchlit balcony", "silent crowd"],
-          stakes: [
-            "If the show flops, chaos returns instantly.",
-            "If it succeeds, Alex may never know you meant any of it."],
-          loot: "marble_mask",
-          returnHub: "neutral_act5_hub_main",
-          exitForward: "neutral_act5_hub_main",
-          personaShift: 3,
-          endings: [
-            {
-              slug: "cold_reckoning",
-              endingType: "secret",
-              text: "The city moves to the rhythm you script. Alex smiles through staged tears, unsure whether the salvation you sell is real."
-            },
-            {
-              slug: "empty_stage",
-              endingType: "bad",
-              text: "Your performance collapses into awkward silence. Alex drops the mask and walks into the rain while the crowd turns feral." 
-            }
-          ]
-        }
-      ]
-    }
-  };
-  const HUB_BLUEPRINTS = [
-    {
-      act: 1,
-      id: "neutral_act1_hub_main",
-      text: "Rain needles shattered windows as Alex paces the mezzanine, asking whether you will save these families, exploit them, or weaponize their fear.",
-      timeDelta: 1,
-      tags: ["hub", "act1"],
-      bridgeEntryText: "Climb with Alex to the roof and survey the district",
-      bridge: {
-        id: "neutral_act1_bridge_rooftop",
-        text: "From the rooftop, sirens blur into the rainfall. Stadium flares, convoy headlights, and raider bonfires paint competing futures across the skyline.",
-        tags: ["bridge", "act1"],
-        choices: [
-          {
-            id: "bridge1_signal_stadium",
-            text: "Signal the stadium wardens for aid",
-            goTo: "neutral_act2_hub_main",
-            effects: { time: 1, flagsSet: ["plan_stadium"], relationships: { Stadium: 4 } },
-            tags: ["leader", "social"]
-          },
-          {
-            id: "bridge1_call_convoy",
-            text: "Patch into the convoy dispatcher",
-            goTo: "neutral_act2_hub_main",
-            effects: { time: 1, flagsSet: ["plan_convoy"], relationships: { Convoy: 4 } },
-            tags: ["social", "stealth"]
-          },
-          {
-            id: "bridge1_hold",
-            text: "Grant Alex one more hour on the floor",
-            goTo: "neutral_act1_hub_main",
-            effects: { stats: { stress: 3 }, relationships: { Alex: 2 } },
-            tags: ["leader", "survival"]
-          }
-        ]
-      },
-      sideScenes: [
-        {
-          id: "neutral_act1_side_generator",
-          entryText: "Check the flickering generator with Alex",
-          text: "The maintenance closet hums with ozone as the generator coughs smoke. Alex begs for a fix before the lights die.",
-          tags: ["side", "act1"],
-          choices: [
-            {
-              id: "act1_fix_generator",
-              text: "Rip open the casing and reroute power (−1 STA)",
-              goTo: "neutral_act1_hub_main",
-              cost: { stats: { stamina: 1 }, time: 1 },
-              effects: { stats: { stress: -2 }, inventoryAdd: ["spare_parts"], relationships: { Volunteers: 4 } },
-              tags: ["survival", "leader"]
-            },
-            {
-              id: "act1_divert_power",
-              text: "Divert power to your apartment only",
-              goTo: "neutral_act1_hub_main",
-              effects: { stats: { morality: -2, stress: -1 }, relationships: { Volunteers: -5 }, flagsSet: ["wall_breached"] },
-              tags: ["stealth", "moral"]
-            }
-          ]
-        },
-        {
-          id: "neutral_act1_side_rations",
-          entryText: "Inspect the ration queue",
-          text: "Families barter heirlooms for stale crackers in the hallway. Alex looks to you for fairness.",
-          tags: ["side", "act1"],
-          choices: [
-            {
-              id: "act1_share_rations",
-              text: "Donate your hidden snacks",
-              goTo: "neutral_act1_hub_main",
-              effects: { stats: { morality: 2, stress: -1 }, relationships: { Volunteers: 5 }, flagsSet: ["shared_rations"] },
-              tags: ["moral", "leader"]
-            },
-            {
-              id: "act1_sell_rations",
-              text: "Sell portions for favors",
-              goTo: "neutral_act1_hub_main",
-              effects: { stats: { morality: -3, stress: -2 }, relationships: { FreeCrews: 3, Volunteers: -4 } },
-              tags: ["social", "stealth"]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      act: 2,
-      id: "neutral_act2_hub_main",
-      text: "Curfew drones sweep the interstate. Alex clutches maps and asks whether you will reinforce the stadium, exploit convoys, or sell safety to raiders.",
-      timeDelta: 1,
-      tags: ["hub", "act2"],
-      bridgeEntryText: "Slip through the curfew lines toward dawn",
-      bridge: {
-        id: "neutral_act2_bridge_curfew",
-        text: "Checkpoint sirens and floodlights dance along the overpass. Every faction watches to see who you protect next.",
-        tags: ["bridge", "act2"],
-        choices: [
-          {
-            id: "bridge2_stage_stadium",
-            text: "Escort medics toward the stadium",
-            goTo: "neutral_act3_hub_main",
-            effects: { time: 1, relationships: { Stadium: 5 }, stats: { stress: 2 } },
-            tags: ["leader", "survival"]
-          },
-          {
-            id: "bridge2_feed_convoy",
-            text: "Load Alex onto a convoy run",
-            goTo: "neutral_act3_hub_main",
-            effects: { time: 1, relationships: { Convoy: 5 }, flagsSet: ["rescued_convoy"] },
-            tags: ["social", "leader"]
-          },
-          {
-            id: "bridge2_stall",
-            text: "Delay and gather more intel",
-            goTo: "neutral_act2_hub_main",
-            effects: { stats: { stress: 1 }, inventoryAdd: ["cipher_codes"] },
-            tags: ["stealth", "survival"]
-          }
-        ]
-      },
-      sideScenes: [
-        {
-          id: "neutral_act2_side_checkpoint",
-          entryText: "Sneak beneath the checkpoint",
-          text: "Floodlights search the rain as militia shout over the curfew loudspeakers.",
-          tags: ["side", "act2"],
-          choices: [
-            {
-              id: "act2_bribe_guard",
-              text: "Bribe the guard with convoy gossip",
-              goTo: "neutral_act2_hub_main",
-              effects: { stats: { stress: -2 }, relationships: { Convoy: 3, Raiders: -2 } },
-              tags: ["social", "stealth"]
-            },
-            {
-              id: "act2_cut_power",
-              text: "Cut the checkpoint power",
-              goTo: "neutral_act2_hub_main",
-              effects: { stats: { morality: -2 }, flagsSet: ["convoy_betrayed"], relationships: { Raiders: 4 } },
-              tags: ["combat", "stealth"]
-            }
-          ]
-        },
-        {
-          id: "neutral_act2_side_infirmary",
-          entryText: "Check the shattered infirmary",
-          text: "Stretchers line the loading bay. Alex wants to know if you heal or prioritize leverage.",
-          tags: ["side", "act2"],
-          choices: [
-            {
-              id: "act2_treat_wounded",
-              text: "Treat the worst wounds",
-              goTo: "neutral_act2_hub_main",
-              effects: { stats: { morality: 3, stress: 2 }, relationships: { Volunteers: 4 }, inventoryRemove: ["antibiotics"] },
-              tags: ["moral", "leader"]
-            },
-            {
-              id: "act2_skimp_supplies",
-              text: "Pocket the best meds",
-              goTo: "neutral_act2_hub_main",
-              effects: { stats: { morality: -3 }, inventoryAdd: ["antibiotics"], relationships: { Volunteers: -4 } },
-              tags: ["stealth", "survival"]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      act: 3,
-      id: "neutral_act3_hub_main",
-      text: "Dawn ash smears the skyline purple. Alex balances flare codes and asks whether you guide convoys, weaponize raiders, or sell secrets.",
-      timeDelta: 1,
-      tags: ["hub", "act3"],
-      bridgeEntryText: "Cross the shattered skybridge with Alex",
-      bridge: {
-        id: "neutral_act3_bridge_signal",
-        text: "A fractured skybridge sways above burning streets. The next choices decide who reaches the finale.",
-        tags: ["bridge", "act3"],
-        choices: [
-          {
-            id: "bridge3_evacuate",
-            text: "Evacuate families toward the stadium",
-            goTo: "neutral_act4_hub_main",
-            effects: { time: 1, relationships: { Volunteers: 4 }, stats: { stress: 3 } },
-            tags: ["leader", "survival"]
-          },
-          {
-            id: "bridge3_cutdeal",
-            text: "Broker safe passage with raider scouts",
-            goTo: "neutral_act4_hub_main",
-            effects: { flagsSet: ["joined_raiders"], relationships: { Raiders: 5 }, stats: { morality: -2 } },
-            tags: ["social", "stealth"]
-          },
-          {
-            id: "bridge3_delay",
-            text: "Delay to gather more proof",
-            goTo: "neutral_act3_hub_main",
-            effects: { stats: { stress: 2 }, inventoryAdd: ["evidence_case"] },
-            tags: ["stealth", "survival"]
-          }
-        ]
-      },
-      sideScenes: [
-        {
-          id: "neutral_act3_side_beacon",
-          entryText: "Repair a failing beacon",
-          text: "One rooftop beacon sputters. Alex grips the ladder waiting for your call.",
-          tags: ["side", "act3"],
-          choices: [
-            {
-              id: "act3_fix_beacon",
-              text: "Risk the climb with Alex",
-              goTo: "neutral_act3_hub_main",
-              effects: { stats: { stress: 2 }, relationships: { Convoy: 4 }, inventoryAdd: ["signal_core"] },
-              tags: ["survival", "leader"]
-            },
-            {
-              id: "act3_remote_shutdown",
-              text: "Shut it down to save time",
-              goTo: "neutral_act3_hub_main",
-              effects: { stats: { morality: -1 }, relationships: { Convoy: -3, Raiders: 3 } },
-              tags: ["stealth", "combat"]
-            }
-          ]
-        },
-        {
-          id: "neutral_act3_side_rescue",
-          entryText: "Respond to a trapped signal",
-          text: "A trapped convoy driver begs for extraction over a cracked radio.",
-          tags: ["side", "act3"],
-          choices: [
-            {
-              id: "act3_pull_driver",
-              text: "Pull the driver out yourself",
-              goTo: "neutral_act3_hub_main",
-              effects: { stats: { stress: 3, morality: 2 }, relationships: { Convoy: 5 } },
-              tags: ["leader", "moral"]
-            },
-            {
-              id: "act3_use_driver",
-              text: "Leverage them for intel",
-              goTo: "neutral_act3_hub_main",
-              effects: { stats: { morality: -3 }, relationships: { Convoy: -4, Raiders: 4 }, inventoryAdd: ["raider_codes"] },
-              tags: ["social", "stealth"]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      act: 4,
-      id: "neutral_act4_hub_main",
-      text: "Night sirens spool up again. Alex studies faction leaders waiting for your final gambit and wonders whose future you cash in.",
-      timeDelta: 1,
-      tags: ["hub", "act4"],
-      bridgeEntryText: "Face the final council with Alex",
-      bridge: {
-        id: "neutral_act4_bridge_finale",
-        text: "All factions crowd the stadium floor. Proofs you gathered decide who follows you into the finale.",
-        tags: ["bridge", "act4"],
-        choices: [
-          {
-            id: "bridge4_to_finale",
-            text: "Announce the final plan",
-            goTo: "neutral_act5_hub_main",
-            effects: { time: 1, stats: { stress: 4 }, relationships: { Alex: 3 } },
-            tags: ["leader", "social"]
-          },
-          {
-            id: "bridge4_delay",
-            text: "Delay and reconsider alliances",
-            goTo: "neutral_act4_hub_main",
-            effects: { stats: { stress: 2 }, inventoryAdd: ["council_notes"] },
-            tags: ["stealth", "survival"]
-          }
-        ]
-      },
-      sideScenes: [
-        {
-          id: "neutral_act4_side_command",
-          entryText: "Review siege drills",
-          text: "Volunteers rehearse breach drills in the rain. Alex needs your verdict.",
-          tags: ["side", "act4"],
-          choices: [
-            {
-              id: "act4_tighten_drills",
-              text: "Tighten the drills",
-              goTo: "neutral_act4_hub_main",
-              effects: { stats: { stress: 2 }, relationships: { Volunteers: 4 } },
-              tags: ["leader", "combat"]
-            },
-            {
-              id: "act4_relax_drills",
-              text: "Give them rest",
-              goTo: "neutral_act4_hub_main",
-              effects: { stats: { stress: -3 }, relationships: { Volunteers: 2, Raiders: 2 } },
-              tags: ["moral", "survival"]
-            }
-          ]
-        },
-        {
-          id: "neutral_act4_side_spy",
-          entryText: "Interrogate the captured spy",
-          text: "A captured raider messenger refuses to talk until you involve Alex.",
-          tags: ["side", "act4"],
-          choices: [
-            {
-              id: "act4_show_mercy",
-              text: "Offer mercy for intel",
-              goTo: "neutral_act4_hub_main",
-              effects: { stats: { morality: 2 }, relationships: { Raiders: 2, Volunteers: -2 }, inventoryAdd: ["spy_report"] },
-              tags: ["social", "moral"]
-            },
-            {
-              id: "act4_break_spy",
-              text: "Break them in front of Alex",
-              goTo: "neutral_act4_hub_main",
-              effects: { stats: { morality: -4, stress: -1 }, relationships: { Raiders: -3, Alex: -2 } },
-              tags: ["combat", "stealth"]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      act: 5,
-      id: "neutral_act5_hub_main",
-      text: "The siren fades to a heartbeat thrum. Alex stands beside you while convoys idle, raiders sharpen blades, and exhausted families beg for verdicts.",
-      timeDelta: 1,
-      tags: ["hub", "act5"],
-      bridgeEntryText: "Take a breath before the epilogue",
-      bridge: {
-        id: "neutral_act5_bridge_reflection",
-        text: "In a quiet broadcast booth, you and Alex replay every promise you made.",
-        tags: ["bridge", "act5"],
-        choices: [
-          {
-            id: "bridge5_reflect",
-            text: "Reflect on the cost",
-            goTo: "neutral_act5_hub_main",
-            effects: { stats: { stress: -3 }, relationships: { Alex: 4 } },
-            tags: ["moral", "leader"]
-          },
-          {
-            id: "bridge5_press",
-            text: "Press forward without pause",
-            goTo: "neutral_act5_hub_main",
-            effects: { stats: { stress: 3 }, relationships: { Alex: -2 } },
-            tags: ["survival", "stealth"]
-          }
-        ]
-      },
-      sideScenes: [
-        {
-          id: "neutral_act5_side_breathe",
-          entryText: "Share a rare quiet moment with Alex",
-          text: "In a darkened radio booth, Alex asks what kind of ending you deserve.",
-          tags: ["side", "act5"],
-          choices: [
-            {
-              id: "act5_confide",
-              text: "Confide the truth",
-              goTo: "neutral_act5_hub_main",
-              effects: { stats: { stress: -4 }, relationships: { Alex: 5 } },
-              tags: ["moral", "social"]
-            },
-            {
-              id: "act5_deflect",
-              text: "Deflect with gallows humor",
-              goTo: "neutral_act5_hub_main",
-              effects: { stats: { stress: -1 }, relationships: { Alex: -2, Raiders: 2 } },
-              tags: ["social", "stealth"]
-            }
-          ]
-        }
-      ]
-    }
-  ];
-  function buildStoryWorld() {
-    const scenes = {};
-    Object.assign(scenes, createActZeroScenes());
-    const { scenes: routeScenes, endings, entryMap } = generateRouteScenes();
-    Object.assign(scenes, routeScenes);
-    Object.assign(scenes, endings);
-    Object.assign(scenes, createHubAndSideScenes(entryMap));
-    return scenes;
-  }
-
-  function createActZeroScenes() {
+  function failForwardChoice(state) {
     return {
-      neutral_act0_intro_apartment: {
-        id: "neutral_act0_intro_apartment",
-        text: "Sirens fade into rain hammering the apartment windows. Alex pounds on your door and whispers that the neighbor turned.",
-        tags: ["intro", "act0"],
-        choices: [
-          {
-            id: "act0_peek",
-            text: "Slide the dresser enough to check on Alex",
-            goTo: "neutral_act0_contact_alex",
-            effects: { stats: { stress: -1 }, relationships: { Alex: 2 } },
-            tags: ["survival", "leader"]
-          },
-          {
-            id: "act0_brace",
-            text: "Grip your knife and brace the door",
-            goTo: "neutral_act0_contact_alex",
-            effects: { stats: { stamina: -1, stress: 1 } },
-            tags: ["combat", "survival"]
-          },
-          {
-            id: "act0_call",
-            text: "Call out through the door to calm Alex",
-            goTo: "neutral_act0_contact_alex",
-            effects: { relationships: { Alex: 3 }, stats: { stress: -2 } },
-            tags: ["social", "leader"]
-          }
-        ]
-      },
-      neutral_act0_contact_alex: {
-        id: "neutral_act0_contact_alex",
-        text: "Alex presses their forehead to the chain and begs you to open up. You can decide whether trust, caution, or cold leverage defines {{name}} tonight.",
-        tags: ["intro", "act0"],
-        choices: [
-          {
-            id: "act0_open",
-            text: "Throw the locks and pull Alex inside",
-            goTo: "neutral_act0_background_select",
-            assignName: true,
-            effects: { relationships: { Alex: 3 }, stats: { stress: -1 }, flagsSet: ["alex_trust_earned"] },
-            tags: ["social", "leader"]
-          },
-          {
-            id: "act0_chain",
-            text: "Keep the chain latched and steady them",
-            goTo: "neutral_act0_background_select",
-            effects: { relationships: { Alex: 1 }, stats: { stress: -1 } },
-            tags: ["social", "survival"]
-          },
-          {
-            id: "act0_proof",
-            text: "Crack the chain and demand proof they aren't bitten",
-            goTo: "neutral_act0_verification",
-            effects: { stats: { stress: 1 } },
-            tags: ["survival", "leader"]
-          },
-          {
-            id: "act0_direct",
-            text: "Order Alex to rally the floor while you gear up",
-            goTo: "neutral_act0_background_select",
-            effects: { relationships: { Alex: 2 }, persona: { leader: 1 } },
-            tags: ["leader", "combat"]
-          }
-        ]
-      },
-      neutral_act0_verification: {
-        id: "neutral_act0_verification",
-        text: "You slide the door to the limit of the chain. Hallway light spills over Alex's shaking hands as they show clean arms and the bite-free back of their neck while infected thud up the stairs.",
-        tags: ["intro", "act0"],
-        choices: [
-          {
-            id: "act0_verify_open",
-            text: "Satisfied—open the door now",
-            goTo: "neutral_act0_background_select",
-            assignName: true,
-            effects: {
-              relationships: { Alex: 4 },
-              stats: { stress: -2 },
-              flagsSet: ["alex_trust_earned"]
-            },
-            tags: ["moral", "leader"]
-          },
-          {
-            id: "act0_verify_gap",
-            text: "Still risky—pass supplies through the gap",
-            goTo: "neutral_act0_supply_gap",
-            effects: {
-              relationships: { Alex: 1 },
-              stats: { stress: -1 },
-              flagsSet: ["alex_supplied_from_door"]
-            },
-            tags: ["survival", "social"]
-          },
-          {
-            id: "act0_verify_close",
-            text: "Not enough—slam the door shut",
-            goTo: "neutral_act0_lockout",
-            effects: {
-              relationships: { Alex: -5 },
-              stats: { stress: 2 },
-              flagsSet: ["alex_denied_entry"]
-            },
-            tags: ["stealth", "combat"]
-          },
-          {
-            id: "act0_verify_apology",
-            text: "Apologize while undoing the locks",
-            goTo: "neutral_act0_background_select",
-            assignName: true,
-            effects: {
-              relationships: { Alex: 3 },
-              stats: { stress: -1 },
-              flagsSet: ["alex_trust_earned"]
-            },
-            tags: ["moral", "leader"]
-          }
-        ]
-      },
-      neutral_act0_supply_gap: {
-        id: "neutral_act0_supply_gap",
-        text: "You hand gauze, painkillers, and a flare through the chained gap. Alex nods, glances at the shadows below, and asks what you want them to do next before the infected reach the landing.",
-        tags: ["intro", "act0"],
-        choices: [
-          {
-            id: "act0_gap_invite",
-            text: "Invite Alex inside after all",
-            goTo: "neutral_act0_background_select",
-            assignName: true,
-            effects: {
-              relationships: { Alex: 2 },
-              stats: { stress: -1 }
-            },
-            tags: ["social", "leader"]
-          },
-          {
-            id: "act0_gap_direct",
-            text: "Keep the door barred—send Alex to warn the others",
-            goTo: "neutral_act0_background_select",
-            effects: {
-              relationships: { Alex: -1 },
-              stats: { stress: 1 },
-              flagsSet: ["alex_supplied_from_door"]
-            },
-            tags: ["survival", "leader"]
-          }
-        ]
-      },
-      neutral_act0_lockout: {
-        id: "neutral_act0_lockout",
-        text: "You slam the door and slide every bolt. Alex keeps knocking, voice shaking between gratitude and fury as claws scrape closer down the stairwell.",
-        tags: ["intro", "act0"],
-        choices: [
-          {
-            id: "act0_lockout_reopen",
-            text: "Undo the locks before the infected arrive",
-            goTo: "neutral_act0_background_select",
-            assignName: true,
-            effects: {
-              relationships: { Alex: -1 },
-              stats: { stress: 1 }
-            },
-            tags: ["moral", "survival"]
-          },
-          {
-            id: "act0_lockout_hold",
-            text: "Hold position and shout instructions through the door",
-            goTo: "neutral_act0_background_select",
-            effects: {
-              relationships: { Alex: -3 },
-              stats: { stress: 2 },
-              flagsSet: ["alex_denied_entry"]
-            },
-            tags: ["leader", "combat"]
-          }
-        ]
-      },
-      neutral_act0_background_select: {
-        id: "neutral_act0_background_select",
-        text: "Whether Alex squeezes past the chain or shouts from the hall, they size up {{name}} and ask what history you bring to this building.",
-        tags: ["intro", "act0"],
-        choices: [
-          {
-            id: "background_medic",
-            text: "Confess you're a field medic",
-            goTo: "neutral_act0_pact",
-            setBackground: "medic",
-            effects: { persona: { protector: 1 }, relationships: { Alex: 1 }, flagsSet: ["background_medic"] },
-            tags: ["moral", "leader"]
-          },
-          {
-            id: "background_fighter",
-            text: "Admit you were a union brawler",
-            goTo: "neutral_act0_pact",
-            setBackground: "fighter",
-            effects: { persona: { warlord: 1 }, flagsSet: ["background_fighter"] },
-            tags: ["combat", "leader"]
-          },
-          {
-            id: "background_hacker",
-            text: "Explain your network skills",
-            goTo: "neutral_act0_pact",
-            setBackground: "hacker",
-            effects: { persona: { fixer: 1 }, flagsSet: ["background_hacker"] },
-            tags: ["social", "stealth"]
-          },
-          {
-            id: "background_thief",
-            text: "Smirk about your thief past",
-            goTo: "neutral_act0_pact",
-            setBackground: "thief",
-            effects: { persona: { sociopath: 1 }, flagsSet: ["background_thief"] },
-            tags: ["stealth", "survival"]
-          }
-        ]
-      },
-      neutral_act0_pact: {
-        id: "neutral_act0_pact",
-        text: "Sirens fade beneath rain slamming broken windows. Alex paces between sobbing neighbors while smoke coils in the stairwell. {{name}}—the {{background}} of this block—must decide whether to steady Alex, weaponize their fear, or drag everyone into your plan.",
-        tags: ["intro", "act0"],
-        choices: [
-          {
-            id: "act0_reassure",
-            text: "Promise Alex you'll protect the floor",
-            goTo: "neutral_act1_hub_main",
-            effects: { persona: { protector: 1 }, relationships: { Alex: 4 }, stats: { morality: 2 } },
-            tags: ["moral", "leader"]
-          },
-          {
-            id: "act0_pragmatic",
-            text: "Tell Alex survival means hard bargains",
-            goTo: "neutral_act1_hub_main",
-            effects: { persona: { fixer: 1 }, relationships: { Alex: 1 }, stats: { stress: 1 } },
-            tags: ["social", "survival"]
-          },
-          {
-            id: "act0_ruthless",
-            text: "Warn Alex that fear will keep people obedient",
-            goTo: "neutral_act1_hub_main",
-            effects: { persona: { warlord: 1, sociopath: 1 }, relationships: { Alex: -1 }, stats: { morality: -2 } },
-            tags: ["combat", "stealth"]
-          }
-        ]
-      }
-    };
-  }
-
-  function createHubAndSideScenes(entryMap) {
-    const scenes = {};
-    for (const blueprint of HUB_BLUEPRINTS) {
-      const hub = {
-        id: blueprint.id,
-        text: blueprint.text,
-        timeDelta: blueprint.timeDelta,
-        tags: blueprint.tags.slice(),
-        choices: []
-      };
-      const actEntries = entryMap[blueprint.act] || {};
-      for (const [routeKey, rootId] of Object.entries(actEntries)) {
-        const routeDef = ROUTE_BLUEPRINTS[routeKey];
-        const theme = routeDef ? routeDef.acts.find((t) => t.act === blueprint.act) : null;
-        if (!routeDef || !theme) continue;
-        hub.choices.push(buildEntryChoice(routeKey, routeDef, theme, rootId));
-      }
-      for (const side of blueprint.sideScenes) {
-        const entryChoice = {
-          id: `${side.id}_entry`,
-          text: side.entryText,
-          goTo: side.id,
-          tags: side.tags.slice(),
-          effects: { stats: { stress: -1 } }
-        };
-        hub.choices.push(entryChoice);
-        const sideScene = {
-          id: side.id,
-          text: side.text,
-          tags: side.tags.slice(),
-          choices: side.choices.map((choice) => {
-            const copy = deepClone(choice);
-            if (!copy.goTo) copy.goTo = blueprint.id;
-            if (!copy.tags) copy.tags = side.tags.slice();
-            return copy;
-          })
-        };
-        scenes[side.id] = sideScene;
-      }
-      const bridgeEntry = {
-        id: `${blueprint.bridge.id}_entry`,
-        text: blueprint.bridgeEntryText,
-        goTo: blueprint.bridge.id,
-        tags: ["leader", "social"],
-        effects: { stats: { stress: 2 } }
-      };
-      hub.choices.push(bridgeEntry);
-      scenes[blueprint.id] = hub;
-      scenes[blueprint.bridge.id] = {
-        id: blueprint.bridge.id,
-        text: blueprint.bridge.text,
-        tags: blueprint.bridge.tags.slice(),
-        choices: blueprint.bridge.choices.map((choice) => deepClone(choice))
-      };
-    }
-    return scenes;
-  }
-
-  function buildEntryChoice(routeKey, routeDef, theme, goTo) {
-    const choice = {
-      id: `${routeKey}_act${theme.act}_entry`,
-      text: theme.entryPrompt,
-      goTo,
-      tags: routeDef.tags.slice(),
+      id: "fail_forward",
+      text: "Push through exhaustion (gain Stress, +1h).",
       effects: {
-        flagsSet: [routeDef.routeFlag],
-        persona: { [routeDef.personaKey]: 1 },
-        relationships: { Alex: 3, [routeDef.relationship]: routeDef.relationshipDelta }
+        time: +1,
+        stats: { stress: +3 },
+        pushEvent: "You force motion despite the stall."
       },
-      popupText: `${routeDef.label} route engaged.`
+      goTo: state.sceneId,
+      tags: ["survival"]
     };
-    if (theme.act === 5) {
-      choice.req = { flags: ROUTE_PROOFS[routeKey] };
-      choice.effects.stats = { stress: 2 };
-    }
-    return choice;
   }
 
-  function generateRouteScenes() {
-    const scenes = {};
-    const endings = {};
-    const entryMap = {};
-    const maxDepth = 3;
-    for (const [routeKey, routeDef] of Object.entries(ROUTE_BLUEPRINTS)) {
-      for (const theme of routeDef.acts) {
-        const exitTargets = [];
-        if (Array.isArray(theme.endings) && theme.endings.length) {
-          const generatedEndings = [];
-          for (const endingDef of theme.endings) {
-            const endingId = `${routeKey}_act${theme.act}_ending_${endingDef.slug}`;
-            endings[endingId] = {
-              id: endingId,
-              text: endingDef.text,
-              isEnding: true,
-              endingType: endingDef.endingType,
-              tags: ["ending", routeKey, `act${theme.act}`]
-            };
-            generatedEndings.push(endingId);
-          }
-          exitTargets.push(...generatedEndings);
-        } else {
-          exitTargets.push(theme.exitForward, theme.returnHub);
-        }
-        const rootId = createSetpieceTree(routeKey, routeDef, theme, scenes, exitTargets, maxDepth);
-        entryMap[theme.act] = entryMap[theme.act] || {};
-        entryMap[theme.act][routeKey] = rootId;
-      }
-    }
-    return { scenes, endings, entryMap };
-  }
-
-  function createSetpieceTree(routeKey, routeDef, theme, scenes, exitTargets, maxDepth, depth = 0, path = []) {
-    const suffix = path.length ? path.join("_") : "root";
-    const id = `${routeKey}_act${theme.act}_setpiece_${theme.slug}_d${depth}_${suffix}`;
-    if (scenes[id]) return id;
-    const scene = {
-      id,
-      text: composeSetpieceText(routeKey, routeDef, theme, depth, path),
-      tags: ["setpiece", routeKey, `act${theme.act}`],
-      choices: []
-    };
-    scenes[id] = scene;
-    for (let branch = 0; branch < 3; branch += 1) {
-      const choice = buildSetpieceChoice(routeKey, routeDef, theme, depth, path, branch, exitTargets, maxDepth, scenes);
-      scene.choices.push(choice);
-    }
-    return id;
-  }
-
-  function buildSetpieceChoice(routeKey, routeDef, theme, depth, path, branch, exitTargets, maxDepth, scenes) {
-    const nextPath = path.concat(branch);
-    const choice = {
-      id: `choice_${depth}_${path.length ? path.join("_") : "root"}_${branch}`,
-      text: createChoiceLabel(routeDef, theme, depth, branch, path),
-      tags: routeDef.tags.slice()
-    };
-    const effects = computeChoiceEffects(routeDef, theme, depth, branch);
-    let goTo;
-    if (depth >= maxDepth - 1) {
-      const index = (branch + sumPath(path)) % exitTargets.length;
-      goTo = exitTargets[index];
-      if (theme.proofFlag) {
-        effects.flagsSet = effects.flagsSet || [];
-        if (!effects.flagsSet.includes(theme.proofFlag)) effects.flagsSet.push(theme.proofFlag);
-      }
-      if (theme.finalFlag) {
-        effects.flagsSet = effects.flagsSet || [];
-        if (!effects.flagsSet.includes(theme.finalFlag)) effects.flagsSet.push(theme.finalFlag);
-      }
-      if (theme.loot && branch === 0) {
-        effects.inventoryAdd = effects.inventoryAdd || [];
-        if (!effects.inventoryAdd.includes(theme.loot)) effects.inventoryAdd.push(theme.loot);
-      }
-    } else {
-      goTo = createSetpieceTree(routeKey, routeDef, theme, scenes, exitTargets, maxDepth, depth + 1, nextPath);
-    }
-    choice.goTo = goTo;
-    choice.effects = effects;
-    choice.popupText = `${routeDef.label} consequence recorded.`;
-    return choice;
-  }
-
-  function composeSetpieceText(routeKey, routeDef, theme, depth, path) {
-    const sum = sumPath(path);
-    const narrative = routeDef.narrative;
-    const action = narrative.actions[(depth + sum) % narrative.actions.length];
-    const environment = narrative.environments[(depth * 2 + sum) % narrative.environments.length];
-    const focus = theme.focus[(depth + sum) % theme.focus.length];
-    const pressure = narrative.pressures[(depth + path.length) % narrative.pressures.length];
-    const reflection = narrative.reflections[(depth + sum) % narrative.reflections.length];
-    const intro = depth === 0 ? theme.summary : theme.stakes[(depth + sum) % theme.stakes.length];
-    const closing = "Alex studies {{name}} to see which promise survives.";
-    return `${intro} You ${action} while ${environment}. The ${focus} becomes the hinge as ${pressure}. ${reflection} ${closing}`;
-  }
-
-  function createChoiceLabel(routeDef, theme, depth, branch, path) {
-    const verb = routeDef.verbs[(depth + branch) % routeDef.verbs.length];
-    const focus = theme.focus[(branch + sumPath(path)) % theme.focus.length];
-    if (branch === 0) return `${verb} the ${focus} alongside Alex (+Morality)`;
-    if (branch === 1) return `${verb} the ${focus} with calculated poise (+Stress)`;
-    return `${verb} the ${focus} without mercy (−Morality)`;
-  }
-
-  function computeChoiceEffects(routeDef, theme, depth, branch) {
-    const effects = { time: 1 };
-    const stats = {};
-    const stress = (routeDef.stressTilt[branch] || 0) + depth;
-    if (stress) stats.stress = stress;
-    const morality = (routeDef.moralityTilt[branch] || 0) - Math.floor(depth / 2);
-    if (morality) stats.morality = morality;
-    if (Object.keys(stats).length) effects.stats = stats;
-
-    if (routeDef.personaKey) {
-      const personaValue = Math.max(1, (theme.personaShift || 1) - depth);
-      effects.persona = { [routeDef.personaKey]: personaValue };
-    }
-
-    const relationships = {};
-    const relDelta = branch === 2 ? -routeDef.relationshipDelta : routeDef.relationshipDelta;
-    if (relDelta) relationships[routeDef.relationship] = relDelta;
-    if (branch === 0) {
-      relationships.Alex = 3;
-    } else if (branch === 2) {
-      relationships.Alex = -3;
-    }
-    if (Object.keys(relationships).length) effects.relationships = relationships;
-
-    effects.pushEvent = branch === 2
-      ? "Fear ripples through the corridor."
-      : branch === 0
-      ? "Hope swells among the survivors."
-      : "Tension hums as you balance the line.";
-
-    return effects;
-  }
-
-  function sumPath(path = []) {
-    return path.reduce((sum, value) => sum + value, 0);
-  }
-
-  const STORY_WORLD = buildStoryWorld();
-  Object.assign(window.STORY_DATABASE, STORY_WORLD);
-
-  function wordCount(text = "") {
-    if (Array.isArray(text)) {
-      return text.reduce((sum, segment) => sum + wordCount(segment), 0);
-    }
-    return String(text)
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean).length;
-  }
-
-  function validateStory(db) {
+  function validateStoryDatabase(db) {
     const errors = [];
     const warnings = [];
-    const allIds = Object.keys(db);
-    const seenFlagsSet = new Map();
-    const seenFlagsUnset = new Map();
+    const ids = Object.keys(db);
+    const idPattern = /^(good|ant|man|killer|socio|neutral)_act[0-5]_(hub|setpiece|side|bridge|ending)_[a-z0-9_]+$/;
 
-    for (const id of allIds) {
-      if (!/^[a-z0-9_]+$/.test(id)) {
-        errors.push(`Invalid ID format: ${id}`);
-      }
+    for (const id of ids) {
       const scene = db[id];
       if (!scene) continue;
+      if (!idPattern.test(id) && !scene.isEnding) {
+        warnings.push(`ID ${id} does not match naming convention`);
+      }
       if (scene.isEnding && scene.choices && scene.choices.length) {
-        errors.push(`Ending scene ${id} must not contain choices.`);
+        errors.push(`Ending ${id} must not contain choices`);
       }
-      const validChoices = (scene.choices || []).filter((choice) => choice && (getChoiceTarget(choice) || choice.effects));
-      if (scene.tags && scene.tags.includes("hub") && !scene.isEnding) {
-        const exits = new Set();
-        for (const choice of validChoices) {
-          const target = getChoiceTarget(choice);
-          if (target) exits.add(target);
-        }
-        if (exits.size < 2) {
-          warnings.push(`Hub ${id} exposes fewer than two exits.`);
-        }
-      }
-      if (wordCount(scene.text) > 140) {
-        warnings.push(`Scene ${id} exceeds 140 words.`);
-      }
-      for (const choice of validChoices) {
+      const seenTargets = new Set();
+      for (const choice of scene.choices || []) {
+        if (!choice) continue;
         const target = getChoiceTarget(choice);
-        if (!target && !choice.effects) {
-          errors.push(`Choice in ${id} lacks goTo/effects.`);
+        const hasEffect = choice.effects && (Object.keys(choice.effects).length > 0);
+        if (!target && !hasEffect) {
+          errors.push(`Choice ${choice.id || "<no id>"} in ${id} has no goTo/next or effects`);
         }
         if (target) {
-          if (!db[target]) {
-            errors.push(`Choice from ${id} targets missing scene ${target}.`);
+          seenTargets.add(target);
+          if (!db[target] && !choice.allowMissingTarget) {
+            errors.push(`Choice ${choice.id || "<no id>"} in ${id} targets missing scene ${target}`);
           }
           if (target === id && !scene.allowSelfLoop) {
-            errors.push(`Choice in ${id} loops to itself without allowSelfLoop.`);
+            errors.push(`Choice ${choice.id || "<no id>"} in ${id} loops to itself`);
           }
         }
-        const flagsSet = (choice.effects && choice.effects.flagsSet) || [];
-        const flagsUnset = (choice.effects && choice.effects.flagsUnset) || [];
-        for (const flag of flagsSet) {
-          seenFlagsSet.set(flag, (seenFlagsSet.get(flag) || 0) + 1);
-        }
-        for (const flag of flagsUnset) {
-          seenFlagsUnset.set(flag, (seenFlagsUnset.get(flag) || 0) + 1);
-        }
-        if (flagsSet.length > 1) {
-          for (const [group, members] of Object.entries(MUTEX)) {
-            const count = flagsSet.filter((flag) => members.includes(flag)).length;
-            if (count > 1) {
-              errors.push(`Choice ${choice.id || choice.text} in ${id} sets multiple mutex flags (${group}).`);
-            }
-          }
+      }
+      if (!scene.isEnding) {
+        const enabledCount = (scene.choices || []).length;
+        if (id.includes("_hub_") && enabledCount < 2) {
+          warnings.push(`Hub ${id} has fewer than two choices`);
         }
       }
     }
 
-    const queue = [DEFAULT_STATE.sceneId];
-    const reachable = new Set(queue);
-    while (queue.length) {
-      const current = queue.shift();
+    const reachable = new Set();
+    const stack = ["neutral_act0_hub_identity"];
+    while (stack.length) {
+      const current = stack.pop();
+      if (reachable.has(current)) continue;
+      reachable.add(current);
       const scene = db[current];
-      if (!scene) continue;
+      if (!scene || scene.isEnding) continue;
       for (const choice of scene.choices || []) {
         const target = getChoiceTarget(choice);
-        if (target && !reachable.has(target)) {
-          reachable.add(target);
-          queue.push(target);
-        }
+        if (target && !reachable.has(target)) stack.push(target);
       }
     }
-
-    for (const id of allIds) {
-      if (!reachable.has(id) && !(db[id] && db[id].isEnding)) {
-        warnings.push(`Scene ${id} is unreachable from intro.`);
+    for (const id of ids) {
+      if (!reachable.has(id) && !db[id].isEnding) {
+        warnings.push(`Scene ${id} is unreachable`);
       }
-    }
-
-    for (const [flag, setCount] of seenFlagsSet.entries()) {
-      if (!seenFlagsUnset.has(flag)) continue;
     }
 
     return { errors, warnings };
   }
 
-  function randomWalkReport(db, startId, iterations = 1000, maxSteps = 200) {
+  function randomWalkCoverage(db, runs = 300, maxSteps = 120) {
     const visited = new Set();
-    const endingPaths = {};
-    let endingsReached = 0;
-    const rng = mulberry32(424242);
+    const endings = new Set();
+    let seed = 1337;
 
-    for (let run = 0; run < iterations; run += 1) {
-      const state = deepClone(DEFAULT_STATE);
-      state.sceneId = startId;
-      const path = [];
-
+    for (let i = 0; i < runs; i += 1) {
+      let current = "neutral_act0_hub_identity";
       for (let step = 0; step < maxSteps; step += 1) {
-        visited.add(state.sceneId);
-        const scene = db[state.sceneId];
+        const scene = db[current];
         if (!scene) break;
+        visited.add(current);
         if (scene.isEnding) {
-          endingsReached += 1;
-          if (!endingPaths[scene.id] || path.length < endingPaths[scene.id].length) {
-            endingPaths[scene.id] = path.slice();
-          }
+          endings.add(current);
           break;
         }
-        const candidates = (scene.choices || []).filter((choice) => choice && (getChoiceTarget(choice) || choice.effects));
-        const available = candidates.filter((choice) => meetsRequirement(state, choice.req));
-        if (available.length === 0) {
-          break;
-        }
-        const pick = available[Math.floor(rng() * available.length)];
-        path.push(`${scene.id}::${pick.id || pick.text}`);
-        applyCost(state, pick.cost);
-        applyEffects(state, pick.effects);
-        resolveSchedule(state);
-        ensureStats(state);
-        state.sceneId = getChoiceTarget(pick) ?? state.sceneId;
+        const choices = (scene.choices || []).filter((choice) => choice && getChoiceTarget(choice));
+        if (!choices.length) break;
+        seed = (seed + 31) >>> 0;
+        const r = randFromSeed(seed);
+        const choice = choices[Math.floor(r * choices.length)];
+        const target = getChoiceTarget(choice);
+        if (!target) break;
+        current = target;
       }
     }
 
-    const coverage = Math.round((visited.size / Object.keys(db).length) * 100);
     return {
-      coverage,
-      visitedCount: visited.size,
-      totalScenes: Object.keys(db).length,
-      endingsReached,
-      endingPaths
+      coverage: Math.round((visited.size / Object.keys(db).length) * 100),
+      visited: visited.size,
+      endings: Array.from(endings)
     };
   }
 
-  function runQAReports() {
-    const db = window.STORY_DATABASE;
-    if (!db) return;
-    const validation = validateStory(db);
-    const walks = randomWalkReport(db, DEFAULT_STATE.sceneId);
-    console.group("Consequence QA");
-    if (validation.errors.length) {
-      console.error("Validator errors:", validation.errors);
-    } else {
-      console.log("Validator: no blocking errors.");
-    }
-    if (validation.warnings.length) {
-      console.warn("Validator warnings:", validation.warnings);
-    }
-    console.log("Random walk coverage:", `${walks.coverage}%`);
-    console.log("Unique scenes visited:", walks.visitedCount, "/", walks.totalScenes);
-    console.log("Endings reached during walks:", walks.endingsReached);
-    console.table(
-      Object.entries(walks.endingPaths).map(([ending, path]) => ({ ending, steps: path.length }))
-    );
-    console.groupEnd();
+  function getEl(id) {
+    return document.getElementById(id);
   }
 
-  runQAReports();
+  class ConsequenceGame {
+    constructor() {
+      this.state = createInitialState();
+      this.db = STORY_DATABASE;
+      this.loadUIRefs();
+      this.bindControls();
+      const save = this.safeLoad();
+      if (save) {
+        this.state = save;
+        clampStats(this.state.stats);
+      }
+      this.renderScene(this.state.sceneId);
+    }
+
+    loadUIRefs() {
+      this.ui = {
+        story: getEl("scene-text"),
+        choices: getEl("choices"),
+        stats: getEl("stats"),
+        eventLog: getEl("event-log"),
+        persona: getEl("persona-grid"),
+        inventory: getEl("inventory-list"),
+        traumaBar: getEl("trauma-bar"),
+        traumaWarning: getEl("trauma-warning"),
+        dayhour: getEl("dayhour-indicator"),
+        worldTime: getEl("world-time"),
+        relationshipList: getEl("relationships-list"),
+        relationshipCount: getEl("relationship-count"),
+        decisionTree: getEl("decision-tree"),
+        flagDisplay: getEl("flag-display"),
+        stateHash: getEl("state-hash"),
+        characterName: getEl("char-name"),
+        characterBackground: getEl("char-background"),
+        popup: getEl("consequence-popup"),
+        popupText: getEl("consequence-text"),
+        popupOk: getEl("consequence-ok")
+      };
+    }
+
+    bindControls() {
+      const newBtn = getEl("new-game");
+      const contBtn = getEl("continue-game");
+      const saveBtn = getEl("save-game");
+      const loadBtn = getEl("load-game");
+      const exportBtn = getEl("export-game");
+      const fileInput = getEl("file-loader");
+      const toggleBackend = getEl("toggle-backend");
+
+      if (newBtn) newBtn.addEventListener("click", () => this.reset());
+      if (contBtn) contBtn.addEventListener("click", () => this.renderScene(this.state.sceneId));
+      if (saveBtn) saveBtn.addEventListener("click", () => this.safeSave());
+      if (loadBtn) loadBtn.addEventListener("click", () => this.promptLoad());
+      if (exportBtn) exportBtn.addEventListener("click", () => this.exportSave());
+      if (fileInput) fileInput.addEventListener("change", (event) => this.importSave(event));
+      if (toggleBackend) toggleBackend.addEventListener("click", () => {
+        const panel = getEl("backend-content");
+        if (!panel) return;
+        panel.classList.toggle("hidden");
+      });
+      if (this.ui.popupOk && this.ui.popup) {
+        this.ui.popupOk.addEventListener("click", () => {
+          this.ui.popup.classList.add("hidden");
+        });
+      }
+    }
+
+    reset() {
+      this.state = createInitialState();
+      this.safeSave();
+      this.renderScene(this.state.sceneId);
+    }
+
+    safeSave() {
+      try {
+        const snapshot = JSON.stringify(this.state);
+        window.localStorage.setItem(SAVE_KEY, snapshot);
+      } catch (err) {
+        console.warn("Save failed", err);
+      }
+    }
+
+    safeLoad() {
+      try {
+        const raw = window.localStorage.getItem(SAVE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (err) {
+        console.warn("Load failed", err);
+        return null;
+      }
+    }
+
+    promptLoad() {
+      const input = getEl("file-loader");
+      if (input) input.click();
+    }
+
+    importSave(event) {
+      const files = event && event.target && event.target.files;
+      if (!files || !files.length) return;
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          this.state = parsed;
+          clampStats(this.state.stats);
+          this.renderScene(this.state.sceneId);
+        } catch (err) {
+          console.warn("Import failed", err);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    exportSave() {
+      try {
+        const data = JSON.stringify(this.state, null, 2);
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${WORKING_TITLE.toLowerCase()}_save.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.warn("Export failed", err);
+      }
+    }
+
+    showPopup(text) {
+      if (!this.ui.popup || !this.ui.popupText) return;
+      this.ui.popupText.textContent = text;
+      this.ui.popup.classList.remove("hidden");
+    }
+
+    renderScene(sceneId) {
+      const targetId = normalizeSceneId(sceneId) || this.state.sceneId || "neutral_act0_hub_identity";
+      const scene = this.db[targetId];
+      if (!scene) {
+        console.warn("Missing scene", targetId);
+        return;
+      }
+
+      if (this.state.sceneId !== targetId) {
+        if (typeof scene.timeDelta === "number") {
+          this.state.time += scene.timeDelta;
+        }
+        if (targetId.includes("_hub_") && this.state.sceneId !== targetId) {
+          this.state.time += 1;
+        }
+      }
+
+      this.state.sceneId = targetId;
+      advanceSchedule(this.state);
+      this.renderStory(scene);
+      this.renderChoices(scene);
+      this.renderStats();
+      this.renderRelationships();
+      this.renderFlags();
+      this.renderDecisionTrace();
+      this.safeSave();
+    }
+
+    renderStory(scene) {
+      if (this.ui.story) {
+        const name = this.state.identity && this.state.identity.name ? this.state.identity.name : "You";
+        const background = this.state.identity && this.state.identity.background ? this.state.identity.background : "survivor";
+        const text = scene.text.replace(/\bAlex\b/g, () => {
+          if (this.state.flags.alex_dead) return "Alex's memory";
+          return "Alex";
+        });
+        this.ui.story.innerHTML = text + `<p class="persona-flavor">${name} — ${background}</p>`;
+      }
+    }
+
+    renderChoices(scene) {
+      if (!this.ui.choices) return;
+      this.ui.choices.innerHTML = "";
+      const fragment = document.createDocumentFragment();
+      const available = [];
+
+      for (const choice of scene.choices || []) {
+        if (!choice) continue;
+        const requirement = evaluateRequirements(this.state, choice);
+        const hasTarget = !!getChoiceTarget(choice) || (choice.effects && Object.keys(choice.effects).length > 0);
+        if (!hasTarget) continue;
+        available.push({ choice, requirement });
+      }
+
+      if (!available.length) {
+        available.push({ choice: failForwardChoice(this.state), requirement: { ok: true } });
+      }
+
+      for (const { choice, requirement } of available) {
+        const button = document.createElement("button");
+        button.className = "choice";
+        if (choice.tags && choice.tags.length) {
+          button.dataset.type = choice.tags[0];
+        }
+        button.textContent = choice.text;
+        if (!requirement.ok) {
+          button.disabled = true;
+          button.classList.add("disabled");
+          button.title = requirement.reason || "Unavailable";
+        } else {
+          button.addEventListener("click", () => this.makeChoice(choice));
+        }
+        fragment.appendChild(button);
+      }
+      this.ui.choices.appendChild(fragment);
+    }
+
+    renderStats() {
+      const stats = this.state.stats;
+      const day = Math.floor(this.state.time / 24);
+      const hour = this.state.time % 24;
+      if (this.ui.stats) {
+        this.ui.stats.innerHTML = `
+          <div class="stats-group">
+            <span class="stat-pill">Health ${stats.health}</span>
+            <span class="stat-pill">Stamina ${stats.stamina}</span>
+            <span class="stat-pill">Stress ${stats.stress}</span>
+            <span class="stat-pill">Morality ${stats.morality}</span>
+            <span class="stat-pill">Trauma ${stats.trauma}</span>
+          </div>`;
+      }
+      if (this.ui.dayhour) {
+        this.ui.dayhour.textContent = `Day ${day} · ${hour.toString().padStart(2, "0")}:00`;
+      }
+      if (this.ui.worldTime) {
+        this.ui.worldTime.textContent = `T+${this.state.time}h`;
+      }
+      if (this.ui.characterName) {
+        this.ui.characterName.textContent = this.state.identity.name || "—";
+      }
+      if (this.ui.characterBackground) {
+        this.ui.characterBackground.textContent = this.state.identity.background || "—";
+      }
+      if (this.ui.inventory) {
+        this.ui.inventory.innerHTML = "";
+        if (!this.state.inventory.length) {
+          const span = document.createElement("span");
+          span.className = "empty-inventory";
+          span.textContent = "(empty)";
+          this.ui.inventory.appendChild(span);
+        } else {
+          for (const item of this.state.inventory) {
+            const chip = document.createElement("span");
+            chip.className = "inventory-chip";
+            chip.textContent = item;
+            this.ui.inventory.appendChild(chip);
+          }
+        }
+      }
+      if (this.ui.traumaBar) {
+        const pct = Math.min(100, Math.round((stats.trauma / STATS_MIN_MAX.trauma[1]) * 100));
+        this.ui.traumaBar.style.width = `${pct}%`;
+      }
+      if (this.ui.traumaWarning) {
+        if (stats.trauma < 40) {
+          this.ui.traumaWarning.textContent = "Stable";
+          this.ui.traumaWarning.className = "trauma-warning moderate";
+        } else if (stats.trauma < 80) {
+          this.ui.traumaWarning.textContent = "Strained";
+          this.ui.traumaWarning.className = "trauma-warning high";
+        } else {
+          this.ui.traumaWarning.textContent = "Critical";
+          this.ui.traumaWarning.className = "trauma-warning critical";
+        }
+      }
+      if (this.ui.persona) {
+        this.ui.persona.innerHTML = "";
+        for (const [key, value] of Object.entries(this.state.persona)) {
+          const row = document.createElement("div");
+          row.className = "persona-point";
+          const label = document.createElement("span");
+          label.className = "persona-name";
+          label.textContent = ROUTE_TITLES[key] || key;
+          const val = document.createElement("span");
+          val.className = "persona-value";
+          val.textContent = value.toString();
+          row.appendChild(label);
+          row.appendChild(val);
+          this.ui.persona.appendChild(row);
+        }
+      }
+      if (this.state.events && this.ui.eventLog) {
+        this.ui.eventLog.innerHTML = "";
+        for (const event of this.state.events.slice(0, 10)) {
+          const entry = document.createElement("div");
+          entry.className = "event-log-entry";
+          entry.textContent = `${event.text}`;
+          this.ui.eventLog.appendChild(entry);
+        }
+      }
+    }
+
+    renderRelationships() {
+      if (!this.ui.relationshipList) return;
+      this.ui.relationshipList.innerHTML = "";
+      const entries = Object.entries(this.state.relationships || {});
+      for (const [name, value] of entries) {
+        const row = document.createElement("div");
+        row.className = "relationship-item";
+        const label = document.createElement("span");
+        label.className = "relationship-name";
+        label.textContent = name;
+        const badge = document.createElement("span");
+        badge.className = "relationship-status relationship-trust-neutral";
+        badge.textContent = value.toString();
+        if (value >= 20) badge.className = "relationship-status relationship-trust-positive";
+        if (value <= -20) badge.className = "relationship-status relationship-trust-negative";
+        row.appendChild(label);
+        row.appendChild(badge);
+        this.ui.relationshipList.appendChild(row);
+      }
+      if (this.ui.relationshipCount) {
+        this.ui.relationshipCount.textContent = `${entries.length} contacts`;
+      }
+    }
+
+    renderFlags() {
+      if (!this.ui.flagDisplay) return;
+      this.ui.flagDisplay.innerHTML = "";
+      for (const [flag, value] of Object.entries(this.state.flags || {})) {
+        if (!value) continue;
+        const flagEl = document.createElement("div");
+        flagEl.className = "flag-item";
+        flagEl.textContent = flag;
+        this.ui.flagDisplay.appendChild(flagEl);
+      }
+      if (this.ui.stateHash) {
+        const summary = `${this.state.sceneId}|${Object.keys(this.state.flags).sort().join(",")}|${this.state.time}`;
+        let hash = 0;
+        for (let i = 0; i < summary.length; i += 1) {
+          hash = (hash << 5) - hash + summary.charCodeAt(i);
+          hash |= 0;
+        }
+        this.ui.stateHash.textContent = `#${(hash >>> 0).toString(16)}`;
+      }
+    }
+
+    renderDecisionTrace() {
+      if (!this.ui.decisionTree) return;
+      this.ui.decisionTree.innerHTML = "";
+      for (const entry of this.state.decisionTrace.slice(-12)) {
+        const node = document.createElement("div");
+        node.className = "decision-node";
+        node.textContent = entry;
+        this.ui.decisionTree.appendChild(node);
+      }
+    }
+
+    makeChoice(choice) {
+      const nextState = clone(this.state);
+      applyChoiceCost(nextState, choice);
+      applyChoiceEffects(nextState, choice.effects || {});
+      const popupNeeded = shouldPopup(choice.effects);
+      const popupMessage = (choice && choice.popupText) || (choice.effects && choice.effects.pushEvent) || "They will remember that.";
+      const goTo = getChoiceTarget(choice) || nextState.sceneId;
+      nextState.sceneId = goTo;
+      nextState.decisionTrace = nextState.decisionTrace || [];
+      nextState.decisionTrace.push(`${this.state.sceneId}::${choice.id || choice.text}`);
+      this.state = nextState;
+      clampStats(this.state.stats);
+      if (popupNeeded) {
+        this.showPopup(popupMessage);
+      }
+      this.renderScene(goTo);
+    }
+  }
+
+  window.STORY_DATABASE = window.STORY_DATABASE || {};
+  Object.assign(window.STORY_DATABASE, STORY_DATABASE);
+  window.ConsequenceGame = ConsequenceGame;
+
+  const validation = validateStoryDatabase(window.STORY_DATABASE);
+  if (validation.errors.length) {
+    console.error("Validator errors:", validation.errors);
+  }
+  if (validation.warnings.length) {
+    console.warn("Validator warnings:", validation.warnings);
+  }
+  const coverage = randomWalkCoverage(window.STORY_DATABASE);
+  console.log("Random walk coverage:", coverage);
 
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (typeof window.ConsequenceGame === "function" && window.STORY_DATABASE) {
-    window.game = new window.ConsequenceGame();
-  }
+  window.game = new window.ConsequenceGame();
 });
