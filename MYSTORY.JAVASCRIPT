@@ -24,7 +24,7 @@
   };
 
   const INITIAL_STATE = () => ({
-    sceneId: "neutral_act1_hub_apartment",
+    sceneId: "intro",
     time: 0,
     stats: { health: 100, stamina: 15, stress: 0, morality: 0 },
     inventory: [],
@@ -96,6 +96,38 @@
   const TAGS_ALLOWED = new Set(["moral", "combat", "social", "stealth", "leader", "survival"]);
 
   const STORY_DATABASE = {
+    intro: {
+      id: "intro",
+      text: "Siren wails leak through cracked windows as the stairwell shakes. Eyes along the hallway watch you decide how these firs"
+        + "t minutes go.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "steady_floor",
+          text: "Steady the apartment floor (+1h)",
+          effects: {
+            time: +1,
+            stats: { stress: +1 },
+            relationships: { Volunteers: +4 }
+          },
+          goTo: "neutral_act1_hub_apartment",
+          tags: ["leader", "social"]
+        },
+        {
+          id: "scout_fireescape",
+          text: "Scout the fire escape (−1 STA, +1h)",
+          cost: { stamina: 1 },
+          effects: {
+            time: +1,
+            flagsSet: ["scouted_fireescape"],
+            stats: { stress: +2 }
+          },
+          goTo: "neutral_act1_hub_apartment",
+          tags: ["stealth", "survival"]
+        }
+      ]
+    },
+
     neutral_act1_hub_apartment: {
       id: "neutral_act1_hub_apartment",
       text: "Rain needles cracked glass. The stairwell reeks of bleach and rot. Survivors crowd the hall waiting for you to call it.",
@@ -287,7 +319,8 @@
           text: "Descend toward the convoy lights",
           effects: {
             flagsSet: ["plan_convoy"],
-            stats: { stress: +1 }
+            stats: { stress: +1 },
+            time: +1
           },
           goTo: "neutral_act2_hub_main",
           tags: ["survival"]
@@ -597,7 +630,211 @@
 
     neutral_act3_bridge_dawn: {
       id: "neutral_act3_bridge_dawn",
-      text: "Sunrise paints the skyline blood-orange. Route leaders demand proof before committing to your endgame.",
+      text: "Sunrise paints the skyline blood-orange while factions crowd the roof demanding direction. You have hours to stage a unite"
+        + "d push before curfew resets.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "summon_council",
+          text: "Summon every route to council (+1h)",
+          effects: { time: +1 },
+          goTo: "neutral_act4_hub_main",
+          tags: ["leader"]
+        },
+        {
+          id: "double_back",
+          text: "Double back to tighten loose ends",
+          goTo: "neutral_act3_hub_main",
+          effects: { stats: { stress: +1 } },
+          tags: ["survival"]
+        }
+      ]
+    },
+
+    neutral_act4_hub_main: {
+      id: "neutral_act4_hub_main",
+      text: "The stadium concourse becomes a war room. Convoy radios, raider scouts, and civic runners wait for assignments that will f"
+        + "inalize your endgame.",
+      tags: ["leader"],
+      choices: [
+        {
+          id: "marshal_evacuation",
+          text: "Marshal the protector evacuation (+1h)",
+          effects: { time: +1 },
+          goTo: "good_act4_setpiece_evacuation",
+          tags: ["leader", "survival"]
+        },
+        {
+          id: "tighten_crackdown",
+          text: "Tighten the warlord crackdown (−1 Morality)",
+          goTo: "ant_act4_setpiece_crackdown",
+          effects: { stats: { morality: -1, stress: +1 } },
+          tags: ["combat", "moral"]
+        },
+        {
+          id: "broker_doublecross",
+          text: "Broker a fixer double-cross (+1h)",
+          effects: { time: +1 },
+          goTo: "man_act4_setpiece_doublecross",
+          tags: ["social"]
+        },
+        {
+          id: "audit_cache",
+          text: "Audit the shared supply cache",
+          goTo: "neutral_act4_side_supplycache",
+          effects: { stats: { stress: -1 } },
+          tags: ["survival"]
+        },
+        {
+          id: "set_finale",
+          text: "Set the final push",
+          goTo: "neutral_act4_bridge_finale",
+          effects: { stats: { stress: +2 }, time: +1 },
+          tags: ["leader"]
+        }
+      ]
+    },
+
+    neutral_act4_side_supplycache: {
+      id: "neutral_act4_side_supplycache",
+      text: "Airdropped crates dangle in the stadium rafters. Volunteers argue over whether to stash or share the precious ration kits"
+        + ".",
+      tags: ["survival"],
+      choices: [
+        {
+          id: "share_crates",
+          text: "Share the crates with havens",
+          effects: {
+            inventoryAdd: ["ration_kit"],
+            relationships: { Stadium: +4, Convoy: +4 },
+            stats: { morality: +1 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["moral", "leader"]
+        },
+        {
+          id: "stash_crates",
+          text: "Stash half for later (−2 Morality)",
+          effects: {
+            flagsSet: ["hidden_cache"],
+            stats: { morality: -2, stress: -1 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["stealth"]
+        },
+        {
+          id: "fireescape_shortcut",
+          text: "Use the scouted fire escape to reroute",
+          req: { flags: ["scouted_fireescape"] },
+          effects: {
+            inventoryAdd: ["flare"],
+            relationships: { FreeCrews: +5 },
+            stats: { stress: -1 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["stealth", "social"]
+        }
+      ]
+    },
+
+    good_act4_setpiece_evacuation: {
+      id: "good_act4_setpiece_evacuation",
+      text: "Wind tears through the open concourse as civilians queue for rooftop lifts. Militia look to you to keep panic from sprea"
+        + "ding.",
+      tags: ["leader", "survival"],
+      choices: [
+        {
+          id: "split_columns",
+          text: "Split columns and run a calm cadence",
+          effects: {
+            flagsSet: ["evacuation_streamlined"],
+            stats: { stress: -2, morality: +2 },
+            relationships: { Volunteers: +5 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["leader", "moral"]
+        },
+        {
+          id: "throw_everybody",
+          text: "Force everyone through fast (−2 STA)",
+          cost: { stamina: 2 },
+          effects: {
+            stats: { stress: +3 },
+            flagsSet: ["evacuation_forced"],
+            relationships: { Stadium: +3 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["combat"]
+        }
+      ]
+    },
+
+    ant_act4_setpiece_crackdown: {
+      id: "ant_act4_setpiece_crackdown",
+      text: "Raiders choke the interstate ramps with burning buses. Refugees kneel while your lieutenants await the order to make an e"
+        + "xample.",
+      tags: ["combat", "leader"],
+      choices: [
+        {
+          id: "seal_perimeter",
+          text: "Seal the perimeter and tax passage",
+          effects: {
+            flagsSet: ["curfew_imposed"],
+            stats: { stress: +2 },
+            relationships: { Raiders: +6, Convoy: -4 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["combat"]
+        },
+        {
+          id: "public_punishment",
+          text: "Stage a public punishment (Morality ≤ -3)",
+          req: { stats: { morality: { lte: -3 } } },
+          effects: {
+            flagsSet: ["terror_campaign"],
+            stats: { stress: -2 },
+            relationships: { Volunteers: -6, Raiders: +4 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["moral", "combat"]
+        }
+      ]
+    },
+
+    man_act4_setpiece_doublecross: {
+      id: "man_act4_setpiece_doublecross",
+      text: "Convoy envoys whisper over stolen schematics while raider captains hover nearby. One wrong promise and every alliance col"
+        + "lapses.",
+      tags: ["social"],
+      choices: [
+        {
+          id: "promise_passage",
+          text: "Promise safe passage for leverage",
+          effects: {
+            flagsSet: ["deal_safe_passage"],
+            relationships: { Convoy: +6, Raiders: -3 },
+            stats: { stress: +1 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["social"]
+        },
+        {
+          id: "leak_positions",
+          text: "Leak rival positions for favors",
+          effects: {
+            flagsSet: ["intel_bartered"],
+            relationships: { FreeCrews: +5, Stadium: -3 }
+          },
+          goTo: "neutral_act4_hub_main",
+          tags: ["stealth", "social"]
+        }
+      ]
+    },
+
+    neutral_act4_bridge_finale: {
+      id: "neutral_act4_bridge_finale",
+      text: "Night sirens spool up again. Every faction lead waits for you to call the final gambit and cash the proofs you've earned"
+        + ".",
       tags: ["leader"],
       choices: [
         {
@@ -622,10 +859,10 @@
           tags: ["social"]
         },
         {
-          id: "regroup",
-          text: "Regroup and reassess",
-          goTo: "neutral_act3_hub_main",
-          effects: { stats: { stress: +1 } },
+          id: "stand_down",
+          text: "Stand down and buy another hour",
+          goTo: "neutral_act4_hub_main",
+          effects: { stats: { stress: +2 } },
           tags: ["survival"]
         }
       ]
@@ -811,7 +1048,7 @@
     const warnings = [];
     const idPattern = /^(good|ant|man|neutral)_act[1-5]_(hub|setpiece|side|bridge|ending)_[a-z0-9_]+$/;
     const reachable = new Set();
-    const queue = ["neutral_act1_hub_apartment"];
+    const queue = ["intro"];
 
     const allIds = Object.keys(story);
 
