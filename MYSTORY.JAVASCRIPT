@@ -275,49 +275,80 @@
     }
 
     bindControls() {
-      document.getElementById("new-game")?.addEventListener("click", () => {
-        this.reset();
-      });
-      document.getElementById("continue-game")?.addEventListener("click", () => {
-        this.load();
-        this.renderScene(this.state.sceneId);
-      });
-      document.getElementById("save-game")?.addEventListener("click", () => {
-        this.save();
-      });
-      document.getElementById("load-game")?.addEventListener("click", () => {
-        const file = document.getElementById("file-loader");
-        file?.click();
-      });
-      document.getElementById("export-game")?.addEventListener("click", () => {
-        this.export();
-      });
-      document.getElementById("file-loader")?.addEventListener("change", (ev) => {
-        const file = ev.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const data = JSON.parse(e.target.result);
-            this.state = { ...deepClone(DEFAULT_STATE), ...data };
-            this.random = mulberry32(this.state.rngSeed || 1337);
-            this.renderScene(this.state.sceneId);
-          } catch (err) {
-            console.warn("Failed to load save", err);
-          }
-        };
-        reader.readAsText(file);
-      });
-      document.getElementById("toggle-backend")?.addEventListener("click", () => {
-        const backend = document.getElementById("backend-content");
-        if (!backend) return;
-        backend.classList.toggle("hidden");
-        const expanded = backend.classList.contains("hidden") ? "false" : "true";
-        document.getElementById("toggle-backend").setAttribute("aria-expanded", expanded);
-      });
-      this.dom.consequenceOk?.addEventListener("click", () => {
-        this.hidePopup();
-      });
+      const newGameBtn = document.getElementById("new-game");
+      if (newGameBtn) {
+        newGameBtn.addEventListener("click", () => {
+          this.reset();
+        });
+      }
+
+      const continueBtn = document.getElementById("continue-game");
+      if (continueBtn) {
+        continueBtn.addEventListener("click", () => {
+          this.load();
+          this.renderScene(this.state.sceneId);
+        });
+      }
+
+      const saveBtn = document.getElementById("save-game");
+      if (saveBtn) {
+        saveBtn.addEventListener("click", () => {
+          this.save();
+        });
+      }
+
+      const loadBtn = document.getElementById("load-game");
+      if (loadBtn) {
+        loadBtn.addEventListener("click", () => {
+          const fileInput = document.getElementById("file-loader");
+          if (fileInput) fileInput.click();
+        });
+      }
+
+      const exportBtn = document.getElementById("export-game");
+      if (exportBtn) {
+        exportBtn.addEventListener("click", () => {
+          this.export();
+        });
+      }
+
+      const fileLoader = document.getElementById("file-loader");
+      if (fileLoader) {
+        fileLoader.addEventListener("change", (ev) => {
+          const files = ev.target && ev.target.files;
+          const file = files && files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const data = JSON.parse(e.target.result);
+              this.state = { ...deepClone(DEFAULT_STATE), ...data };
+              this.random = mulberry32(this.state.rngSeed || 1337);
+              this.renderScene(this.state.sceneId);
+            } catch (err) {
+              console.warn("Failed to load save", err);
+            }
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      const toggleBtn = document.getElementById("toggle-backend");
+      if (toggleBtn) {
+        toggleBtn.addEventListener("click", () => {
+          const backend = document.getElementById("backend-content");
+          if (!backend) return;
+          backend.classList.toggle("hidden");
+          const expanded = backend.classList.contains("hidden") ? "false" : "true";
+          toggleBtn.setAttribute("aria-expanded", expanded);
+        });
+      }
+
+      if (this.dom.consequenceOk) {
+        this.dom.consequenceOk.addEventListener("click", () => {
+          this.hidePopup();
+        });
+      }
     }
 
     reset() {
@@ -388,7 +419,7 @@
       resolveSchedule(nextState);
       ensureStats(nextState);
 
-      if (choice.effects?.pushEvent) {
+      if (choice.effects && choice.effects.pushEvent) {
         this.pushEvent(choice.effects.pushEvent, "consequence");
       }
 
@@ -466,7 +497,7 @@
         p.textContent = line;
         this.dom.sceneText.appendChild(p);
       }
-      if (scene?.personaFlavor) {
+      if (scene && scene.personaFlavor) {
         const flavor = document.createElement("div");
         flavor.className = "persona-flavor";
         for (const [key, value] of Object.entries(scene.personaFlavor)) {
@@ -488,7 +519,7 @@
         const button = document.createElement("button");
         button.className = "choice";
         button.type = "button";
-        button.dataset.type = choice.tags?.[0] || choice.type || "";
+        button.dataset.type = (choice.tags && choice.tags[0]) || choice.type || "";
         button.innerHTML = `<span class="choice-text">${choice.text}</span>`;
 
         const met = meetsRequirement(this.state, choice.req);
