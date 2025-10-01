@@ -115,6 +115,21 @@
         if (typeof rule.lte === "number" && value > rule.lte) return false;
       }
     }
+    if (Array.isArray(req.items)) {
+      for (const it of req.items) {
+        if (!state.inventory.includes(it)) return false;
+      }
+    }
+    if (Array.isArray(req.flags)) {
+      for (const f of req.flags) {
+        if (!state.flags[f]) return false;
+      }
+    }
+    if (Array.isArray(req.notFlags)) {
+      for (const nf of req.notFlags) {
+        if (state.flags[nf]) return false;
+      }
+    }
     return true;
   }
 
@@ -228,7 +243,28 @@
         this.pushEvent(choice.effects.pushEvent, "consequence");
       }
 
+      if (choice.popupText) {
+        this.showPopup(choice.popupText);
+      }
       const goTo = getChoiceTarget(choice) ?? nextState.sceneId;
+      // Advance time by scene.timeDelta (default 1 if scene changed)
+      const nextScene = window.STORY_DATABASE[goTo];
+      if (nextScene && typeof nextScene.timeDelta === 'number') {
+        nextState.time += Math.max(0, nextScene.timeDelta);
+      } else if (goTo !== this.state.sceneId) {
+        nextState.time += 1;
+      }
+      // Simple schedule ticking (no external effects)
+      if (Array.isArray(nextState.schedule) && nextState.schedule.length) {
+        for (const job of nextState.schedule) {
+          if (typeof job.steps === 'number' && job.steps > 0) job.steps -= 1;
+          if (job.steps === 0 && typeof job.apply === 'function') {
+            try { job.apply(nextState); } catch (e) {}
+            job.steps = -1;
+          }
+        }
+        nextState.schedule = nextState.schedule.filter(j => j.steps !== -1);
+      }
       nextState.sceneId = goTo;
       nextState.decisionTrace.push({ choice: choice.id, scene: this.state.sceneId, time: this.state.time });
       this.state = nextState;
@@ -486,17 +522,18 @@
    {
     "id": "i_ignore",
     "text": "Ignore. Survival means hard choices.",
-    "goTo": "intro",
+    "goTo": "alex_screams",
     "effects": {
      "stats": {
-      "morality": -5,
-      "stress": -3
+      "morality": -8,
+      "stress": -2
      },
      "persona": {
-      "psycho": 1
+      "psycho": 2
      },
      "flagsSet": [
-      "ignored_alex"
+      "ignored_alex",
+      "alex_dead"
      ],
      "pushEvent": "Step away. Don't care."
     },
@@ -563,13 +600,14 @@
    {
     "id": "pk_test",
     "text": "Wait—test if they survive alone",
-    "goTo": "intro",
+    "goTo": "stairwell_test",
     "effects": {
      "stats": {
-      "stress": -2
+      "stress": -1
      },
      "persona": {
-      "psycho": 1
+      "psycho": 1,
+      "chill": 1
      },
      "flagsSet": [
       "tested_solo"
@@ -583,7 +621,7 @@
    {
     "id": "pk_abandon",
     "text": "Too risky—walk away",
-    "goTo": "intro",
+    "goTo": "alex_dies_now",
     "effects": {
      "stats": {
       "morality": -6,
@@ -593,7 +631,8 @@
       "psycho": 2
      },
      "flagsSet": [
-      "alex_dead_watched"
+      "alex_dead_watched",
+      "alex_dead"
      ],
      "pushEvent": "Step back. Hear scream. Then silence."
     },
@@ -991,7 +1030,7 @@
    {
     "id": "ah_no",
     "text": "No—stay here, safer",
-    "goTo": "intro",
+    "goTo": "fortify_home",
     "effects": {
      "stats": {
       "stress": 1
@@ -1041,7 +1080,7 @@
    {
     "id": "jd_turn_back",
     "text": "Turn back—too dangerous",
-    "goTo": "intro",
+    "goTo": "retreat_blockade",
     "effects": {
      "stats": {
       "stress": 2
@@ -1144,7 +1183,7 @@
    {
     "id": "sc_supplies",
     "text": "Take supplies, leave her",
-    "goTo": "intro",
+    "goTo": "leave_sarah",
     "effects": {
      "stats": {
       "morality": -3
@@ -1220,7 +1259,7 @@
    {
     "id": "hs_no",
     "text": "No—stay independent",
-    "goTo": "intro",
+    "goTo": "independent_route",
     "effects": {
      "stats": {
       "stress": 1
@@ -1373,7 +1412,7 @@
    {
     "id": "ss_no",
     "text": "No—stay defensive",
-    "goTo": "intro",
+    "goTo": "defensive_preparations",
     "effects": {
      "stats": {
       "stress": -1
@@ -1473,7 +1512,7 @@
    {
     "id": "sp_refuse",
     "text": "I can't do this",
-    "goTo": "intro",
+    "goTo": "refusal_consequence",
     "effects": {
      "stats": {
       "stress": -2
@@ -1808,10 +1847,615 @@
   "tags": [
    "ending"
   ]
+ },
+ "alex_screams": {
+  "id": "alex_screams",
+  "text": "You stand frozen as Alex's pounding turns to pleading, then a wet choking silence. The stairwell erupts—tearing, boots, and bone. Your door holds. For now. The quiet after tastes like metal. The building knows what you did.",
+  "choices": [
+   {
+    "id": "as_bar",
+    "text": "Barricade alone and shut the world out",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "stress": -2, "morality": -2 },
+     "persona": { "sociopath": 1 },
+     "flagsSet": [ "route_sociopath" ],
+     "pushEvent": "You add furniture to the door and push until your arms shake."
+    },
+    "tags": [ "psycho" ]
+   },
+   {
+    "id": "as_loot",
+    "text": "Loot 3B while it's quiet",
+    "goTo": "loot_3B",
+    "effects": {
+     "stats": { "morality": -3, "stress": -1 },
+     "persona": { "killer": 1, "fixer": 1 },
+     "flagsSet": [ "proof_creep_keys" ],
+     "pushEvent": "You pocket their spare keys and step into 3B."
+    },
+    "tags": [ "fixer" ]
+   },
+   {
+    "id": "as_signal",
+    "text": "Fire your flare to draw infected away (from the building)",
+    "goTo": "signal_mistake",
+    "effects": {
+     "stats": { "stress": 2, "stamina": -1 },
+     "persona": { "protector": 1 },
+     "inventoryRemove": [ "flare" ],
+     "flagsSet": [ "wall_breached" ],
+     "pushEvent": "The flare screams into the sky. So do they."
+    },
+    "tags": [ "protector" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "stairwell_test": {
+  "id": "stairwell_test",
+  "text": "You wait, counting breaths. The infected close in. Alex fights—desperate, clumsy. You could still act. Or not.",
+  "choices": [
+   {
+    "id": "st_pull",
+    "text": "Open at the last second—drag Alex inside",
+    "goTo": "saved_trust",
+    "effects": {
+     "stats": { "health": -3, "stress": 3, "morality": 1 },
+     "persona": { "protector": 1, "chill": 1 },
+     "relationships": { "Alex": 4 },
+     "flagsSet": [ "alex_alive", "verified" ],
+     "pushEvent": "You yank them through and take a rake of nails to your arm."
+    },
+    "tags": [ "protector" ]
+   },
+   {
+    "id": "st_trip",
+    "text": "Trip Alex to buy yourself time",
+    "goTo": "alex_crippled",
+    "effects": {
+     "stats": { "morality": -6, "stress": -2, "health": 0 },
+     "persona": { "psycho": 3, "killer": 1 },
+     "relationships": { "Alex": -12 },
+     "flagsSet": [ "alex_alive", "alex_abused", "route_sociopath" ],
+     "pushEvent": "Your foot scythes out. Alex crumples. The horde surges."
+    },
+    "tags": [ "psycho" ]
+   },
+   {
+    "id": "st_leave",
+    "text": "Close your eyes and walk away",
+    "goTo": "alex_dies_now",
+    "effects": {
+     "stats": { "morality": -5, "stress": -1 },
+     "persona": { "psycho": 2 },
+     "flagsSet": [ "alex_dead", "alex_dead_watched" ],
+     "pushEvent": "You become a ghost in your own home."
+    },
+    "tags": [ "psycho" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "alex_dies_now": {
+  "id": "alex_dies_now",
+  "text": "There's no more knocking. Only the building's breath and the drip under your door. Alex of 3B is part of the city again.",
+  "choices": [
+   {
+    "id": "adn_takeknife",
+    "text": "Search 3B for Marcus's knife and supplies",
+    "goTo": "loot_3B",
+    "effects": {
+     "stats": { "morality": -2, "stress": -1 },
+     "inventoryAdd": [ "marcus_knife" ],
+     "flagsSet": [ "alex_dead", "proof_creep_silence" ],
+     "pushEvent": "You find a wrapped knife and a note with your name crossed out."
+    },
+    "tags": [ "psycho" ]
+   },
+   {
+    "id": "adn_silent",
+    "text": "Sit with the silence and plan alone",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "stress": -2 },
+     "persona": { "chill": 1 },
+     "flagsSet": [ "ignored_grief" ],
+     "pushEvent": "You count resources. There's only you now."
+    },
+    "tags": [ "chill" ]
+   },
+   {
+    "id": "adn_signal",
+    "text": "Use the flare to pull the horde off the stairwell",
+    "goTo": "signal_mistake",
+    "effects": {
+     "stats": { "stress": 2 },
+     "inventoryRemove": [ "flare" ],
+     "flagsSet": [ "wall_breached" ],
+     "pushEvent": "The bright arc paints hungry faces red."
+    },
+    "tags": [ "protector" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "alex_crippled": {
+  "id": "alex_crippled",
+  "text": "You slam the door after using Alex as a wedge. Their screams cut short. Later: a crawl, a smear, a fist. Alex didn't die—just broke. They beg through the doorframe, voice shredded: \"Why?\"",
+  "choices": [
+   {
+    "id": "ac_lie",
+    "text": "Lie: \"It was an accident.\"",
+    "goTo": "saved_trust",
+    "effects": {
+     "persona": { "sociopath": 1, "rude": 1 },
+     "relationships": { "Alex": -6 },
+     "flagsSet": [ "alex_controlled" ],
+     "pushEvent": "They swallow it—because they have to."
+    },
+    "tags": [ "psycho" ]
+   },
+   {
+    "id": "ac_dominate",
+    "text": "Dominate: \"You live because of me.\"",
+    "goTo": "saved_trust",
+    "effects": {
+     "stats": { "morality": -3 },
+     "persona": { "killer": 1, "sociopath": 2 },
+     "relationships": { "Alex": -10 },
+     "flagsSet": [ "proof_sociopath_dominion" ],
+     "pushEvent": "A new kind of silence grows between you."
+    },
+    "tags": [ "psycho" ]
+   },
+   {
+    "id": "ac_bandage",
+    "text": "Open up and bandage them, own the harm",
+    "goTo": "saved_trust",
+    "effects": {
+     "stats": { "morality": 2, "stress": 2, "health": -2 },
+     "persona": { "protector": 1, "nice": 1 },
+     "relationships": { "Alex": 3 },
+     "flagsSet": [ "alex_alive" ],
+     "pushEvent": "You lift them inside and face what you did."
+    },
+    "tags": [ "protector" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "loot_3B": {
+  "id": "loot_3B",
+  "text": "3B is a cut-open life: tools, comic stacks, a photo of two siblings on a roof. You move like a thief in daylight.",
+  "choices": [
+   {
+    "id": "l3b_keys",
+    "text": "Take their master keys and toolkit",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "inventoryAdd": [ "3B_keys", "multitool" ],
+     "persona": { "fixer": 2 },
+     "flagsSet": [ "proof_creep_keys" ],
+     "pushEvent": "Keys jingle like guilt."
+    },
+    "tags": [ "fixer" ]
+   },
+   {
+    "id": "l3b_watch",
+    "text": "Pocket the gold watch (pawn later)",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "inventoryAdd": [ "gold_watch" ],
+     "stats": { "morality": -1 },
+     "flagsSet": [ "proof_creep_watch" ],
+     "pushEvent": "Time has a price now."
+    },
+    "tags": [ "psycho" ]
+   },
+   {
+    "id": "l3b_note",
+    "text": "Leave a note for whoever survives you",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "morality": 2, "stress": -1 },
+     "persona": { "nice": 1 },
+     "flagsSet": [ "proof_creep_silence" ],
+     "pushEvent": "You set the pen down and feel almost human."
+    },
+    "tags": [ "nice" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "signal_mistake": {
+  "id": "signal_mistake",
+  "text": "The flare buys the building minutes—and paints an arrow to you. The horde swells like a tide turning.",
+  "choices": [
+   {
+    "id": "sm_hide",
+    "text": "Hide and let them pass the stairwell",
+    "goTo": "retreat_blockade",
+    "effects": {
+     "stats": { "stress": 3 },
+     "flagsSet": [ "bloom_exposed" ],
+     "pushEvent": "Footsteps. Sniffing. Then the wave rolls on—mostly."
+    },
+    "tags": [ "chill" ]
+   },
+   {
+    "id": "sm_fight",
+    "text": "Ambush a straggler to thin the pack",
+    "goTo": "retreat_blockade",
+    "effects": {
+     "stats": { "health": -8, "stress": 2 },
+     "persona": { "killer": 1 },
+     "flagsSet": [ "proof_killer_fear" ],
+     "pushEvent": "You learn how their jaws hinge by breaking one."
+    },
+    "tags": [ "killer" ]
+   },
+   {
+    "id": "sm_flee",
+    "text": "Slip to the roof and relocate",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "stamina": -4, "stress": 1 },
+     "flagsSet": [ "roof_escape" ],
+     "pushEvent": "You climb until your legs burn."
+    },
+    "tags": [ "chill" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "act1_alone_hub": {
+  "id": "act1_alone_hub",
+  "text": "Day 2. You're alone, by choice or consequence. The city's map redraws itself in your head: routes, caches, threats. No one will save you.",
+  "choices": [
+   {
+    "id": "al_scavenge",
+    "text": "Street scrape: quick, quiet runs",
+    "goTo": "street_scrape",
+    "effects": {
+     "persona": { "chill": 1 },
+     "pushEvent": "You sketch a path between shadows."
+    },
+    "tags": [ "chill" ]
+   },
+   {
+    "id": "al_radio",
+    "text": "Hunt radio signals with the old set",
+    "goTo": "weird_broadcast",
+    "effects": {
+     "stats": { "stress": -1 },
+     "pushEvent": "Static becomes a language when you're lonely."
+    },
+    "tags": [ "chill" ]
+   },
+   {
+    "id": "al_regret",
+    "text": "Stare at your door and decide what kind of person you are",
+    "goTo": "haunted_door",
+    "effects": {
+     "stats": { "morality": 1, "stress": 1 },
+     "pushEvent": "You hold your own trial without a jury."
+    },
+    "tags": [ "nice" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "street_scrape": {
+  "id": "street_scrape",
+  "text": "Alleyways are arteries now. Every turn a pulse. You spot a pharmacy with a back window half-ajar.",
+  "choices": [
+   {
+    "id": "ss_knife",
+    "text": "Ease it open with the pocketknife",
+    "goTo": "narrow_escape",
+    "effects": {
+     "stats": { "stress": 1, "health": -1 },
+     "inventoryAdd": [ "bandages" ],
+     "pushEvent": "Glass squeals. Something answers."
+    },
+    "tags": [ "protector" ]
+   },
+   {
+    "id": "ss_radio",
+    "text": "Use the old radio to lure noise away",
+    "goTo": "narrow_escape",
+    "effects": {
+     "stats": { "stamina": -1 },
+     "inventoryAdd": [ "painkillers" ],
+     "pushEvent": "You trade batteries for silence."
+    },
+    "tags": [ "fixer" ]
+   },
+   {
+    "id": "ss_run",
+    "text": "Too hot—bail to rooftops",
+    "goTo": "narrow_escape",
+    "effects": {
+     "stats": { "stamina": -3, "stress": 2 },
+     "pushEvent": "Your calves scream, but so does the city."
+    },
+    "tags": [ "chill" ]
+   }
+  ],
+  "timeDelta": 2
+ },
+ "narrow_escape": {
+  "id": "narrow_escape",
+  "text": "You make it out with lungs on fire and something rattling in your bag. Small wins keep you alive.",
+  "choices": [
+   {
+    "id": "ne_back",
+    "text": "Regroup at the apartment (alone route continues)",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "stress": -1 },
+     "pushEvent": "You learn to breathe between alarms."
+    },
+    "tags": [ "chill" ]
+   },
+   {
+    "id": "ne_scan",
+    "text": "Scan the bands again—anything human?",
+    "goTo": "weird_broadcast",
+    "effects": {
+     "stats": { "stress": -1 },
+     "pushEvent": "A voice flickers, then dies. You chase ghosts."
+    },
+    "tags": [ "chill" ]
+   },
+   {
+    "id": "ne_steel",
+    "text": "Harden up. Feel nothing.",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "persona": { "sociopath": 1 },
+     "stats": { "morality": -1, "stress": -2 },
+     "pushEvent": "Numbness is a tool too."
+    },
+    "tags": [ "psycho" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "weird_broadcast": {
+  "id": "weird_broadcast",
+  "text": "Through static: a calm voice recites street names and tide tables. Not rescue—routing. Someone is mapping the horde.",
+  "choices": [
+   {
+    "id": "wb_trace",
+    "text": "Trace the source (east industrial roof)",
+    "goTo": "retreat_blockade",
+    "effects": {
+     "persona": { "fixer": 1 },
+     "pushEvent": "You mark the path with chalk and memory."
+    },
+    "tags": [ "fixer" ]
+   },
+   {
+    "id": "wb_note",
+    "text": "Record patterns to predict movements",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "stress": -2 },
+     "flagsSet": [ "proof_split_echoes" ],
+     "pushEvent": "The city starts making a cruel kind of sense."
+    },
+    "tags": [ "chill" ]
+   },
+   {
+    "id": "wb_bait",
+    "text": "Broadcast bait to pull a pocket away",
+    "goTo": "street_scrape",
+    "effects": {
+     "stats": { "stamina": -1 },
+     "flagsSet": [ "proof_warlord_blackout" ],
+     "pushEvent": "You move the monsters like a shepherd without a flock."
+    },
+    "tags": [ "warlord" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "haunted_door": {
+  "id": "haunted_door",
+  "text": "You rest your forehead to the wood where Alex once knocked. It's not an apology. It's not not an apology.",
+  "choices": [
+   {
+    "id": "hd_vow",
+    "text": "Vow: no one else dies outside your door",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "morality": 3 },
+     "persona": { "protector": 2 },
+     "flagsSet": [ "route_protector" ],
+     "pushEvent": "Oaths weigh less than bodies. Still, you lift one."
+    },
+    "tags": [ "protector" ]
+   },
+   {
+    "id": "hd_forget",
+    "text": "Bury it. Function only.",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "morality": -2, "stress": -2 },
+     "persona": { "sociopath": 2 },
+     "pushEvent": "You file the memory under 'noise'."
+    },
+    "tags": [ "psycho" ]
+   },
+   {
+    "id": "hd_leave",
+    "text": "Leave the building for good",
+    "goTo": "retreat_blockade",
+    "effects": {
+     "stats": { "stamina": -2 },
+     "pushEvent": "You walk until the door is just a door."
+    },
+    "tags": [ "chill" ]
+   }
+  ],
+  "timeDelta": 1
+ },
+ "retreat_blockade": {
+  "id": "retreat_blockade",
+  "text": "Barricades run like scars through the district. Signs: 'DON'T APPROACH', 'NO BROADCAST'. Someone tried to hold a line here and lost.",
+  "choices": [
+   {
+    "id": "rb_probe",
+    "text": "Probe a weak point for a safe crossing",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "stats": { "health": -2, "stress": 2 },
+     "persona": { "chill": 1 },
+     "pushEvent": "You learn the fence's language—bend, rust, give."
+    },
+    "tags": [ "chill" ]
+   },
+   {
+    "id": "rb_follow",
+    "text": "Follow the line toward downtown signals",
+    "goTo": "journey_downtown",
+    "effects": {
+     "stats": { "stamina": -2 },
+     "pushEvent": "Every barrier tells you where people were. Where they might be."
+    },
+    "tags": [ "fixer" ]
+   },
+   {
+    "id": "rb_salvage",
+    "text": "Salvage wire and scrap for later traps",
+    "goTo": "act1_alone_hub",
+    "effects": {
+     "inventoryAdd": [ "copper_wire", "scrap_blades" ],
+     "persona": { "fixer": 2 },
+     "pushEvent": "You pocket tomorrow's safety."
+    },
+    "tags": [ "fixer" ]
+   }
+  ],
+  "timeDelta": 2
+ },
+ "fortify_home": {
+  "id": "fortify_home",
+  "text": "You stay. Wood, screws, and routine become your armor.",
+  "choices": [
+   { "id": "fh_brace", "text": "Brace doors", "goTo": "safe_house_settled", "effects": { "flagsSet": [ "defensive_decision" ] }, "tags": [ "protector" ] },
+   { "id": "fh_traps", "text": "Set noise traps", "goTo": "safe_house_settled", "effects": { "flagsSet": [ "proof_warlord_tithe" ] }, "tags": [ "warlord" ] },
+   { "id": "fh_listen", "text": "Listen to the city", "goTo": "safe_house_settled", "effects": { "stats": { "stress": -2 } }, "tags": [ "chill" ] }
+  ],
+  "timeDelta": 2
+ },
+ "leave_sarah": {
+  "id": "leave_sarah",
+  "text": "You strip the shelves and leave the living behind. The building remembers.",
+  "choices": [
+   { "id": "ls_rationalize", "text": "Rationalize it", "goTo": "retreat_blockade", "effects": { "stats": { "morality": -2, "stress": -1 }, "persona": { "sociopath": 1 } }, "tags": [ "psycho" ] },
+   { "id": "ls_listen", "text": "Listen to her cries anyway", "goTo": "retreat_blockade", "effects": { "stats": { "stress": 2 } }, "tags": [ "nice" ] },
+   { "id": "ls_mark", "text": "Mark a safe path for others", "goTo": "retreat_blockade", "effects": { "stats": { "morality": 1 }, "persona": { "protector": 1 } }, "tags": [ "protector" ] }
+  ],
+  "timeDelta": 1
+ },
+ "independent_route": {
+  "id": "independent_route",
+  "text": "You part ways with Sarah's hope. Independence is cheaper than trust—until it isn't.",
+  "choices": [
+   { "id": "ir_cache", "text": "Build a cache network", "goTo": "retreat_blockade", "effects": { "inventoryAdd": [ "stash_marker" ], "persona": { "fixer": 1 } }, "tags": [ "fixer" ] },
+   { "id": "ir_watch", "text": "Shadow the safe house from a distance", "goTo": "retreat_blockade", "effects": { "flagsSet": [ "proof_creep_watch" ] }, "tags": [ "psycho" ] },
+   { "id": "ir_radio", "text": "Scour signals for threats", "goTo": "retreat_blockade", "effects": { "stats": { "stress": -1 } }, "tags": [ "chill" ] }
+  ],
+  "timeDelta": 2
+ },
+ "defensive_preparations": {
+  "id": "defensive_preparations",
+  "text": "You build walls while they learn ladders.",
+  "choices": [
+   { "id": "dp_drill", "text": "Drill neighborhood response", "goTo": "night_strike", "effects": { "persona": { "protector": 1 } }, "tags": [ "protector" ] },
+   { "id": "dp_supply", "text": "Secure supply lines", "goTo": "night_strike", "effects": { "persona": { "fixer": 1 } }, "tags": [ "fixer" ] },
+   { "id": "dp_watch", "text": "Establish watch rotations", "goTo": "night_strike", "effects": { "stats": { "stress": -1 } }, "tags": [ "chill" ] }
+  ],
+  "timeDelta": 3
+ },
+ "refusal_consequence": {
+  "id": "refusal_consequence",
+  "text": "You balk at the plan. Sarah's eyes harden; Alex's don't meet yours. The night moves without you.",
+  "choices": [
+   { "id": "rc_apologize", "text": "Apologize and rejoin", "goTo": "night_strike", "effects": { "relationships": { "Alex": 1, "Sarah": 1 } }, "tags": [ "nice" ] },
+   { "id": "rc_guard", "text": "Stay and guard the base", "goTo": "night_strike", "effects": { "flagsSet": [ "defensive_decision" ] }, "tags": [ "protector" ] },
+   { "id": "rc_split", "text": "Split off—different priorities", "goTo": "retreat_blockade", "effects": { "flagsSet": [ "proof_split_masks" ] }, "tags": [ "chill" ] }
+  ],
+  "timeDelta": 1
  }
 });
 
 })();
+
+function validateStoryDB(db) {
+  const errors = [];
+  const warnings = [];
+  const scenes = Object.keys(db);
+  const isEnding = (s) => (db[s]?.tags || []).includes('ending') || s.startsWith('ending_');
+
+  // 1) Missing targets
+  for (const [sid, scene] of Object.entries(db)) {
+    const choices = (scene.choices || []);
+    for (const c of choices) {
+      const dest = (c && (c.goTo ?? c.next)) || null;
+      if (dest && !db[dest]) {
+        errors.push({ type: 'missing-target', scene: sid, choice: c.id, dest });
+      }
+    }
+  }
+
+  // 2) Illegal back-jumps to intro (except endings/chapter_reset)
+  for (const [sid, scene] of Object.entries(db)) {
+    const choices = (scene.choices || []);
+    for (const c of choices) {
+      const dest = (c && (c.goTo ?? c.next)) || null;
+      if (dest === 'intro' && !isEnding(sid) && !sid.startsWith('chapter_reset_')) {
+        errors.push({ type: 'illegal-intro-loop', scene: sid, choice: c.id });
+      }
+    }
+  }
+
+  // 3) No-op choices (no effects and same-scene)
+  for (const [sid, scene] of Object.entries(db)) {
+    const choices = (scene.choices || []);
+    for (const c of choices) {
+      const dest = (c && (c.goTo ?? c.next)) || null;
+      const hasEffects = !!(c && c.effects && Object.keys(c.effects).length);
+      if (!hasEffects && (!dest || dest === sid)) {
+        warnings.push({ type: 'no-op-choice', scene: sid, choice: c?.id || '(unknown)' });
+      }
+    }
+  }
+
+  // 4) Scenes with <3 choices (except endings)
+  for (const [sid, scene] of Object.entries(db)) {
+    const count = (scene.choices || []).length;
+    if (!isEnding(sid) && count > 0 && count < 3) {
+      warnings.push({ type: 'thin-scene', scene: sid, choices: count });
+    }
+  }
+
+  const summary = `Scenes: ${scenes.length} | Errors: ${errors.length} | Warnings: ${warnings.length}`;
+  return { summary, errors, warnings };
+}
+
+// Log once on load
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    const report = validateStoryDB(window.STORY_DATABASE);
+    console.log('[Consequence Validator]', report.summary);
+    if (report.errors.length) console.table(report.errors);
+    if (report.warnings.length) console.table(report.warnings);
+  }, 0);
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   if (typeof window.ConsequenceGame === "function" && window.STORY_DATABASE) {
