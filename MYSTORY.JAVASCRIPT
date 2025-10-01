@@ -5663,14 +5663,27 @@
    "adaptation"
   ]
  },
+ "filler_branch_11": {
+  "id": "filler_branch_11",
+  "text": "Scene 11: The consequences of your previous actions become clear. You must navigate through the challenges that have emerged, making decisions that will impact your survival and relationships.",
+  "choices": [
+   {
+    "id": "fb11_a",
+    "text": "Chill approach",
+    "goTo": "intro",
+    "effects": {
+     "stats": {
+      "stress": -1
+     }
+    },
     "tags": [
      "chill"
     ]
    },
    {
-    "id": "fb10_b",
+    "id": "fb11_b",
     "text": "Careful action",
-    "goTo": "filler_branch_12",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "stamina": -1
@@ -5681,9 +5694,9 @@
     ]
    },
    {
-    "id": "fb10_c",
+    "id": "fb11_c",
     "text": "Social action",
-    "goTo": "filler_branch_13",
+    "goTo": "intro",
     "effects": {
      "relationships": {
       "Survivors": 1
@@ -5694,9 +5707,9 @@
     ]
    },
    {
-    "id": "fb10_d",
+    "id": "fb11_d",
     "text": "Selfish action",
-    "goTo": "filler_branch_11",
+    "goTo": "intro",
     "effects": {
      "inventoryAdd": "resource"
     },
@@ -5763,52 +5776,6 @@
    "adaptation"
   ]
  },
-    "tags": [
-     "rude"
-    ]
-   },
-   {
-    "id": "fb11_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_13",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb11_c",
-    "text": "Social action",
-    "goTo": "filler_branch_14",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb11_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_12",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_11"
-  ]
- },
  "filler_branch_12": {
   "id": "filler_branch_12",
   "text": "Scene 12: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
@@ -5861,52 +5828,6 @@
   "tags": [
    "consequence",
    "adaptation"
-  ]
- },
-    "tags": [
-     "psycho"
-    ]
-   },
-   {
-    "id": "fb12_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_14",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb12_c",
-    "text": "Social action",
-    "goTo": "filler_branch_15",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb12_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_13",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_12"
   ]
  },
  "filler_branch_13": {
@@ -5963,52 +5884,6 @@
    "adaptation"
   ]
  },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb13_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_15",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb13_c",
-    "text": "Social action",
-    "goTo": "filler_branch_16",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb13_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_14",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_13"
-  ]
- },
  "filler_branch_14": {
   "id": "filler_branch_14",
   "text": "Scene 14: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
@@ -6061,52 +5936,6 @@
   "tags": [
    "consequence",
    "adaptation"
-  ]
- },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb14_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_16",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb14_c",
-    "text": "Social action",
-    "goTo": "filler_branch_17",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb14_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_15",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_14"
   ]
  },
  "filler_branch_15": {
@@ -6163,52 +5992,6 @@
    "adaptation"
   ]
  },
-    "tags": [
-     "rude"
-    ]
-   },
-   {
-    "id": "fb15_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_17",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb15_c",
-    "text": "Social action",
-    "goTo": "filler_branch_18",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb15_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_16",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_15"
-  ]
- },
  "filler_branch_16": {
   "id": "filler_branch_16",
   "text": "Scene 16: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
@@ -6261,52 +6044,6 @@
   "tags": [
    "consequence",
    "adaptation"
-  ]
- },
-    "tags": [
-     "psycho"
-    ]
-   },
-   {
-    "id": "fb16_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_18",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb16_c",
-    "text": "Social action",
-    "goTo": "filler_branch_19",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb16_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_17",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_16"
   ]
  },
  "filler_branch_17": {
@@ -6363,52 +6100,6 @@
    "adaptation"
   ]
  },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb17_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_19",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb17_c",
-    "text": "Social action",
-    "goTo": "filler_branch_0",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb17_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_18",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_17"
-  ]
- },
  "filler_branch_18": {
   "id": "filler_branch_18",
   "text": "Scene 18: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
@@ -6463,52 +6154,6 @@
    "adaptation"
   ]
  },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb18_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_0",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb18_c",
-    "text": "Social action",
-    "goTo": "filler_branch_1",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb18_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_19",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_18"
-  ]
- },
  "filler_branch_19": {
   "id": "filler_branch_19",
   "text": "Scene 19: You find yourself in a complex situation where your previous choices have led to unexpected consequences. The world around you has changed, and you must adapt to survive. Your decisions will shape not just your fate, but the fate of those around you.",
@@ -6561,52 +6206,6 @@
   "tags": [
    "consequence",
    "adaptation"
-  ]
- },
-    "tags": [
-     "rude"
-    ]
-   },
-   {
-    "id": "fb19_b",
-    "text": "Careful action",
-    "goTo": "filler_branch_1",
-    "effects": {
-     "stats": {
-      "stamina": -1
-     }
-    },
-    "tags": [
-     "chill"
-    ]
-   },
-   {
-    "id": "fb19_c",
-    "text": "Social action",
-    "goTo": "filler_branch_2",
-    "effects": {
-     "relationships": {
-      "Survivors": 1
-     }
-    },
-    "tags": [
-     "nice"
-    ]
-   },
-   {
-    "id": "fb19_d",
-    "text": "Selfish action",
-    "goTo": "filler_branch_0",
-    "effects": {
-     "inventoryAdd": "resource"
-    },
-    "tags": [
-     "rude"
-    ]
-   }
-  ],
-  "tags": [
-   "branch_19"
   ]
  },
  "hub_convergence": {
@@ -17123,6 +16722,13 @@
   "tags": ["day4", "research"]
  }
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (typeof window.ConsequenceGame === "function" && window.STORY_DATABASE) {
+    window.game = new window.ConsequenceGame();
+  }
+  });
 
 })();
 
