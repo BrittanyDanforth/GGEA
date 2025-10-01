@@ -452,7 +452,7 @@
    {
     "id": "i_open",
     "text": "Open immediately—Alex needs help NOW",
-    "goTo": "open_immediate",
+    "goTo": "saved_trust",
     "effects": {
      "stats": {
       "stress": 2
@@ -469,7 +469,7 @@
    {
     "id": "i_demand",
     "text": "Demand proof they're not infected",
-    "goTo": "demand_proof",
+    "goTo": "saved_trust",
     "effects": {
      "persona": {
       "rude": 1
@@ -486,7 +486,7 @@
    {
     "id": "i_ignore",
     "text": "Ignore. Survival means hard choices.",
-    "goTo": "ignore_knock",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "morality": -5,
@@ -542,7 +542,7 @@
    {
     "id": "pk_verify",
     "text": "Open but verify verbally",
-    "goTo": "saved_verify",
+    "goTo": "saved_trust",
     "effects": {
      "persona": {
       "rude": 1
@@ -563,7 +563,7 @@
    {
     "id": "pk_test",
     "text": "Wait—test if they survive alone",
-    "goTo": "alex_test_solo",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "stress": -2
@@ -583,7 +583,7 @@
    {
     "id": "pk_abandon",
     "text": "Too risky—walk away",
-    "goTo": "alex_dies_watched",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "morality": -6,
@@ -637,7 +637,7 @@
    {
     "id": "tr_science",
     "text": "Observed carefully. Science.",
-    "goTo": "alex_respect",
+    "goTo": "alex_deep_trust",
     "effects": {
      "persona": {
       "chill": 2
@@ -657,7 +657,7 @@
    {
     "id": "tr_lucky",
     "text": "Didn't. You got lucky.",
-    "goTo": "alex_uncertain",
+    "goTo": "alex_deep_trust",
     "effects": {
      "stats": {
       "stress": 1
@@ -677,7 +677,7 @@
    {
     "id": "tr_debt",
     "text": "You owe me now.",
-    "goTo": "alex_debt",
+    "goTo": "alex_deep_trust",
     "effects": {
      "persona": {
       "psycho": 1,
@@ -731,7 +731,7 @@
    {
     "id": "ad_purpose",
     "text": "What Marcus would want",
-    "goTo": "alex_bond_purpose",
+    "goTo": "alex_bond_deep",
     "effects": {
      "stats": {
       "stress": -3
@@ -755,7 +755,7 @@
    {
     "id": "ad_hard",
     "text": "No. But don't let it happen again.",
-    "goTo": "alex_bond_hard",
+    "goTo": "alex_bond_deep",
     "effects": {
      "stats": {
       "morality": -1
@@ -778,7 +778,7 @@
    {
     "id": "ad_lever",
     "text": "Prove you're not a coward",
-    "goTo": "alex_guilt_lever",
+    "goTo": "alex_bond_deep",
     "effects": {
      "persona": {
       "psycho": 2,
@@ -830,7 +830,7 @@
    {
     "id": "ab_partners",
     "text": "Partners—watch backs",
-    "goTo": "alex_partners",
+    "goTo": "alex_sworn_family",
     "effects": {
      "stats": {
       "stress": -2
@@ -854,7 +854,7 @@
    {
     "id": "ab_cautious",
     "text": "Survive first",
-    "goTo": "alex_cautious",
+    "goTo": "alex_sworn_family",
     "effects": {
      "stats": {
       "stress": 1
@@ -874,7 +874,7 @@
    {
     "id": "ab_professional",
     "text": "Keep it professional",
-    "goTo": "alex_professional",
+    "goTo": "alex_sworn_family",
     "effects": {
      "persona": {
       "psycho": 1
@@ -991,7 +991,7 @@
    {
     "id": "ah_no",
     "text": "No—stay here, safer",
-    "goTo": "stay_building",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "stress": 1
@@ -1014,7 +1014,7 @@
    {
     "id": "ah_scout",
     "text": "Scout first, decide later",
-    "goTo": "scout_downtown",
+    "goTo": "journey_downtown",
     "effects": {
      "persona": {
       "chill": 2
@@ -1041,7 +1041,7 @@
    {
     "id": "jd_turn_back",
     "text": "Turn back—too dangerous",
-    "goTo": "return_building",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "stress": 2
@@ -1088,7 +1088,7 @@
    {
     "id": "jd_distract",
     "text": "Create distraction—draw them away",
-    "goTo": "distract_infected",
+    "goTo": "sneak_courthouse",
     "effects": {
      "stats": {
       "stress": 4,
@@ -1144,7 +1144,7 @@
    {
     "id": "sc_supplies",
     "text": "Take supplies, leave her",
-    "goTo": "abandon_sarah",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "morality": -3
@@ -1167,7 +1167,7 @@
    {
     "id": "sc_negotiate",
     "text": "Negotiate—supplies for help",
-    "goTo": "negotiate_sarah",
+    "goTo": "help_sarah",
     "effects": {
      "persona": {
       "fixer": 1
@@ -1220,7 +1220,7 @@
    {
     "id": "hs_no",
     "text": "No—stay independent",
-    "goTo": "stay_independent",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "stress": 1
@@ -1244,7 +1244,7 @@
    {
     "id": "hs_visit",
     "text": "Visit but don't stay",
-    "goTo": "visit_safe_house",
+    "goTo": "safe_house",
     "effects": {
      "persona": {
       "chill": 1
@@ -1373,7 +1373,7 @@
    {
     "id": "ss_no",
     "text": "No—stay defensive",
-    "goTo": "defensive_plan",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "stress": -1
@@ -1397,7 +1397,7 @@
    {
     "id": "ss_negotiate",
     "text": "Negotiate—find another way",
-    "goTo": "negotiate_plan",
+    "goTo": "strike_plan",
     "effects": {
      "persona": {
       "fixer": 2
@@ -1473,7 +1473,7 @@
    {
     "id": "sp_refuse",
     "text": "I can't do this",
-    "goTo": "refuse_strike",
+    "goTo": "intro",
     "effects": {
      "stats": {
       "stress": -2
@@ -1529,7 +1529,7 @@
    {
     "id": "ns_improvise",
     "text": "Improvise as needed",
-    "goTo": "strike_mixed",
+    "goTo": "strike_success",
     "effects": {
      "stats": {
       "stress": 3,
@@ -1554,7 +1554,7 @@
    {
     "id": "ns_protect_alex",
     "text": "Protect Alex above all",
-    "goTo": "strike_protect",
+    "goTo": "strike_success",
     "effects": {
      "stats": {
       "stress": 4,
@@ -1612,7 +1612,7 @@
    {
     "id": "ss_prepare",
     "text": "Prepare for the next wave",
-    "goTo": "epilogue_prepare",
+    "goTo": "epilogue_strong",
     "effects": {
      "persona": {
       "protector": 2
@@ -1633,7 +1633,7 @@
    {
     "id": "ss_rest",
     "text": "Rest and recover",
-    "goTo": "epilogue_rest",
+    "goTo": "epilogue_strong",
     "effects": {
      "stats": {
       "stress": -3,
