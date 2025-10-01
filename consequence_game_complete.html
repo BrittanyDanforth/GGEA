@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consequence Game - Complete Edition</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        
+        .main-content {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        
+        .sidebar {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        
+        .scene-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+        
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .choice {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .choice:hover:not(.disabled) {
+            background: #3a3a3a;
+            border-color: #666;
+        }
+        
+        .choice.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .choice-text {
+            display: block;
+        }
+        
+        .stats-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-pill {
+            background: #2a2a2a;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid #444;
+        }
+        
+        .inventory-list, .relationships-list {
+            margin-bottom: 20px;
+        }
+        
+        .inventory-chip {
+            background: #2a2a2a;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 2px;
+            display: inline-block;
+            border: 1px solid #444;
+        }
+        
+        .empty-inventory {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .persona-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .persona-point {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .persona-name {
+            color: #888;
+        }
+        
+        .persona-value {
+            color: #e0e0e0;
+        }
+        
+        .relationship-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .relationship-name {
+            color: #e0e0e0;
+        }
+        
+        .relationship-status {
+            color: #888;
+        }
+        
+        .relationship-trust-positive {
+            color: #4a9;
+        }
+        
+        .relationship-trust-negative {
+            color: #a44;
+        }
+        
+        .relationship-trust-neutral {
+            color: #888;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-family: inherit;
+        }
+        
+        .control-btn:hover {
+            background: #3a3a3a;
+        }
+        
+        .debug-section {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border: 1px solid #333;
+        }
+        
+        .debug-section h3 {
+            margin-top: 0;
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .flag-item, .decision-item {
+            background: #2a2a2a;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .consequence-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a1a;
+            border: 2px solid #444;
+            padding: 30px;
+            border-radius: 10px;
+            z-index: 1000;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .consequence-popup.hidden {
+            display: none;
+        }
+        
+        .consequence-text {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .consequence-ok {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .consequence-ok:hover {
+            background: #3a3a3a;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .event-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #0a0a0a;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        
+        .event-item {
+            font-size: 12px;
+            margin-bottom: 5px;
+            padding: 3px;
+            border-radius: 3px;
+        }
+        
+        .event-consequence {
+            background: #2a1a1a;
+            border-left: 3px solid #a44;
+        }
+        
+        .event-discovery {
+            background: #1a2a1a;
+            border-left: 3px solid #4a4;
+        }
+        
+        .event-info {
+            background: #1a1a2a;
+            border-left: 3px solid #44a;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="main-content">
+            <div class="controls">
+                <button id="new-game" class="control-btn">New Game</button>
+                <button id="save-game" class="control-btn">Save Game</button>
+                <button id="export-game" class="control-btn">Export Save</button>
+                <button id="toggle-backend" class="control-btn">Toggle Debug</button>
+            </div>
+            
+            <div id="scene-text" class="scene-text">
+                Loading game...
+            </div>
+            
+            <div id="choices" class="choices">
+                <!-- Choices will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div id="stats" class="stats-group">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+            
+            <div>
+                <h3>Inventory</h3>
+                <div id="inventory-list" class="inventory-list">
+                    <!-- Inventory will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div>
+                <h3>Persona</h3>
+                <div id="persona-grid" class="persona-grid">
+                    <!-- Persona will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div>
+                <h3>Relationships</h3>
+                <div id="relationships-list" class="relationships-list">
+                    <!-- Relationships will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="debug-section" id="backend-content">
+                <h3>Debug Info</h3>
+                <div>
+                    <strong>World Time:</strong> <span id="world-time">Day 1, Hour 0</span>
+                </div>
+                <div>
+                    <strong>State Hash:</strong> <span id="state-hash">0</span>
+                </div>
+                <div>
+                    <strong>Flags:</strong> <span id="flag-display"></span>
+                </div>
+                <div>
+                    <strong>Recent Decisions:</strong> <span id="decision-tree"></span>
+                </div>
+            </div>
+            
+            <div class="event-log">
+                <h3>Event Log</h3>
+                <div id="event-log">
+                    <!-- Events will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Consequence Popup -->
+    <div id="consequence-popup" class="consequence-popup hidden">
+        <div id="consequence-text" class="consequence-text"></div>
+        <button id="consequence-ok" class="consequence-ok">OK</button>
+    </div>
+    
+    <script>
+        // Complete Consequence Game Implementation
+        (() => {
+            const STORAGE_KEY = 'consequence_save_v2';
+            const MAX_STAT = 100;
+            const MIN_STAT = -100;
+
+            const DEFAULT_STATE = {
+                sceneId: 'intro',
+                time: 0,
+                stats: { health: 90, stamina: 12, stress: 8, morality: 0, viralLoad: 0 },
+                persona: { psycho: 0, nice: 0, chill: 0, rude: 0, protector: 0, warlord: 0, fixer: 0, killer: 0, sociopath: 0 },
+                inventory: ['pocketknife', 'lighter', 'phone_dead'],
+                playerName: 'Survivor',
+                background: null,
+                flags: {},
+                relationships: {},
+                decisionTrace: [],
+            };
+
+            function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+            function clamp(value) { return Math.max(MIN_STAT, Math.min(MAX_STAT, value)); }
+            function getChoiceTarget(choice) {
+                if (!choice) return null;
+                const destination = choice.goTo ?? choice.next;
+                return typeof destination === 'string' && destination.length ? destination : null;
+            }
+
+            function applyEffects(state, effects) {
+                if (!effects) return;
+                if (effects.stats) {
+                    for (const [key, value] of Object.entries(effects.stats)) {
+                        state.stats[key] = clamp((state.stats[key] || 0) + value);
+                    }
+                }
+                if (effects.persona) {
+                    for (const [k, v] of Object.entries(effects.persona)) {
+                        state.persona[k] = clamp((state.persona[k] || 0) + v);
+                    }
+                }
+                if (Array.isArray(effects.inventoryAdd)) {
+                    for (const item of effects.inventoryAdd) state.inventory.push(item);
+                }
+                if (Array.isArray(effects.inventoryRemove)) {
+                    for (const item of effects.inventoryRemove) {
+                        const idx = state.inventory.indexOf(item);
+                        if (idx >= 0) state.inventory.splice(idx, 1);
+                    }
+                }
+                if (Array.isArray(effects.flagsSet)) {
+                    for (const flag of effects.flagsSet) state.flags[flag] = true;
+                }
+                if (effects.relationships) {
+                    for (const [name, delta] of Object.entries(effects.relationships)) {
+                        state.relationships[name] = clamp((state.relationships[name] || 0) + delta);
+                    }
+                }
+            }
+
+            function meetsRequirement(state, req) {
+                if (!req) return true;
+                if (req.stats) {
+                    for (const [key, rule] of Object.entries(req.stats)) {
+                        const value = state.stats[key] || 0;
+                        if (typeof rule.gte === 'number' && value < rule.gte) return false;
+                        if (typeof rule.lte === 'number' && value > rule.lte) return false;
+                    }
+                }
+                if (Array.isArray(req.items)) {
+                    for (const it of req.items) {
+                        if (!state.inventory.includes(it)) return false;
+                    }
+                }
+                if (Array.isArray(req.flags)) {
+                    for (const f of req.flags) {
+                        if (!state.flags[f]) return false;
+                    }
+                }
+                if (Array.isArray(req.notFlags)) {
+                    for (const nf of req.notFlags) {
+                        if (state.flags[nf]) return false;
+                    }
+                }
+                return true;
+            }
+
+            class ConsequenceGame {
+                constructor() {
+                    this.state = deepClone(DEFAULT_STATE);
+                    this.dom = {
+                        stats: document.getElementById('stats'),
+                        sceneText: document.getElementById('scene-text'),
+                        choices: document.getElementById('choices'),
+                        inventory: document.getElementById('inventory-list'),
+                        charName: document.getElementById('char-name'),
+                        worldTime: document.getElementById('world-time'),
+                        consequencePopup: document.getElementById('consequence-popup'),
+                        consequenceText: document.getElementById('consequence-text'),
+                        consequenceOk: document.getElementById('consequence-ok'),
+                        personaGrid: document.getElementById('persona-grid'),
+                        relationships: document.getElementById('relationships-list'),
+                        flagDisplay: document.getElementById('flag-display'),
+                        decisionTree: document.getElementById('decision-tree'),
+                    };
+                    this.eventLog = [];
+                    this.bindControls();
+                    this.render();
+                }
+
+                bindControls() {
+                    document.getElementById('new-game')?.addEventListener('click', () => this.reset());
+                    document.getElementById('save-game')?.addEventListener('click', () => this.save());
+                    document.getElementById('export-game')?.addEventListener('click', () => this.export());
+                    this.dom.consequenceOk?.addEventListener('click', () => this.hidePopup());
+                }
+
+                reset() {
+                    this.state = deepClone(DEFAULT_STATE);
+                    this.eventLog = [];
+                    this.render();
+                }
+
+                save() {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+                    this.pushEvent('Game saved.', 'discovery');
+                }
+
+                export() {
+                    const data = { ...this.state, __eventLog: this.eventLog };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `consequence-${Date.now()}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+
+                makeChoice(choice) {
+                    const nextState = deepClone(this.state);
+                    applyEffects(nextState, choice.effects);
+
+                    if (choice.effects?.pushEvent) {
+                        this.pushEvent(choice.effects.pushEvent, 'consequence');
+                    }
+
+                    if (choice.popupText) {
+                        this.showPopup(choice.popupText);
+                    }
+
+                    const goTo = getChoiceTarget(choice) ?? nextState.sceneId;
+                    const nextScene = window.STORY_DATABASE[goTo];
+                    if (nextScene?.timeDelta) {
+                        nextState.time += nextScene.timeDelta;
+                    } else if (goTo !== this.state.sceneId) {
+                        nextState.time += 1;
+                    }
+
+                    nextState.sceneId = goTo;
+                    nextState.decisionTrace.push({ choice: choice.id, scene: this.state.sceneId, time: this.state.time });
+                    this.state = nextState;
+                    this.render();
+                }
+
+                pushEvent(text, type = 'info') {
+                    this.eventLog.unshift({ text, type, time: this.state.time });
+                    if (this.eventLog.length > 50) this.eventLog.pop();
+                }
+
+                showPopup(text) {
+                    if (!this.dom.consequencePopup) return;
+                    this.dom.consequenceText.textContent = text;
+                    this.dom.consequencePopup.classList.remove('hidden');
+                }
+
+                hidePopup() {
+                    this.dom.consequencePopup?.classList.add('hidden');
+                }
+
+                renderScene(sceneId) {
+                    const scene = window.STORY_DATABASE[sceneId];
+                    if (!scene) {
+                        this.displayStory('Scene not found.', null);
+                        this.displayChoices(null);
+                        return;
+                    }
+                    this.displayStory(scene.text, scene);
+                    this.displayChoices(scene);
+                }
+
+                displayStory(text) {
+                    if (!this.dom.sceneText) return;
+                    this.dom.sceneText.innerHTML = '';
+                    const p = document.createElement('p');
+                    p.textContent = text;
+                    this.dom.sceneText.appendChild(p);
+                }
+
+                displayChoices(scene) {
+                    if (!this.dom.choices) return;
+                    this.dom.choices.innerHTML = '';
+                    const choices = (scene?.choices || []).filter((c) => c && (getChoiceTarget(c) || c.effects));
+
+                    for (const choice of choices) {
+                        const button = document.createElement('button');
+                        button.className = 'choice';
+                        button.type = 'button';
+                        button.dataset.type = (choice.tags && choice.tags[0]) || '';
+                        button.innerHTML = `<span class="choice-text">${choice.text}</span>`;
+
+                        const met = meetsRequirement(this.state, choice.req);
+                        if (!met) {
+                            button.classList.add('disabled');
+                            button.disabled = true;
+                        } else {
+                            button.addEventListener('click', () => this.makeChoice(choice));
+                        }
+                        this.dom.choices.appendChild(button);
+                    }
+                }
+
+                renderStats() {
+                    if (!this.dom.stats) return;
+                    this.dom.stats.innerHTML = '';
+                    const entries = [
+                        { key: 'health', label: 'HEALTH' },
+                        { key: 'stamina', label: 'STAMINA' },
+                        { key: 'stress', label: 'STRESS' },
+                        { key: 'morality', label: 'MORALITY' },
+                    ];
+                    for (const entry of entries) {
+                        const pill = document.createElement('div');
+                        pill.className = 'stat-pill';
+                        pill.textContent = `${entry.label}: ${Math.round(this.state.stats[entry.key] || 0)}`;
+                        this.dom.stats.appendChild(pill);
+                    }
+                }
+
+                renderInventory() {
+                    if (!this.dom.inventory) return;
+                    this.dom.inventory.innerHTML = '';
+                    if (!this.state.inventory.length) {
+                        const span = document.createElement('span');
+                        span.className = 'empty-inventory';
+                        span.textContent = '(empty)';
+                        this.dom.inventory.appendChild(span);
+                        return;
+                    }
+                    for (const item of this.state.inventory) {
+                        const chip = document.createElement('span');
+                        chip.className = 'inventory-chip';
+                        chip.textContent = item;
+                        this.dom.inventory.appendChild(chip);
+                    }
+                }
+
+                renderPersona() {
+                    if (!this.dom.personaGrid) return;
+                    this.dom.personaGrid.innerHTML = '';
+                    for (const [key, value] of Object.entries(this.state.persona)) {
+                        const row = document.createElement('div');
+                        row.className = 'persona-point';
+                        row.innerHTML = `<span class="persona-name">${key}</span><span class="persona-value">${value}</span>`;
+                        this.dom.personaGrid.appendChild(row);
+                    }
+                }
+
+                renderDebug() {
+                    if (this.dom.worldTime) {
+                        const day = Math.floor(this.state.time / 24) + 1;
+                        const hour = this.state.time % 24;
+                        this.dom.worldTime.textContent = `Day ${day}, Hour ${hour}`;
+                    }
+                    if (this.dom.flagDisplay) {
+                        this.dom.flagDisplay.innerHTML = '';
+                        for (const flag of Object.keys(this.state.flags)) {
+                            const node = document.createElement('div');
+                            node.className = 'flag-item';
+                            node.textContent = flag;
+                            this.dom.flagDisplay.appendChild(node);
+                        }
+                    }
+                }
+
+                render() {
+                    this.renderScene(this.state.sceneId);
+                    this.renderStats();
+                    this.renderInventory();
+                    this.renderPersona();
+                    this.renderDebug();
+                }
+            }
+
+            window.ConsequenceGame = ConsequenceGame;
+            window.STORY_DATABASE = {};
+
+            // Load the story completion
+            Object.assign(window.STORY_DATABASE, {
+                intro: {
+                    id: 'intro',
+                    text: `You wake to screaming. Not movie screaming—raw, animal terror. Your phone is dead. Power's out. Through your window: people running, people falling, people standing back up wrong. The building shakes. Something hit the lobby. Your door is still locked. For now.`,
+                    choices: [
+                        {
+                            id: 'i_window',
+                            text: 'Window—assess threat levels outside',
+                            goTo: 'window_scan',
+                            effects: { stats: { stress: 2 }, persona: { chill: 2 }, flagsSet: ['threat_assessed'], pushEvent: 'You count before you act.' },
+                            tags: ['chill'],
+                        },
+                        {
+                            id: 'i_door',
+                            text: 'Door—check locks, hinges, weak points',
+                            goTo: 'door_check',
+                            effects: { stats: { stress: 1 }, persona: { protector: 2 }, flagsSet: ['door_secured'], pushEvent: 'Your home is either fortress or coffin.' },
+                            tags: ['protector'],
+                        },
+                        {
+                            id: 'i_supplies',
+                            text: 'Inventory—catalog food, water, weapons',
+                            goTo: 'supply_count',
+                            effects: { persona: { fixer: 2 }, flagsSet: ['supplies_known'], pushEvent: 'Lists keep you sane.' },
+                            tags: ['fixer'],
+                        },
+                        {
+                            id: 'i_freeze',
+                            text: `Freeze—this can't be real`,
+                            goTo: 'panic_spiral',
+                            effects: { stats: { stress: 5, stamina: -2 }, persona: { nice: 2 }, pushEvent: 'Fear is honest, at least.' },
+                            tags: ['nice'],
+                        },
+                    ],
+                    timeDelta: 0,
+                },
+
+                window_scan: {
+                    id: 'window_scan',
+                    text: `Street level: 40+ infected. Movement patterns—sound and motion based. Three cars burning. Helicopter wreckage smoking. North: 50 yards clear. South: dense, 200+. Building across has movement in windows. Survivors? Or bait? Your mind catalogs: exits, chokepoints, resources. Then—pounding on your door.`,
+                    choices: [
+                        {
+                            id: 'ws_map',
+                            text: 'Sketch escape routes on paper',
+                            goTo: 'alex_knock',
+                            effects: { stats: { stress: -1 }, persona: { chill: 1, fixer: 1 }, inventoryAdd: ['escape_map'], pushEvent: 'Maps are hope in ink.' },
+                            tags: ['chill'],
+                        },
+                        {
+                            id: 'ws_signal',
+                            text: 'Flash light at opposite building',
+                            goTo: 'signal_across',
+                            effects: { stats: { stress: 2 }, persona: { nice: 2 }, flagsSet: ['signaled_strangers'], pushEvent: 'You reach into darkness.' },
+                            tags: ['nice'],
+                        },
+                        {
+                            id: 'ws_memorize',
+                            text: 'Memorize everything—leave no trail',
+                            goTo: 'alex_knock',
+                            effects: { persona: { psycho: 2 }, flagsSet: ['threat_memorized'], pushEvent: 'Your mind is a weapon.' },
+                            tags: ['psycho'],
+                        },
+                    ],
+                    timeDelta: 1,
+                },
+
+                alex_knock: {
+                    id: 'alex_knock',
+                    text: `Through the peephole: Alex from 3B, hands bloody, eyes desperate. Behind them: shadows moving up the stairwell. Infected. 30 seconds until they reach this floor. Alex pounds: "I KNOW YOU'RE IN THERE! PLEASE!"`,
+                    choices: [
+                        {
+                            id: 'ak_open_now',
+                            text: 'Open immediately—pull them in',
+                            goTo: 'alex_saved_rush',
+                            effects: { stats: { stress: 3, health: -2 }, persona: { nice: 3, protector: 2 }, relationships: { Alex: 8 }, flagsSet: ['alex_alive', 'saved_rushed'], pushEvent: 'Instinct beats fear.' },
+                            tags: ['nice'],
+                        },
+                        {
+                            id: 'ak_verify',
+                            text: `Chain on—make them prove they're clean`,
+                            goTo: 'alex_verify',
+                            effects: { stats: { stress: 2 }, persona: { rude: 2, chill: 1 }, relationships: { Alex: -2 }, flagsSet: ['verified_alex'], pushEvent: 'Trust requires proof.' },
+                            tags: ['rude'],
+                        },
+                        {
+                            id: 'ak_observe',
+                            text: 'Watch—assess infection signs first',
+                            goTo: 'alex_observe',
+                            effects: { stats: { stress: 1 }, persona: { chill: 3 }, flagsSet: ['observed_carefully'], pushEvent: 'Data before decision.' },
+                            tags: ['chill'],
+                        },
+                        {
+                            id: 'ak_test',
+                            text: 'Wait—test if they survive alone',
+                            goTo: 'alex_test',
+                            effects: { persona: { psycho: 2 }, flagsSet: ['tested_alex'], pushEvent: 'Survival of the fittest.' },
+                            tags: ['psycho'],
+                        },
+                        {
+                            id: 'ak_weapon',
+                            text: 'Crack door with weapon ready',
+                            goTo: 'alex_armed',
+                            effects: { stats: { stress: 2 }, persona: { warlord: 2 }, flagsSet: ['armed_greeting'], pushEvent: 'Safety through strength.' },
+                            tags: ['warlord'],
+                        },
+                        {
+                            id: 'ak_ignore',
+                            text: 'Walk away—your survival only',
+                            goTo: 'alex_dies',
+                            effects: { stats: { morality: -8, stress: -2 }, persona: { sociopath: 3 }, relationships: { Alex: -20 }, flagsSet: ['alex_dead', 'abandoned_alex'], pushEvent: 'Silence swallows screams.' },
+                            tags: ['psycho'],
+                            popupText: 'You hear them die. The building remembers.',
+                        },
+                    ],
+                    timeDelta: 0,
+                },
+
+                alex_saved_rush: {
+                    id: 'alex_saved_rush',
+                    text: `You yank Alex inside. An infected lunges—catches your arm, tearing skin. You slam the door. Bolt. Chain. Brace. Alex collapses, sobbing. "You moved so fast. Why? Why me?"`,
+                    choices: [
+                        {
+                            id: 'asr_instinct',
+                            text: '"Because hesitation kills."',
+                            goTo: 'alex_bond_01',
+                            effects: { stats: { stress: -2 }, persona: { protector: 2 }, relationships: { Alex: 4 }, pushEvent: 'Truth bonds better than comfort.' },
+                            tags: ['protector'],
+                        },
+                        {
+                            id: 'asr_human',
+                            text: `"Because you're human. That's enough."`,
+                            goTo: 'alex_bond_01',
+                            effects: { stats: { morality: 3 }, persona: { nice: 3 }, relationships: { Alex: 6 }, pushEvent: 'Humanity is the last currency.' },
+                            tags: ['nice'],
+                        },
+                        {
+                            id: 'asr_math',
+                            text: '"Two survive longer than one."',
+                            goTo: 'alex_bond_01',
+                            effects: { persona: { fixer: 2 }, relationships: { Alex: 3 }, pushEvent: 'Logic wears kindness as a mask.' },
+                            tags: ['fixer'],
+                        },
+                        {
+                            id: 'asr_owe',
+                            text: '"You owe me now. Remember that."',
+                            goTo: 'alex_bond_debt',
+                            effects: { stats: { morality: -2 }, persona: { psycho: 2 }, relationships: { Alex: -3 }, flagsSet: ['alex_indebted'], pushEvent: 'Rescue becomes leverage.' },
+                            tags: ['psycho'],
+                        },
+                    ],
+                    timeDelta: 1,
+                },
+
+                alex_dies: {
+                    id: 'alex_dies',
+                    text: `Screaming. Tearing. Then quiet. Blood seeps under your door. The building exhales. You are alone. By choice.`,
+                    choices: [
+                        {
+                            id: 'ad_loot',
+                            text: 'Loot 3B while the hall is clear',
+                            goTo: 'loot_apartment',
+                            effects: { stats: { morality: -3 }, persona: { fixer: 2 }, flagsSet: ['looted_alex'], pushEvent: `The dead don't need keys.` },
+                            tags: ['fixer'],
+                        },
+                        {
+                            id: 'ad_fortify',
+                            text: 'Barricade and commit to solo survival',
+                            goTo: 'solo_fortify',
+                            effects: { stats: { stress: -2 }, persona: { sociopath: 2 }, flagsSet: ['solo_path'], pushEvent: 'One is simpler than two.' },
+                            tags: ['psycho'],
+                        },
+                        {
+                            id: 'ad_regret',
+                            text: 'Sit with what you did',
+                            goTo: 'guilt_moment',
+                            effects: { stats: { morality: 2, stress: 3 }, persona: { nice: 2 }, pushEvent: `Regret is proof you're still human.` },
+                            tags: ['nice'],
+                        },
+                    ],
+                    timeDelta: 1,
+                },
+
+                alex_bond_01: {
+                    id: 'alex_bond_01',
+                    text: `Alex catches their breath. "My brother Marcus turned. In the basement. I heard him calling my name but... wrong. Am I a coward for running?"`,
+                    choices: [
+                        {
+                            id: 'ab1_survivor',
+                            text: `"You chose to live. That's not cowardice."`,
+                            goTo: 'apartment_hub_01',
+                            effects: { stats: { morality: 2, stress: -2 }, persona: { nice: 2 }, relationships: { Alex: 5 }, flagsSet: ['marcus_tools_goal'], pushEvent: 'Permission to survive granted.' },
+                            tags: ['nice'],
+                        },
+                        {
+                            id: 'ab1_purpose',
+                            text: '"Marcus would want you alive."',
+                            goTo: 'apartment_hub_01',
+                            effects: { stats: { stress: -3 }, persona: { nice: 2 }, relationships: { Alex: 6 }, flagsSet: ['marcus_tools_goal'], pushEvent: 'Grief becomes compass.' },
+                            tags: ['nice'],
+                        },
+                        {
+                            id: 'ab1_hard',
+                            text: `"Coward? No. But don't run next time."`,
+                            goTo: 'apartment_hub_01',
+                            effects: { persona: { rude: 2 }, relationships: { Alex: 2 }, flagsSet: ['marcus_tools_goal'], pushEvent: 'Steel offered as kindness.' },
+                            tags: ['rude'],
+                        },
+                        {
+                            id: 'ab1_lever',
+                            text: `"You'll have to prove you belong here."`,
+                            goTo: 'apartment_hub_01',
+                            effects: { stats: { morality: -2 }, persona: { psycho: 2 }, relationships: { Alex: 0 }, flagsSet: ['alex_on_trial', 'marcus_tools_goal'], pushEvent: 'Guilt as leverage.' },
+                            tags: ['psycho'],
+                        },
+                    ],
+                    timeDelta: 1,
+                },
+
+                apartment_hub_01: {
+                    id: 'apartment_hub_01',
+                    text: `Day 1, Hour 8. The building is quiet. Too quiet. You and Alex need a plan. Resources are finite. The infected are learning.`,
+                    choices: [
+                        {
+                            id: 'ah1_3b',
+                            text: `Retrieve Marcus's tools from 3B`,
+                            goTo: 'retrieve_3b',
+                            effects: { stats: { stamina: -1 }, pushEvent: 'The hall smells like copper and fear.' },
+                            tags: ['fixer'],
+                            req: { flags: ['marcus_tools_goal'] },
+                        },
+                        {
+                            id: 'ah1_water',
+                            text: 'Secure water supply—bathtub, containers',
+                            goTo: 'water_mission',
+                            effects: { persona: { fixer: 1 }, pushEvent: 'Water first. Always water first.' },
+                            tags: ['fixer'],
+                            req: { notFlags: ['water_secured'] },
+                        },
+                        {
+                            id: 'ah1_neighbor',
+                            text: 'Check on neighbors—4C (Maya), 2A (elderly couple)',
+                            goTo: 'neighbor_check',
+                            effects: { stats: { stress: 1 }, persona: { nice: 1 }, pushEvent: 'Humanity tax: checking on the vulnerable.' },
+                            tags: ['nice'],
+                        },
+                        {
+                            id: 'ah1_fortify',
+                            text: 'Fortify apartment—barricades, traps',
+                            goTo: 'fortify_phase',
+                            effects: { stats: { stamina: -2 }, persona: { protector: 1 }, pushEvent: 'Wood and nails become peace of mind.' },
+                            tags: ['protector'],
+                        },
+                        {
+                            id: 'ah1_roof',
+                            text: 'Scout the roof—escape routes, signals',
+                            goTo: 'roof_scout',
+                            effects: { persona: { chill: 1 }, pushEvent: 'Up means options.' },
+                            tags: ['chill'],
+                        },
+                        {
+                            id: 'ah1_radio',
+                            text: 'Listen to emergency broadcasts',
+                            goTo: 'radio_scan',
+                            effects: { stats: { stress: -1 }, pushEvent: 'Voices through static feel like ghosts.' },
+                            tags: ['chill'],
+                        },
+                        {
+                            id: 'ah1_evening',
+                            text: 'Skip ahead to evening preparations',
+                            goTo: 'evening_hub',
+                            effects: {},
+                            tags: ['chill'],
+                        },
+                    ],
+                    timeDelta: 0,
+                },
+
+                // Add more scenes as needed...
+                day2_morning: {
+                    id: 'day2_morning',
+                    text: `Day 2, Hour 6. You wake to Alex's voice. "We made it through the night." The city outside is different. Quieter. More dangerous.`,
+                    choices: [
+                        {
+                            id: 'd2m_continue',
+                            text: 'Continue your survival',
+                            goTo: 'apartment_hub_01',
+                            effects: { flagsSet: ['day2_started'], pushEvent: 'Day 2 begins.' },
+                            tags: ['chill'],
+                        },
+                    ],
+                    timeDelta: 1,
+                },
+            });
+
+            // Initialize the game when DOM is loaded
+            document.addEventListener('DOMContentLoaded', () => {
+                window.game = new window.ConsequenceGame();
+            });
+        })();
+    </script>
+</body>
+</html>
