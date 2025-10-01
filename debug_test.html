@@ -25,7 +25,7 @@
   <!-- Header -->
   <header class="game-header" role="banner">
     <h1>CONSEQUENCE</h1>
-    <p class="game-subtitle">Every choice changes something.</p>
+    <p class="game-subtitle">Protector. Warlord. Fixer. Killer. Sociopath. Five destinies, one burning city.</p>
   </header>
 
   <!-- Main container -->
@@ -194,18 +194,5 @@
   <!-- Your single local bundle with engine + story goes here. No CDNs, no fetch. -->
   <script src="MYSTORY.JAVASCRIPT"></script>
 
-  <!-- Safe boot: try to render if engine is present; otherwise the shell just sits idle -->
-  <script>
-    (function(){
-      const ok = typeof window.ConsequenceGame === 'function' && window.STORY_DATABASE;
-      if (!ok) return; // engine not present yet
-      try {
-        window.__GAME__ = new window.ConsequenceGame();
-        window.__GAME__.renderScene('intro');
-      } catch (e) {
-        console.warn('Engine error:', e);
-      }
-    })();
-  </script>
 </body>
 </html>
