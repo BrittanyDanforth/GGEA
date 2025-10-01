@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consequence Game - Solo Route Expansion</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        
+        .main-content {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        
+        .sidebar {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        
+        .scene-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+        
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .choice {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .choice:hover:not(.disabled) {
+            background: #3a3a3a;
+            border-color: #666;
+        }
+        
+        .choice.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .choice-text {
+            display: block;
+        }
+        
+        .stats-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-pill {
+            background: #2a2a2a;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid #444;
+        }
+        
+        .inventory-list, .relationships-list {
+            margin-bottom: 20px;
+        }
+        
+        .inventory-chip {
+            background: #2a2a2a;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 2px;
+            display: inline-block;
+            border: 1px solid #444;
+        }
+        
+        .empty-inventory {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .persona-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .persona-point {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .persona-name {
+            color: #888;
+        }
+        
+        .persona-value {
+            color: #e0e0e0;
+        }
+        
+        .relationship-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .relationship-name {
+            color: #e0e0e0;
+        }
+        
+        .relationship-status {
+            color: #888;
+        }
+        
+        .relationship-trust-positive {
+            color: #4a9;
+        }
+        
+        .relationship-trust-negative {
+            color: #a44;
+        }
+        
+        .relationship-trust-neutral {
+            color: #888;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-family: inherit;
+        }
+        
+        .control-btn:hover {
+            background: #3a3a3a;
+        }
+        
+        .debug-section {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border: 1px solid #333;
+        }
+        
+        .debug-section h3 {
+            margin-top: 0;
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .flag-item, .decision-item {
+            background: #2a2a2a;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .consequence-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a1a;
+            border: 2px solid #444;
+            padding: 30px;
+            border-radius: 10px;
+            z-index: 1000;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .consequence-popup.hidden {
+            display: none;
+        }
+        
+        .consequence-text {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .consequence-ok {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .consequence-ok:hover {
+            background: #3a3a3a;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .event-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #0a0a0a;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        
+        .event-item {
+            font-size: 12px;
+            margin-bottom: 5px;
+            padding: 3px;
+            border-radius: 3px;
+        }
+        
+        .event-consequence {
+            background: #2a1a1a;
+            border-left: 3px solid #a44;
+        }
+        
+        .event-discovery {
+            background: #1a2a1a;
+            border-left: 3px solid #4a4;
+        }
+        
+        .event-info {
+            background: #1a1a2a;
+            border-left: 3px solid #44a;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="main-content">
+            <div class="controls">
+                <button id="new-game" class="control-btn">New Game</button>
+                <button id="save-game" class="control-btn">Save Game</button>
+                <button id="export-game" class="control-btn">Export Save</button>
+                <button id="toggle-backend" class="control-btn">Toggle Debug</button>
+            </div>
+            
+            <div id="scene-text" class="scene-text">
+                Loading game...
+            </div>
+            
+            <div id="choices" class="choices">
+                <!-- Choices will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div id="stats" class="stats-group">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+            
+            <div>
+                <h3>Inventory</h3>
+                <div id="inventory-list" class="inventory-list">
+                    <!-- Inventory will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div>
+                <h3>Persona</h3>
+                <div id="persona-grid" class="persona-grid">
+                    <!-- Persona will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div>
+                <h3>Relationships</h3>
+                <div id="relationships-list" class="relationships-list">
+                    <!-- Relationships will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="debug-section" id="backend-content">
+                <h3>Debug Info</h3>
+                <div>
+                    <strong>World Time:</strong> <span id="world-time">Day 1, Hour 0</span>
+                </div>
+                <div>
+                    <strong>State Hash:</strong> <span id="state-hash">0</span>
+                </div>
+                <div>
+                    <strong>Flags:</strong> <span id="flag-display"></span>
+                </div>
+                <div>
+                    <strong>Recent Decisions:</strong> <span id="decision-tree"></span>
+                </div>
+            </div>
+            
+            <div class="event-log">
+                <h3>Event Log</h3>
+                <div id="event-log">
+                    <!-- Events will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Consequence Popup -->
+    <div id="consequence-popup" class="consequence-popup hidden">
+        <div id="consequence-text" class="consequence-text"></div>
+        <button id="consequence-ok" class="consequence-ok">OK</button>
+    </div>
+    
+    <!-- Load the main game script -->
+    <script src="MYSTORY.JAVASCRIPT"></script>
+    
+    <!-- Load the solo route expansions -->
+    <script src="solo_route_day1_expansion.js"></script>
+    <script src="solo_route_day2_expansion.js"></script>
+    <script src="solo_route_integration.js"></script>
+    
+    <script>
+        // Initialize the game when everything is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait a bit for all scripts to load
+            setTimeout(() => {
+                if (typeof window.ConsequenceGame === 'function' && window.STORY_DATABASE) {
+                    // Integrate solo route expansions
+                    if (typeof integrateSoloRouteExpansions === 'function') {
+                        integrateSoloRouteExpansions();
+                    }
+                    
+                    // Initialize the game
+                    window.game = new window.ConsequenceGame();
+                    
+                    console.log("Game initialized with solo route expansions!");
+                    console.log("Total scenes available:", Object.keys(window.STORY_DATABASE).length);
+                } else {
+                    console.error("Failed to initialize game. Make sure all scripts are loaded.");
+                }
+            }, 200);
+        });
+    </script>
+</body>
+</html>
