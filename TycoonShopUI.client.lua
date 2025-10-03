@@ -386,7 +386,12 @@ function Shop:_build()
 		SliceCenter = Rect.new(100,100,100,100),
 		ImageTransparency = 0.15,
 	})
-	self.gui.SelectionImageObject = sel
+	sel.Name = "SelectionRing"
+	sel.Parent = self.gui
+	-- SelectionImageObject is a property on GuiService, not ScreenGui
+	pcall(function()
+		GuiService.SelectionImageObject = sel
+	end)
 	self.selection = sel
 
 	-- Blur
