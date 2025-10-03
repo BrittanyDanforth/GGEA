@@ -17,6 +17,7 @@ local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContentProvider = game:GetService("ContentProvider")
+local SoundService = game:GetService("SoundService")
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
@@ -73,6 +74,7 @@ Core.State = {
 	productCache = {},
 	initialized = false,
 	settings = {
+		soundEnabled = true,
 		animationsEnabled = true,
 		reducedMotion = false,
 		autoRefresh = true,
@@ -214,6 +216,42 @@ function Core.Animation.tween(object, properties, duration, easingStyle, easingD
 	local tween = TweenService:Create(object, tweenInfo, properties)
 	tween:Play()
 	return tween
+end
+
+-- Sound System
+Core.SoundSystem = {}
+
+function Core.SoundSystem.initialize()
+	-- Using working sound IDs
+	local sounds = {
+		click = {id = "rbxassetid://876939830", volume = 0.4},
+		hover = {id = "rbxassetid://10066936758", volume = 0.2},
+		open = {id = "rbxassetid://452267918", volume = 0.5},
+		close = {id = "rbxassetid://452267918", volume = 0.5},
+		success = {id = "rbxassetid://876939830", volume = 0.6},
+		error = {id = "rbxassetid://876939830", volume = 0.5},
+		notification = {id = "rbxassetid://876939830", volume = 0.5},
+	}
+
+	Core.SoundSystem.sounds = {}
+
+	for name, config in pairs(sounds) do
+		local sound = Instance.new("Sound")
+		sound.Name = "SanrioShop_" .. name
+		sound.SoundId = config.id
+		sound.Volume = config.volume
+		sound.Parent = SoundService
+		Core.SoundSystem.sounds[name] = sound
+	end
+end
+
+function Core.SoundSystem.play(soundName)
+	if not Core.State.settings.soundEnabled then return end
+
+	local sound = Core.SoundSystem.sounds[soundName]
+	if sound then
+		sound:Play()
+	end
 end
 
 -- Data Management
@@ -554,6 +592,7 @@ function UI.Components.Button(props)
 	local hoverScale = props.hoverScale or 1.05
 
 	component.instance.MouseEnter:Connect(function()
+		Core.SoundSystem.play("hover")
 		Core.Animation.tween(component.instance, {
 			Size = UDim2.new(
 				originalSize.X.Scale * hoverScale,
@@ -568,6 +607,10 @@ function UI.Components.Button(props)
 		Core.Animation.tween(component.instance, {
 			Size = originalSize
 		}, Core.CONSTANTS.ANIM_FAST)
+	end)
+
+	component.instance.MouseButton1Click:Connect(function()
+		Core.SoundSystem.play("click")
 	end)
 
 	return component
@@ -707,7 +750,7 @@ function UI.Responsive.scale(instance)
 end
 
 -- ========================================
--- MAIN SHOP IMPLEMENTATION - MODERN DESIGN
+-- MAIN SHOP IMPLEMENTATION
 -- ========================================
 local Shop = {}
 Shop.__index = Shop
@@ -731,6 +774,7 @@ function Shop.new()
 end
 
 function Shop:initialize()
+	Core.SoundSystem.initialize()
 	Core.DataManager.refreshPrices()
 
 	self:createToggleButton()
@@ -817,69 +861,14 @@ function Shop:createMainInterface()
 		Size = UDim2.fromOffset(panelSize.X, panelSize.Y),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = Color3.fromRGB(2, 6, 23),
-		cornerRadius = UDim.new(0, 36),
+		BackgroundColor3 = UI.Theme:get("background"),
+		cornerRadius = UDim.new(0, 24),
 		stroke = {
-			color = Color3.fromRGB(147, 51, 234),
-			thickness = 3,
+			color = UI.Theme:get("stroke"),
+			thickness = 1,
 		},
 		parent = self.gui,
 	}):render()
-
-	-- Glassmorphism background with animated gradient
-	local panelGradient = Instance.new("UIGradient")
-	panelGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(8, 12, 35)),
-		ColorSequenceKeypoint.new(0.25, Color3.fromRGB(6, 10, 30)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(4, 8, 25)),
-		ColorSequenceKeypoint.new(0.75, Color3.fromRGB(2, 6, 20)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 4, 15)),
-	})
-	panelGradient.Rotation = 45
-	panelGradient.Parent = self.mainPanel
-
-	-- Animated background pattern
-	local bgPattern = Instance.new("ImageLabel")
-	bgPattern.Name = "BackgroundPattern"
-	bgPattern.BackgroundTransparency = 1
-	bgPattern.Image = "rbxassetid://8992230672"
-	bgPattern.ImageColor3 = Color3.fromRGB(147, 51, 234)
-	bgPattern.ImageTransparency = 0.85
-	bgPattern.ScaleType = Enum.ScaleType.Tile
-	bgPattern.TileSize = UDim2.fromOffset(80, 80)
-	bgPattern.Size = UDim2.fromScale(1, 1)
-	bgPattern.ZIndex = 1
-	bgPattern.Parent = self.mainPanel
-
-	-- Floating accent orbs
-	local orb1 = Instance.new("Frame")
-	orb1.Name = "Orb1"
-	orb1.BackgroundColor3 = Color3.fromRGB(147, 51, 234)
-	orb1.BackgroundTransparency = 0.9
-	orb1.BorderSizePixel = 0
-	orb1.Size = UDim2.fromOffset(120, 120)
-	orb1.Position = UDim2.new(0, -60, 0, -60)
-	orb1.ZIndex = 2
-	orb1.Parent = self.mainPanel
-
-	local orb1Corner = Instance.new("UICorner")
-	orb1Corner.CornerRadius = UDim.new(0.5, 0)
-	orb1Corner.Parent = orb1
-
-	local orb2 = Instance.new("Frame")
-	orb2.Name = "Orb2"
-	orb2.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
-	orb2.BackgroundTransparency = 0.9
-	orb2.BorderSizePixel = 0
-	orb2.Size = UDim2.fromOffset(100, 100)
-	orb2.Position = UDim2.new(1, -50, 1, -50)
-	orb2.AnchorPoint = Vector2.new(1, 1)
-	orb2.ZIndex = 2
-	orb2.Parent = self.mainPanel
-
-	local orb2Corner = Instance.new("UICorner")
-	orb2Corner.CornerRadius = UDim.new(0.5, 0)
-	orb2Corner.Parent = orb2
 
 	UI.Responsive.scale(self.mainPanel)
 
@@ -901,97 +890,40 @@ end
 function Shop:createHeader()
 	local header = UI.Components.Frame({
 		Name = "Header",
-		Size = UDim2.new(1, -48, 0, 90),
+		Size = UDim2.new(1, -48, 0, 80),
 		Position = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0.05,
-		cornerRadius = UDim.new(0, 20),
+		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
+		cornerRadius = UDim.new(0, 16),
 		parent = self.mainPanel,
 	}):render()
-
-	-- Glassmorphism header with blur effect
-	local headerBlur = Instance.new("Frame")
-	headerBlur.Name = "HeaderBlur"
-	headerBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	headerBlur.BackgroundTransparency = 0.95
-	headerBlur.BorderSizePixel = 0
-	headerBlur.Size = UDim2.fromScale(1, 1)
-	headerBlur.Position = UDim2.fromOffset(0, 0)
-	headerBlur.ZIndex = header.ZIndex - 1
-	headerBlur.Parent = header
-
-	local headerCorner = Instance.new("UICorner")
-	headerCorner.CornerRadius = UDim.new(0, 20)
-	headerCorner.Parent = headerBlur
-
-	-- Modern header border glow
-	local headerBorder = Instance.new("UIStroke")
-	headerBorder.Color = Color3.fromRGB(147, 51, 234)
-	headerBorder.Thickness = 2
-	headerBorder.Transparency = 0.7
-	headerBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	headerBorder.Parent = header
-
-	local logoContainer = UI.Components.Frame({
-		Size = UDim2.fromOffset(70, 70),
-		Position = UDim2.fromOffset(15, 10),
-		BackgroundColor3 = Color3.fromRGB(147, 51, 234),
-		cornerRadius = UDim.new(0.5, 0),
-		parent = header,
-	}):render()
-
-	-- Pulsing logo effect
-	local logoPulse = Instance.new("UIGradient")
-	logoPulse.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(147, 51, 234)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(168, 85, 247)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(147, 51, 234)),
-	})
-	logoPulse.Parent = logoContainer
 
 	local logo = UI.Components.Image({
 		Name = "Logo",
 		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromScale(0.85, 0.85),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		parent = logoContainer,
+		Size = UDim2.fromOffset(60, 60),
+		Position = UDim2.fromOffset(16, 10),
+		parent = header,
 	}):render()
 
 	local title = UI.Components.TextLabel({
 		Name = "Title",
-		Text = "SANRIO SHOP",
+		Text = "Sanrio Shop",
 		Size = UDim2.new(1, -200, 1, 0),
-		Position = UDim2.fromOffset(100, 0),
+		Position = UDim2.fromOffset(92, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Enum.Font.GothamBold,
-		TextSize = 34,
-		TextColor3 = Color3.fromRGB(255, 255, 255),
-		parent = header,
-	}):render()
-
-	-- Subtitle with modern styling
-	local subtitle = UI.Components.TextLabel({
-		Name = "Subtitle",
-		Text = "Premium Items & Upgrades",
-		Size = UDim2.new(1, -200, 0, 20),
-		Position = UDim2.fromOffset(100, 45),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Font = Enum.Font.Gotham,
-		TextSize = 16,
-		TextColor3 = Color3.fromRGB(200, 200, 210),
+		TextSize = 32,
 		parent = header,
 	}):render()
 
 	local closeButton = UI.Components.Button({
 		Name = "CloseButton",
-		Text = "×",
-		Size = UDim2.fromOffset(50, 50),
-		Position = UDim2.new(1, -70, 0.5, 0),
+		Text = "X",
+		Size = UDim2.fromOffset(48, 48),
+		Position = UDim2.new(1, -64, 0.5, 0),
 		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundColor3 = Color3.fromRGB(239, 68, 68),
-		BackgroundTransparency = 0.1,
-		TextColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundColor3 = UI.Theme:get("error"),
+		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
 		TextSize = 24,
 		cornerRadius = UDim.new(0.5, 0),
@@ -1000,86 +932,23 @@ function Shop:createHeader()
 			self:close()
 		end,
 	}):render()
-
-	-- Modern glassmorphism close button
-	local closeBlur = Instance.new("Frame")
-	closeBlur.Name = "CloseBlur"
-	closeBlur.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
-	closeBlur.BackgroundTransparency = 0.8
-	closeBlur.BorderSizePixel = 0
-	closeBlur.Size = UDim2.fromScale(1, 1)
-	closeBlur.Position = UDim2.fromOffset(0, 0)
-	closeBlur.ZIndex = closeButton.ZIndex - 1
-	closeBlur.Parent = closeButton
-
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0.5, 0)
-	closeCorner.Parent = closeBlur
-
-	-- Close button glow effect
-	local closeGlow = Instance.new("UIStroke")
-	closeGlow.Color = Color3.fromRGB(239, 68, 68)
-	closeGlow.Thickness = 2
-	closeGlow.Transparency = 0.5
-	closeGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	closeGlow.Parent = closeButton
-
-	-- Enhanced hover effects
-	closeButton.MouseEnter:Connect(function()
-		Core.Animation.tween(closeButton, {
-			BackgroundTransparency = 0,
-			Size = UDim2.fromOffset(60, 60)
-		}, Core.CONSTANTS.ANIM_FAST)
-	end)
-
-	closeButton.MouseLeave:Connect(function()
-		Core.Animation.tween(closeButton, {
-			BackgroundTransparency = 0.1,
-			Size = UDim2.fromOffset(50, 50)
-		}, Core.CONSTANTS.ANIM_FAST)
-	end)
 end
 
 function Shop:createTabBar()
 	self.tabContainer = UI.Components.Frame({
 		Name = "TabContainer",
-		Size = UDim2.new(1, -48, 0, 70),
-		Position = UDim2.fromOffset(24, 130),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0.05,
-		cornerRadius = UDim.new(0, 18),
+		Size = UDim2.new(1, -48, 0, 48),
+		Position = UDim2.fromOffset(24, 116),
+		BackgroundTransparency = 1,
 		parent = self.mainPanel,
 	}):render()
 
-	-- Glassmorphism tab container
-	local tabBlur = Instance.new("Frame")
-	tabBlur.Name = "TabBlur"
-	tabBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tabBlur.BackgroundTransparency = 0.95
-	tabBlur.BorderSizePixel = 0
-	tabBlur.Size = UDim2.fromScale(1, 1)
-	tabBlur.Position = UDim2.fromOffset(0, 0)
-	tabBlur.ZIndex = self.tabContainer.ZIndex - 1
-	tabBlur.Parent = self.tabContainer
-
-	local tabCorner = Instance.new("UICorner")
-	tabCorner.CornerRadius = UDim.new(0, 18)
-	tabCorner.Parent = tabBlur
-
-	-- Modern tab border
-	local tabBorder = Instance.new("UIStroke")
-	tabBorder.Color = Color3.fromRGB(147, 51, 234)
-	tabBorder.Thickness = 2
-	tabBorder.Transparency = 0.8
-	tabBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	tabBorder.Parent = self.tabContainer
-
-	UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 24)
+	UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 12)
 
 	local tabData = {
-		{id = "Home", name = "HOME", icon = "rbxassetid://17398522865", color = Color3.fromRGB(147, 51, 234)},
-		{id = "Cash", name = "CASH", icon = "rbxassetid://10709728059", color = Color3.fromRGB(59, 130, 246)},
-		{id = "Gamepasses", name = "PASSES", icon = "rbxassetid://10709727148", color = Color3.fromRGB(16, 185, 129)},
+		{id = "Home", name = "Home", icon = "rbxassetid://17398522865", color = UI.Theme:get("kitty")},
+		{id = "Cash", name = "Cash", icon = "rbxassetid://10709728059", color = UI.Theme:get("cinna")},
+		{id = "Gamepasses", name = "Passes", icon = "rbxassetid://10709727148", color = UI.Theme:get("kuromi")},
 	}
 
 	for _, data in ipairs(tabData) do
@@ -1091,14 +960,12 @@ function Shop:createTab(data)
 	local tab = UI.Components.Button({
 		Name = data.id .. "Tab",
 		Text = "",
-		Size = UDim2.fromOffset(160, 45),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0.1,
-		cornerRadius = UDim.new(0, 12),
+		Size = UDim2.fromOffset(160, 48),
+		BackgroundColor3 = UI.Theme:get("surface"),
+		cornerRadius = UDim.new(0.5, 0),
 		stroke = {
-			color = data.color,
-			thickness = 2,
-			transparency = 0.6,
+			color = UI.Theme:get("stroke"),
+			thickness = 1,
 		},
 		LayoutOrder = #self.tabs + 1,
 		parent = self.tabContainer,
@@ -1107,29 +974,6 @@ function Shop:createTab(data)
 		end,
 	}):render()
 
-	-- Glassmorphism tab background
-	local tabBlur = Instance.new("Frame")
-	tabBlur.Name = "TabBlur"
-	tabBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	tabBlur.BackgroundTransparency = 0.9
-	tabBlur.BorderSizePixel = 0
-	tabBlur.Size = UDim2.fromScale(1, 1)
-	tabBlur.Position = UDim2.fromOffset(0, 0)
-	tabBlur.ZIndex = tab.ZIndex - 1
-	tabBlur.Parent = tab
-
-	local tabCorner = Instance.new("UICorner")
-	tabCorner.CornerRadius = UDim.new(0, 12)
-	tabCorner.Parent = tabBlur
-
-	-- Tab accent glow
-	local tabGlow = Instance.new("UIStroke")
-	tabGlow.Color = data.color
-	tabGlow.Thickness = 1
-	tabGlow.Transparency = 0.8
-	tabGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	tabGlow.Parent = tab
-
 	local content = UI.Components.Frame({
 		Name = "Content",
 		Size = UDim2.fromScale(1, 1),
@@ -1137,7 +981,7 @@ function Shop:createTab(data)
 		parent = tab,
 	}):render()
 
-	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 10, {left = 16, right = 16})
+	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 8, {left = 16, right = 16})
 
 	local icon = UI.Components.Image({
 		Name = "Icon",
@@ -1151,9 +995,8 @@ function Shop:createTab(data)
 		Name = "Label",
 		Text = data.name,
 		Size = UDim2.new(1, -32, 1, 0),
-		Font = Enum.Font.GothamBold,
+		Font = Enum.Font.GothamMedium,
 		TextSize = 16,
-		TextColor3 = Color3.fromRGB(255, 255, 255),
 		LayoutOrder = 2,
 		parent = content,
 	}):render()
@@ -1312,48 +1155,20 @@ end
 function Shop:createHeroSection(parent)
 	local hero = UI.Components.Frame({
 		Name = "HeroSection",
-		Size = UDim2.new(1, 0, 0, 220),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0.05,
-		cornerRadius = UDim.new(0, 24),
+		Size = UDim2.new(1, 0, 0, 200),
+		BackgroundColor3 = UI.Theme:get("accent"),
+		cornerRadius = UDim.new(0, 16),
 		LayoutOrder = 1,
 		parent = parent,
 	}):render()
 
-	-- Glassmorphism hero background
-	local heroBlur = Instance.new("Frame")
-	heroBlur.Name = "HeroBlur"
-	heroBlur.BackgroundColor3 = Color3.fromRGB(147, 51, 234)
-	heroBlur.BackgroundTransparency = 0.9
-	heroBlur.BorderSizePixel = 0
-	heroBlur.Size = UDim2.fromScale(1, 1)
-	heroBlur.Position = UDim2.fromOffset(0, 0)
-	heroBlur.ZIndex = hero.ZIndex - 1
-	heroBlur.Parent = hero
-
-	local heroCorner = Instance.new("UICorner")
-	heroCorner.CornerRadius = UDim.new(0, 24)
-	heroCorner.Parent = heroBlur
-
-	-- Hero border glow
-	local heroBorder = Instance.new("UIStroke")
-	heroBorder.Color = Color3.fromRGB(147, 51, 234)
-	heroBorder.Thickness = 2
-	heroBorder.Transparency = 0.7
-	heroBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	heroBorder.Parent = hero
-
-	-- Hero accent line
-	local heroAccent = Instance.new("Frame")
-	heroAccent.Name = "Accent"
-	heroAccent.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
-	heroAccent.BackgroundTransparency = 0.8
-	heroAccent.BorderSizePixel = 0
-	heroAccent.Size = UDim2.new(1, 0, 0, 2)
-	heroAccent.Position = UDim2.fromOffset(0, 0)
-	heroAccent.ZIndex = 3
-	heroAccent.Parent = hero
-
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 200)),
+	})
+	gradient.Rotation = 45
+	gradient.Parent = hero
 
 	local content = UI.Components.Frame({
 		Size = UDim2.fromScale(1, 1),
@@ -1361,95 +1176,56 @@ function Shop:createHeroSection(parent)
 		parent = hero,
 	}):render()
 
-	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 40, {
-		left = 50,
-		right = 50,
-		top = 40,
-		bottom = 40,
+	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 24, {
+		left = 32,
+		right = 32,
+		top = 24,
+		bottom = 24,
 	})
 
 	local textContainer = UI.Components.Frame({
-		Size = UDim2.new(0.7, 0, 1, 0),
+		Size = UDim2.new(0.6, 0, 1, 0),
 		BackgroundTransparency = 1,
 		LayoutOrder = 1,
 		parent = content,
 	}):render()
 
 	local heroTitle = UI.Components.TextLabel({
-		Text = "SANRIO SHOP",
-		Size = UDim2.new(1, 0, 0, 50),
+		Text = "Welcome to Sanrio Shop!",
+		Size = UDim2.new(1, 0, 0, 40),
 		Font = Enum.Font.GothamBold,
-		TextSize = 36,
-		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextSize = 32,
+		TextColor3 = Color3.new(1, 1, 1),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = textContainer,
 	}):render()
 
 	local heroDesc = UI.Components.TextLabel({
-		Text = "Premium items and exclusive upgrades await. Browse our collection of cash bundles and powerful gamepasses to enhance your tycoon experience.",
-		Size = UDim2.new(1, 0, 0, 70),
-		Position = UDim2.fromOffset(0, 60),
+		Text = "Get exclusive items and boosts for your tycoon!",
+		Size = UDim2.new(1, 0, 0, 60),
+		Position = UDim2.fromOffset(0, 50),
 		Font = Enum.Font.Gotham,
 		TextSize = 18,
-		TextColor3 = Color3.fromRGB(200, 210, 220),
+		TextColor3 = Color3.new(1, 1, 1),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextWrapped = true,
 		parent = textContainer,
 	}):render()
 
 	local ctaButton = UI.Components.Button({
-		Text = "EXPLORE STORE",
-		Size = UDim2.fromOffset(220, 55),
-		Position = UDim2.fromOffset(0, 140),
-		BackgroundColor3 = Color3.fromRGB(59, 130, 246),
-		BackgroundTransparency = 0.1,
-		TextColor3 = Color3.new(1, 1, 1),
+		Text = "Browse Items",
+		Size = UDim2.fromOffset(180, 48),
+		Position = UDim2.fromOffset(0, 120),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		TextColor3 = UI.Theme:get("accent"),
 		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		cornerRadius = UDim.new(0, 14),
+		TextSize = 18,
+		cornerRadius = UDim.new(0.5, 0),
 		parent = textContainer,
 		onClick = function()
 			self:selectTab("Cash")
 		end,
 	}):render()
-
-	-- Glassmorphism CTA button
-	local ctaBlur = Instance.new("Frame")
-	ctaBlur.Name = "CTABlur"
-	ctaBlur.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
-	ctaBlur.BackgroundTransparency = 0.8
-	ctaBlur.BorderSizePixel = 0
-	ctaBlur.Size = UDim2.fromScale(1, 1)
-	ctaBlur.Position = UDim2.fromOffset(0, 0)
-	ctaBlur.ZIndex = ctaButton.ZIndex - 1
-	ctaBlur.Parent = ctaButton
-
-	local ctaCorner = Instance.new("UICorner")
-	ctaCorner.CornerRadius = UDim.new(0, 14)
-	ctaCorner.Parent = ctaBlur
-
-	-- CTA button glow
-	local ctaGlow = Instance.new("UIStroke")
-	ctaGlow.Color = Color3.fromRGB(59, 130, 246)
-	ctaGlow.Thickness = 2
-	ctaGlow.Transparency = 0.6
-	ctaGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	ctaGlow.Parent = ctaButton
-
-	-- Enhanced hover effects
-	ctaButton.MouseEnter:Connect(function()
-		Core.Animation.tween(ctaButton, {
-			BackgroundTransparency = 0,
-			Size = UDim2.fromOffset(230, 60)
-		}, Core.CONSTANTS.ANIM_FAST)
-	end)
-
-	ctaButton.MouseLeave:Connect(function()
-		Core.Animation.tween(ctaButton, {
-			BackgroundTransparency = 0.1,
-			Size = UDim2.fromOffset(220, 55)
-		}, Core.CONSTANTS.ANIM_FAST)
-	end)
 
 	return hero
 end
@@ -1458,75 +1234,21 @@ function Shop:createProductCard(product, productType, parent)
 	local isGamepass = productType == "gamepass"
 	local cardColor = isGamepass and UI.Theme:get("kuromi") or UI.Theme:get("cinna")
 
-	-- Calculate responsive card size
-	local cardWidth = Core.Utils.isMobile() and 280 or 320
-	local cardHeight = Core.Utils.isMobile() and 380 or 420
-
 	local card = UI.Components.Frame({
 		Name = product.name .. "Card",
-		Size = UDim2.fromOffset(cardWidth, cardHeight),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0.05,
-		cornerRadius = UDim.new(0, 20),
+		Size = UDim2.fromOffset(
+			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.X or Core.CONSTANTS.CARD_SIZE.X,
+			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.Y or Core.CONSTANTS.CARD_SIZE.Y
+		),
+		BackgroundColor3 = UI.Theme:get("surface"),
+		cornerRadius = UDim.new(0, 16),
 		stroke = {
 			color = cardColor,
-			thickness = 3,
-			transparency = 0.7,
+			thickness = 2,
+			transparency = 0.5,
 		},
 		parent = parent,
 	}):render()
-
-	-- Glassmorphism card background
-	local cardBlur = Instance.new("Frame")
-	cardBlur.Name = "CardBlur"
-	cardBlur.BackgroundColor3 = cardColor
-	cardBlur.BackgroundTransparency = 0.9
-	cardBlur.BorderSizePixel = 0
-	cardBlur.Size = UDim2.fromScale(1, 1)
-	cardBlur.Position = UDim2.fromOffset(0, 0)
-	cardBlur.ZIndex = card.ZIndex - 1
-	cardBlur.Parent = card
-
-	local cardCorner = Instance.new("UICorner")
-	cardCorner.CornerRadius = UDim.new(0, 20)
-	cardCorner.Parent = cardBlur
-
-	-- Card border glow
-	local cardGlow = Instance.new("UIStroke")
-	cardGlow.Color = cardColor
-	cardGlow.Thickness = 2
-	cardGlow.Transparency = 0.8
-	cardGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	cardGlow.Parent = card
-
-	-- Multiple shadow layers for premium depth
-	local cardShadow1 = Instance.new("Frame")
-	cardShadow1.Name = "Shadow1"
-	cardShadow1.BackgroundColor3 = Color3.new(0, 0, 0)
-	cardShadow1.BackgroundTransparency = 0.85
-	cardShadow1.BorderSizePixel = 0
-	cardShadow1.Size = UDim2.new(1, 10, 1, 10)
-	cardShadow1.Position = UDim2.fromOffset(5, 5)
-	cardShadow1.ZIndex = card.ZIndex - 3
-	cardShadow1.Parent = parent
-
-	local cardShadow2 = Instance.new("Frame")
-	cardShadow2.Name = "Shadow2"
-	cardShadow2.BackgroundColor3 = Color3.new(0, 0, 0)
-	cardShadow2.BackgroundTransparency = 0.92
-	cardShadow2.BorderSizePixel = 0
-	cardShadow2.Size = UDim2.new(1, 6, 1, 6)
-	cardShadow2.Position = UDim2.fromOffset(3, 3)
-	cardShadow2.ZIndex = card.ZIndex - 2
-	cardShadow2.Parent = parent
-
-	local shadowCorner1 = Instance.new("UICorner")
-	shadowCorner1.CornerRadius = UDim.new(0, 20)
-	shadowCorner1.Parent = cardShadow1
-
-	local shadowCorner2 = Instance.new("UICorner")
-	shadowCorner2.CornerRadius = UDim.new(0, 20)
-	shadowCorner2.Parent = cardShadow2
 
 	self:addCardHoverEffect(card)
 
@@ -1537,115 +1259,76 @@ function Shop:createProductCard(product, productType, parent)
 		parent = card,
 	}):render()
 
-	-- Modern image container with glassmorphism
 	local imageContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 160),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0.1,
-		cornerRadius = UDim.new(0, 16),
+		Size = UDim2.new(1, 0, 0, 140),
+		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
+		cornerRadius = UDim.new(0, 12),
 		parent = content,
 	}):render()
 
-	-- Image container blur effect
-	local imageBlur = Instance.new("Frame")
-	imageBlur.Name = "ImageBlur"
-	imageBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	imageBlur.BackgroundTransparency = 0.9
-	imageBlur.BorderSizePixel = 0
-	imageBlur.Size = UDim2.fromScale(1, 1)
-	imageBlur.Position = UDim2.fromOffset(0, 0)
-	imageBlur.ZIndex = imageContainer.ZIndex - 1
-	imageBlur.Parent = imageContainer
-
-	local imageCorner = Instance.new("UICorner")
-	imageCorner.CornerRadius = UDim.new(0, 16)
-	imageCorner.Parent = imageBlur
-
-	-- Image border glow
-	local imageGlow = Instance.new("UIStroke")
-	imageGlow.Color = cardColor
-	imageGlow.Thickness = 1
-	imageGlow.Transparency = 0.8
-	imageGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	imageGlow.Parent = imageContainer
-
 	local productImage = UI.Components.Image({
-		Image = product.icon or "rbxassetid://10709728059",
-		Size = UDim2.fromScale(0.85, 0.85),
+		Image = product.icon or "rbxassetid://0",
+		Size = UDim2.fromScale(0.8, 0.8),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		ScaleType = Enum.ScaleType.Fit,
 		parent = imageContainer,
 	}):render()
 
-	-- Image inner glow effect
-	local imageInnerGlow = Instance.new("UIGradient")
-	imageInnerGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, cardColor:Lerp(Color3.new(1, 1, 1), 0.2)),
-		ColorSequenceKeypoint.new(0.5, cardColor:Lerp(Color3.new(1, 1, 1), 0.1)),
-		ColorSequenceKeypoint.new(1, cardColor:Lerp(Color3.new(1, 1, 1), 0.2)),
-	})
-	imageInnerGlow.Parent = productImage
-
 	local infoContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 1, -200),
-		Position = UDim2.fromOffset(0, 200),
+		Size = UDim2.new(1, 0, 1, -160),
+		Position = UDim2.fromOffset(0, 160),
 		BackgroundTransparency = 1,
 		parent = content,
 	}):render()
 
-	-- Modern title styling
 	local title = UI.Components.TextLabel({
 		Text = product.name,
-		Size = UDim2.new(1, 0, 0, 35),
+		Size = UDim2.new(1, 0, 0, 28),
 		Font = Enum.Font.GothamBold,
-		TextSize = 24,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextSize = 20,
+		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = infoContainer,
 	}):render()
 
-	-- Modern description styling
 	local description = UI.Components.TextLabel({
 		Text = product.description,
-		Size = UDim2.new(1, 0, 0, 50),
-		Position = UDim2.fromOffset(0, 40),
+		Size = UDim2.new(1, 0, 0, 40),
+		Position = UDim2.fromOffset(0, 32),
 		Font = Enum.Font.Gotham,
-		TextSize = 16,
-		TextColor3 = Color3.fromRGB(180, 190, 200),
-		TextXAlignment = Enum.TextXAlignment.Center,
+		TextSize = 14,
+		TextColor3 = UI.Theme:get("textSecondary"),
+		TextXAlignment = Enum.TextXAlignment.Left,
 		TextWrapped = true,
 		parent = infoContainer,
 	}):render()
 
-	-- Modern price display
-	local priceText = isGamepass and
-		("R$" .. tostring(product.price or 0)) or
-		("R$" .. tostring(product.price or 0) .. " • " .. Core.Utils.formatNumber(product.amount) .. " Cash")
+	local priceText = isGamepass and 
+		("R$" .. tostring(product.price or 0)) or 
+		("R$" .. tostring(product.price or 0) .. " for " .. Core.Utils.formatNumber(product.amount) .. " Cash")
 
 	local priceLabel = UI.Components.TextLabel({
 		Text = priceText,
-		Size = UDim2.new(1, 0, 0, 28),
-		Position = UDim2.fromOffset(0, 95),
+		Size = UDim2.new(1, 0, 0, 24),
+		Position = UDim2.fromOffset(0, 76),
 		Font = Enum.Font.GothamBold,
-		TextSize = 22,
+		TextSize = 18,
 		TextColor3 = cardColor,
-		TextXAlignment = Enum.TextXAlignment.Center,
+		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = infoContainer,
 	}):render()
 
 	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
 
 	local purchaseButton = UI.Components.Button({
-		Text = isOwned and "OWNED" or "PURCHASE",
-		Size = UDim2.new(1, -20, 0, 50),
-		Position = UDim2.fromOffset(10, 0, 1, -50),
-		BackgroundColor3 = isOwned and Color3.fromRGB(16, 185, 129) or cardColor,
-		BackgroundTransparency = 0.1,
+		Text = isOwned and "Owned" or "Purchase",
+		Size = UDim2.new(1, 0, 0, 40),
+		Position = UDim2.new(0, 0, 1, -40),
+		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
-		TextSize = 18,
-		cornerRadius = UDim.new(0, 12),
+		TextSize = 16,
+		cornerRadius = UDim.new(0, 8),
 		parent = infoContainer,
 		onClick = function()
 			if not isOwned then
@@ -1655,29 +1338,6 @@ function Shop:createProductCard(product, productType, parent)
 			end
 		end,
 	}):render()
-
-	-- Glassmorphism button background
-	local buttonBlur = Instance.new("Frame")
-	buttonBlur.Name = "ButtonBlur"
-	buttonBlur.BackgroundColor3 = isOwned and Color3.fromRGB(16, 185, 129) or cardColor
-	buttonBlur.BackgroundTransparency = 0.8
-	buttonBlur.BorderSizePixel = 0
-	buttonBlur.Size = UDim2.fromScale(1, 1)
-	buttonBlur.Position = UDim2.fromOffset(0, 0)
-	buttonBlur.ZIndex = purchaseButton.ZIndex - 1
-	buttonBlur.Parent = purchaseButton
-
-	local buttonCorner = Instance.new("UICorner")
-	buttonCorner.CornerRadius = UDim.new(0, 12)
-	buttonCorner.Parent = buttonBlur
-
-	-- Button glow effect
-	local buttonGlow = Instance.new("UIStroke")
-	buttonGlow.Color = isOwned and Color3.fromRGB(16, 185, 129) or cardColor
-	buttonGlow.Thickness = 2
-	buttonGlow.Transparency = 0.7
-	buttonGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	buttonGlow.Parent = purchaseButton
 
 	if isOwned and product.hasToggle then
 		self:addToggleSwitch(product, infoContainer)
@@ -1691,127 +1351,43 @@ end
 
 function Shop:addCardHoverEffect(card)
 	local originalPosition = card.Position
-	local originalStroke = card:FindFirstChildOfClass("UIStroke")
 
 	card.MouseEnter:Connect(function()
-		-- Modern hover effect with scale, lift, and glow
 		Core.Animation.tween(card, {
 			Position = UDim2.new(
 				originalPosition.X.Scale,
 				originalPosition.X.Offset,
 				originalPosition.Y.Scale,
 				originalPosition.Y.Offset - 8
-			),
-			Size = UDim2.fromOffset(card.Size.X.Offset * 1.03, card.Size.Y.Offset * 1.03)
+			)
 		}, Core.CONSTANTS.ANIM_FAST)
-
-		-- Enhanced glow on hover
-		if originalStroke then
-			Core.Animation.tween(originalStroke, {
-				Thickness = 4,
-				Transparency = 0.3
-			}, Core.CONSTANTS.ANIM_FAST)
-		end
-
-		-- Add hover blur enhancement
-		local hoverBlur = card:FindFirstChild("CardBlur")
-		if hoverBlur then
-			Core.Animation.tween(hoverBlur, {
-				BackgroundTransparency = 0.85
-			}, Core.CONSTANTS.ANIM_FAST)
-		end
 	end)
 
 	card.MouseLeave:Connect(function()
 		Core.Animation.tween(card, {
-			Position = originalPosition,
-			Size = UDim2.fromOffset(card.Size.X.Offset, card.Size.Y.Offset)
+			Position = originalPosition
 		}, Core.CONSTANTS.ANIM_FAST)
-
-		-- Restore original effects
-		if originalStroke then
-			Core.Animation.tween(originalStroke, {
-				Thickness = 3,
-				Transparency = 0.7
-			}, Core.CONSTANTS.ANIM_FAST)
-		end
-
-		-- Restore hover blur
-		local hoverBlur = card:FindFirstChild("CardBlur")
-		if hoverBlur then
-			Core.Animation.tween(hoverBlur, {
-				BackgroundTransparency = 0.9
-			}, Core.CONSTANTS.ANIM_FAST)
-		end
 	end)
 end
 
 function Shop:addToggleSwitch(product, parent)
 	local toggleContainer = UI.Components.Frame({
 		Name = "ToggleContainer",
-		Size = UDim2.fromOffset(70, 35),
-		Position = UDim2.new(1, -70, 0, 85),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0.1,
+		Size = UDim2.fromOffset(60, 30),
+		Position = UDim2.new(1, -60, 0, 76),
+		BackgroundColor3 = UI.Theme:get("stroke"),
 		cornerRadius = UDim.new(0.5, 0),
 		parent = parent,
 	}):render()
 
-	-- Glassmorphism toggle background
-	local toggleBlur = Instance.new("Frame")
-	toggleBlur.Name = "ToggleBlur"
-	toggleBlur.BackgroundColor3 = Color3.fromRGB(100, 100, 110)
-	toggleBlur.BackgroundTransparency = 0.8
-	toggleBlur.BorderSizePixel = 0
-	toggleBlur.Size = UDim2.fromScale(1, 1)
-	toggleBlur.Position = UDim2.fromOffset(0, 0)
-	toggleBlur.ZIndex = toggleContainer.ZIndex - 1
-	toggleBlur.Parent = toggleContainer
-
-	local toggleCorner = Instance.new("UICorner")
-	toggleCorner.CornerRadius = UDim.new(0.5, 0)
-	toggleCorner.Parent = toggleBlur
-
-	-- Toggle border glow
-	local toggleGlow = Instance.new("UIStroke")
-	toggleGlow.Color = Color3.fromRGB(147, 51, 234)
-	toggleGlow.Thickness = 1
-	toggleGlow.Transparency = 0.8
-	toggleGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	toggleGlow.Parent = toggleContainer
-
 	local toggleButton = UI.Components.Frame({
 		Name = "ToggleButton",
-		Size = UDim2.fromOffset(31, 31),
+		Size = UDim2.fromOffset(26, 26),
 		Position = UDim2.fromOffset(2, 2),
-		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-		BackgroundTransparency = 0.1,
+		BackgroundColor3 = UI.Theme:get("surface"),
 		cornerRadius = UDim.new(0.5, 0),
 		parent = toggleContainer,
 	}):render()
-
-	-- Toggle button glassmorphism
-	local toggleButtonBlur = Instance.new("Frame")
-	toggleButtonBlur.Name = "ToggleButtonBlur"
-	toggleButtonBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	toggleButtonBlur.BackgroundTransparency = 0.9
-	toggleButtonBlur.BorderSizePixel = 0
-	toggleButtonBlur.Size = UDim2.fromScale(1, 1)
-	toggleButtonBlur.Position = UDim2.fromOffset(0, 0)
-	toggleButtonBlur.ZIndex = toggleButton.ZIndex - 1
-	toggleButtonBlur.Parent = toggleButton
-
-	local toggleButtonCorner = Instance.new("UICorner")
-	toggleButtonCorner.CornerRadius = UDim.new(0.5, 0)
-	toggleButtonCorner.Parent = toggleButtonBlur
-
-	-- Toggle button glow
-	local toggleButtonGlow = Instance.new("UIStroke")
-	toggleButtonGlow.Color = Color3.fromRGB(255, 255, 255)
-	toggleButtonGlow.Thickness = 1
-	toggleButtonGlow.Transparency = 0.7
-	toggleButtonGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	toggleButtonGlow.Parent = toggleButton
 
 	local toggleState = false
 	if Remotes then
@@ -1828,16 +1404,12 @@ function Shop:addToggleSwitch(product, parent)
 
 	local function updateToggleVisual()
 		if toggleState then
-			Core.Animation.tween(toggleContainer, {
-				BackgroundColor3 = Color3.fromRGB(16, 185, 129)
-			}, Core.CONSTANTS.ANIM_FAST)
+			toggleContainer.BackgroundColor3 = UI.Theme:get("success")
 			Core.Animation.tween(toggleButton, {
-				Position = UDim2.fromOffset(37, 2)
+				Position = UDim2.fromOffset(32, 2)
 			}, Core.CONSTANTS.ANIM_FAST)
 		else
-			Core.Animation.tween(toggleContainer, {
-				BackgroundColor3 = Color3.fromRGB(100, 100, 110)
-			}, Core.CONSTANTS.ANIM_FAST)
+			toggleContainer.BackgroundColor3 = UI.Theme:get("stroke")
 			Core.Animation.tween(toggleButton, {
 				Position = UDim2.fromOffset(2, 2)
 			}, Core.CONSTANTS.ANIM_FAST)
@@ -1863,6 +1435,7 @@ function Shop:addToggleSwitch(product, parent)
 			end
 		end
 
+		Core.SoundSystem.play("click")
 	end)
 end
 
@@ -1926,6 +1499,7 @@ function Shop:selectTab(tabId)
 	end
 
 	self.currentTab = tabId
+	Core.SoundSystem.play("click")
 	Core.Events:emit("tabChanged", tabId)
 end
 
@@ -2038,6 +1612,7 @@ function Shop:open()
 		)
 	}, Core.CONSTANTS.ANIM_BOUNCE, Enum.EasingStyle.Back)
 
+	Core.SoundSystem.play("open")
 
 	task.wait(Core.CONSTANTS.ANIM_BOUNCE)
 	Core.State.isAnimating = false
@@ -2063,6 +1638,7 @@ function Shop:close()
 		)
 	}, Core.CONSTANTS.ANIM_FAST)
 
+	Core.SoundSystem.play("close")
 
 	task.wait(Core.CONSTANTS.ANIM_FAST)
 	self.gui.Enabled = false
@@ -2087,12 +1663,14 @@ function Shop:setupRemoteHandlers()
 		purchaseConfirm.OnClientEvent:Connect(function(passId)
 			ownershipCache:clear()
 			self:refreshAllProducts()
+			Core.SoundSystem.play("success")
 		end)
 	end
 
 	local productGrant = Remotes:FindFirstChild("ProductGranted") or Remotes:FindFirstChild("GrantProductCurrency")
 	if productGrant and productGrant:IsA("RemoteEvent") then
 		productGrant.OnClientEvent:Connect(function(productId, amount)
+			Core.SoundSystem.play("success")
 		end)
 	end
 end
@@ -2137,6 +1715,7 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 			pending.product.purchaseButton.Active = false
 		end
 
+		Core.SoundSystem.play("success")
 
 		task.wait(0.5)
 		shop:refreshAllProducts()
@@ -2157,6 +1736,7 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, produc
 	Core.State.purchasePending[productId] = nil
 
 	if purchased then
+		Core.SoundSystem.play("success")
 
 		if Remotes then
 			local grantEvent = Remotes:FindFirstChild("GrantProductCurrency")
