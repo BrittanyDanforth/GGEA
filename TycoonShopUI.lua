@@ -2312,9 +2312,11 @@ Player.CharacterAdded:Connect(function()
 	end
 end)
 
--- Cleanup on close
-game:BindToClose(function()
-	shopManager:destroy()
+-- Cleanup when player leaves
+Players.PlayerRemoving:Connect(function(player)
+	if player == Player then
+		shopManager:destroy()
+	end
 end)
 
 print("[TycoonShop] Modern Cute UI v" .. SHOP_VERSION .. " initialized successfully!")
