@@ -1135,12 +1135,14 @@ end
 
 -- Input Handling
 function Shop:connectInputs()
+    local shopInstance = self -- Capture self in a local variable
+
     UserInputService.InputBegan:Connect(function(input, gp)
         if gp then return end
         if input.KeyCode == Enum.KeyCode.M then
-            self:toggle()
+            shopInstance:toggle()
         elseif input.KeyCode == Enum.KeyCode.Escape and Core.State.isOpen then
-            self:close()
+            shopInstance:close()
         end
     end)
 
@@ -1162,7 +1164,7 @@ function Shop:connectInputs()
         AnchorPoint = Vector2.new(1, 1),
         corner = Theme.radius.small,
         parent = toggleGui,
-        onClick = function() self:toggle() end,
+        onClick = function() shopInstance:toggle() end,
     }):render()
 
     pill.MouseEnter:Connect(function()
