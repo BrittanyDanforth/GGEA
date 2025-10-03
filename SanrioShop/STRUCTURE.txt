@@ -1,0 +1,271 @@
+================================================================================
+SANRIO SHOP SYSTEM - FILE STRUCTURE & HIERARCHY
+================================================================================
+
+📦 ROBLOX STUDIO HIERARCHY
+================================================================================
+
+game
+├── StarterPlayer
+│   └── StarterPlayerScripts
+│       └── ShopSystem                          📁 Create this folder
+│           ├── SanrioShop                      📜 LocalScript (Main)
+│           ├── SanrioShop_Core                 📦 ModuleScript
+│           └── SanrioShop_UI                   📦 ModuleScript
+│
+├── ReplicatedStorage
+│   └── TycoonRemotes                           📁 Create this folder
+│       ├── GrantProductCurrency                🔄 RemoteEvent
+│       ├── GamepassPurchased                   🔄 RemoteEvent
+│       ├── AutoCollectToggle                   🔄 RemoteEvent
+│       └── GetAutoCollectState                 📞 RemoteFunction
+│
+└── ServerScriptService
+    └── ShopHandler                             📜 Script (Your server code)
+
+================================================================================
+📋 FILE DESCRIPTIONS
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SanrioShop (LocalScript)                                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│ PURPOSE: Main shop implementation                                       │
+│ TYPE: LocalScript (Client-side)                                         │
+│ LOCATION: StarterPlayer/StarterPlayerScripts/ShopSystem/               │
+│ REQUIRES: SanrioShop_Core, SanrioShop_UI                               │
+│                                                                          │
+│ RESPONSIBILITIES:                                                        │
+│   • Creates shop UI and toggle button                                  │
+│   • Handles user interactions                                          │
+│   • Manages purchase prompts                                           │
+│   • Connects to marketplace services                                   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SanrioShop_Core (ModuleScript)                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│ PURPOSE: Core logic and utilities                                       │
+│ TYPE: ModuleScript (Reusable module)                                   │
+│ LOCATION: StarterPlayer/StarterPlayerScripts/ShopSystem/               │
+│ REQUIRED BY: SanrioShop, SanrioShop_UI                                 │
+│                                                                          │
+│ EXPORTS:                                                                 │
+│   • CONSTANTS - Configuration values                                   │
+│   • State - Shop state management                                      │
+│   • Events - Event pub/sub system                                      │
+│   • Cache - Caching system                                             │
+│   • Utils - Utility functions                                          │
+│   • Animation - Animation helpers                                      │
+│   • SoundSystem - Sound management                                     │
+│   • DataManager - Product data & API calls                            │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ SanrioShop_UI (ModuleScript)                                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│ PURPOSE: UI components and theming                                      │
+│ TYPE: ModuleScript (Reusable module)                                   │
+│ LOCATION: StarterPlayer/StarterPlayerScripts/ShopSystem/               │
+│ REQUIRES: SanrioShop_Core                                               │
+│ REQUIRED BY: SanrioShop                                                 │
+│                                                                          │
+│ EXPORTS:                                                                 │
+│   • Theme - Color theme system                                         │
+│   • Components - UI component factory                                  │
+│   • Effects - Visual effects library                                   │
+│   • Layout - Layout utilities                                          │
+│   • Responsive - Responsive design helpers                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+🔗 DEPENDENCY GRAPH
+================================================================================
+
+              ┌─────────────────┐
+              │   SanrioShop    │  LocalScript (Entry Point)
+              │   (Main Script) │
+              └────────┬────────┘
+                       │
+         ┌─────────────┴─────────────┐
+         │                           │
+         ▼                           ▼
+┌─────────────────┐         ┌─────────────────┐
+│ SanrioShop_Core │         │  SanrioShop_UI  │
+│  (ModuleScript) │◄────────┤  (ModuleScript) │
+└─────────────────┘         └─────────────────┘
+         │                           │
+         └───────────┬───────────────┘
+                     │
+                     ▼
+         ┌───────────────────────┐
+         │  Roblox Services:     │
+         │  • MarketplaceService │
+         │  • TweenService       │
+         │  • SoundService       │
+         │  • etc.               │
+         └───────────────────────┘
+
+================================================================================
+📡 REMOTE EVENTS STRUCTURE
+================================================================================
+
+TycoonRemotes (Folder in ReplicatedStorage)
+│
+├── GrantProductCurrency (RemoteEvent)
+│   Direction: Client → Server
+│   Purpose: Request to grant currency after product purchase
+│   Parameters: productId (number)
+│
+├── GamepassPurchased (RemoteEvent)
+│   Direction: Server → Client
+│   Purpose: Notify client that gamepass was purchased
+│   Parameters: passId (number)
+│
+├── AutoCollectToggle (RemoteEvent)
+│   Direction: Client → Server
+│   Purpose: Toggle Auto Collect gamepass on/off
+│   Parameters: state (boolean)
+│
+└── GetAutoCollectState (RemoteFunction)
+    Direction: Client ↔ Server
+    Purpose: Get current Auto Collect state
+    Returns: state (boolean)
+
+================================================================================
+💾 DATA FLOW
+================================================================================
+
+PRODUCT PURCHASE FLOW:
+1. Player clicks "Purchase" button
+2. SanrioShop calls MarketplaceService:PromptProductPurchase()
+3. Player completes purchase in Roblox prompt
+4. MarketplaceService.ProcessReceipt fires on SERVER
+5. Server grants currency and marks purchase complete
+6. Client receives PromptProductPurchaseFinished event
+7. Shop plays success sound and refreshes UI
+
+GAMEPASS PURCHASE FLOW:
+1. Player clicks "Purchase" button on gamepass
+2. SanrioShop calls MarketplaceService:PromptGamePassPurchase()
+3. Player completes purchase in Roblox prompt
+4. Client receives PromptGamePassPurchaseFinished event
+5. Shop updates button to "Owned" and refreshes ownership
+6. Server can optionally fire GamepassPurchased remote for sync
+
+================================================================================
+🎨 UI COMPONENT HIERARCHY
+================================================================================
+
+SanrioShopMain (ScreenGui)
+│
+├── DimBackground (Frame)
+│   └── (Semi-transparent overlay)
+│
+└── MainPanel (Frame) ← Main container
+    │
+    ├── Header (Frame)
+    │   ├── Logo (ImageLabel)
+    │   ├── Title (TextLabel)
+    │   └── CloseButton (TextButton)
+    │
+    ├── TabContainer (Frame)
+    │   ├── HomeTab (TextButton)
+    │   ├── CashTab (TextButton)
+    │   └── GamepassesTab (TextButton)
+    │
+    └── ContentContainer (Frame)
+        ├── HomePage (Frame)
+        │   ├── HeroSection (Frame)
+        │   └── FeaturedItems (ScrollingFrame)
+        │
+        ├── CashPage (Frame)
+        │   └── ProductGrid (ScrollingFrame)
+        │       ├── ProductCard1 (Frame)
+        │       ├── ProductCard2 (Frame)
+        │       └── ...
+        │
+        └── GamepassesPage (Frame)
+            └── GamepassGrid (ScrollingFrame)
+                ├── GamepassCard1 (Frame)
+                ├── GamepassCard2 (Frame)
+                └── ...
+
+SanrioShopToggle (ScreenGui)
+│
+└── ShopToggle (TextButton)
+    ├── Icon (ImageLabel)
+    └── Label (TextLabel)
+
+================================================================================
+⚙️ CONFIGURATION LOCATIONS
+================================================================================
+
+┌──────────────────────────────────────┬────────────────────────────────────┐
+│ What to Change                       │ Where to Find It                   │
+├──────────────────────────────────────┼────────────────────────────────────┤
+│ Product IDs & Prices                 │ SanrioShop_Core.lua                │
+│                                      │ → DataManager.products (line ~350) │
+├──────────────────────────────────────┼────────────────────────────────────┤
+│ Theme Colors                         │ SanrioShop_UI.lua                  │
+│                                      │ → UI.Theme.themes (line ~20)       │
+├──────────────────────────────────────┼────────────────────────────────────┤
+│ Sound IDs                            │ SanrioShop_Core.lua                │
+│                                      │ → SoundSystem.initialize (line ~270)│
+├──────────────────────────────────────┼────────────────────────────────────┤
+│ Panel/Card Sizes                     │ SanrioShop_Core.lua                │
+│                                      │ → CONSTANTS (line ~30)             │
+├──────────────────────────────────────┼────────────────────────────────────┤
+│ Animation Timings                    │ SanrioShop_Core.lua                │
+│                                      │ → CONSTANTS (line ~30)             │
+├──────────────────────────────────────┼────────────────────────────────────┤
+│ Keybind (M key)                      │ SanrioShop.lua                     │
+│                                      │ → setupInputHandlers (line ~1050)  │
+└──────────────────────────────────────┴────────────────────────────────────┘
+
+================================================================================
+🔍 QUICK REFERENCE - COMMON OPERATIONS
+================================================================================
+
+CHANGE MODULE LOCATION:
+If you want modules in ReplicatedStorage instead:
+1. Move both ModuleScripts to ReplicatedStorage
+2. Update requires in SanrioShop.lua:
+   local Core = require(game.ReplicatedStorage:WaitForChild("SanrioShop_Core"))
+   local UI = require(game.ReplicatedStorage:WaitForChild("SanrioShop_UI"))
+
+ADD NEW PRODUCT:
+1. Open SanrioShop_Core.lua
+2. Find DataManager.products
+3. Add new entry to cash or gamepasses array
+4. Include: id, name, description, icon, price, amount (for cash)
+
+CHANGE SHOP OPEN KEY:
+1. Open SanrioShop.lua
+2. Find: if input.KeyCode == Enum.KeyCode.M then
+3. Replace M with desired key (e.g., Enum.KeyCode.B)
+
+DISABLE ANIMATIONS:
+1. Open SanrioShop_Core.lua
+2. Find: State.settings
+3. Set: animationsEnabled = false
+
+================================================================================
+✅ SETUP CHECKLIST
+================================================================================
+
+□ Created ShopSystem folder in StarterPlayerScripts
+□ Added SanrioShop LocalScript
+□ Added SanrioShop_Core ModuleScript
+□ Added SanrioShop_UI ModuleScript
+□ Created TycoonRemotes folder in ReplicatedStorage
+□ Added GrantProductCurrency RemoteEvent
+□ Added GamepassPurchased RemoteEvent
+□ Added AutoCollectToggle RemoteEvent
+□ Added GetAutoCollectState RemoteFunction
+□ Updated product IDs in SanrioShop_Core
+□ Created server script to handle ProcessReceipt
+□ Tested shop opens with M key
+□ Verified products display correctly
+
+================================================================================
