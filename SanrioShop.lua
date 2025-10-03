@@ -817,44 +817,69 @@ function Shop:createMainInterface()
 		Size = UDim2.fromOffset(panelSize.X, panelSize.Y),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = Color3.fromRGB(20, 20, 25),
-		cornerRadius = UDim.new(0, 32),
+		BackgroundColor3 = Color3.fromRGB(2, 6, 23),
+		cornerRadius = UDim.new(0, 36),
 		stroke = {
-			color = Color3.fromRGB(255, 64, 129),
-			thickness = 2,
+			color = Color3.fromRGB(147, 51, 234),
+			thickness = 3,
 		},
 		parent = self.gui,
 	}):render()
 
-	-- Modern dark gradient background
+	-- Glassmorphism background with animated gradient
 	local panelGradient = Instance.new("UIGradient")
 	panelGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 30)),
-		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(22, 22, 28)),
-		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(18, 18, 24)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 20)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(8, 12, 35)),
+		ColorSequenceKeypoint.new(0.25, Color3.fromRGB(6, 10, 30)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(4, 8, 25)),
+		ColorSequenceKeypoint.new(0.75, Color3.fromRGB(2, 6, 20)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 4, 15)),
 	})
-	panelGradient.Rotation = 135
+	panelGradient.Rotation = 45
 	panelGradient.Parent = self.mainPanel
 
-	-- Modern accent lighting effect
-	local accentLight = Instance.new("Frame")
-	accentLight.Name = "AccentLight"
-	accentLight.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
-	accentLight.BackgroundTransparency = 0.95
-	accentLight.BorderSizePixel = 0
-	accentLight.Size = UDim2.new(1, 0, 0, 4)
-	accentLight.Position = UDim2.fromOffset(0, 0)
-	accentLight.ZIndex = 2
-	accentLight.Parent = self.mainPanel
+	-- Animated background pattern
+	local bgPattern = Instance.new("ImageLabel")
+	bgPattern.Name = "BackgroundPattern"
+	bgPattern.BackgroundTransparency = 1
+	bgPattern.Image = "rbxassetid://8992230672"
+	bgPattern.ImageColor3 = Color3.fromRGB(147, 51, 234)
+	bgPattern.ImageTransparency = 0.85
+	bgPattern.ScaleType = Enum.ScaleType.Tile
+	bgPattern.TileSize = UDim2.fromOffset(80, 80)
+	bgPattern.Size = UDim2.fromScale(1, 1)
+	bgPattern.ZIndex = 1
+	bgPattern.Parent = self.mainPanel
 
-	local lightGradient = Instance.new("UIGradient")
-	lightGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 64, 129)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 140)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 64, 129)),
-	})
-	lightGradient.Parent = accentLight
+	-- Floating accent orbs
+	local orb1 = Instance.new("Frame")
+	orb1.Name = "Orb1"
+	orb1.BackgroundColor3 = Color3.fromRGB(147, 51, 234)
+	orb1.BackgroundTransparency = 0.9
+	orb1.BorderSizePixel = 0
+	orb1.Size = UDim2.fromOffset(120, 120)
+	orb1.Position = UDim2.new(0, -60, 0, -60)
+	orb1.ZIndex = 2
+	orb1.Parent = self.mainPanel
+
+	local orb1Corner = Instance.new("UICorner")
+	orb1Corner.CornerRadius = UDim.new(0.5, 0)
+	orb1Corner.Parent = orb1
+
+	local orb2 = Instance.new("Frame")
+	orb2.Name = "Orb2"
+	orb2.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+	orb2.BackgroundTransparency = 0.9
+	orb2.BorderSizePixel = 0
+	orb2.Size = UDim2.fromOffset(100, 100)
+	orb2.Position = UDim2.new(1, -50, 1, -50)
+	orb2.AnchorPoint = Vector2.new(1, 1)
+	orb2.ZIndex = 2
+	orb2.Parent = self.mainPanel
+
+	local orb2Corner = Instance.new("UICorner")
+	orb2Corner.CornerRadius = UDim.new(0.5, 0)
+	orb2Corner.Parent = orb2
 
 	UI.Responsive.scale(self.mainPanel)
 
@@ -876,54 +901,58 @@ end
 function Shop:createHeader()
 	local header = UI.Components.Frame({
 		Name = "Header",
-		Size = UDim2.new(1, -48, 0, 100),
+		Size = UDim2.new(1, -48, 0, 90),
 		Position = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = Color3.fromRGB(30, 30, 35),
-		cornerRadius = UDim.new(0, 24),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.05,
+		cornerRadius = UDim.new(0, 20),
 		parent = self.mainPanel,
 	}):render()
 
-	-- Modern dark header gradient
-	local headerGradient = Instance.new("UIGradient")
-	headerGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 40)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(32, 32, 37)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(28, 28, 33)),
-	})
-	headerGradient.Parent = header
+	-- Glassmorphism header with blur effect
+	local headerBlur = Instance.new("Frame")
+	headerBlur.Name = "HeaderBlur"
+	headerBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	headerBlur.BackgroundTransparency = 0.95
+	headerBlur.BorderSizePixel = 0
+	headerBlur.Size = UDim2.fromScale(1, 1)
+	headerBlur.Position = UDim2.fromOffset(0, 0)
+	headerBlur.ZIndex = header.ZIndex - 1
+	headerBlur.Parent = header
 
-	-- Header accent line
-	local headerAccent = Instance.new("Frame")
-	headerAccent.Name = "Accent"
-	headerAccent.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
-	headerAccent.BackgroundTransparency = 0.8
-	headerAccent.BorderSizePixel = 0
-	headerAccent.Size = UDim2.new(1, 0, 0, 2)
-	headerAccent.Position = UDim2.fromOffset(0, 0)
-	headerAccent.ZIndex = 3
-	headerAccent.Parent = header
+	local headerCorner = Instance.new("UICorner")
+	headerCorner.CornerRadius = UDim.new(0, 20)
+	headerCorner.Parent = headerBlur
+
+	-- Modern header border glow
+	local headerBorder = Instance.new("UIStroke")
+	headerBorder.Color = Color3.fromRGB(147, 51, 234)
+	headerBorder.Thickness = 2
+	headerBorder.Transparency = 0.7
+	headerBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	headerBorder.Parent = header
 
 	local logoContainer = UI.Components.Frame({
-		Size = UDim2.fromOffset(80, 80),
-		Position = UDim2.fromOffset(20, 10),
-		BackgroundColor3 = Color3.fromRGB(255, 64, 129),
+		Size = UDim2.fromOffset(70, 70),
+		Position = UDim2.fromOffset(15, 10),
+		BackgroundColor3 = Color3.fromRGB(147, 51, 234),
 		cornerRadius = UDim.new(0.5, 0),
 		parent = header,
 	}):render()
 
-	-- Logo glow effect
-	local logoGlow = Instance.new("UIGradient")
-	logoGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 140)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 64, 129)),
+	-- Pulsing logo effect
+	local logoPulse = Instance.new("UIGradient")
+	logoPulse.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(147, 51, 234)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(168, 85, 247)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(147, 51, 234)),
 	})
-	logoGlow.Parent = logoContainer
+	logoPulse.Parent = logoContainer
 
 	local logo = UI.Components.Image({
 		Name = "Logo",
 		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromScale(0.8, 0.8),
+		Size = UDim2.fromScale(0.85, 0.85),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		parent = logoContainer,
@@ -932,25 +961,39 @@ function Shop:createHeader()
 	local title = UI.Components.TextLabel({
 		Name = "Title",
 		Text = "SANRIO SHOP",
-		Size = UDim2.new(1, -220, 1, 0),
-		Position = UDim2.fromOffset(115, 0),
+		Size = UDim2.new(1, -200, 1, 0),
+		Position = UDim2.fromOffset(100, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Enum.Font.GothamBold,
-		TextSize = 38,
+		TextSize = 34,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
+		parent = header,
+	}):render()
+
+	-- Subtitle with modern styling
+	local subtitle = UI.Components.TextLabel({
+		Name = "Subtitle",
+		Text = "Premium Items & Upgrades",
+		Size = UDim2.new(1, -200, 0, 20),
+		Position = UDim2.fromOffset(100, 45),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Font = Enum.Font.Gotham,
+		TextSize = 16,
+		TextColor3 = Color3.fromRGB(200, 200, 210),
 		parent = header,
 	}):render()
 
 	local closeButton = UI.Components.Button({
 		Name = "CloseButton",
 		Text = "×",
-		Size = UDim2.fromOffset(60, 60),
-		Position = UDim2.new(1, -80, 0.5, 0),
+		Size = UDim2.fromOffset(50, 50),
+		Position = UDim2.new(1, -70, 0.5, 0),
 		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundColor3 = Color3.fromRGB(220, 53, 69),
-		TextColor3 = Color3.new(1, 1, 1),
+		BackgroundColor3 = Color3.fromRGB(239, 68, 68),
+		BackgroundTransparency = 0.1,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
 		Font = Enum.Font.GothamBold,
-		TextSize = 28,
+		TextSize = 24,
 		cornerRadius = UDim.new(0.5, 0),
 		parent = header,
 		onClick = function()
@@ -958,67 +1001,85 @@ function Shop:createHeader()
 		end,
 	}):render()
 
-	-- Modern hover effects for close button
+	-- Modern glassmorphism close button
+	local closeBlur = Instance.new("Frame")
+	closeBlur.Name = "CloseBlur"
+	closeBlur.BackgroundColor3 = Color3.fromRGB(239, 68, 68)
+	closeBlur.BackgroundTransparency = 0.8
+	closeBlur.BorderSizePixel = 0
+	closeBlur.Size = UDim2.fromScale(1, 1)
+	closeBlur.Position = UDim2.fromOffset(0, 0)
+	closeBlur.ZIndex = closeButton.ZIndex - 1
+	closeBlur.Parent = closeButton
+
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(0.5, 0)
+	closeCorner.Parent = closeBlur
+
+	-- Close button glow effect
+	local closeGlow = Instance.new("UIStroke")
+	closeGlow.Color = Color3.fromRGB(239, 68, 68)
+	closeGlow.Thickness = 2
+	closeGlow.Transparency = 0.5
+	closeGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	closeGlow.Parent = closeButton
+
+	-- Enhanced hover effects
 	closeButton.MouseEnter:Connect(function()
 		Core.Animation.tween(closeButton, {
-			BackgroundColor3 = Color3.fromRGB(255, 69, 84),
-			Size = UDim2.fromOffset(70, 70)
+			BackgroundTransparency = 0,
+			Size = UDim2.fromOffset(60, 60)
 		}, Core.CONSTANTS.ANIM_FAST)
 	end)
 
 	closeButton.MouseLeave:Connect(function()
 		Core.Animation.tween(closeButton, {
-			BackgroundColor3 = Color3.fromRGB(220, 53, 69),
-			Size = UDim2.fromOffset(60, 60)
+			BackgroundTransparency = 0.1,
+			Size = UDim2.fromOffset(50, 50)
 		}, Core.CONSTANTS.ANIM_FAST)
 	end)
-
-	-- Close button glow
-	local closeGlow = Instance.new("UIGradient")
-	closeGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 235, 240)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 220, 225)),
-	})
-	closeGlow.Parent = closeButton
 end
 
 function Shop:createTabBar()
 	self.tabContainer = UI.Components.Frame({
 		Name = "TabContainer",
-		Size = UDim2.new(1, -48, 0, 60),
-		Position = UDim2.fromOffset(24, 140),
-		BackgroundColor3 = Color3.fromRGB(25, 25, 30),
-		cornerRadius = UDim.new(0, 16),
+		Size = UDim2.new(1, -48, 0, 70),
+		Position = UDim2.fromOffset(24, 130),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.05,
+		cornerRadius = UDim.new(0, 18),
 		parent = self.mainPanel,
 	}):render()
 
-	-- Modern tab container gradient
-	local tabContainerGradient = Instance.new("UIGradient")
-	tabContainerGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 35)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(27, 27, 32)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 24, 29)),
-	})
-	tabContainerGradient.Parent = self.tabContainer
+	-- Glassmorphism tab container
+	local tabBlur = Instance.new("Frame")
+	tabBlur.Name = "TabBlur"
+	tabBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	tabBlur.BackgroundTransparency = 0.95
+	tabBlur.BorderSizePixel = 0
+	tabBlur.Size = UDim2.fromScale(1, 1)
+	tabBlur.Position = UDim2.fromOffset(0, 0)
+	tabBlur.ZIndex = self.tabContainer.ZIndex - 1
+	tabBlur.Parent = self.tabContainer
 
-	-- Tab container accent border
-	local tabAccent = Instance.new("Frame")
-	tabAccent.Name = "Accent"
-	tabAccent.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
-	tabAccent.BackgroundTransparency = 0.9
-	tabAccent.BorderSizePixel = 0
-	tabAccent.Size = UDim2.new(1, 0, 0, 1)
-	tabAccent.Position = UDim2.fromOffset(0, 0)
-	tabAccent.ZIndex = 3
-	tabAccent.Parent = self.tabContainer
+	local tabCorner = Instance.new("UICorner")
+	tabCorner.CornerRadius = UDim.new(0, 18)
+	tabCorner.Parent = tabBlur
 
-	UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 20)
+	-- Modern tab border
+	local tabBorder = Instance.new("UIStroke")
+	tabBorder.Color = Color3.fromRGB(147, 51, 234)
+	tabBorder.Thickness = 2
+	tabBorder.Transparency = 0.8
+	tabBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	tabBorder.Parent = self.tabContainer
+
+	UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 24)
 
 	local tabData = {
-		{id = "Home", name = "HOME", icon = "rbxassetid://17398522865", color = Color3.fromRGB(255, 64, 129)},
-		{id = "Cash", name = "CASH", icon = "rbxassetid://10709728059", color = Color3.fromRGB(64, 129, 255)},
-		{id = "Gamepasses", name = "PASSES", icon = "rbxassetid://10709727148", color = Color3.fromRGB(129, 64, 255)},
+		{id = "Home", name = "HOME", icon = "rbxassetid://17398522865", color = Color3.fromRGB(147, 51, 234)},
+		{id = "Cash", name = "CASH", icon = "rbxassetid://10709728059", color = Color3.fromRGB(59, 130, 246)},
+		{id = "Gamepasses", name = "PASSES", icon = "rbxassetid://10709727148", color = Color3.fromRGB(16, 185, 129)},
 	}
 
 	for _, data in ipairs(tabData) do
@@ -1030,13 +1091,14 @@ function Shop:createTab(data)
 	local tab = UI.Components.Button({
 		Name = data.id .. "Tab",
 		Text = "",
-		Size = UDim2.fromOffset(180, 50),
-		BackgroundColor3 = Color3.fromRGB(35, 35, 40),
-		cornerRadius = UDim.new(0, 14),
+		Size = UDim2.fromOffset(160, 45),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.1,
+		cornerRadius = UDim.new(0, 12),
 		stroke = {
 			color = data.color,
 			thickness = 2,
-			transparency = 0.7,
+			transparency = 0.6,
 		},
 		LayoutOrder = #self.tabs + 1,
 		parent = self.tabContainer,
@@ -1045,22 +1107,27 @@ function Shop:createTab(data)
 		end,
 	}):render()
 
-	-- Modern tab gradient
-	local tabGradient = Instance.new("UIGradient")
-	tabGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 45)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(37, 37, 42)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(34, 34, 39)),
-	})
-	tabGradient.Parent = tab
+	-- Glassmorphism tab background
+	local tabBlur = Instance.new("Frame")
+	tabBlur.Name = "TabBlur"
+	tabBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	tabBlur.BackgroundTransparency = 0.9
+	tabBlur.BorderSizePixel = 0
+	tabBlur.Size = UDim2.fromScale(1, 1)
+	tabBlur.Position = UDim2.fromOffset(0, 0)
+	tabBlur.ZIndex = tab.ZIndex - 1
+	tabBlur.Parent = tab
 
-	-- Tab glow effect
-	local tabGlow = Instance.new("UIGradient")
-	tabGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, data.color:Lerp(Color3.new(1, 1, 1), 0.3)),
-		ColorSequenceKeypoint.new(0.5, data.color:Lerp(Color3.new(1, 1, 1), 0.2)),
-		ColorSequenceKeypoint.new(1, data.color:Lerp(Color3.new(1, 1, 1), 0.3)),
-	})
+	local tabCorner = Instance.new("UICorner")
+	tabCorner.CornerRadius = UDim.new(0, 12)
+	tabCorner.Parent = tabBlur
+
+	-- Tab accent glow
+	local tabGlow = Instance.new("UIStroke")
+	tabGlow.Color = data.color
+	tabGlow.Thickness = 1
+	tabGlow.Transparency = 0.8
+	tabGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	tabGlow.Parent = tab
 
 	local content = UI.Components.Frame({
@@ -1070,12 +1137,12 @@ function Shop:createTab(data)
 		parent = tab,
 	}):render()
 
-	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 12, {left = 20, right = 20})
+	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 10, {left = 16, right = 16})
 
 	local icon = UI.Components.Image({
 		Name = "Icon",
 		Image = data.icon,
-		Size = UDim2.fromOffset(28, 28),
+		Size = UDim2.fromOffset(24, 24),
 		LayoutOrder = 1,
 		parent = content,
 	}):render()
@@ -1083,10 +1150,10 @@ function Shop:createTab(data)
 	local label = UI.Components.TextLabel({
 		Name = "Label",
 		Text = data.name,
-		Size = UDim2.new(1, -40, 1, 0),
+		Size = UDim2.new(1, -32, 1, 0),
 		Font = Enum.Font.GothamBold,
-		TextSize = 18,
-		TextColor3 = Color3.fromRGB(240, 240, 245),
+		TextSize = 16,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
 		LayoutOrder = 2,
 		parent = content,
 	}):render()
@@ -1245,42 +1312,47 @@ end
 function Shop:createHeroSection(parent)
 	local hero = UI.Components.Frame({
 		Name = "HeroSection",
-		Size = UDim2.new(1, 0, 0, 240),
-		BackgroundColor3 = Color3.fromRGB(15, 15, 20),
-		cornerRadius = UDim.new(0, 28),
+		Size = UDim2.new(1, 0, 0, 220),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.05,
+		cornerRadius = UDim.new(0, 24),
 		LayoutOrder = 1,
 		parent = parent,
 	}):render()
 
-	-- Modern hero gradient with dark theme
-	local gradient = Instance.new("UIGradient")
-	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 25)),
-		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(18, 18, 23)),
-		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(16, 16, 21)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 14, 19)),
-	})
-	gradient.Rotation = 135
-	gradient.Parent = hero
+	-- Glassmorphism hero background
+	local heroBlur = Instance.new("Frame")
+	heroBlur.Name = "HeroBlur"
+	heroBlur.BackgroundColor3 = Color3.fromRGB(147, 51, 234)
+	heroBlur.BackgroundTransparency = 0.9
+	heroBlur.BorderSizePixel = 0
+	heroBlur.Size = UDim2.fromScale(1, 1)
+	heroBlur.Position = UDim2.fromOffset(0, 0)
+	heroBlur.ZIndex = hero.ZIndex - 1
+	heroBlur.Parent = hero
 
-	-- Hero accent lighting
+	local heroCorner = Instance.new("UICorner")
+	heroCorner.CornerRadius = UDim.new(0, 24)
+	heroCorner.Parent = heroBlur
+
+	-- Hero border glow
+	local heroBorder = Instance.new("UIStroke")
+	heroBorder.Color = Color3.fromRGB(147, 51, 234)
+	heroBorder.Thickness = 2
+	heroBorder.Transparency = 0.7
+	heroBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	heroBorder.Parent = hero
+
+	-- Hero accent line
 	local heroAccent = Instance.new("Frame")
 	heroAccent.Name = "Accent"
-	heroAccent.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
-	heroAccent.BackgroundTransparency = 0.9
+	heroAccent.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+	heroAccent.BackgroundTransparency = 0.8
 	heroAccent.BorderSizePixel = 0
-	heroAccent.Size = UDim2.new(1, 0, 0, 3)
+	heroAccent.Size = UDim2.new(1, 0, 0, 2)
 	heroAccent.Position = UDim2.fromOffset(0, 0)
-	heroAccent.ZIndex = 2
+	heroAccent.ZIndex = 3
 	heroAccent.Parent = hero
-
-	local accentGradient = Instance.new("UIGradient")
-	accentGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 64, 129)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 140)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 64, 129)),
-	})
-	accentGradient.Parent = heroAccent
 
 
 	local content = UI.Components.Frame({
@@ -1304,63 +1376,78 @@ function Shop:createHeroSection(parent)
 	}):render()
 
 	local heroTitle = UI.Components.TextLabel({
-		Text = "WELCOME TO SANRIO SHOP",
-		Size = UDim2.new(1, 0, 0, 60),
+		Text = "SANRIO SHOP",
+		Size = UDim2.new(1, 0, 0, 50),
 		Font = Enum.Font.GothamBold,
-		TextSize = 40,
+		TextSize = 36,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = textContainer,
 	}):render()
 
 	local heroDesc = UI.Components.TextLabel({
-		Text = "Premium items and powerful upgrades await. Purchase cash bundles and unlock exclusive gamepasses to dominate your tycoon empire.",
-		Size = UDim2.new(1, 0, 0, 80),
-		Position = UDim2.fromOffset(0, 70),
+		Text = "Premium items and exclusive upgrades await. Browse our collection of cash bundles and powerful gamepasses to enhance your tycoon experience.",
+		Size = UDim2.new(1, 0, 0, 70),
+		Position = UDim2.fromOffset(0, 60),
 		Font = Enum.Font.Gotham,
-		TextSize = 20,
-		TextColor3 = Color3.fromRGB(220, 220, 225),
+		TextSize = 18,
+		TextColor3 = Color3.fromRGB(200, 210, 220),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextWrapped = true,
 		parent = textContainer,
 	}):render()
 
 	local ctaButton = UI.Components.Button({
-		Text = "BROWSE ITEMS",
-		Size = UDim2.fromOffset(240, 60),
-		Position = UDim2.fromOffset(0, 160),
-		BackgroundColor3 = Color3.fromRGB(255, 64, 129),
+		Text = "EXPLORE STORE",
+		Size = UDim2.fromOffset(220, 55),
+		Position = UDim2.fromOffset(0, 140),
+		BackgroundColor3 = Color3.fromRGB(59, 130, 246),
+		BackgroundTransparency = 0.1,
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
-		TextSize = 22,
-		cornerRadius = UDim.new(0, 16),
+		TextSize = 20,
+		cornerRadius = UDim.new(0, 14),
 		parent = textContainer,
 		onClick = function()
 			self:selectTab("Cash")
 		end,
 	}):render()
 
-	-- Modern CTA button gradient
-	local ctaGradient = Instance.new("UIGradient")
-	ctaGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 64, 129)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 140)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 64, 129)),
-	})
-	ctaGradient.Parent = ctaButton
+	-- Glassmorphism CTA button
+	local ctaBlur = Instance.new("Frame")
+	ctaBlur.Name = "CTABlur"
+	ctaBlur.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+	ctaBlur.BackgroundTransparency = 0.8
+	ctaBlur.BorderSizePixel = 0
+	ctaBlur.Size = UDim2.fromScale(1, 1)
+	ctaBlur.Position = UDim2.fromOffset(0, 0)
+	ctaBlur.ZIndex = ctaButton.ZIndex - 1
+	ctaBlur.Parent = ctaButton
 
-	-- CTA button hover effect
+	local ctaCorner = Instance.new("UICorner")
+	ctaCorner.CornerRadius = UDim.new(0, 14)
+	ctaCorner.Parent = ctaBlur
+
+	-- CTA button glow
+	local ctaGlow = Instance.new("UIStroke")
+	ctaGlow.Color = Color3.fromRGB(59, 130, 246)
+	ctaGlow.Thickness = 2
+	ctaGlow.Transparency = 0.6
+	ctaGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	ctaGlow.Parent = ctaButton
+
+	-- Enhanced hover effects
 	ctaButton.MouseEnter:Connect(function()
 		Core.Animation.tween(ctaButton, {
-			Size = UDim2.fromOffset(250, 65),
-			BackgroundColor3 = Color3.fromRGB(255, 80, 140)
+			BackgroundTransparency = 0,
+			Size = UDim2.fromOffset(230, 60)
 		}, Core.CONSTANTS.ANIM_FAST)
 	end)
 
 	ctaButton.MouseLeave:Connect(function()
 		Core.Animation.tween(ctaButton, {
-			Size = UDim2.fromOffset(240, 60),
-			BackgroundColor3 = Color3.fromRGB(255, 64, 129)
+			BackgroundTransparency = 0.1,
+			Size = UDim2.fromOffset(220, 55)
 		}, Core.CONSTANTS.ANIM_FAST)
 	end)
 
@@ -1378,54 +1465,68 @@ function Shop:createProductCard(product, productType, parent)
 	local card = UI.Components.Frame({
 		Name = product.name .. "Card",
 		Size = UDim2.fromOffset(cardWidth, cardHeight),
-		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0, 24),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.05,
+		cornerRadius = UDim.new(0, 20),
 		stroke = {
 			color = cardColor,
-			thickness = 4,
+			thickness = 3,
+			transparency = 0.7,
 		},
 		parent = parent,
 	}):render()
 
-	-- Enhanced card gradient with depth and character-specific colors
-	local gradient = Instance.new("UIGradient")
-	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.3, cardColor:Lerp(Color3.new(1, 1, 1), 0.05)),
-		ColorSequenceKeypoint.new(0.7, cardColor:Lerp(Color3.fromRGB(245, 245, 250), 0.1)),
-		ColorSequenceKeypoint.new(1, cardColor:Lerp(Color3.fromRGB(240, 240, 248), 0.15)),
-	})
-	gradient.Rotation = 135
-	gradient.Parent = card
+	-- Glassmorphism card background
+	local cardBlur = Instance.new("Frame")
+	cardBlur.Name = "CardBlur"
+	cardBlur.BackgroundColor3 = cardColor
+	cardBlur.BackgroundTransparency = 0.9
+	cardBlur.BorderSizePixel = 0
+	cardBlur.Size = UDim2.fromScale(1, 1)
+	cardBlur.Position = UDim2.fromOffset(0, 0)
+	cardBlur.ZIndex = card.ZIndex - 1
+	cardBlur.Parent = card
 
-	-- Add multiple shadow layers for depth
+	local cardCorner = Instance.new("UICorner")
+	cardCorner.CornerRadius = UDim.new(0, 20)
+	cardCorner.Parent = cardBlur
+
+	-- Card border glow
+	local cardGlow = Instance.new("UIStroke")
+	cardGlow.Color = cardColor
+	cardGlow.Thickness = 2
+	cardGlow.Transparency = 0.8
+	cardGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	cardGlow.Parent = card
+
+	-- Multiple shadow layers for premium depth
 	local cardShadow1 = Instance.new("Frame")
 	cardShadow1.Name = "Shadow1"
 	cardShadow1.BackgroundColor3 = Color3.new(0, 0, 0)
-	cardShadow1.BackgroundTransparency = 0.9
+	cardShadow1.BackgroundTransparency = 0.85
 	cardShadow1.BorderSizePixel = 0
-	cardShadow1.Size = UDim2.new(1, 12, 1, 12)
-	cardShadow1.Position = UDim2.fromOffset(6, 6)
+	cardShadow1.Size = UDim2.new(1, 10, 1, 10)
+	cardShadow1.Position = UDim2.fromOffset(5, 5)
 	cardShadow1.ZIndex = card.ZIndex - 3
 	cardShadow1.Parent = parent
 
 	local cardShadow2 = Instance.new("Frame")
 	cardShadow2.Name = "Shadow2"
 	cardShadow2.BackgroundColor3 = Color3.new(0, 0, 0)
-	cardShadow2.BackgroundTransparency = 0.95
+	cardShadow2.BackgroundTransparency = 0.92
 	cardShadow2.BorderSizePixel = 0
-	cardShadow2.Size = UDim2.new(1, 8, 1, 8)
-	cardShadow2.Position = UDim2.fromOffset(4, 4)
+	cardShadow2.Size = UDim2.new(1, 6, 1, 6)
+	cardShadow2.Position = UDim2.fromOffset(3, 3)
 	cardShadow2.ZIndex = card.ZIndex - 2
 	cardShadow2.Parent = parent
 
-	local cardCorner1 = Instance.new("UICorner")
-	cardCorner1.CornerRadius = UDim.new(0, 24)
-	cardCorner1.Parent = cardShadow1
+	local shadowCorner1 = Instance.new("UICorner")
+	shadowCorner1.CornerRadius = UDim.new(0, 20)
+	shadowCorner1.Parent = cardShadow1
 
-	local cardCorner2 = Instance.new("UICorner")
-	cardCorner2.CornerRadius = UDim.new(0, 24)
-	cardCorner2.Parent = cardShadow2
+	local shadowCorner2 = Instance.new("UICorner")
+	shadowCorner2.CornerRadius = UDim.new(0, 20)
+	shadowCorner2.Parent = cardShadow2
 
 	self:addCardHoverEffect(card)
 
@@ -1436,55 +1537,55 @@ function Shop:createProductCard(product, productType, parent)
 		parent = card,
 	}):render()
 
-	-- Enhanced image container with premium styling
+	-- Modern image container with glassmorphism
 	local imageContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 180),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 20),
+		Size = UDim2.new(1, 0, 0, 160),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.1,
+		cornerRadius = UDim.new(0, 16),
 		parent = content,
 	}):render()
 
-	-- Enhanced image gradient
-	local imageGradient = Instance.new("UIGradient")
-	imageGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(250, 252, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(245, 248, 255)),
-	})
-	imageGradient.Parent = imageContainer
-
-	-- Add inner shadow to image container
-	local imageInnerShadow = Instance.new("Frame")
-	imageInnerShadow.Name = "InnerShadow"
-	imageInnerShadow.BackgroundColor3 = Color3.new(0, 0, 0)
-	imageInnerShadow.BackgroundTransparency = 0.85
-	imageInnerShadow.BorderSizePixel = 0
-	imageInnerShadow.Size = UDim2.new(1, 6, 1, 6)
-	imageInnerShadow.Position = UDim2.fromOffset(3, 3)
-	imageInnerShadow.ZIndex = imageContainer.ZIndex - 1
-	imageInnerShadow.Parent = content
+	-- Image container blur effect
+	local imageBlur = Instance.new("Frame")
+	imageBlur.Name = "ImageBlur"
+	imageBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	imageBlur.BackgroundTransparency = 0.9
+	imageBlur.BorderSizePixel = 0
+	imageBlur.Size = UDim2.fromScale(1, 1)
+	imageBlur.Position = UDim2.fromOffset(0, 0)
+	imageBlur.ZIndex = imageContainer.ZIndex - 1
+	imageBlur.Parent = imageContainer
 
 	local imageCorner = Instance.new("UICorner")
-	imageCorner.CornerRadius = UDim.new(0, 20)
-	imageCorner.Parent = imageInnerShadow
+	imageCorner.CornerRadius = UDim.new(0, 16)
+	imageCorner.Parent = imageBlur
+
+	-- Image border glow
+	local imageGlow = Instance.new("UIStroke")
+	imageGlow.Color = cardColor
+	imageGlow.Thickness = 1
+	imageGlow.Transparency = 0.8
+	imageGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	imageGlow.Parent = imageContainer
 
 	local productImage = UI.Components.Image({
 		Image = product.icon or "rbxassetid://10709728059",
-		Size = UDim2.fromScale(0.8, 0.8),
+		Size = UDim2.fromScale(0.85, 0.85),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		ScaleType = Enum.ScaleType.Fit,
 		parent = imageContainer,
 	}):render()
 
-	-- Add subtle glow around product image
-	local imageGlow = Instance.new("UIGradient")
-	imageGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5, cardColor:Lerp(Color3.new(1, 1, 1), 0.3)),
-		ColorSequenceKeypoint.new(1, cardColor:Lerp(Color3.fromRGB(240, 240, 245), 0.4)),
+	-- Image inner glow effect
+	local imageInnerGlow = Instance.new("UIGradient")
+	imageInnerGlow.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, cardColor:Lerp(Color3.new(1, 1, 1), 0.2)),
+		ColorSequenceKeypoint.new(0.5, cardColor:Lerp(Color3.new(1, 1, 1), 0.1)),
+		ColorSequenceKeypoint.new(1, cardColor:Lerp(Color3.new(1, 1, 1), 0.2)),
 	})
-	imageGlow.Parent = productImage
+	imageInnerGlow.Parent = productImage
 
 	local infoContainer = UI.Components.Frame({
 		Size = UDim2.new(1, 0, 1, -200),
@@ -1493,41 +1594,41 @@ function Shop:createProductCard(product, productType, parent)
 		parent = content,
 	}):render()
 
-	-- Enhanced title with premium typography
+	-- Modern title styling
 	local title = UI.Components.TextLabel({
 		Text = product.name,
-		Size = UDim2.new(1, 0, 0, 40),
+		Size = UDim2.new(1, 0, 0, 35),
 		Font = Enum.Font.GothamBold,
-		TextSize = 26,
+		TextSize = 24,
 		TextXAlignment = Enum.TextXAlignment.Center,
-		TextColor3 = UI.Theme:get("text"),
+		TextColor3 = Color3.fromRGB(255, 255, 255),
 		parent = infoContainer,
 	}):render()
 
-	-- Enhanced description with better spacing
+	-- Modern description styling
 	local description = UI.Components.TextLabel({
 		Text = product.description,
-		Size = UDim2.new(1, 0, 0, 60),
-		Position = UDim2.fromOffset(0, 48),
+		Size = UDim2.new(1, 0, 0, 50),
+		Position = UDim2.fromOffset(0, 40),
 		Font = Enum.Font.Gotham,
-		TextSize = 18,
-		TextColor3 = UI.Theme:get("textSecondary"),
+		TextSize = 16,
+		TextColor3 = Color3.fromRGB(180, 190, 200),
 		TextXAlignment = Enum.TextXAlignment.Center,
 		TextWrapped = true,
 		parent = infoContainer,
 	}):render()
 
-	-- Enhanced price display with character-specific styling
+	-- Modern price display
 	local priceText = isGamepass and
 		("R$" .. tostring(product.price or 0)) or
-		("R$" .. tostring(product.price or 0) .. " for " .. Core.Utils.formatNumber(product.amount) .. " Cash")
+		("R$" .. tostring(product.price or 0) .. " • " .. Core.Utils.formatNumber(product.amount) .. " Cash")
 
 	local priceLabel = UI.Components.TextLabel({
 		Text = priceText,
-		Size = UDim2.new(1, 0, 0, 32),
-		Position = UDim2.fromOffset(0, 115),
+		Size = UDim2.new(1, 0, 0, 28),
+		Position = UDim2.fromOffset(0, 95),
 		Font = Enum.Font.GothamBold,
-		TextSize = 24,
+		TextSize = 22,
 		TextColor3 = cardColor,
 		TextXAlignment = Enum.TextXAlignment.Center,
 		parent = infoContainer,
@@ -1536,14 +1637,15 @@ function Shop:createProductCard(product, productType, parent)
 	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
 
 	local purchaseButton = UI.Components.Button({
-		Text = isOwned and "Owned" or "Purchase",
-		Size = UDim2.new(1, -24, 0, 60),
-		Position = UDim2.fromOffset(12, 0, 1, -60),
-		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
+		Text = isOwned and "OWNED" or "PURCHASE",
+		Size = UDim2.new(1, -20, 0, 50),
+		Position = UDim2.fromOffset(10, 0, 1, -50),
+		BackgroundColor3 = isOwned and Color3.fromRGB(16, 185, 129) or cardColor,
+		BackgroundTransparency = 0.1,
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		cornerRadius = UDim.new(0, 16),
+		TextSize = 18,
+		cornerRadius = UDim.new(0, 12),
 		parent = infoContainer,
 		onClick = function()
 			if not isOwned then
@@ -1554,14 +1656,27 @@ function Shop:createProductCard(product, productType, parent)
 		end,
 	}):render()
 
-	-- Enhanced button with multiple gradients and premium effects
-	local buttonGlow = Instance.new("UIGradient")
-	buttonGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(250, 252, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(245, 248, 255)),
-	})
+	-- Glassmorphism button background
+	local buttonBlur = Instance.new("Frame")
+	buttonBlur.Name = "ButtonBlur"
+	buttonBlur.BackgroundColor3 = isOwned and Color3.fromRGB(16, 185, 129) or cardColor
+	buttonBlur.BackgroundTransparency = 0.8
+	buttonBlur.BorderSizePixel = 0
+	buttonBlur.Size = UDim2.fromScale(1, 1)
+	buttonBlur.Position = UDim2.fromOffset(0, 0)
+	buttonBlur.ZIndex = purchaseButton.ZIndex - 1
+	buttonBlur.Parent = purchaseButton
+
+	local buttonCorner = Instance.new("UICorner")
+	buttonCorner.CornerRadius = UDim.new(0, 12)
+	buttonCorner.Parent = buttonBlur
+
+	-- Button glow effect
+	local buttonGlow = Instance.new("UIStroke")
+	buttonGlow.Color = isOwned and Color3.fromRGB(16, 185, 129) or cardColor
+	buttonGlow.Thickness = 2
+	buttonGlow.Transparency = 0.7
+	buttonGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	buttonGlow.Parent = purchaseButton
 
 	if isOwned and product.hasToggle then
@@ -1579,22 +1694,30 @@ function Shop:addCardHoverEffect(card)
 	local originalStroke = card:FindFirstChildOfClass("UIStroke")
 
 	card.MouseEnter:Connect(function()
-		-- Enhanced hover effect with scale and lift
+		-- Modern hover effect with scale, lift, and glow
 		Core.Animation.tween(card, {
 			Position = UDim2.new(
 				originalPosition.X.Scale,
 				originalPosition.X.Offset,
 				originalPosition.Y.Scale,
-				originalPosition.Y.Offset - 12
+				originalPosition.Y.Offset - 8
 			),
-			Size = UDim2.fromOffset(card.Size.X.Offset * 1.02, card.Size.Y.Offset * 1.02)
+			Size = UDim2.fromOffset(card.Size.X.Offset * 1.03, card.Size.Y.Offset * 1.03)
 		}, Core.CONSTANTS.ANIM_FAST)
 
-		-- Enhance stroke on hover
+		-- Enhanced glow on hover
 		if originalStroke then
 			Core.Animation.tween(originalStroke, {
 				Thickness = 4,
-				Transparency = 0.2
+				Transparency = 0.3
+			}, Core.CONSTANTS.ANIM_FAST)
+		end
+
+		-- Add hover blur enhancement
+		local hoverBlur = card:FindFirstChild("CardBlur")
+		if hoverBlur then
+			Core.Animation.tween(hoverBlur, {
+				BackgroundTransparency = 0.85
 			}, Core.CONSTANTS.ANIM_FAST)
 		end
 	end)
@@ -1605,11 +1728,19 @@ function Shop:addCardHoverEffect(card)
 			Size = UDim2.fromOffset(card.Size.X.Offset, card.Size.Y.Offset)
 		}, Core.CONSTANTS.ANIM_FAST)
 
-		-- Restore original stroke
+		-- Restore original effects
 		if originalStroke then
 			Core.Animation.tween(originalStroke, {
 				Thickness = 3,
-				Transparency = 0
+				Transparency = 0.7
+			}, Core.CONSTANTS.ANIM_FAST)
+		end
+
+		-- Restore hover blur
+		local hoverBlur = card:FindFirstChild("CardBlur")
+		if hoverBlur then
+			Core.Animation.tween(hoverBlur, {
+				BackgroundTransparency = 0.9
 			}, Core.CONSTANTS.ANIM_FAST)
 		end
 	end)
@@ -1618,38 +1749,68 @@ end
 function Shop:addToggleSwitch(product, parent)
 	local toggleContainer = UI.Components.Frame({
 		Name = "ToggleContainer",
-		Size = UDim2.fromOffset(80, 40),
-		Position = UDim2.new(1, -80, 0, 90),
-		BackgroundColor3 = UI.Theme:get("stroke"),
+		Size = UDim2.fromOffset(70, 35),
+		Position = UDim2.new(1, -70, 0, 85),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.1,
 		cornerRadius = UDim.new(0.5, 0),
 		parent = parent,
 	}):render()
 
-	-- Enhanced toggle gradient
-	local toggleGradient = Instance.new("UIGradient")
-	toggleGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 240, 245)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(235, 237, 242)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 232, 240)),
-	})
-	toggleGradient.Parent = toggleContainer
+	-- Glassmorphism toggle background
+	local toggleBlur = Instance.new("Frame")
+	toggleBlur.Name = "ToggleBlur"
+	toggleBlur.BackgroundColor3 = Color3.fromRGB(100, 100, 110)
+	toggleBlur.BackgroundTransparency = 0.8
+	toggleBlur.BorderSizePixel = 0
+	toggleBlur.Size = UDim2.fromScale(1, 1)
+	toggleBlur.Position = UDim2.fromOffset(0, 0)
+	toggleBlur.ZIndex = toggleContainer.ZIndex - 1
+	toggleBlur.Parent = toggleContainer
+
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.CornerRadius = UDim.new(0.5, 0)
+	toggleCorner.Parent = toggleBlur
+
+	-- Toggle border glow
+	local toggleGlow = Instance.new("UIStroke")
+	toggleGlow.Color = Color3.fromRGB(147, 51, 234)
+	toggleGlow.Thickness = 1
+	toggleGlow.Transparency = 0.8
+	toggleGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	toggleGlow.Parent = toggleContainer
 
 	local toggleButton = UI.Components.Frame({
 		Name = "ToggleButton",
-		Size = UDim2.fromOffset(36, 36),
+		Size = UDim2.fromOffset(31, 31),
 		Position = UDim2.fromOffset(2, 2),
-		BackgroundColor3 = UI.Theme:get("surface"),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		BackgroundTransparency = 0.1,
 		cornerRadius = UDim.new(0.5, 0),
 		parent = toggleContainer,
 	}):render()
 
-	-- Add glow to toggle button
-	local toggleButtonGlow = Instance.new("UIGradient")
-	toggleButtonGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(250, 250, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(245, 245, 255)),
-	})
+	-- Toggle button glassmorphism
+	local toggleButtonBlur = Instance.new("Frame")
+	toggleButtonBlur.Name = "ToggleButtonBlur"
+	toggleButtonBlur.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	toggleButtonBlur.BackgroundTransparency = 0.9
+	toggleButtonBlur.BorderSizePixel = 0
+	toggleButtonBlur.Size = UDim2.fromScale(1, 1)
+	toggleButtonBlur.Position = UDim2.fromOffset(0, 0)
+	toggleButtonBlur.ZIndex = toggleButton.ZIndex - 1
+	toggleButtonBlur.Parent = toggleButton
+
+	local toggleButtonCorner = Instance.new("UICorner")
+	toggleButtonCorner.CornerRadius = UDim.new(0.5, 0)
+	toggleButtonCorner.Parent = toggleButtonBlur
+
+	-- Toggle button glow
+	local toggleButtonGlow = Instance.new("UIStroke")
+	toggleButtonGlow.Color = Color3.fromRGB(255, 255, 255)
+	toggleButtonGlow.Thickness = 1
+	toggleButtonGlow.Transparency = 0.7
+	toggleButtonGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	toggleButtonGlow.Parent = toggleButton
 
 	local toggleState = false
@@ -1667,12 +1828,16 @@ function Shop:addToggleSwitch(product, parent)
 
 	local function updateToggleVisual()
 		if toggleState then
-			toggleContainer.BackgroundColor3 = UI.Theme:get("success")
+			Core.Animation.tween(toggleContainer, {
+				BackgroundColor3 = Color3.fromRGB(16, 185, 129)
+			}, Core.CONSTANTS.ANIM_FAST)
 			Core.Animation.tween(toggleButton, {
-				Position = UDim2.fromOffset(42, 2)
+				Position = UDim2.fromOffset(37, 2)
 			}, Core.CONSTANTS.ANIM_FAST)
 		else
-			toggleContainer.BackgroundColor3 = UI.Theme:get("stroke")
+			Core.Animation.tween(toggleContainer, {
+				BackgroundColor3 = Color3.fromRGB(100, 100, 110)
+			}, Core.CONSTANTS.ANIM_FAST)
 			Core.Animation.tween(toggleButton, {
 				Position = UDim2.fromOffset(2, 2)
 			}, Core.CONSTANTS.ANIM_FAST)
