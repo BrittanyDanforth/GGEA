@@ -2,7 +2,7 @@
     SANRIO SHOP SYSTEM - FIXED VERSION
     Place this as a LocalScript in StarterPlayer > StarterPlayerScripts
     Name it: SanrioShop
-
+    
     This version fixes:
     1. Layout property error
     2. Sound asset loading
@@ -29,11 +29,725 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local Remotes = ReplicatedStorage:WaitForChild("TycoonRemotes", 10)
 
 -- ========================================
--- MODULE IMPORTS
+-- CORE MODULE (Embedded)
 -- ========================================
-local Core = require(script.SanrioShop_Core)
-local UI = require(script.SanrioShop_UI)
+local Core = {}
 
+Core.VERSION = "3.0.0"
+Core.DEBUG = false
+
+-- Constants
+Core.CONSTANTS = {
+	PANEL_SIZE = Vector2.new(1140, 860),
+	PANEL_SIZE_MOBILE = Vector2.new(920, 720),
+	CARD_SIZE = Vector2.new(520, 300),
+	CARD_SIZE_MOBILE = Vector2.new(480, 280),
+
+	ANIM_FAST = 0.15,
+	ANIM_MEDIUM = 0.25,
+	ANIM_SLOW = 0.35,
+	ANIM_BOUNCE = 0.3,
+	ANIM_SMOOTH = 0.4,
+
+	Z_BACKGROUND = 1,
+	Z_CONTENT = 10,
+	Z_OVERLAY = 20,
+	Z_MODAL = 30,
+	Z_TOOLTIP = 40,
+	Z_NOTIFICATION = 50,
+
+	CACHE_PRODUCT_INFO = 300,
+	CACHE_OWNERSHIP = 60,
+
+	PURCHASE_TIMEOUT = 15,
+	RETRY_DELAY = 2,
+	MAX_RETRIES = 3,
+}
+
+-- State Management
+Core.State = {
+	isOpen = false,
+	isAnimating = false,
+	currentTab = "Home",
+	purchasePending = {},
+	ownershipCache = {},
+	productCache = {},
+	initialized = false,
+	settings = {
+		soundEnabled = true,
+		animationsEnabled = true,
+		reducedMotion = false,
+		autoRefresh = true,
+	}
+}
+
+-- Event System
+Core.Events = {
+	handlers = {},
+}
+
+function Core.Events:on(eventName, handler)
+	if not self.handlers[eventName] then
+		self.handlers[eventName] = {}
+	end
+	table.insert(self.handlers[eventName], handler)
+	return function()
+		local index = table.find(self.handlers[eventName], handler)
+		if index then
+			table.remove(self.handlers[eventName], index)
+		end
+	end
+end
+
+function Core.Events:emit(eventName, ...)
+	if self.handlers[eventName] then
+		for _, handler in ipairs(self.handlers[eventName]) do
+			task.spawn(handler, ...)
+		end
+	end
+end
+
+-- Cache System
+local Cache = {}
+Cache.__index = Cache
+
+function Cache.new(duration)
+	return setmetatable({
+		data = {},
+		duration = duration or 300,
+	}, Cache)
+end
+
+function Cache:set(key, value)
+	self.data[key] = {
+		value = value,
+		timestamp = tick(),
+	}
+end
+
+function Cache:get(key)
+	local entry = self.data[key]
+	if not entry then return nil end
+
+	if tick() - entry.timestamp > self.duration then
+		self.data[key] = nil
+		return nil
+	end
+
+	return entry.value
+end
+
+function Cache:clear(key)
+	if key then
+		self.data[key] = nil
+	else
+		self.data = {}
+	end
+end
+
+Core.Cache = Cache
+
+-- Initialize caches
+local productCache = Cache.new(Core.CONSTANTS.CACHE_PRODUCT_INFO)
+local ownershipCache = Cache.new(Core.CONSTANTS.CACHE_OWNERSHIP)
+
+-- Utility Functions
+Core.Utils = {}
+
+function Core.Utils.isMobile()
+	local camera = workspace.CurrentCamera
+	if not camera then return false end
+	local viewportSize = camera.ViewportSize
+	return viewportSize.X < 1024 or GuiService:IsTenFootInterface()
+end
+
+function Core.Utils.formatNumber(number)
+	local formatted = tostring(number)
+	local k = 1
+	while k ~= 0 do
+		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+	end
+	return formatted
+end
+
+function Core.Utils.lerp(a, b, t)
+	return a + (b - a) * t
+end
+
+function Core.Utils.clamp(value, min, max)
+	return math.max(min, math.min(max, value))
+end
+
+function Core.Utils.blend(a, b, alpha)
+	alpha = Core.Utils.clamp(alpha, 0, 1)
+	return Color3.new(
+		a.R + (b.R - a.R) * alpha,
+		a.G + (b.G - a.G) * alpha,
+		a.B + (b.B - a.B) * alpha
+	)
+end
+
+function Core.Utils.debounce(func, delay)
+	local lastCall = 0
+	return function(...)
+		local now = tick()
+		if now - lastCall < delay then return end
+		lastCall = now
+		return func(...)
+	end
+end
+
+-- Animation System
+Core.Animation = {}
+
+function Core.Animation.tween(object, properties, duration, easingStyle, easingDirection)
+	if not Core.State.settings.animationsEnabled then
+		for property, value in pairs(properties) do
+			object[property] = value
+		end
+		return
+	end
+
+	duration = duration or Core.CONSTANTS.ANIM_MEDIUM
+	easingStyle = easingStyle or Enum.EasingStyle.Quad
+	easingDirection = easingDirection or Enum.EasingDirection.Out
+
+	local tweenInfo = TweenInfo.new(duration, easingStyle, easingDirection)
+	local tween = TweenService:Create(object, tweenInfo, properties)
+	tween:Play()
+	return tween
+end
+
+-- Sound System
+Core.SoundSystem = {}
+
+function Core.SoundSystem.initialize()
+	-- Using working sound IDs
+	local sounds = {
+		click = {id = "rbxassetid://876939830", volume = 0.4},
+		hover = {id = "rbxassetid://10066936758", volume = 0.2},
+		open = {id = "rbxassetid://452267918", volume = 0.5},
+		close = {id = "rbxassetid://452267918", volume = 0.5},
+		success = {id = "rbxassetid://876939830", volume = 0.6},
+		error = {id = "rbxassetid://876939830", volume = 0.5},
+		notification = {id = "rbxassetid://876939830", volume = 0.5},
+	}
+
+	Core.SoundSystem.sounds = {}
+
+	for name, config in pairs(sounds) do
+		local sound = Instance.new("Sound")
+		sound.Name = "SanrioShop_" .. name
+		sound.SoundId = config.id
+		sound.Volume = config.volume
+		sound.Parent = SoundService
+		Core.SoundSystem.sounds[name] = sound
+	end
+end
+
+function Core.SoundSystem.play(soundName)
+	if not Core.State.settings.soundEnabled then return end
+
+	local sound = Core.SoundSystem.sounds[soundName]
+	if sound then
+		sound:Play()
+	end
+end
+
+-- Data Management
+Core.DataManager = {}
+
+Core.DataManager.products = {
+	cash = {
+		{
+			id = 1897730242,
+			amount = 1000,
+			name = "1,000 Cash",
+			description = "A small boost to get you started",
+			icon = "rbxassetid://10709728059",
+			featured = false,
+			price = 0,
+		},
+		{
+			id = 1897730373,
+			amount = 5000,
+			name = "5,000 Cash",
+			description = "Perfect for mid-game expansion",
+			icon = "rbxassetid://10709728059",
+			featured = true,
+			price = 0,
+		},
+		{
+			id = 1897730467,
+			amount = 10000,
+			name = "10,000 Cash",
+			description = "Accelerate your progress significantly",
+			icon = "rbxassetid://10709728059",
+			featured = false,
+			price = 0,
+		},
+		{
+			id = 1897730581,
+			amount = 50000,
+			name = "50,000 Cash",
+			description = "Maximum value for serious players",
+			icon = "rbxassetid://10709728059",
+			featured = true,
+			price = 0,
+		},
+	},
+	gamepasses = {
+		{
+			id = 1412171840,
+			name = "Auto Collect",
+			description = "Automatically collect all cash drops",
+			icon = "rbxassetid://10709727148",
+			price = 99,
+			features = {
+				"Hands-free collection",
+				"Works while AFK",
+				"Saves time",
+			},
+			hasToggle = true,
+		},
+		{
+			id = 1398974710,
+			name = "2x Cash",
+			description = "Double all cash earned permanently",
+			icon = "rbxassetid://10709727148",
+			price = 199,
+			features = {
+				"2x multiplier",
+				"Stacks with events",
+				"Best value",
+			},
+			hasToggle = false,
+		},
+	},
+}
+
+function Core.DataManager.getProductInfo(productId)
+	local cached = productCache:get(productId)
+	if cached then return cached end
+
+	local success, info = pcall(function()
+		return MarketplaceService:GetProductInfo(productId, Enum.InfoType.Product)
+	end)
+
+	if success and info then
+		productCache:set(productId, info)
+		return info
+	end
+
+	return nil
+end
+
+function Core.DataManager.getGamePassInfo(passId)
+	local cached = productCache:get("pass_" .. passId)
+	if cached then return cached end
+
+	local success, info = pcall(function()
+		return MarketplaceService:GetProductInfo(passId, Enum.InfoType.GamePass)
+	end)
+
+	if success and info then
+		productCache:set("pass_" .. passId, info)
+		return info
+	end
+
+	return nil
+end
+
+function Core.DataManager.checkOwnership(passId)
+	local cacheKey = Player.UserId .. "_" .. passId
+	local cached = ownershipCache:get(cacheKey)
+	if cached ~= nil then return cached end
+
+	local success, owns = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(Player.UserId, passId)
+	end)
+
+	if success then
+		ownershipCache:set(cacheKey, owns)
+		return owns
+	end
+
+	return false
+end
+
+function Core.DataManager.refreshPrices()
+	for _, product in ipairs(Core.DataManager.products.cash) do
+		local info = Core.DataManager.getProductInfo(product.id)
+		if info then
+			product.price = info.PriceInRobux or 0
+		end
+	end
+
+	for _, pass in ipairs(Core.DataManager.products.gamepasses) do
+		local info = Core.DataManager.getGamePassInfo(pass.id)
+		if info and info.PriceInRobux then
+			pass.price = info.PriceInRobux
+		end
+	end
+end
+
+-- ========================================
+-- UI MODULE (Embedded)
+-- ========================================
+local UI = {}
+
+-- Theme System
+UI.Theme = {
+	current = "light",
+	themes = {
+		light = {
+			background = Color3.fromRGB(253, 252, 250),
+			surface = Color3.fromRGB(255, 255, 255),
+			surfaceAlt = Color3.fromRGB(246, 248, 252),
+			stroke = Color3.fromRGB(222, 226, 235),
+			text = Color3.fromRGB(35, 38, 46),
+			textSecondary = Color3.fromRGB(120, 126, 140),
+			accent = Color3.fromRGB(255, 64, 129),
+			accentAlt = Color3.fromRGB(186, 214, 255),
+			success = Color3.fromRGB(76, 175, 80),
+			warning = Color3.fromRGB(255, 152, 0),
+			error = Color3.fromRGB(244, 67, 54),
+
+			kitty = Color3.fromRGB(255, 64, 64),
+			melody = Color3.fromRGB(255, 187, 204),
+			kuromi = Color3.fromRGB(200, 190, 255),
+			cinna = Color3.fromRGB(186, 214, 255),
+			pompom = Color3.fromRGB(255, 220, 110),
+		}
+	}
+}
+
+function UI.Theme:get(key)
+	return self.themes[self.current][key] or Color3.new(1, 1, 1)
+end
+
+-- Component Factory
+UI.Components = {}
+
+-- Base Component Class
+local Component = {}
+Component.__index = Component
+
+function Component.new(className, props)
+	local self = setmetatable({}, Component)
+	self.instance = Instance.new(className)
+	self.props = props or {}
+	self.children = {}
+	self.eventConnections = {}
+	return self
+end
+
+function Component:applyProps()
+	for key, value in pairs(self.props) do
+		-- Skip special properties
+		if key ~= "children" and key ~= "parent" and key ~= "onClick" and 
+			key ~= "cornerRadius" and key ~= "stroke" and key ~= "shadow" and 
+			key ~= "layout" and key ~= "padding" then
+
+			if type(value) == "function" and key:sub(1, 2) == "on" then
+				local eventName = key:sub(3)
+				local connection = self.instance[eventName]:Connect(value)
+				table.insert(self.eventConnections, connection)
+			else
+				-- Only set if property exists
+				pcall(function()
+					self.instance[key] = value
+				end)
+			end
+		end
+	end
+
+	-- Handle onClick separately for buttons
+	if self.props.onClick and self.instance:IsA("TextButton") then
+		local connection = self.instance.MouseButton1Click:Connect(self.props.onClick)
+		table.insert(self.eventConnections, connection)
+	end
+end
+
+function Component:render()
+	self:applyProps()
+
+	if self.props.children then
+		for _, child in ipairs(self.props.children) do
+			if typeof(child) == "table" and child.render then
+				child:render()
+				child.instance.Parent = self.instance
+			elseif typeof(child) == "Instance" then
+				child.Parent = self.instance
+			end
+		end
+	end
+
+	if self.props.parent then
+		self.instance.Parent = self.props.parent
+	end
+
+	return self.instance
+end
+
+function Component:destroy()
+	for _, connection in ipairs(self.eventConnections) do
+		connection:Disconnect()
+	end
+	self.instance:Destroy()
+end
+
+-- Frame Component
+function UI.Components.Frame(props)
+	local defaultProps = {
+		BackgroundColor3 = UI.Theme:get("surface"),
+		BorderSizePixel = 0,
+		Size = UDim2.fromScale(1, 1),
+	}
+
+	for key, value in pairs(defaultProps) do
+		if props[key] == nil then
+			props[key] = value
+		end
+	end
+
+	local component = Component.new("Frame", props)
+
+	if props.cornerRadius then
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = props.cornerRadius
+		corner.Parent = component.instance
+	end
+
+	if props.stroke then
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = props.stroke.color or UI.Theme:get("stroke")
+		stroke.Thickness = props.stroke.thickness or 1
+		stroke.Transparency = props.stroke.transparency or 0
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.Parent = component.instance
+	end
+
+	return component
+end
+
+-- Text Label Component
+function UI.Components.TextLabel(props)
+	local defaultProps = {
+		BackgroundTransparency = 1,
+		TextColor3 = UI.Theme:get("text"),
+		Font = Enum.Font.Gotham,
+		TextScaled = false,
+		TextWrapped = true,
+		Size = UDim2.fromScale(1, 1),
+	}
+
+	for key, value in pairs(defaultProps) do
+		if props[key] == nil then
+			props[key] = value
+		end
+	end
+
+	return Component.new("TextLabel", props)
+end
+
+-- Button Component
+function UI.Components.Button(props)
+	local defaultProps = {
+		BackgroundColor3 = UI.Theme:get("accent"),
+		TextColor3 = Color3.new(1, 1, 1),
+		Font = Enum.Font.GothamMedium,
+		TextScaled = false,
+		Size = UDim2.fromOffset(120, 40),
+		AutoButtonColor = false,
+	}
+
+	for key, value in pairs(defaultProps) do
+		if props[key] == nil then
+			props[key] = value
+		end
+	end
+
+	local component = Component.new("TextButton", props)
+
+	-- Add corner radius if specified
+	if props.cornerRadius then
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = props.cornerRadius
+		corner.Parent = component.instance
+	end
+
+	-- Add stroke if specified
+	if props.stroke then
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = props.stroke.color or UI.Theme:get("stroke")
+		stroke.Thickness = props.stroke.thickness or 1
+		stroke.Transparency = props.stroke.transparency or 0
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		stroke.Parent = component.instance
+	end
+
+	-- Add hover effects
+	local originalSize = props.Size or defaultProps.Size
+	local hoverScale = props.hoverScale or 1.05
+
+	component.instance.MouseEnter:Connect(function()
+		Core.SoundSystem.play("hover")
+		Core.Animation.tween(component.instance, {
+			Size = UDim2.new(
+				originalSize.X.Scale * hoverScale,
+				originalSize.X.Offset * hoverScale,
+				originalSize.Y.Scale * hoverScale,
+				originalSize.Y.Offset * hoverScale
+			)
+		}, Core.CONSTANTS.ANIM_FAST)
+	end)
+
+	component.instance.MouseLeave:Connect(function()
+		Core.Animation.tween(component.instance, {
+			Size = originalSize
+		}, Core.CONSTANTS.ANIM_FAST)
+	end)
+
+	component.instance.MouseButton1Click:Connect(function()
+		Core.SoundSystem.play("click")
+	end)
+
+	return component
+end
+
+-- Image Component
+function UI.Components.Image(props)
+	local defaultProps = {
+		BackgroundTransparency = 1,
+		ScaleType = Enum.ScaleType.Fit,
+		Size = UDim2.fromOffset(100, 100),
+	}
+
+	for key, value in pairs(defaultProps) do
+		if props[key] == nil then
+			props[key] = value
+		end
+	end
+
+	return Component.new("ImageLabel", props)
+end
+
+-- ScrollingFrame Component
+function UI.Components.ScrollingFrame(props)
+	local defaultProps = {
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 8,
+		ScrollBarImageColor3 = UI.Theme:get("stroke"),
+		Size = UDim2.fromScale(1, 1),
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ScrollingDirection = props.ScrollingDirection or Enum.ScrollingDirection.Y,
+	}
+
+	for key, value in pairs(defaultProps) do
+		if props[key] == nil then
+			props[key] = value
+		end
+	end
+
+	local component = Component.new("ScrollingFrame", props)
+
+	-- Add layout if specified
+	if props.layout then
+		local layoutType = props.layout.type or "List"
+		local layout = Instance.new("UI" .. layoutType .. "Layout")
+
+		for key, value in pairs(props.layout) do
+			if key ~= "type" then
+				pcall(function()
+					layout[key] = value
+				end)
+			end
+		end
+
+		layout.Parent = component.instance
+
+		-- Auto-size canvas
+		task.defer(function()
+			if layoutType == "List" then
+				layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+					if props.ScrollingDirection == Enum.ScrollingDirection.X then
+						component.instance.CanvasSize = UDim2.new(0, layout.AbsoluteContentSize.X + 20, 0, 0)
+					else
+						component.instance.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+					end
+				end)
+			elseif layoutType == "Grid" then
+				layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+					component.instance.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+				end)
+			end
+		end)
+	end
+
+	-- Add padding if specified
+	if props.padding then
+		local padding = Instance.new("UIPadding")
+		if props.padding.top then padding.PaddingTop = props.padding.top end
+		if props.padding.bottom then padding.PaddingBottom = props.padding.bottom end
+		if props.padding.left then padding.PaddingLeft = props.padding.left end
+		if props.padding.right then padding.PaddingRight = props.padding.right end
+		padding.Parent = component.instance
+	end
+
+	return component
+end
+
+-- Layout Utilities
+UI.Layout = {}
+
+function UI.Layout.stack(parent, direction, spacing, padding)
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = direction or Enum.FillDirection.Vertical
+	layout.Padding = UDim.new(0, spacing or 10)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = parent
+
+	if padding then
+		local uiPadding = Instance.new("UIPadding")
+		uiPadding.PaddingTop = UDim.new(0, padding.top or 0)
+		uiPadding.PaddingBottom = UDim.new(0, padding.bottom or 0)
+		uiPadding.PaddingLeft = UDim.new(0, padding.left or 0)
+		uiPadding.PaddingRight = UDim.new(0, padding.right or 0)
+		uiPadding.Parent = parent
+	end
+
+	return layout
+end
+
+-- Responsive Design
+UI.Responsive = {}
+
+function UI.Responsive.scale(instance)
+	local camera = workspace.CurrentCamera
+	if not camera then return end
+
+	local scale = Instance.new("UIScale")
+	scale.Parent = instance
+
+	local function updateScale()
+		local viewportSize = camera.ViewportSize
+		local scaleFactor = math.min(viewportSize.X / 1920, viewportSize.Y / 1080)
+		scaleFactor = Core.Utils.clamp(scaleFactor, 0.5, 1.5)
+
+		if Core.Utils.isMobile() then
+			scaleFactor = scaleFactor * 0.85
+		end
+
+		scale.Scale = scaleFactor
+	end
+
+	updateScale()
+	camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+
+	return scale
+end
 
 -- ========================================
 -- MAIN SHOP IMPLEMENTATION
@@ -1031,7 +1745,7 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, produc
 			end
 		end
 	end
-end
+end)
 
 -- Initialize shop
 local shop = Shop.new()
