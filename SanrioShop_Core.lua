@@ -1,7 +1,7 @@
 --[[
     SANRIO SHOP SYSTEM - CORE MODULE
     Professional Shop System with Modern Architecture
-
+    
     Features:
     - Modular design with clean separation of concerns
     - Advanced state management
