@@ -224,7 +224,7 @@ function Utils.getSafeAreaInsets()
 	local topInset, bottomInset = GuiService:GetGuiInset()
 	return {
 		Top = topInset.Y,
-		Bottom = bottomInset,
+		Bottom = bottomInset.Y,
 		Left = 0,
 		Right = 0,
 	}
