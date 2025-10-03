@@ -653,6 +653,178 @@ function UI.Components.ScrollingFrame(props)
 	return component
 end
 
+-- Data Management
+Core.DataManager = {}
+
+Core.DataManager.products = {
+	cash = {
+		{
+			id = 1897730242,
+			amount = 1000,
+			name = "Sweet Starter Pack",
+			description = "A gentle beginning to your pastel collection journey",
+			icon = "rbxassetid://10709728059",
+			featured = false,
+			price = 0,
+		},
+		{
+			id = 1897730373,
+			amount = 5000,
+			name = "Cozy Comfort Bundle",
+			description = "Expand your collection with warm, comforting items",
+			icon = "rbxassetid://10709728059",
+			featured = true,
+			price = 0,
+		},
+		{
+			id = 1897730467,
+			amount = 10000,
+			name = "Dream Collection Set",
+			description = "Build your dream collection with premium items",
+			icon = "rbxassetid://10709728059",
+			featured = false,
+			price = 0,
+		},
+		{
+			id = 1897730581,
+			amount = 50000,
+			name = "Ultimate Pastel Treasury",
+			description = "The complete collection for true pastel enthusiasts",
+			icon = "rbxassetid://10709728059",
+			featured = true,
+			price = 0,
+		},
+	},
+	gamepasses = {
+		{
+			id = 1412171840,
+			name = "Gentle Auto-Collect",
+			description = "Peacefully gather resources while you relax",
+			icon = "rbxassetid://10709727148",
+			price = 99,
+			features = {
+				"Automatic gentle collection",
+				"Works while you're away",
+				"Calming background process",
+			},
+			hasToggle = true,
+		},
+		{
+			id = 1398974710,
+			name = "2x Gentle Boost",
+			description = "Double your collection rate with soft pastel magic",
+			icon = "rbxassetid://10709727148",
+			price = 199,
+			features = {
+				"2x multiplier on all items",
+				"Permanent gentle enhancement",
+				"Stacks with seasonal events",
+			},
+			hasToggle = false,
+		},
+	}
+}
+
+function Core.DataManager.getProductInfo(productId)
+	local cached = productCache:get(productId)
+	if cached then return cached end
+
+	local success, info = pcall(function()
+		return MarketplaceService:GetProductInfo(productId, Enum.InfoType.Product)
+	end)
+
+	if success and info then
+		productCache:set(productId, info)
+		return info
+	end
+
+	return nil
+end
+
+function Core.DataManager.getGamePassInfo(passId)
+	local cached = productCache:get("pass_" .. passId)
+	if cached then return cached end
+
+	local success, info = pcall(function()
+		return MarketplaceService:GetProductInfo(passId, Enum.InfoType.GamePass)
+	end)
+
+	if success and info then
+		productCache:set("pass_" .. passId, info)
+		return info
+	end
+
+	return nil
+end
+
+function Core.DataManager.checkOwnership(passId)
+	local cacheKey = Player.UserId .. "_" .. passId
+	local cached = ownershipCache:get(cacheKey)
+	if cached ~= nil then return cached end
+
+	local success, owns = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(Player.UserId, passId)
+	end)
+
+	if success then
+		ownershipCache:set(cacheKey, owns)
+		return owns
+	end
+
+	return false
+end
+
+function Core.DataManager.refreshPrices()
+	for _, product in ipairs(Core.DataManager.products.cash) do
+		local info = Core.DataManager.getProductInfo(product.id)
+		if info then
+			product.price = info.PriceInRobux or 0
+		end
+	end
+
+	for _, pass in ipairs(Core.DataManager.products.gamepasses) do
+		local info = Core.DataManager.getGamePassInfo(pass.id)
+		if info and info.PriceInRobux then
+			pass.price = info.PriceInRobux
+		end
+	end
+end
+
+-- Sound System
+Core.SoundSystem = {}
+
+function Core.SoundSystem.initialize()
+	local sounds = {
+		click = { id = "rbxassetid://876939830", volume = 0.4 },
+		hover = { id = "rbxassetid://10066936758", volume = 0.2 },
+		open = { id = "rbxassetid://452267918", volume = 0.5 },
+		close = { id = "rbxassetid://452267918", volume = 0.5 },
+		success = { id = "rbxassetid://876939830", volume = 0.6 },
+		error = { id = "rbxassetid://876939830", volume = 0.5 },
+		notification = { id = "rbxassetid://876939830", volume = 0.5 },
+	}
+
+	Core.SoundSystem.sounds = {}
+
+	for name, config in pairs(sounds) do
+		local sound = Instance.new("Sound")
+		sound.Name = "SanrioShop_" .. name
+		sound.SoundId = config.id
+		sound.Volume = config.volume
+		sound.Parent = SoundService
+		Core.SoundSystem.sounds[name] = sound
+	end
+end
+
+function Core.SoundSystem.play(soundName)
+	if not Core.State.settings.soundEnabled then return end
+
+	local sound = Core.SoundSystem.sounds[soundName]
+	if sound then
+		sound:Play()
+	end
+end
+
 -- ========================================
 -- SHOP SYSTEM - PASTEL DREAM
 -- ========================================
@@ -678,6 +850,7 @@ function Shop.new()
 end
 
 function Shop:initialize()
+	Core.SoundSystem.initialize()
 	Core.DataManager.refreshPrices()
 
 	self:createToggleButton()
