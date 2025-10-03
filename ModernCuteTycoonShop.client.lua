@@ -518,8 +518,11 @@ end
 
 function ShopController:_buildGui()
 	-- Create or reuse ScreenGui
-	local gui = PlayerGui:FindFirstChild("TycoonShopUI") :: ScreenGui?
-	if not gui then
+	local gui: ScreenGui
+	local existingGui = PlayerGui:FindFirstChild("TycoonShopUI")
+	if existingGui and existingGui:IsA("ScreenGui") then
+		gui = existingGui :: ScreenGui
+	else
 		gui = Instance.new("ScreenGui")
 		gui.Name = "TycoonShopUI"
 		gui.ResetOnSpawn = false
@@ -528,7 +531,7 @@ function ShopController:_buildGui()
 		gui.Enabled = false
 		gui.Parent = PlayerGui
 	end
-	
+
 	-- Dim overlay
 	UI.ImageLabelX({
 		Name = "DimOverlay",
@@ -538,7 +541,7 @@ function ShopController:_buildGui()
 		Size = UDim2.fromScale(1, 1),
 		Parent = gui,
 	})
-	
+
 	-- Main panel (scale-based with aspect constraint)
 	local panel = UI.FrameX({
 		Name = "Panel",
@@ -550,21 +553,24 @@ function ShopController:_buildGui()
 		stroke = { Color = Tokens.colors.stroke, Transparency = 0.5 },
 		Parent = gui,
 	})
-	
+
 	local aspectRatio = Instance.new("UIAspectRatioConstraint")
 	aspectRatio.AspectRatio = 1.6
 	aspectRatio.DominantAxis = Enum.DominantAxis.Height
 	aspectRatio.Parent = panel
-	
+
 	-- Blur effect for background
-	local blur = Lighting:FindFirstChild("ShopBlur") :: BlurEffect?
-	if not blur then
+	local blur: BlurEffect
+	local existingBlur = Lighting:FindFirstChild("ShopBlur")
+	if existingBlur and existingBlur:IsA("BlurEffect") then
+		blur = existingBlur :: BlurEffect
+	else
 		blur = Instance.new("BlurEffect")
 		blur.Name = "ShopBlur"
 		blur.Size = 0
 		blur.Parent = Lighting
 	end
-	
+
 	self._gui = gui
 	self._panel = panel
 	self._blur = blur
@@ -1217,21 +1223,24 @@ end
 
 function ShopController:open()
 	if self._state.isOpen or self._state.isAnimating then return end
-	
+
 	self._state.isAnimating = true
 	self._state.isOpen = true
-	
+
 	self:_refreshPrices()
 	self:refreshVisuals()
-	
-	if not self._gui or not self._panel or not self._blur then return end
-	
-	self._gui.Enabled = true
-	Utils.tween(self._blur, { Size = 28 }, Tokens.animation.medium)
-	
-	self._panel.Position = UDim2.fromScale(0.5, 0.52)
-	Utils.tween(self._panel, { Position = UDim2.fromScale(0.5, 0.5) }, Tokens.animation.slow, Enum.EasingStyle.Back)
-	
+
+	local gui = self._gui
+	local panel = self._panel
+	local blur = self._blur
+	if not gui or not panel or not blur then return end
+
+	gui.Enabled = true
+	Utils.tween(blur, { Size = 28 }, Tokens.animation.medium)
+
+	panel.Position = UDim2.fromScale(0.5, 0.52)
+	Utils.tween(panel, { Position = UDim2.fromScale(0.5, 0.5) }, Tokens.animation.slow, Enum.EasingStyle.Back)
+
 	task.delay(Tokens.animation.slow, function()
 		self._state.isAnimating = false
 	end)
@@ -1239,17 +1248,20 @@ end
 
 function ShopController:close()
 	if not self._state.isOpen or self._state.isAnimating then return end
-	
+
 	self._state.isAnimating = true
 	self._state.isOpen = false
-	
-	if not self._gui or not self._panel or not self._blur then return end
-	
-	Utils.tween(self._blur, { Size = 0 }, Tokens.animation.fast)
-	Utils.tween(self._panel, { Position = UDim2.fromScale(0.5, 0.52) }, Tokens.animation.fast)
-	
+
+	local gui = self._gui
+	local panel = self._panel
+	local blur = self._blur
+	if not gui or not panel or not blur then return end
+
+	Utils.tween(blur, { Size = 0 }, Tokens.animation.fast)
+	Utils.tween(panel, { Position = UDim2.fromScale(0.5, 0.52) }, Tokens.animation.fast)
+
 	task.delay(Tokens.animation.fast, function()
-		self._gui.Enabled = false
+		gui.Enabled = false
 		self._state.isAnimating = false
 	end)
 end
@@ -1338,17 +1350,20 @@ function ShopController:_connectInputs()
 	-- Keyboard + Gamepad
 	table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, processed)
 		if processed then return end
-		
+
 		if input.KeyCode == Enum.KeyCode.M or input.KeyCode == Enum.KeyCode.ButtonX then
 			self:toggle()
 		elseif input.KeyCode == Enum.KeyCode.Escape and self._state.isOpen then
 			self:close()
 		end
 	end))
-	
+
 	-- Floating shop button
-	local toggleGui = PlayerGui:FindFirstChild("ShopToggleButton") :: ScreenGui?
-	if not toggleGui then
+	local toggleGui: ScreenGui
+	local existingToggle = PlayerGui:FindFirstChild("ShopToggleButton")
+	if existingToggle and existingToggle:IsA("ScreenGui") then
+		toggleGui = existingToggle :: ScreenGui
+	else
 		toggleGui = Instance.new("ScreenGui")
 		toggleGui.Name = "ShopToggleButton"
 		toggleGui.ResetOnSpawn = false
@@ -1470,16 +1485,13 @@ local CONFIG: ShopConfig = {
 	},
 	Products = {
 		cash = {
+			-- REPLACE THESE WITH YOUR ACTUAL DEVPRODUCT IDS FROM ROBLOX CREATOR DASHBOARD
+			-- These are the same IDs from your MoneyShop script
 			{ id = 1897730242, amount = 1000,     name = "Starter Pouch",    description = "Kickstart upgrades.",  icon = "rbxassetid://18420350532" },
 			{ id = 1897730373, amount = 5000,     name = "Festival Bundle",  description = "Dress your floors.",   icon = "rbxassetid://18420350532" },
 			{ id = 1897730467, amount = 10000,    name = "Showcase Chest",   description = "Unlock new wings.",    icon = "rbxassetid://18420350532" },
 			{ id = 1897730581, amount = 50000,    name = "Grand Vault",      description = "Relaunch fund.",       icon = "rbxassetid://18420350532" },
-			{ id = 1234567001, amount = 100000,   name = "Mega Safe",        description = "Major expansion.",     icon = "rbxassetid://18420350532" },
-			{ id = 1234567002, amount = 250000,   name = "Quarter Million",  description = "Serious investment.",  icon = "rbxassetid://18420350532" },
-			{ id = 1234567003, amount = 500000,   name = "Half Million",     description = "Fast-track builds.",   icon = "rbxassetid://18420350532" },
-			{ id = 1234567004, amount = 1000000,  name = "Millionaire Pack", description = "Dominate upgrades.",   icon = "rbxassetid://18420350532" },
-			{ id = 1234567005, amount = 5000000,  name = "Tycoon Titan",     description = "Finish it all.",       icon = "rbxassetid://18420350532" },
-			{ id = 1234567006, amount = 10000000, name = "Ultimate Vault",   description = "Max everything.",      icon = "rbxassetid://18420350532" },
+			-- ADD MORE PRODUCTS HERE IF NEEDED
 		},
 		gamepasses = {
 			{ id = 1412171840, name = "Auto Collect", description = "Hands-free register sweep.", icon = "rbxassetid://18420350433", hasToggle = true },
