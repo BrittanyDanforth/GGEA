@@ -653,6 +653,34 @@ function UI.Components.ScrollingFrame(props)
 	return component
 end
 
+-- Responsive Design
+UI.Responsive = {}
+
+function UI.Responsive.scale(instance)
+	local camera = workspace.CurrentCamera
+	if not camera then return end
+
+	local scale = Instance.new("UIScale")
+	scale.Parent = instance
+
+	local function updateScale()
+		local viewportSize = camera.ViewportSize
+		local scaleFactor = math.min(viewportSize.X / 1920, viewportSize.Y / 1080)
+		scaleFactor = Core.Utils.clamp(scaleFactor, 0.5, 1.5)
+
+		if Core.Utils.isMobile() then
+			scaleFactor = scaleFactor * 0.85
+		end
+
+		scale.Scale = scaleFactor
+	end
+
+	updateScale()
+	camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+
+	return scale
+end
+
 -- Data Management
 Core.DataManager = {}
 
@@ -945,6 +973,210 @@ function Shop:createToggleButton()
 	clickArea.MouseButton1Click:Connect(function()
 		self:toggle()
 	end)
+end
+
+function Shop:toggle()
+	if Core.State.isOpen then
+		self:close()
+	else
+		self:open()
+	end
+end
+
+function Shop:open()
+	if Core.State.isOpen or Core.State.isAnimating then return end
+
+	Core.State.isAnimating = true
+	Core.State.isOpen = true
+
+	Core.DataManager.refreshPrices()
+	self:refreshAllProducts()
+
+	self.gui.Enabled = true
+
+	Core.Animation.tween(self.blur, {
+		Size = 24
+	}, Core.CONSTANTS.ANIM_MEDIUM)
+
+	self.mainPanel.Position = UDim2.fromScale(0.5, 0.55)
+	self.mainPanel.Size = UDim2.fromOffset(
+		self.mainPanel.Size.X.Offset * 0.9,
+		self.mainPanel.Size.Y.Offset * 0.9
+	)
+
+	Core.Animation.tween(self.mainPanel, {
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(
+			Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE.X or Core.CONSTANTS.PANEL_SIZE.X,
+			Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE.Y or Core.CONSTANTS.PANEL_SIZE.Y
+		)
+	}, Core.CONSTANTS.ANIM_BOUNCE, Enum.EasingStyle.Back)
+
+	Core.SoundSystem.play("open")
+
+	task.wait(Core.CONSTANTS.ANIM_BOUNCE)
+	Core.State.isAnimating = false
+
+	Core.Events:emit("shopOpened")
+end
+
+function Shop:close()
+	if not Core.State.isOpen or Core.State.isAnimating then return end
+
+	Core.State.isAnimating = true
+	Core.State.isOpen = false
+
+	Core.Animation.tween(self.blur, {
+		Size = 0
+	}, Core.CONSTANTS.ANIM_FAST)
+
+	Core.Animation.tween(self.mainPanel, {
+		Position = UDim2.fromScale(0.5, 0.55),
+		Size = UDim2.fromOffset(
+			self.mainPanel.Size.X.Offset * 0.9,
+			self.mainPanel.Size.Y.Offset * 0.9
+		)
+	}, Core.CONSTANTS.ANIM_FAST)
+
+	Core.SoundSystem.play("close")
+
+	task.wait(Core.CONSTANTS.ANIM_FAST)
+	self.gui.Enabled = false
+	Core.State.isAnimating = false
+
+	Core.Events:emit("shopClosed")
+end
+
+function Shop:refreshAllProducts()
+	ownershipCache:clear()
+
+	for _, pass in ipairs(Core.DataManager.products.gamepasses) do
+		self:refreshProduct(pass, "gamepass")
+	end
+
+	Core.Events:emit("productsRefreshed")
+end
+
+function Shop:refreshProduct(product, productType)
+	if productType == "gamepass" then
+		local isOwned = Core.DataManager.checkOwnership(product.id)
+
+		if product.purchaseButton then
+			product.purchaseButton.Text = isOwned and "✅ Owned" or "🛒 Purchase"
+			product.purchaseButton.BackgroundColor3 = isOwned and
+				UI.Theme:get("success") or UI.Theme:get("kuromi")
+			product.purchaseButton.Active = not isOwned
+		end
+
+		if product.cardInstance then
+			local stroke = product.cardInstance:FindFirstChildOfClass("UIStroke")
+			if stroke then
+				stroke.Color = isOwned and UI.Theme:get("success") or UI.Theme:get("kuromi")
+			end
+		end
+	end
+end
+
+function Shop:promptPurchase(product, productType)
+	if productType == "gamepass" then
+		if Core.DataManager.checkOwnership(product.id) then
+			self:refreshProduct(product, productType)
+			return
+		end
+
+		product.purchaseButton.Text = "Processing..."
+		product.purchaseButton.Active = false
+
+		Core.State.purchasePending[product.id] = {
+			product = product,
+			timestamp = tick(),
+			type = productType,
+		}
+
+		local success = pcall(function()
+			MarketplaceService:PromptGamePassPurchase(Player, product.id)
+		end)
+
+		if not success then
+			product.purchaseButton.Text = "🛒 Purchase"
+			product.purchaseButton.Active = true
+			Core.State.purchasePending[product.id] = nil
+		end
+
+		task.delay(Core.CONSTANTS.PURCHASE_TIMEOUT, function()
+			if Core.State.purchasePending[product.id] then
+				product.purchaseButton.Text = "🛒 Purchase"
+				product.purchaseButton.Active = true
+				Core.State.purchasePending[product.id] = nil
+			end
+		end)
+	else
+		Core.State.purchasePending[product.id] = {
+			product = product,
+			timestamp = tick(),
+			type = productType,
+		}
+
+		local success = pcall(function()
+			MarketplaceService:PromptProductPurchase(Player, product.id)
+		end)
+
+		if not success then
+			Core.State.purchasePending[product.id] = nil
+		end
+	end
+end
+
+function Shop:toggleGamepass(product)
+	if not product.hasToggle then return end
+	if Remotes then
+		local toggleRemote = Remotes:FindFirstChild("AutoCollectToggle")
+		if toggleRemote and toggleRemote:IsA("RemoteEvent") then
+			toggleRemote:FireServer()
+		end
+	end
+end
+
+function Shop:setupRemoteHandlers()
+	if not Remotes then return end
+
+	local purchaseConfirm = Remotes:FindFirstChild("GamepassPurchased")
+	if purchaseConfirm and purchaseConfirm:IsA("RemoteEvent") then
+		purchaseConfirm.OnClientEvent:Connect(function(passId)
+			ownershipCache:clear()
+			self:refreshAllProducts()
+			Core.SoundSystem.play("success")
+		end)
+	end
+
+	local productGrant = Remotes:FindFirstChild("ProductGranted") or Remotes:FindFirstChild("GrantProductCurrency")
+	if productGrant and productGrant:IsA("RemoteEvent") then
+		productGrant.OnClientEvent:Connect(function()
+			Core.SoundSystem.play("success")
+		end)
+	end
+end
+
+function Shop:setupInputHandlers()
+	UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
+
+		if input.KeyCode == Enum.KeyCode.M then
+			self:toggle()
+		elseif input.KeyCode == Enum.KeyCode.Escape and Core.State.isOpen then
+			self:close()
+		end
+	end)
+
+	if UserInputService.GamepadEnabled then
+		UserInputService.InputBegan:Connect(function(input, gameProcessed)
+			if gameProcessed then return end
+
+			if input.KeyCode == Enum.KeyCode.ButtonX then
+				self:toggle()
+			end
+		end)
+	end
 end
 
 function Shop:createMainInterface()
@@ -1712,6 +1944,64 @@ task.spawn(function()
 		if Core.State.isOpen then
 			shop:refreshAllProducts()
 		end
+	end
+end)
+
+-- Marketplace callbacks
+MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
+	if player ~= Player then return end
+
+	local pending = Core.State.purchasePending[passId]
+	if not pending then return end
+
+	Core.State.purchasePending[passId] = nil
+
+	if purchased then
+		ownershipCache:clear()
+
+		if pending.product.purchaseButton then
+			pending.product.purchaseButton.Text = "✅ Owned"
+			pending.product.purchaseButton.BackgroundColor3 = UI.Theme:get("success")
+			pending.product.purchaseButton.Active = false
+		end
+
+		Core.SoundSystem.play("success")
+
+		task.wait(0.5)
+		shop:refreshAllProducts()
+	else
+		if pending.product.purchaseButton then
+			pending.product.purchaseButton.Text = "🛒 Purchase"
+			pending.product.purchaseButton.Active = true
+		end
+	end
+end)
+
+MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, productId, purchased)
+	if player ~= Player then return end
+
+	local pending = Core.State.purchasePending[productId]
+	if not pending then return end
+
+	Core.State.purchasePending[productId] = nil
+
+	if purchased then
+		Core.SoundSystem.play("success")
+
+		if Remotes then
+			local grantEvent = Remotes:FindFirstChild("GrantProductCurrency")
+			if grantEvent and grantEvent:IsA("RemoteEvent") then
+				grantEvent:FireServer(productId)
+			end
+		end
+	end
+end)
+
+-- Handle character respawn
+Player.CharacterAdded:Connect(function()
+	task.wait(1)
+	if not shop.toggleButton or not shop.toggleButton.Parent then
+		shop:createToggleButton()
 	end
 end)
 
