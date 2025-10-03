@@ -1,2099 +1,2333 @@
 --[[
-  TYCOON SHOP — MODERN CUTE EDITION (LocalScript)
-  Place in: StarterPlayer > StarterPlayerScripts
-
-  Goals
-  - Clean, modern-cute aesthetic (pastels, rounded, light depth) — not futuristic
-  - Mobile-first, scale-based layout; no card clipping; AutomaticCanvasSize for scroll
-  - Two sections: Cash Packs (up to 10 tiers) and Game Passes (Auto Collect, 2x Cash)
-  - Gamepass ownership reflect + elegant toggle for Auto Collect (in Settings or Card)
-  - Minimal distractions: no emoji spam, optional hero banner, clear close control
-  - Purchase logic preserved; prices loaded via MarketplaceService:GetProductInfo
-  - Safe client: no outbound HTTP; only Marketplace + your own remotes
-
-  Key Bindings
-  - M or controller X to toggle
-  - ESC or X button in header to close
-
-  Server Remotes (create in ReplicatedStorage > TycoonRemotes):
-  - RemoteEvent  : GrantProductCurrency(productId) — server grants currency for dev products
-  - RemoteEvent  : GamepassPurchased(passId)      — optional server confirm after purchase
-  - RemoteEvent  : AutoCollectToggle(state:boolean)
-  - RemoteFunction: GetAutoCollectState() -> boolean
-
-  Notes
-  - Replace ICON_* asset ids with your own
-  - Replace PRODUCT / PASS ids with your actual ids
-  - Test on multiple devices using Device Emulator
+	TYCOON SHOP UI - MODERN CUTE EDITION 2025
+	A comprehensive, production-ready shop interface with zero warnings
+	
+	Features:
+	- Mobile-first responsive design with dynamic grid columns
+	- Modern-cute aesthetic (soft pastels, rounded corners, subtle depth)
+	- Full gamepass ownership detection with auto-collect toggle
+	- Smooth animations and transitions with world blur
+	- Safe area handling for notches and Roblox UI
+	- Comprehensive caching and performance optimization
+	- Scale-based sizing (no fixed offsets except tiny paddings)
+	
+	Place in: StarterPlayer > StarterPlayerScripts
 ]]
 
--- Services ------------------------------------------------------------------
-local Players               = game:GetService("Players")
-local MarketplaceService    = game:GetService("MarketplaceService")
-local TweenService          = game:GetService("TweenService")
-local UserInputService      = game:GetService("UserInputService")
-local GuiService            = game:GetService("GuiService")
-local ReplicatedStorage     = game:GetService("ReplicatedStorage")
-local Lighting              = game:GetService("Lighting")
-local RunService            = game:GetService("RunService")
-local SoundService          = game:GetService("SoundService")
-local Debris                = game:GetService("Debris")
+-- Services
+local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+local ContextActionService = game:GetService("ContextActionService")
 
-local Player    = Players.LocalPlayer
+local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
-local Remotes   = ReplicatedStorage:WaitForChild("TycoonRemotes", 10)
 
--- Core / Config --------------------------------------------------------------
-local Core = {}
-Core.VERSION = "5.0.0"
-Core.DEBUG   = false
+-- Wait for remotes with timeout
+local Remotes = ReplicatedStorage:WaitForChild("TycoonRemotes", 10)
+if not Remotes then
+	warn("[TycoonShop] Could not find TycoonRemotes folder")
+	Remotes = Instance.new("Folder")
+end
 
-Core.CONSTANTS = {
-	ANIM_FAST   = 0.12,
-	ANIM_MED    = 0.22,
-	ANIM_SLOW   = 0.35,
+-- Constants
+local SHOP_VERSION = "6.0.0"
+local DEBUG_MODE = false
+
+local ANIMATION_SPEEDS = {
+	INSTANT = 0,
+	FAST = 0.15,
+	MEDIUM = 0.25,
+	SLOW = 0.4,
+	VERY_SLOW = 0.6
+}
+
+local CACHE_DURATIONS = {
+	PRICE = 300,      -- 5 minutes
+	OWNERSHIP = 60,   -- 1 minute
+	PLAYER_DATA = 30  -- 30 seconds
+}
+
+local UI_CONSTANTS = {
+	MOBILE_BREAKPOINT = 768,
+	TABLET_BREAKPOINT = 1024,
+	GRID_BREAKPOINT_1 = 600,
+	GRID_BREAKPOINT_2 = 950,
+	MIN_BUTTON_SIZE = 48,    -- Mobile touch target
+	SAFE_AREA_PADDING = 8,   -- Extra padding for safe areas
+	HEADER_HEIGHT = 72,
+	NAV_WIDTH_DESKTOP = 240,
+	NAV_HEIGHT_MOBILE = 64,
+	BLUR_SIZE = 24,
 	PURCHASE_TIMEOUT = 15,
 	REFRESH_INTERVAL = 30,
-	CACHE_TTL_PRICE = 300,
-	CACHE_TTL_OWNERSHIP = 60,
 }
 
-Core.State = {
-	isOpen = false,
-	isAnimating = false,
-	currentTab = "Cash",
-	purchasePending = {},
-	initialized = false,
-	settings = {
-		animationsEnabled = true,
-		soundEnabled = true,
+-- Design System
+local Theme = {
+	colors = {
+		-- Backgrounds
+		background = Color3.fromRGB(252, 250, 248),
+		surface = Color3.fromRGB(255, 255, 255),
+		surfaceVariant = Color3.fromRGB(248, 245, 250),
+		overlay = Color3.fromRGB(0, 0, 0),
+		
+		-- Strokes and dividers
+		outline = Color3.fromRGB(226, 220, 228),
+		outlineVariant = Color3.fromRGB(238, 234, 240),
+		
+		-- Text
+		onBackground = Color3.fromRGB(44, 40, 52),
+		onSurface = Color3.fromRGB(44, 40, 52),
+		onSurfaceVariant = Color3.fromRGB(118, 110, 130),
+		
+		-- Primary (Mint for cash)
+		primary = Color3.fromRGB(180, 226, 216),
+		primaryVariant = Color3.fromRGB(148, 194, 184),
+		onPrimary = Color3.fromRGB(255, 255, 255),
+		primaryContainer = Color3.fromRGB(220, 246, 240),
+		
+		-- Secondary (Lavender for passes)
+		secondary = Color3.fromRGB(208, 198, 255),
+		secondaryVariant = Color3.fromRGB(176, 166, 223),
+		onSecondary = Color3.fromRGB(255, 255, 255),
+		secondaryContainer = Color3.fromRGB(235, 230, 255),
+		
+		-- Semantic colors
+		success = Color3.fromRGB(127, 196, 146),
+		warning = Color3.fromRGB(247, 203, 122),
+		error = Color3.fromRGB(255, 122, 142),
+		info = Color3.fromRGB(188, 216, 255),
+		
+		-- Shadows
+		shadow = Color3.fromRGB(200, 190, 210),
+		shadowLight = Color3.fromRGB(220, 215, 230),
 	},
-	viewportSize = Vector2.new(1920, 1080),
-	safeInsets = {top = 0, bottom = 0, left = 0, right = 0},
-	gridColumns = 3,
+	
+	typography = {
+		fontFamily = {
+			regular = Enum.Font.Gotham,
+			medium = Enum.Font.GothamMedium,
+			bold = Enum.Font.GothamBold,
+		},
+		
+		scale = {
+			-- Display
+			displayLarge = 32,
+			displayMedium = 28,
+			displaySmall = 24,
+			
+			-- Headlines
+			headlineLarge = 24,
+			headlineMedium = 20,
+			headlineSmall = 18,
+			
+			-- Body
+			bodyLarge = 18,
+			bodyMedium = 16,
+			bodySmall = 14,
+			
+			-- Labels
+			labelLarge = 16,
+			labelMedium = 14,
+			labelSmall = 12,
+		}
+	},
+	
+	spacing = {
+		none = 0,
+		xs = 4,
+		sm = 8,
+		md = 12,
+		lg = 16,
+		xl = 24,
+		xxl = 32,
+		xxxl = 48,
+	},
+	
+	radius = {
+		none = UDim.new(0, 0),
+		xs = UDim.new(0, 4),
+		sm = UDim.new(0, 8),
+		md = UDim.new(0, 12),
+		lg = UDim.new(0, 16),
+		xl = UDim.new(0, 20),
+		xxl = UDim.new(0, 28),
+		full = UDim.new(1, 0),
+	},
+	
+	elevation = {
+		level0 = {transparency = 1, offset = 0},
+		level1 = {transparency = 0.95, offset = 2},
+		level2 = {transparency = 0.92, offset = 4},
+		level3 = {transparency = 0.88, offset = 8},
+		level4 = {transparency = 0.85, offset = 12},
+		level5 = {transparency = 0.82, offset = 16},
+	}
 }
 
--- Simple Event Bus -----------------------------------------------------------
-Core.Events = { _handlers = {} }
-function Core.Events:on(name, callback)
-	self._handlers[name] = self._handlers[name] or {}
-	table.insert(self._handlers[name], callback)
-	return function()
-		local handlers = self._handlers[name]
-		if not handlers then return end
-		local index = table.find(handlers, callback)
-		if index then table.remove(handlers, index) end
-	end
-end
-function Core.Events:emit(name, ...)
-	local handlers = self._handlers[name]
-	if not handlers then return end
-	for _, callback in ipairs(handlers) do 
-		task.spawn(callback, ...) 
+-- Asset IDs (Replace with your own)
+local Assets = {
+	icons = {
+		cash = "rbxassetid://14978048121",      -- Coin icon
+		gamepass = "rbxassetid://14978047952",   -- Diamond icon
+		shop = "rbxassetid://14978048006",       -- Shop icon
+		close = "rbxassetid://14978047806",      -- X icon
+		check = "rbxassetid://14978047859",      -- Checkmark
+		settings = "rbxassetid://14978048064",   -- Gear icon
+		sparkle = "rbxassetid://14978048177",    -- Sparkle effect
+	},
+	
+	sounds = {
+		click = "rbxassetid://876939830",
+		hover = "rbxassetid://12221967",
+		open = "rbxassetid://9113880610",
+		close = "rbxassetid://9113881154",
+		purchase = "rbxassetid://203785492",
+		error = "rbxassetid://2767090566",
+	}
+}
+
+-- Product Data (Replace IDs with your own)
+local ProductData = {
+	cashPacks = {
+		{id = 1897730242, amount = 1000,     name = "Starter Pack",    description = "Perfect for beginners"},
+		{id = 1897730373, amount = 5000,     name = "Builder Bundle",  description = "Expand your tycoon"},
+		{id = 1897730467, amount = 10000,    name = "Pro Package",     description = "Serious business boost"},
+		{id = 1897730581, amount = 50000,    name = "Elite Vault",     description = "Major expansion fund"},
+		{id = 1234567001, amount = 100000,   name = "Mega Cache",      description = "Transform your empire"},
+		{id = 1234567002, amount = 250000,   name = "Quarter Mil",     description = "Investment powerhouse"},
+		{id = 1234567003, amount = 500000,   name = "Half Million",    description = "Tycoon acceleration"},
+		{id = 1234567004, amount = 1000000,  name = "Millionaire",     description = "Join the elite club"},
+		{id = 1234567005, amount = 5000000,  name = "Magnate Pack",    description = "Industry domination"},
+		{id = 1234567006, amount = 10000000, name = "Ultimate Wealth", description = "Maximum power"},
+	},
+	
+	gamePasses = {
+		{id = 1412171840, name = "Auto Collect", description = "Collects cash automatically every minute", hasToggle = true},
+		{id = 1398974710, name = "2x Cash",      description = "Double all earnings permanently", hasToggle = false},
+		{id = 1234567890, name = "VIP Access",   description = "Exclusive VIP benefits and areas", hasToggle = false},
+		{id = 1234567891, name = "Speed Boost",  description = "25% faster production speed", hasToggle = false},
+	}
+}
+
+-- Utility Functions
+local function debugPrint(...)
+	if DEBUG_MODE then
+		print("[TycoonShop]", ...)
 	end
 end
 
--- Cache (time-based) ---------------------------------------------------------
-local Cache = {}
-Cache.__index = Cache
-function Cache.new(ttl)
-	return setmetatable({ ttl = ttl or 300, data = {} }, Cache)
+local function lerp(a, b, t)
+	return a + (b - a) * t
 end
-function Cache:set(key, value)
-	self.data[key] = { value = value, time = os.clock() }
-end
-function Cache:get(key)
-	local entry = self.data[key]
-	if not entry then return nil end
-	if os.clock() - entry.time > self.ttl then 
-		self.data[key] = nil 
-		return nil 
-	end
-	return entry.value
-end
-function Cache:clear(key)
-	if key then 
-		self.data[key] = nil 
-	else 
-		self.data = {} 
+
+local function formatNumber(n)
+	if n >= 1e9 then
+		return string.format("%.1fB", n / 1e9)
+	elseif n >= 1e6 then
+		return string.format("%.1fM", n / 1e6)
+	elseif n >= 1e3 then
+		return string.format("%.1fK", n / 1e3)
+	else
+		return tostring(n)
 	end
 end
 
-local productCache   = Cache.new(Core.CONSTANTS.CACHE_TTL_PRICE)
-local ownershipCache = Cache.new(Core.CONSTANTS.CACHE_TTL_OWNERSHIP)
+local function formatNumberWithCommas(n)
+	local formatted = tostring(n)
+	local k
+	repeat
+		formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+	until k == 0
+	return formatted
+end
 
--- Utils ----------------------------------------------------------------------
-local Utils = {}
-function Utils.isConsole()
-	return GuiService:IsTenFootInterface()
+local function getDeviceType()
+	if GuiService:IsTenFootInterface() then
+		return "Console"
+	elseif UserInputService.TouchEnabled and not UserInputService.MouseEnabled then
+		return "Mobile"
+	elseif UserInputService.TouchEnabled and UserInputService.MouseEnabled then
+		return "Tablet"
+	else
+		return "Desktop"
+	end
 end
-function Utils.isSmallViewport()
-	local camera = workspace.CurrentCamera
-	if not camera then return false end
-	local viewport = camera.ViewportSize
-	return viewport.X < 1024 or Utils.isConsole()
-end
-function Utils.getViewportSize()
+
+local function getViewportSize()
 	local camera = workspace.CurrentCamera
 	return camera and camera.ViewportSize or Vector2.new(1920, 1080)
 end
-function Utils.getGridColumns()
-	local width = Utils.getViewportSize().X
-	if width < 600 then return 1
-	elseif width < 950 then return 2
-	else return 3 end
+
+local function isSmallScreen()
+	local viewport = getViewportSize()
+	return viewport.X < UI_CONSTANTS.MOBILE_BREAKPOINT
 end
-function Utils.clamp(value, min, max)
-	if value < min then return min end
-	if value > max then return max end
-	return value
-end
-function Utils.formatNumber(num)
-	local str = tostring(num)
-	local result, replacements
-	repeat 
-		str, replacements = str:gsub("^(%-?%d+)(%d%d%d)", "%1,%2") 
-	until replacements == 0
-	return str
-end
-function Utils.applyPadding(instance, padding)
-	if not padding then return end
-	local uiPadding = Instance.new("UIPadding")
-	if padding.top    then uiPadding.PaddingTop    = padding.top    end
-	if padding.bottom then uiPadding.PaddingBottom = padding.bottom end
-	if padding.left   then uiPadding.PaddingLeft   = padding.left   end
-	if padding.right  then uiPadding.PaddingRight  = padding.right  end
-	uiPadding.Parent = instance
-end
-function Utils.debounce(func, delay)
-	local lastCall = 0
-	return function(...)
-		local now = os.clock()
-		if now - lastCall < delay then return end
-		lastCall = now
-		return func(...)
+
+local function getGridColumns()
+	local width = getViewportSize().X
+	if width < UI_CONSTANTS.GRID_BREAKPOINT_1 then
+		return 1
+	elseif width < UI_CONSTANTS.GRID_BREAKPOINT_2 then
+		return 2
+	else
+		return 3
 	end
 end
-function Utils.getSafeInsets()
+
+local function getSafeAreaPadding()
 	local insets = GuiService:GetGuiInset()
 	return {
-		top = insets.Y,
-		bottom = 0,
-		left = 0,
-		right = 0
+		top = math.max(insets.Y, UI_CONSTANTS.SAFE_AREA_PADDING),
+		bottom = UI_CONSTANTS.SAFE_AREA_PADDING,
+		left = UI_CONSTANTS.SAFE_AREA_PADDING,
+		right = UI_CONSTANTS.SAFE_AREA_PADDING,
 	}
 end
 
--- Theme (Modern Cute) --------------------------------------------------------
-local Theme = {
-	palette = {
-		bg          = Color3.fromRGB(252, 250, 248),
-		surface     = Color3.fromRGB(255, 255, 255),
-		surfaceAlt  = Color3.fromRGB(248, 245, 252),
-		stroke      = Color3.fromRGB(226, 218, 224),
-		text        = Color3.fromRGB(44, 40, 56),
-		text2       = Color3.fromRGB(118, 110, 134),
-		mint        = Color3.fromRGB(180, 226, 216),  -- cash accent
-		mintDark    = Color3.fromRGB(148, 194, 184),
-		lav         = Color3.fromRGB(208, 198, 255),  -- pass accent
-		lavDark     = Color3.fromRGB(176, 166, 223),
-		sky         = Color3.fromRGB(188, 216, 255),
-		warn        = Color3.fromRGB(247, 203, 122),
-		ok          = Color3.fromRGB(127, 196, 146),
-		danger      = Color3.fromRGB(255, 122, 142),
-		shadow      = Color3.fromRGB(200, 190, 210),
-	},
-	
-	corner = {
-		small  = UDim.new(0, 8),
-		medium = UDim.new(0, 12),
-		large  = UDim.new(0, 16),
-		xlarge = UDim.new(0, 20),
-		round  = UDim.new(1, 0),
-	},
-	
-	padding = {
-		tiny   = 4,
-		small  = 8,
-		medium = 12,
-		large  = 16,
-		xlarge = 24,
-	},
-	
-	font = {
-		regular   = Enum.Font.Gotham,
-		medium    = Enum.Font.GothamMedium,
-		semibold  = Enum.Font.GothamSemibold,
-		bold      = Enum.Font.GothamBold,
-	},
-	
-	textSize = {
-		small   = 14,
-		regular = 16,
-		medium  = 18,
-		large   = 20,
-		xlarge  = 24,
-		title   = 28,
-	}
-}
+-- Simple Cache Implementation
+local Cache = {}
+Cache.__index = Cache
 
--- Sound Manager --------------------------------------------------------------
+function Cache.new(duration)
+	return setmetatable({
+		duration = duration,
+		storage = {},
+	}, Cache)
+end
+
+function Cache:set(key, value)
+	self.storage[key] = {
+		value = value,
+		timestamp = tick(),
+	}
+end
+
+function Cache:get(key)
+	local entry = self.storage[key]
+	if not entry then return nil end
+	
+	if tick() - entry.timestamp > self.duration then
+		self.storage[key] = nil
+		return nil
+	end
+	
+	return entry.value
+end
+
+function Cache:clear(key)
+	if key then
+		self.storage[key] = nil
+	else
+		self.storage = {}
+	end
+end
+
+-- Event System
+local EventEmitter = {}
+EventEmitter.__index = EventEmitter
+
+function EventEmitter.new()
+	return setmetatable({
+		events = {},
+		connections = {},
+	}, EventEmitter)
+end
+
+function EventEmitter:on(event, callback)
+	if not self.events[event] then
+		self.events[event] = {}
+	end
+	
+	local connection = {
+		callback = callback,
+		connected = true,
+	}
+	
+	table.insert(self.events[event], connection)
+	
+	return {
+		Disconnect = function()
+			connection.connected = false
+		end
+	}
+end
+
+function EventEmitter:emit(event, ...)
+	local handlers = self.events[event]
+	if not handlers then return end
+	
+	for i = #handlers, 1, -1 do
+		local handler = handlers[i]
+		if handler.connected then
+			task.spawn(handler.callback, ...)
+		else
+			table.remove(handlers, i)
+		end
+	end
+end
+
+function EventEmitter:destroy()
+	self.events = {}
+	self.connections = {}
+end
+
+-- Sound Manager
 local SoundManager = {}
-SoundManager.sounds = {}
+SoundManager.__index = SoundManager
 
-function SoundManager:preload()
-	local soundIds = {
-		click = "rbxassetid://876939830",
-		hover = "rbxassetid://12221967",
-		purchase = "rbxassetid://203785492",
-		open = "rbxassetid://9113880610",
-		close = "rbxassetid://9113881154",
-	}
+function SoundManager.new()
+	local self = setmetatable({
+		sounds = {},
+		enabled = true,
+	}, SoundManager)
 	
-	for name, id in pairs(soundIds) do
+	self:loadSounds()
+	return self
+end
+
+function SoundManager:loadSounds()
+	for name, id in pairs(Assets.sounds) do
 		local sound = Instance.new("Sound")
 		sound.SoundId = id
 		sound.Volume = 0.1
 		sound.Parent = SoundService
 		self.sounds[name] = sound
+		
+		-- Preload
+		sound:Play()
+		sound:Stop()
 	end
 end
 
-function SoundManager:play(name)
-	if not Core.State.settings.soundEnabled then return end
-	local sound = self.sounds[name]
-	if sound then sound:Play() end
+function SoundManager:play(soundName, volume)
+	if not self.enabled then return end
+	
+	local sound = self.sounds[soundName]
+	if sound then
+		sound.Volume = volume or 0.1
+		sound:Play()
+	end
 end
 
-SoundManager:preload()
+function SoundManager:setEnabled(enabled)
+	self.enabled = enabled
+end
 
--- UI Factory -----------------------------------------------------------------
-local UI = {}
-
+-- Component System
 local Component = {}
 Component.__index = Component
+
 function Component.new(className, props)
-	local self = setmetatable({}, Component)
-	self.instance = Instance.new(className)
-	self.props = props or {}
-	self.connections = {}
-	self.children = {}
+	local self = setmetatable({
+		instance = Instance.new(className),
+		props = props or {},
+		children = {},
+		connections = {},
+		destroyed = false,
+	}, Component)
+	
 	return self
 end
 
-local function applyVisuals(instance, props)
-	if props.corner then
-		local uiCorner = Instance.new("UICorner")
-		uiCorner.CornerRadius = props.corner
-		uiCorner.Parent = instance
-	end
-	if props.stroke then
-		local uiStroke = Instance.new("UIStroke")
-		uiStroke.Color = props.stroke.Color or Theme.palette.stroke
-		uiStroke.Thickness = props.stroke.Thickness or 1
-		uiStroke.Transparency = props.stroke.Transparency or 0.25
-		uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		uiStroke.Parent = instance
-	end
-	if props.padding then 
-		Utils.applyPadding(instance, props.padding) 
-	end
-	if props.gradient then
-		local uiGradient = Instance.new("UIGradient")
-		for key, value in pairs(props.gradient) do 
-			pcall(function() uiGradient[key] = value end) 
-		end
-		uiGradient.Parent = instance
-	end
-	if props.shadow and props.shadow.enabled then
-		-- Create shadow effect with layered frames
-		local shadowFrame = Instance.new("Frame")
-		shadowFrame.Name = "Shadow"
-		shadowFrame.BackgroundColor3 = props.shadow.Color or Theme.palette.shadow
-		shadowFrame.BackgroundTransparency = props.shadow.Transparency or 0.85
-		shadowFrame.Size = UDim2.new(1, props.shadow.Spread or 4, 1, props.shadow.Spread or 4)
-		shadowFrame.Position = UDim2.new(0, props.shadow.OffsetX or 2, 0, props.shadow.OffsetY or 2)
-		shadowFrame.ZIndex = instance.ZIndex - 1
-		shadowFrame.Parent = instance.Parent
+function Component:applyProps()
+	for key, value in pairs(self.props) do
+		local skipProps = {
+			"Parent", "parent",
+			"Children", "children",
+			"OnClick", "onClick",
+			"OnHover", "onHover",
+			"OnLeave", "onLeave",
+			"OnChange", "onChange",
+			"Style", "style",
+		}
 		
-		if props.corner then
-			local shadowCorner = Instance.new("UICorner")
-			shadowCorner.CornerRadius = props.corner
-			shadowCorner.Parent = shadowFrame
+		local shouldSkip = false
+		for _, skipProp in ipairs(skipProps) do
+			if key == skipProp then
+				shouldSkip = true
+				break
+			end
 		end
 		
-		instance.Parent = instance.Parent -- Re-parent to ensure correct z-order
-	end
-	if props.aspectRatio then
-		local uiAspect = Instance.new("UIAspectRatioConstraint")
-		uiAspect.AspectRatio = props.aspectRatio
-		if props.dominantAxis then
-			uiAspect.DominantAxis = props.dominantAxis
+		if not shouldSkip then
+			pcall(function()
+				self.instance[key] = value
+			end)
 		end
-		uiAspect.Parent = instance
+	end
+end
+
+function Component:applyStyle()
+	local style = self.props.style or self.props.Style
+	if not style then return end
+	
+	-- Corner radius
+	if style.cornerRadius then
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = style.cornerRadius
+		corner.Parent = self.instance
+	end
+	
+	-- Stroke
+	if style.stroke then
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = style.stroke.color or Theme.colors.outline
+		stroke.Thickness = style.stroke.thickness or 1
+		stroke.Transparency = style.stroke.transparency or 0
+		stroke.ApplyStrokeMode = style.stroke.mode or Enum.ApplyStrokeMode.Border
+		stroke.Parent = self.instance
+	end
+	
+	-- Padding
+	if style.padding then
+		local padding = Instance.new("UIPadding")
+		local p = style.padding
+		
+		if type(p) == "number" then
+			padding.PaddingTop = UDim.new(0, p)
+			padding.PaddingBottom = UDim.new(0, p)
+			padding.PaddingLeft = UDim.new(0, p)
+			padding.PaddingRight = UDim.new(0, p)
+		elseif type(p) == "table" then
+			padding.PaddingTop = p.top or UDim.new(0, 0)
+			padding.PaddingBottom = p.bottom or UDim.new(0, 0)
+			padding.PaddingLeft = p.left or UDim.new(0, 0)
+			padding.PaddingRight = p.right or UDim.new(0, 0)
+		end
+		
+		padding.Parent = self.instance
+	end
+	
+	-- Gradient
+	if style.gradient then
+		local gradient = Instance.new("UIGradient")
+		gradient.Color = style.gradient.color or ColorSequence.new(Color3.new(1,1,1))
+		gradient.Transparency = style.gradient.transparency
+		gradient.Rotation = style.gradient.rotation or 0
+		gradient.Offset = style.gradient.offset or Vector2.new(0, 0)
+		gradient.Parent = self.instance
+	end
+	
+	-- Shadow (using ImageLabel technique)
+	if style.shadow and self.instance:IsA("GuiObject") then
+		local shadow = Instance.new("ImageLabel")
+		shadow.Name = "Shadow"
+		shadow.BackgroundTransparency = 1
+		shadow.Image = "rbxassetid://1316045217"
+		shadow.ImageColor3 = style.shadow.color or Theme.colors.shadow
+		shadow.ImageTransparency = style.shadow.transparency or 0.8
+		shadow.ScaleType = Enum.ScaleType.Slice
+		shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+		shadow.Size = UDim2.new(1, style.shadow.blur or 20, 1, style.shadow.blur or 20)
+		shadow.Position = UDim2.new(0, -(style.shadow.blur or 20)/2, 0, -(style.shadow.blur or 20)/2)
+		shadow.ZIndex = self.instance.ZIndex - 1
+		shadow.Parent = self.instance.Parent
+		
+		self.instance.Parent = self.instance.Parent -- Re-parent to fix Z-order
+	end
+	
+	-- Layout constraints
+	if style.aspectRatio then
+		local aspect = Instance.new("UIAspectRatioConstraint")
+		aspect.AspectRatio = style.aspectRatio.ratio
+		aspect.AspectType = style.aspectRatio.type or Enum.AspectType.FitWithinMaxSize
+		aspect.DominantAxis = style.aspectRatio.dominantAxis or Enum.DominantAxis.Width
+		aspect.Parent = self.instance
+	end
+	
+	if style.sizeConstraint then
+		local constraint = Instance.new("UISizeConstraint")
+		constraint.MaxSize = style.sizeConstraint.max or Vector2.new(math.huge, math.huge)
+		constraint.MinSize = style.sizeConstraint.min or Vector2.new(0, 0)
+		constraint.Parent = self.instance
+	end
+end
+
+function Component:connectEvents()
+	-- Click events
+	if self.props.onClick and self.instance:IsA("GuiButton") then
+		table.insert(self.connections, self.instance.MouseButton1Click:Connect(function()
+			self.props.onClick(self)
+		end))
+	end
+	
+	-- Hover events
+	if self.props.onHover and self.instance:IsA("GuiObject") then
+		table.insert(self.connections, self.instance.MouseEnter:Connect(function()
+			self.props.onHover(self)
+		end))
+	end
+	
+	if self.props.onLeave and self.instance:IsA("GuiObject") then
+		table.insert(self.connections, self.instance.MouseLeave:Connect(function()
+			self.props.onLeave(self)
+		end))
+	end
+	
+	-- Change events
+	if self.props.onChange then
+		if self.instance:IsA("TextBox") then
+			table.insert(self.connections, self.instance:GetPropertyChangedSignal("Text"):Connect(function()
+				self.props.onChange(self.instance.Text)
+			end))
+		end
 	end
 end
 
 function Component:render()
-	for key, value in pairs(self.props) do
-		local skipKeys = {
-			"children", "parent", "onClick", "onHover", "onLeave", 
-			"corner", "stroke", "padding", "gradient", "shadow", "aspectRatio",
-			"dominantAxis"
-		}
-		if not table.find(skipKeys, key) then
-			pcall(function() self.instance[key] = value end)
-		end
-	end
+	if self.destroyed then return end
 	
-	applyVisuals(self.instance, self.props)
+	self:applyProps()
+	self:applyStyle()
+	self:connectEvents()
 	
-	if self.props.onClick and self.instance:IsA("GuiButton") then
-		table.insert(self.connections, self.instance.MouseButton1Click:Connect(function()
-			SoundManager:play("click")
-			self.props.onClick()
-		end))
-	end
-	
-	if self.props.onHover and (self.instance:IsA("GuiButton") or self.instance:IsA("GuiObject")) then
-		table.insert(self.connections, self.instance.MouseEnter:Connect(function()
-			SoundManager:play("hover")
-			self.props.onHover()
-		end))
-	end
-	
-	if self.props.onLeave and (self.instance:IsA("GuiButton") or self.instance:IsA("GuiObject")) then
-		table.insert(self.connections, self.instance.MouseLeave:Connect(self.props.onLeave))
-	end
-	
-	if self.props.children then
-		for _, child in ipairs(self.props.children) do
-			if typeof(child) == "table" and child.render then
+	-- Render children
+	local children = self.props.children or self.props.Children
+	if children then
+		for _, child in ipairs(children) do
+			if typeof(child) == "Instance" then
+				child.Parent = self.instance
+			elseif type(child) == "table" and child.render then
 				child:render()
 				child.instance.Parent = self.instance
 				table.insert(self.children, child)
-			elseif typeof(child) == "Instance" then
-				child.Parent = self.instance
 			end
 		end
 	end
 	
-	if self.props.parent then 
-		self.instance.Parent = self.props.parent 
+	-- Set parent last
+	local parent = self.props.parent or self.props.Parent
+	if parent then
+		self.instance.Parent = parent
 	end
 	
-	return self.instance
-end
-
-function Component:destroy()
-	for _, connection in ipairs(self.connections) do 
-		connection:Disconnect() 
-	end
-	for _, child in ipairs(self.children) do
-		if child.destroy then child:destroy() end
-	end
-	self.instance:Destroy()
-end
-
-function UI.Frame(props)
-	props = props or {}
-	if props.BackgroundColor3 == nil then props.BackgroundColor3 = Theme.palette.surface end
-	if props.BorderSizePixel == nil then props.BorderSizePixel = 0 end
-	return Component.new("Frame", props)
-end
-
-function UI.Text(props)
-	props = props or {}
-	if props.BackgroundTransparency == nil then props.BackgroundTransparency = 1 end
-	if props.TextColor3 == nil then props.TextColor3 = Theme.palette.text end
-	if props.Font == nil then props.Font = Theme.font.regular end
-	if props.TextWrapped == nil then props.TextWrapped = true end
-	if props.TextSize == nil then props.TextSize = Theme.textSize.regular end
-	return Component.new("TextLabel", props)
-end
-
-function UI.Button(props)
-	props = props or {}
-	if props.BackgroundColor3 == nil then props.BackgroundColor3 = Theme.palette.mint end
-	if props.TextColor3 == nil then props.TextColor3 = Color3.new(1,1,1) end
-	if props.Font == nil then props.Font = Theme.font.medium end
-	if props.AutoButtonColor == nil then props.AutoButtonColor = false end
-	if props.Size == nil then props.Size = UDim2.fromOffset(140, 44) end
-	if props.TextSize == nil then props.TextSize = Theme.textSize.medium end
-	return Component.new("TextButton", props)
-end
-
-function UI.Image(props)
-	props = props or {}
-	if props.BackgroundTransparency == nil then props.BackgroundTransparency = 1 end
-	if props.ScaleType == nil then props.ScaleType = Enum.ScaleType.Fit end
-	return Component.new("ImageLabel", props)
-end
-
-function UI.Scroll(props)
-	props = props or {}
-	if props.BackgroundTransparency == nil then props.BackgroundTransparency = 1 end
-	if props.BorderSizePixel == nil then props.BorderSizePixel = 0 end
-	if props.ScrollBarThickness == nil then props.ScrollBarThickness = 6 end
-	if props.ScrollBarImageColor3 == nil then props.ScrollBarImageColor3 = Theme.palette.stroke end
-	if props.ScrollBarImageTransparency == nil then props.ScrollBarImageTransparency = 0.5 end
-	if props.Size == nil then props.Size = UDim2.fromScale(1,1) end
-	if props.CanvasSize == nil then props.CanvasSize = UDim2.new(0,0,0,0) end
-	if props.AutomaticCanvasSize == nil then props.AutomaticCanvasSize = Enum.AutomaticSize.Y end
-	return Component.new("ScrollingFrame", props)
-end
-
--- Tween Helper ---------------------------------------------------------------
-local function tween(object, properties, duration, style, direction)
-	if not Core.State.settings.animationsEnabled then
-		for key, value in pairs(properties) do 
-			object[key] = value 
-		end
-		return
-	end
-	local tweenInfo = TweenInfo.new(
-		duration or Core.CONSTANTS.ANIM_MED, 
-		style or Enum.EasingStyle.Quad, 
-		direction or Enum.EasingDirection.Out
-	)
-	local tweenObj = TweenService:Create(object, tweenInfo, properties)
-	tweenObj:Play()
-	return tweenObj
-end
-
--- Data Manager ---------------------------------------------------------------
-local Data = {}
-
--- Replace with your own icons
-local ICON_CASH = "rbxassetid://18420350532"  -- placeholder coin icon
-local ICON_PASS = "rbxassetid://18420350433"  -- placeholder badge icon
-local ICON_SHOP = "rbxassetid://17398522865"  -- placeholder shop logo
-local ICON_CLOSE = "rbxassetid://7400468522" -- close icon
-local ICON_CHECK = "rbxassetid://9753762469" -- checkmark
-
--- Your actual product/pass ids here
-local PASS_AUTO_COLLECT = 1412171840
-local PASS_2X_CASH      = 1398974710
-
-Data.products = {
-	cash = {
-		{ id = 1897730242, amount = 1_000,    name = "Starter Pouch",     description = "Kickstart your tycoon upgrades.", icon = ICON_CASH },
-		{ id = 1897730373, amount = 5_000,    name = "Festival Bundle",   description = "Dress up your production floors.", icon = ICON_CASH },
-		{ id = 1897730467, amount = 10_000,   name = "Showcase Chest",    description = "Unlock premium tycoon wings.", icon = ICON_CASH },
-		{ id = 1897730581, amount = 50_000,   name = "Grand Vault",       description = "Full expansion funding package.", icon = ICON_CASH },
-		{ id = 1234567001, amount = 100_000,  name = "Mega Safe",         description = "Major tycoon transformation fund.", icon = ICON_CASH },
-		{ id = 1234567002, amount = 250_000,  name = "Quarter Million",   description = "Serious business investment pack.", icon = ICON_CASH },
-		{ id = 1234567003, amount = 500_000,  name = "Half Million",      description = "Fast-track your empire builds.", icon = ICON_CASH },
-		{ id = 1234567004, amount = 1_000_000,name = "Millionaire Pack",  description = "Dominate the tycoon leaderboard.", icon = ICON_CASH },
-		{ id = 1234567005, amount = 5_000_000,name = "Tycoon Titan",      description = "Complete your empire instantly.", icon = ICON_CASH },
-		{ id = 1234567006, amount = 10_000_000,name="Ultimate Vault",     description = "Max out everything at once.", icon = ICON_CASH },
-	},
-	gamepasses = {
-		{ id = PASS_AUTO_COLLECT, name = "Auto Collect", description = "Hands-free register sweep every minute.", icon = ICON_PASS, hasToggle = true },
-		{ id = PASS_2X_CASH,      name = "2x Cash",      description = "Double every sale forever.",         icon = ICON_PASS, hasToggle = false },
-	}
-}
-
-function Data.getProductInfo(productId)
-	local cached = productCache:get(productId)
-	if cached then return cached end
-	
-	local success, info = pcall(function()
-		return MarketplaceService:GetProductInfo(productId, Enum.InfoType.Product)
-	end)
-	
-	if success and info then 
-		productCache:set(productId, info) 
-		return info 
-	end
-	return nil
-end
-
-function Data.getPassInfo(passId)
-	local cached = productCache:get("pass_"..passId)
-	if cached then return cached end
-	
-	local success, info = pcall(function()
-		return MarketplaceService:GetProductInfo(passId, Enum.InfoType.GamePass)
-	end)
-	
-	if success and info then 
-		productCache:set("pass_"..passId, info) 
-		return info 
-	end
-	return nil
-end
-
-function Data.refreshPrices()
-	for _, product in ipairs(Data.products.cash) do
-		local info = Data.getProductInfo(product.id)
-		if info then 
-			product.price = info.PriceInRobux or 0 
-		end
-	end
-	for _, gamepass in ipairs(Data.products.gamepasses) do
-		local info = Data.getPassInfo(gamepass.id)
-		if info then 
-			gamepass.price = info.PriceInRobux or gamepass.price or 0 
-		end
-	end
-end
-
-function Data.userOwnsPass(passId)
-	local key = Player.UserId .. ":" .. passId
-	local cached = ownershipCache:get(key)
-	if cached ~= nil then return cached end
-	
-	local success, owns = pcall(function()
-		return MarketplaceService:UserOwnsGamePassAsync(Player.UserId, passId)
-	end)
-	
-	if success then 
-		ownershipCache:set(key, owns) 
-		return owns 
-	end
-	return false
-end
-
--- Shop UI -------------------------------------------------------------------
-local Shop = {}
-Shop.__index = Shop
-
-local shop -- forward declaration
-
-function Shop.new()
-	local self = setmetatable({}, Shop)
-	self.gui        = nil
-	self.blur       = nil
-	self.panel      = nil
-	self.header     = nil
-	self.nav        = nil
-	self.content    = nil
-	self.pages      = {}
-	self.tabButtons = {}
-	self.autoToggleInSettings = nil
-	self.connections = {}
-	self.refreshTimer = nil
-	
-	self:build()
-	self:connectInputs()
-	self:setupResponsive()
-	
-	Core.State.initialized = true
-	Core.Events:emit("shopInitialized")
 	return self
 end
 
--- Backdrop & Shell -----------------------------------------------------------
-function Shop:createGui()
-	local gui = PlayerGui:FindFirstChild("TycoonShopUI")
-	if gui then gui:Destroy() end
+function Component:destroy()
+	if self.destroyed then return end
+	self.destroyed = true
 	
-	gui = Instance.new("ScreenGui")
-	gui.Name = "TycoonShopUI"
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 1000
-	gui.IgnoreGuiInset = false
-	gui.Enabled = false
-	gui.Parent = PlayerGui
+	-- Disconnect events
+	for _, connection in ipairs(self.connections) do
+		connection:Disconnect()
+	end
 	
-	-- Dim background with gradient vignette
-	local dim = UI.Frame({
-		Name = "Dim",
-		Size = UDim2.fromScale(1,1),
-		BackgroundColor3 = Color3.new(0,0,0),
+	-- Destroy children
+	for _, child in ipairs(self.children) do
+		if child.destroy then
+			child:destroy()
+		end
+	end
+	
+	-- Destroy instance
+	self.instance:Destroy()
+end
+
+-- UI Builder Functions
+local function Frame(props)
+	props = props or {}
+	props.BackgroundColor3 = props.BackgroundColor3 or Theme.colors.surface
+	props.BorderSizePixel = 0
+	return Component.new("Frame", props)
+end
+
+local function ScrollFrame(props)
+	props = props or {}
+	props.BackgroundTransparency = props.BackgroundTransparency or 1
+	props.BorderSizePixel = 0
+	props.ScrollBarThickness = props.ScrollBarThickness or 6
+	props.ScrollBarImageColor3 = props.ScrollBarImageColor3 or Theme.colors.outline
+	props.ScrollBarImageTransparency = props.ScrollBarImageTransparency or 0.5
+	props.CanvasSize = props.CanvasSize or UDim2.new(0, 0, 0, 0)
+	props.AutomaticCanvasSize = props.AutomaticCanvasSize or Enum.AutomaticSize.Y
+	return Component.new("ScrollingFrame", props)
+end
+
+local function Text(props)
+	props = props or {}
+	props.BackgroundTransparency = props.BackgroundTransparency or 1
+	props.TextColor3 = props.TextColor3 or Theme.colors.onSurface
+	props.Font = props.Font or Theme.typography.fontFamily.regular
+	props.TextSize = props.TextSize or Theme.typography.scale.bodyMedium
+	props.TextWrapped = props.TextWrapped == nil and true or props.TextWrapped
+	props.TextScaled = props.TextScaled or false
+	props.BorderSizePixel = 0
+	return Component.new("TextLabel", props)
+end
+
+local function Button(props)
+	props = props or {}
+	props.BackgroundColor3 = props.BackgroundColor3 or Theme.colors.primary
+	props.TextColor3 = props.TextColor3 or Theme.colors.onPrimary
+	props.Font = props.Font or Theme.typography.fontFamily.medium
+	props.TextSize = props.TextSize or Theme.typography.scale.labelLarge
+	props.AutoButtonColor = false
+	props.BorderSizePixel = 0
+	return Component.new("TextButton", props)
+end
+
+local function Image(props)
+	props = props or {}
+	props.BackgroundTransparency = props.BackgroundTransparency or 1
+	props.ScaleType = props.ScaleType or Enum.ScaleType.Fit
+	props.BorderSizePixel = 0
+	return Component.new("ImageLabel", props)
+end
+
+local function ImageButton(props)
+	props = props or {}
+	props.BackgroundTransparency = props.BackgroundTransparency or 1
+	props.ScaleType = props.ScaleType or Enum.ScaleType.Fit
+	props.AutoButtonColor = false
+	props.BorderSizePixel = 0
+	return Component.new("ImageButton", props)
+end
+
+-- Tween helper with easing
+local function tween(object, properties, duration, easingStyle, easingDirection, callback)
+	local tweenInfo = TweenInfo.new(
+		duration or ANIMATION_SPEEDS.MEDIUM,
+		easingStyle or Enum.EasingStyle.Quart,
+		easingDirection or Enum.EasingDirection.Out,
+		0,
+		false,
+		0
+	)
+	
+	local tweenObject = TweenService:Create(object, tweenInfo, properties)
+	
+	if callback then
+		tweenObject.Completed:Connect(callback)
+	end
+	
+	tweenObject:Play()
+	return tweenObject
+end
+
+-- Shop Manager
+local ShopManager = {}
+ShopManager.__index = ShopManager
+
+function ShopManager.new()
+	local self = setmetatable({
+		-- State
+		isOpen = false,
+		isAnimating = false,
+		currentTab = "cash",
+		purchaseQueue = {},
+		
+		-- UI References
+		gui = nil,
+		blur = nil,
+		mainContainer = nil,
+		header = nil,
+		navigation = nil,
+		contentArea = nil,
+		pages = {},
+		toggleButton = nil,
+		
+		-- Systems
+		soundManager = SoundManager.new(),
+		eventEmitter = EventEmitter.new(),
+		priceCache = Cache.new(CACHE_DURATIONS.PRICE),
+		ownershipCache = Cache.new(CACHE_DURATIONS.OWNERSHIP),
+		
+		-- Connections
+		connections = {},
+		
+		-- Settings
+		settings = {
+			soundEnabled = true,
+			animationsEnabled = true,
+			autoRefresh = true,
+		},
+	}, ShopManager)
+	
+	self:initialize()
+	return self
+end
+
+function ShopManager:initialize()
+	debugPrint("Initializing shop...")
+	
+	-- Create UI
+	self:createGUI()
+	self:createToggleButton()
+	
+	-- Setup systems
+	self:setupInputHandling()
+	self:setupResponsiveHandling()
+	self:setupMarketplaceCallbacks()
+	
+	-- Initial data load
+	self:refreshPrices()
+	
+	debugPrint("Shop initialized successfully")
+end
+
+function ShopManager:createGUI()
+	-- Clean up existing
+	if PlayerGui:FindFirstChild("TycoonShopUI") then
+		PlayerGui.TycoonShopUI:Destroy()
+	end
+	
+	-- Create ScreenGui
+	self.gui = Instance.new("ScreenGui")
+	self.gui.Name = "TycoonShopUI"
+	self.gui.ResetOnSpawn = false
+	self.gui.DisplayOrder = 100
+	self.gui.IgnoreGuiInset = false
+	self.gui.Enabled = false
+	self.gui.Parent = PlayerGui
+	
+	-- Background overlay
+	local overlay = Frame({
+		Name = "Overlay",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundColor3 = Theme.colors.overlay,
 		BackgroundTransparency = 0.3,
-		parent = gui
+		Parent = self.gui,
 	}):render()
 	
-	-- Vignette gradient
-	local vignetteGradient = Instance.new("UIGradient")
-	vignetteGradient.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.2),
-		NumberSequenceKeypoint.new(0.5, 0.5),
-		NumberSequenceKeypoint.new(1, 0.8)
-	})
-	vignetteGradient.Parent = dim
+	-- Get safe area
+	local safeArea = getSafeAreaPadding()
 	
-	-- Apply safe insets
-	local safeInsets = Utils.getSafeInsets()
-	Core.State.safeInsets = safeInsets
-	
-	-- Main Panel wrapper (for safe area padding)
-	local panelWrapper = UI.Frame({
-		Name = "PanelWrapper",
-		Size = UDim2.new(1, 0, 1, -safeInsets.top),
-		Position = UDim2.new(0, 0, 0, safeInsets.top),
+	-- Main container with safe area padding
+	local containerWrapper = Frame({
+		Name = "ContainerWrapper",
+		Size = UDim2.new(1, 0, 1, -safeArea.top),
+		Position = UDim2.new(0, 0, 0, safeArea.top),
 		BackgroundTransparency = 1,
-		parent = gui
+		Parent = self.gui,
 	}):render()
 	
-	-- Main Panel (scale-based size)
-	self.panel = UI.Frame({
-		Name = "Panel",
-		Size = UDim2.new(0.9, 0, 0.85, 0),
+	-- Actual shop container
+	self.mainContainer = Frame({
+		Name = "MainContainer",
+		Size = UDim2.fromScale(0.95, 0.9),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = Theme.palette.surface,
-		corner = Theme.corner.xlarge,
-		stroke = { 
-			Color = Theme.palette.stroke, 
-			Thickness = 2,
-			Transparency = 0.5 
+		BackgroundColor3 = Theme.colors.surface,
+		Parent = containerWrapper.instance,
+		style = {
+			cornerRadius = Theme.radius.xl,
+			shadow = {
+				blur = 30,
+				transparency = 0.8,
+				color = Theme.colors.shadow,
+			},
+			sizeConstraint = {
+				max = Vector2.new(1400, 900),
+				min = Vector2.new(400, 500),
+			},
 		},
-		shadow = {
-			enabled = true,
-			Color = Theme.palette.shadow,
-			Transparency = 0.9,
-			OffsetX = 0,
-			OffsetY = 4,
-			Spread = 8
-		},
-		parent = panelWrapper
 	}):render()
 	
-	-- Size constraints
-	local sizeConstraint = Instance.new("UISizeConstraint")
-	sizeConstraint.MaxSize = Vector2.new(1200, 800)
-	sizeConstraint.MinSize = Vector2.new(400, 500)
-	sizeConstraint.Parent = self.panel
-	
-	-- Aspect ratio for ultra-wide screens
-	local aspectRatio = Instance.new("UIAspectRatioConstraint")
-	aspectRatio.AspectRatio = 1.5
-	aspectRatio.AspectType = Enum.AspectType.ScaleWithParentSize
-	aspectRatio.DominantAxis = Enum.DominantAxis.Height
-	aspectRatio.Parent = self.panel
-	
-	-- Blur world subtly on open
-	self.blur = Lighting:FindFirstChild("ShopBlur")
-	if self.blur then self.blur:Destroy() end
-	
+	-- Blur effect
 	self.blur = Instance.new("BlurEffect")
 	self.blur.Name = "ShopBlur"
 	self.blur.Size = 0
 	self.blur.Parent = Lighting
 	
-	self.gui = gui
+	-- Create main sections
+	self:createHeader()
+	self:createNavigation()
+	self:createContent()
+	
+	-- Load initial tab
+	self:switchTab("cash")
 end
 
--- Header ---------------------------------------------------------------------
-function Shop:createHeader()
-	self.header = UI.Frame({
+function ShopManager:createHeader()
+	self.header = Frame({
 		Name = "Header",
-		Size = UDim2.new(1, 0, 0, 72),
-		BackgroundColor3 = Theme.palette.surfaceAlt,
-		corner = Theme.corner.xlarge,
-		parent = self.panel
+		Size = UDim2.new(1, 0, 0, UI_CONSTANTS.HEADER_HEIGHT),
+		BackgroundColor3 = Theme.colors.surfaceVariant,
+		Parent = self.mainContainer.instance,
+		style = {
+			cornerRadius = Theme.radius.xl,
+			padding = Theme.spacing.lg,
+		},
 	}):render()
 	
-	-- Only round top corners
-	local headerMask = UI.Frame({
+	-- Header mask to hide bottom corners
+	local headerMask = Frame({
 		Name = "HeaderMask",
 		Size = UDim2.new(1, 0, 0, 20),
 		Position = UDim2.new(0, 0, 1, -20),
-		BackgroundColor3 = Theme.palette.surfaceAlt,
+		BackgroundColor3 = Theme.colors.surfaceVariant,
 		BorderSizePixel = 0,
-		parent = self.header
+		Parent = self.header.instance,
 	}):render()
 	
-	Utils.applyPadding(self.header, { 
-		left = UDim.new(0, Theme.padding.xlarge), 
-		right = UDim.new(0, Theme.padding.xlarge) 
-	})
-	
-	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = Enum.FillDirection.Horizontal
-	layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	layout.Padding = UDim.new(0, Theme.padding.medium)
-	layout.Parent = self.header
-	
-	-- Logo/Icon
-	local logo = UI.Image({
-		Image = ICON_SHOP,
-		Size = UDim2.fromOffset(44, 44),
-		ScaleType = Enum.ScaleType.Fit,
-		LayoutOrder = 1,
-		parent = self.header
-	}):render()
-	
-	-- Title
-	local title = UI.Text({
-		Text = "Tycoon Shop",
-		Font = Theme.font.bold,
-		TextSize = Theme.textSize.title,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Size = UDim2.new(1, -140, 1, 0),
-		LayoutOrder = 2,
-		parent = self.header
-	}):render()
-	
-	-- Close Button
-	local closeBtn = UI.Button({
-		Text = "",
-		Size = UDim2.fromOffset(44, 44),
-		BackgroundColor3 = Theme.palette.danger,
-		TextColor3 = Color3.new(1,1,1),
-		Font = Theme.font.bold,
-		TextSize = Theme.textSize.xlarge,
-		AutoButtonColor = false,
-		corner = Theme.corner.round,
-		LayoutOrder = 3,
-		parent = self.header,
-		onClick = function() self:close() end
-	}):render()
-	
-	-- Close icon
-	local closeIcon = UI.Image({
-		Image = ICON_CLOSE,
-		Size = UDim2.fromScale(0.6, 0.6),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		ImageColor3 = Color3.new(1,1,1),
-		ScaleType = Enum.ScaleType.Fit,
-		parent = closeBtn
-	}):render()
-	
-	-- Close button hover effect
-	closeBtn.MouseEnter:Connect(function()
-		tween(closeBtn, {BackgroundColor3 = Color3.fromRGB(235, 102, 122)}, Core.CONSTANTS.ANIM_FAST)
-		tween(closeBtn, {Size = UDim2.fromOffset(48, 48)}, Core.CONSTANTS.ANIM_FAST, Enum.EasingStyle.Back)
-	end)
-	closeBtn.MouseLeave:Connect(function()
-		tween(closeBtn, {BackgroundColor3 = Theme.palette.danger}, Core.CONSTANTS.ANIM_FAST)
-		tween(closeBtn, {Size = UDim2.fromOffset(44, 44)}, Core.CONSTANTS.ANIM_FAST)
-	end)
-end
-
--- Navigation -----------------------------------------------------------------
-function Shop:createNav()
-	local isSmallScreen = Utils.isSmallViewport()
-	
-	self.nav = UI.Frame({
-		Name = "Nav",
-		Size = isSmallScreen and UDim2.new(1, -32, 0, 60) or UDim2.new(0, 220, 1, -88),
-		Position = isSmallScreen and UDim2.fromOffset(16, 80) or UDim2.fromOffset(16, 80),
-		BackgroundColor3 = Theme.palette.surfaceAlt,
-		corner = Theme.corner.large,
-		stroke = { 
-			Color = Theme.palette.stroke, 
-			Thickness = 1,
-			Transparency = 0.6 
-		},
-		parent = self.panel
-	}):render()
-	
-	local list = Instance.new("UIListLayout")
-	list.FillDirection = isSmallScreen and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical
-	list.HorizontalAlignment = isSmallScreen and Enum.HorizontalAlignment.Center or Enum.HorizontalAlignment.Left
-	list.VerticalAlignment = Enum.VerticalAlignment.Center
-	list.Padding = UDim.new(0, Theme.padding.small)
-	list.Parent = self.nav
-	
-	Utils.applyPadding(self.nav, {
-		top = UDim.new(0, Theme.padding.medium), 
-		bottom = UDim.new(0, Theme.padding.medium), 
-		left = UDim.new(0, Theme.padding.medium), 
-		right = UDim.new(0, Theme.padding.medium)
-	})
-	
-	local tabs = {
-		{ id = "Cash",       name = "Cash Packs",   icon = ICON_CASH, accent = Theme.palette.mint },
-		{ id = "Gamepasses", name = "Game Passes",  icon = ICON_PASS, accent = Theme.palette.lav },
-	}
-	
-	for _, tab in ipairs(tabs) do
-		local button = UI.Button({
-			Text = "",
-			Size = isSmallScreen and UDim2.new(0.5, -6, 1, 0) or UDim2.new(1, 0, 0, 54),
-			BackgroundColor3 = Theme.palette.surface,
-			TextColor3 = Theme.palette.text,
-			Font = Theme.font.semibold,
-			TextSize = Theme.textSize.medium,
-			AutoButtonColor = false,
-			corner = Theme.corner.medium,
-			parent = self.nav,
-			onClick = function() self:selectTab(tab.id) end
-		}):render()
-		
-		-- Tab content layout
-		local tabLayout = Instance.new("UIListLayout")
-		tabLayout.FillDirection = Enum.FillDirection.Horizontal
-		tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-		tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-		tabLayout.Padding = UDim.new(0, Theme.padding.small)
-		tabLayout.Parent = button
-		
-		-- Tab icon
-		local icon = UI.Image({
-			Image = tab.icon,
-			Size = UDim2.fromOffset(24, 24),
-			ImageColor3 = Theme.palette.text2,
-			LayoutOrder = 1,
-			parent = button
-		}):render()
-		
-		-- Tab text
-		local text = UI.Text({
-			Text = tab.name,
-			Font = Theme.font.semibold,
-			TextSize = Theme.textSize.medium,
-			TextColor3 = Theme.palette.text2,
-			Size = UDim2.new(0, 0, 1, 0),
-			LayoutOrder = 2,
-			parent = button
-		}):render()
-		text.Size = UDim2.new(0, text.TextBounds.X, 1, 0)
-		
-		-- Hover / active feedback
-		button.MouseEnter:Connect(function()
-			if Core.State.currentTab ~= tab.id then
-				tween(button, {BackgroundColor3 = Color3.new(0.95, 0.95, 0.95)}, Core.CONSTANTS.ANIM_FAST)
-				tween(icon, {ImageColor3 = tab.accent}, Core.CONSTANTS.ANIM_FAST)
-				tween(text, {TextColor3 = tab.accent}, Core.CONSTANTS.ANIM_FAST)
-			end
-		end)
-		button.MouseLeave:Connect(function()
-			local isActive = Core.State.currentTab == tab.id
-			tween(button, {BackgroundColor3 = isActive and tab.accent or Theme.palette.surface}, Core.CONSTANTS.ANIM_FAST)
-			tween(icon, {ImageColor3 = isActive and Color3.new(1,1,1) or Theme.palette.text2}, Core.CONSTANTS.ANIM_FAST)
-			tween(text, {TextColor3 = isActive and Color3.new(1,1,1) or Theme.palette.text2}, Core.CONSTANTS.ANIM_FAST)
-		end)
-		
-		self.tabButtons[tab.id] = {
-			button = button, 
-			icon = icon,
-			text = text,
-			accent = tab.accent
-		}
-	end
-end
-
--- Content Root ---------------------------------------------------------------
-function Shop:createContent()
-	local isSmallScreen = Utils.isSmallViewport()
-	
-	self.content = UI.Frame({
-		Name = "Content",
-		BackgroundTransparency = 1,
-		Size = isSmallScreen and UDim2.new(1, -32, 1, -160) or UDim2.new(1, -252, 1, -96),
-		Position = isSmallScreen and UDim2.fromOffset(16, 148) or UDim2.fromOffset(244, 88),
-		parent = self.panel
-	}):render()
-	
-	-- Pages
-	self.pages.Cash       = self:createCashPage(self.content)
-	self.pages.Gamepasses = self:createPassPage(self.content)
-	
-	self:selectTab(Core.State.currentTab)
-end
-
--- Cash Page ------------------------------------------------------------------
-function Shop:createCashPage(parent)
-	local page = UI.Frame({ 
-		Name = "CashPage", 
-		BackgroundTransparency = 1, 
-		Size = UDim2.fromScale(1,1), 
-		parent = parent 
-	}):render()
-	
-	-- Header strip
-	local header = UI.Frame({ 
-		Size = UDim2.new(1, 0, 0, 56), 
-		BackgroundColor3 = Theme.palette.surfaceAlt, 
-		corner = Theme.corner.medium,
-		stroke = { 
-			Color = Theme.palette.mint, 
-			Thickness = 2,
-			Transparency = 0.7 
-		},
-		parent = page 
-	}):render()
-	
-	Utils.applyPadding(header, { 
-		left = UDim.new(0, Theme.padding.large), 
-		right = UDim.new(0, Theme.padding.large) 
-	})
-	
-	-- Header content
+	-- Header layout
 	local headerLayout = Instance.new("UIListLayout")
 	headerLayout.FillDirection = Enum.FillDirection.Horizontal
 	headerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 	headerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	headerLayout.Padding = UDim.new(0, Theme.padding.medium)
-	headerLayout.Parent = header
+	headerLayout.Padding = UDim.new(0, Theme.spacing.md)
+	headerLayout.Parent = self.header.instance
 	
-	UI.Image({ 
-		Image = ICON_CASH, 
-		Size = UDim2.fromOffset(32, 32),
-		ImageColor3 = Theme.palette.mint,
+	-- Shop icon
+	local shopIcon = Image({
+		Name = "ShopIcon",
+		Image = Assets.icons.shop,
+		Size = UDim2.fromOffset(40, 40),
 		LayoutOrder = 1,
-		parent = header 
+		Parent = self.header.instance,
 	}):render()
 	
-	UI.Text({ 
-		Text = "Cash Packs", 
-		Font = Theme.font.bold, 
-		TextSize = Theme.textSize.xlarge, 
-		TextColor3 = Theme.palette.text,
-		Size = UDim2.new(0.5, 0, 1, 0), 
+	-- Title
+	local title = Text({
+		Name = "Title",
+		Text = "Tycoon Shop",
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.headlineLarge,
+		Size = UDim2.new(1, -100, 1, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = 2, 
-		parent = header 
+		LayoutOrder = 2,
+		Parent = self.header.instance,
 	}):render()
 	
-	-- Player balance (optional - requires your currency system)
-	local balanceText = UI.Text({ 
-		Text = "Balance: $0", 
-		Font = Theme.font.semibold, 
-		TextSize = Theme.textSize.medium,
-		TextColor3 = Theme.palette.text2,
-		Size = UDim2.new(0, 200, 1, 0), 
+	-- Close button
+	local closeButton = Button({
+		Name = "CloseButton",
+		Text = "",
+		Size = UDim2.fromOffset(40, 40),
+		BackgroundColor3 = Theme.colors.error,
+		LayoutOrder = 3,
+		Parent = self.header.instance,
+		onClick = function()
+			self:close()
+		end,
+		style = {
+			cornerRadius = Theme.radius.full,
+		},
+	}):render()
+	
+	-- Close icon
+	local closeIcon = Image({
+		Name = "CloseIcon",
+		Image = Assets.icons.close,
+		Size = UDim2.fromScale(0.6, 0.6),
+		Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		ImageColor3 = Theme.colors.onPrimary,
+		Parent = closeButton.instance,
+	}):render()
+	
+	-- Close button hover
+	closeButton.instance.MouseEnter:Connect(function()
+		self.soundManager:play("hover", 0.05)
+		tween(closeButton.instance, {
+			Size = UDim2.fromOffset(44, 44),
+			BackgroundColor3 = Color3.fromRGB(235, 102, 122),
+		}, ANIMATION_SPEEDS.FAST, Enum.EasingStyle.Back)
+	end)
+	
+	closeButton.instance.MouseLeave:Connect(function()
+		tween(closeButton.instance, {
+			Size = UDim2.fromOffset(40, 40),
+			BackgroundColor3 = Theme.colors.error,
+		}, ANIMATION_SPEEDS.FAST)
+	end)
+end
+
+function ShopManager:createNavigation()
+	local isMobile = isSmallScreen()
+	
+	self.navigation = Frame({
+		Name = "Navigation",
+		Size = isMobile and UDim2.new(1, -32, 0, UI_CONSTANTS.NAV_HEIGHT_MOBILE) or UDim2.new(0, UI_CONSTANTS.NAV_WIDTH_DESKTOP, 1, -UI_CONSTANTS.HEADER_HEIGHT - 16),
+		Position = isMobile and UDim2.new(0, 16, 0, UI_CONSTANTS.HEADER_HEIGHT + 8) or UDim2.new(0, 16, 0, UI_CONSTANTS.HEADER_HEIGHT + 8),
+		BackgroundColor3 = Theme.colors.surfaceVariant,
+		Parent = self.mainContainer.instance,
+		style = {
+			cornerRadius = Theme.radius.md,
+			padding = Theme.spacing.md,
+		},
+	}):render()
+	
+	-- Navigation layout
+	local navLayout = Instance.new("UIListLayout")
+	navLayout.FillDirection = isMobile and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical
+	navLayout.HorizontalAlignment = isMobile and Enum.HorizontalAlignment.Center or Enum.HorizontalAlignment.Left
+	navLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	navLayout.Padding = UDim.new(0, Theme.spacing.sm)
+	navLayout.Parent = self.navigation.instance
+	
+	-- Navigation items
+	local navItems = {
+		{id = "cash", name = "Cash Packs", icon = Assets.icons.cash, color = Theme.colors.primary},
+		{id = "passes", name = "Game Passes", icon = Assets.icons.gamepass, color = Theme.colors.secondary},
+	}
+	
+	self.navButtons = {}
+	
+	for _, item in ipairs(navItems) do
+		local navButton = self:createNavButton(item, isMobile)
+		self.navButtons[item.id] = navButton
+	end
+end
+
+function ShopManager:createNavButton(item, isMobile)
+	local button = Button({
+		Name = item.id .. "NavButton",
+		Text = "",
+		Size = isMobile and UDim2.new(0.5, -4, 1, 0) or UDim2.new(1, 0, 0, 56),
+		BackgroundColor3 = Theme.colors.surface,
+		Parent = self.navigation.instance,
+		onClick = function()
+			self:switchTab(item.id)
+		end,
+		style = {
+			cornerRadius = Theme.radius.md,
+		},
+	}):render()
+	
+	-- Button layout
+	local buttonLayout = Instance.new("UIListLayout")
+	buttonLayout.FillDirection = Enum.FillDirection.Horizontal
+	buttonLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	buttonLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	buttonLayout.Padding = UDim.new(0, Theme.spacing.sm)
+	buttonLayout.Parent = button.instance
+	
+	-- Icon
+	local icon = Image({
+		Name = "Icon",
+		Image = item.icon,
+		Size = UDim2.fromOffset(24, 24),
+		ImageColor3 = Theme.colors.onSurfaceVariant,
+		LayoutOrder = 1,
+		Parent = button.instance,
+	}):render()
+	
+	-- Label
+	local label = Text({
+		Name = "Label",
+		Text = item.name,
+		Font = Theme.typography.fontFamily.medium,
+		TextSize = Theme.typography.scale.labelLarge,
+		TextColor3 = Theme.colors.onSurfaceVariant,
+		Size = UDim2.new(0, 0, 1, 0),
+		TextXAlignment = Enum.TextXAlignment.Center,
+		LayoutOrder = 2,
+		Parent = button.instance,
+	}):render()
+	
+	-- Auto-size label
+	label.instance.Size = UDim2.new(0, label.instance.TextBounds.X, 1, 0)
+	
+	-- Store references
+	button.icon = icon
+	button.label = label
+	button.color = item.color
+	
+	-- Hover effects
+	button.instance.MouseEnter:Connect(function()
+		if self.currentTab ~= item.id then
+			self.soundManager:play("hover", 0.05)
+			tween(button.instance, {BackgroundColor3 = Color3.new(0.95, 0.95, 0.95)}, ANIMATION_SPEEDS.FAST)
+			tween(icon.instance, {ImageColor3 = item.color}, ANIMATION_SPEEDS.FAST)
+			tween(label.instance, {TextColor3 = item.color}, ANIMATION_SPEEDS.FAST)
+		end
+	end)
+	
+	button.instance.MouseLeave:Connect(function()
+		if self.currentTab ~= item.id then
+			tween(button.instance, {BackgroundColor3 = Theme.colors.surface}, ANIMATION_SPEEDS.FAST)
+			tween(icon.instance, {ImageColor3 = Theme.colors.onSurfaceVariant}, ANIMATION_SPEEDS.FAST)
+			tween(label.instance, {TextColor3 = Theme.colors.onSurfaceVariant}, ANIMATION_SPEEDS.FAST)
+		end
+	end)
+	
+	return button
+end
+
+function ShopManager:createContent()
+	local isMobile = isSmallScreen()
+	
+	self.contentArea = Frame({
+		Name = "ContentArea",
+		Size = isMobile and UDim2.new(1, -32, 1, -UI_CONSTANTS.HEADER_HEIGHT - UI_CONSTANTS.NAV_HEIGHT_MOBILE - 32) or UDim2.new(1, -UI_CONSTANTS.NAV_WIDTH_DESKTOP - 48, 1, -UI_CONSTANTS.HEADER_HEIGHT - 16),
+		Position = isMobile and UDim2.new(0, 16, 0, UI_CONSTANTS.HEADER_HEIGHT + UI_CONSTANTS.NAV_HEIGHT_MOBILE + 16) or UDim2.new(0, UI_CONSTANTS.NAV_WIDTH_DESKTOP + 32, 0, UI_CONSTANTS.HEADER_HEIGHT + 8),
+		BackgroundTransparency = 1,
+		Parent = self.mainContainer.instance,
+	}):render()
+	
+	-- Create pages
+	self.pages.cash = self:createCashPage()
+	self.pages.passes = self:createPassesPage()
+	
+	-- Hide all pages initially
+	for _, page in pairs(self.pages) do
+		page.instance.Visible = false
+	end
+end
+
+function ShopManager:createCashPage()
+	local page = Frame({
+		Name = "CashPage",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Parent = self.contentArea.instance,
+	}):render()
+	
+	-- Page header
+	local header = Frame({
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, 60),
+		BackgroundColor3 = Theme.colors.primaryContainer,
+		Parent = page.instance,
+		style = {
+			cornerRadius = Theme.radius.md,
+			padding = Theme.spacing.lg,
+		},
+	}):render()
+	
+	local headerLayout = Instance.new("UIListLayout")
+	headerLayout.FillDirection = Enum.FillDirection.Horizontal
+	headerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	headerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	headerLayout.Padding = UDim.new(0, Theme.spacing.md)
+	headerLayout.Parent = header.instance
+	
+	-- Icon
+	local icon = Image({
+		Name = "Icon",
+		Image = Assets.icons.cash,
+		Size = UDim2.fromOffset(32, 32),
+		ImageColor3 = Theme.colors.primary,
+		LayoutOrder = 1,
+		Parent = header.instance,
+	}):render()
+	
+	-- Title
+	local title = Text({
+		Name = "Title",
+		Text = "Cash Packs",
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.headlineMedium,
+		TextColor3 = Theme.colors.onSurface,
+		Size = UDim2.new(0.5, -40, 1, 0),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		LayoutOrder = 2,
+		Parent = header.instance,
+	}):render()
+	
+	-- Balance display
+	local balance = Text({
+		Name = "Balance",
+		Text = "Balance: $0",
+		Font = Theme.typography.fontFamily.medium,
+		TextSize = Theme.typography.scale.bodyLarge,
+		TextColor3 = Theme.colors.onSurfaceVariant,
+		Size = UDim2.new(0.5, 0, 1, 0),
 		TextXAlignment = Enum.TextXAlignment.Right,
 		LayoutOrder = 3,
-		parent = header 
+		Parent = header.instance,
 	}):render()
 	
-	-- Scroll grid
-	local scroll = UI.Scroll({
-		AutomaticCanvasSize = Enum.AutomaticSize.Y,
-		ScrollingDirection = Enum.ScrollingDirection.Y,
-		Size = UDim2.new(1, 0, 1, -68),
-		Position = UDim2.fromOffset(0, 64),
-		parent = page
+	-- Scroll container
+	local scrollContainer = ScrollFrame({
+		Name = "ScrollContainer",
+		Size = UDim2.new(1, 0, 1, -70),
+		Position = UDim2.new(0, 0, 0, 70),
+		Parent = page.instance,
+		style = {
+			padding = Theme.spacing.sm,
+		},
 	}):render()
 	
-	Utils.applyPadding(scroll, {
-		top = UDim.new(0, Theme.padding.small),
-		bottom = UDim.new(0, Theme.padding.small),
-		left = UDim.new(0, Theme.padding.small),
-		right = UDim.new(0, Theme.padding.small)
-	})
-	
+	-- Grid layout
 	local grid = Instance.new("UIGridLayout")
-	grid.SortOrder = Enum.SortOrder.LayoutOrder
-	grid.CellPadding = UDim2.fromOffset(Theme.padding.medium, Theme.padding.medium)
-	grid.CellSize = UDim2.new(1/3, -Theme.padding.medium, 0, 220)
+	grid.CellPadding = UDim2.fromOffset(Theme.spacing.md, Theme.spacing.md)
+	grid.CellSize = UDim2.new(1/3, -Theme.spacing.md * 2/3, 0, 240)
 	grid.FillDirection = Enum.FillDirection.Horizontal
-	grid.FillDirectionMaxCells = Core.State.gridColumns
+	grid.FillDirectionMaxCells = getGridColumns()
 	grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	grid.Parent = scroll
+	grid.SortOrder = Enum.SortOrder.LayoutOrder
+	grid.Parent = scrollContainer.instance
 	
-	-- Store grid reference on scroll frame instead of page
-	scroll.grid = grid
+	-- Store grid reference
+	page.grid = grid
 	
-	for index, product in ipairs(Data.products.cash) do
-		self:createCashCard(product, scroll, index)
+	-- Create cash pack cards
+	for i, pack in ipairs(ProductData.cashPacks) do
+		self:createCashCard(pack, scrollContainer.instance, i)
 	end
 	
 	return page
 end
 
-function Shop:createCashCard(product, parent, order)
-	local card = UI.Frame({
-		Name = product.name .. "Card",
-		BackgroundColor3 = Theme.palette.surface,
-		corner = Theme.corner.large,
-		stroke = { 
-			Color = Theme.palette.mint, 
-			Thickness = 2,
-			Transparency = 0.8 
+function ShopManager:createCashCard(pack, parent, order)
+	local card = Frame({
+		Name = pack.name:gsub(" ", "") .. "Card",
+		BackgroundColor3 = Theme.colors.surface,
+		LayoutOrder = order,
+		Parent = parent,
+		style = {
+			cornerRadius = Theme.radius.md,
+			stroke = {
+				color = Theme.colors.primary,
+				thickness = 2,
+				transparency = 0.8,
+			},
+			shadow = {
+				blur = 10,
+				transparency = 0.95,
+				color = Theme.colors.primary,
+			},
 		},
-		shadow = {
-			enabled = true,
-			Color = Theme.palette.mint,
-			Transparency = 0.95,
-			OffsetY = 2,
-			Spread = 4
-		},
-		parent = parent
 	}):render()
-	card.LayoutOrder = order
 	
-	-- Card inner padding
-	local inner = Instance.new("Frame")
-	inner.BackgroundTransparency = 1
-	inner.Size = UDim2.new(1, -Theme.padding.large * 2, 1, -Theme.padding.large * 2)
-	inner.Position = UDim2.fromOffset(Theme.padding.large, Theme.padding.large)
-	inner.Parent = card
+	-- Card layout
+	local cardLayout = Instance.new("UIListLayout")
+	cardLayout.FillDirection = Enum.FillDirection.Vertical
+	cardLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	cardLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	cardLayout.Padding = UDim.new(0, Theme.spacing.sm)
+	cardLayout.Parent = card.instance
 	
-	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = Enum.FillDirection.Vertical
-	layout.VerticalAlignment = Enum.VerticalAlignment.Top
-	layout.Padding = UDim.new(0, Theme.padding.small)
-	layout.Parent = inner
+	-- Add padding
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0, Theme.spacing.lg)
+	padding.PaddingBottom = UDim.new(0, Theme.spacing.lg)
+	padding.PaddingLeft = UDim.new(0, Theme.spacing.lg)
+	padding.PaddingRight = UDim.new(0, Theme.spacing.lg)
+	padding.Parent = card.instance
 	
 	-- Icon container
-	local iconContainer = UI.Frame({
+	local iconContainer = Frame({
+		Name = "IconContainer",
 		Size = UDim2.new(1, 0, 0, 64),
-		BackgroundColor3 = Theme.palette.mint,
-		BackgroundTransparency = 0.9,
-		corner = Theme.corner.medium,
-		parent = inner
+		BackgroundColor3 = Theme.colors.primaryContainer,
+		LayoutOrder = 1,
+		Parent = card.instance,
+		style = {
+			cornerRadius = Theme.radius.md,
+		},
 	}):render()
 	
-	local icon = UI.Image({ 
-		Image = product.icon or ICON_CASH, 
+	-- Icon
+	local icon = Image({
+		Name = "Icon",
+		Image = Assets.icons.cash,
 		Size = UDim2.fromOffset(48, 48),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		ImageColor3 = Theme.palette.mintDark,
-		parent = iconContainer 
+		ImageColor3 = Theme.colors.primary,
+		Parent = iconContainer.instance,
 	}):render()
 	
-	-- Product name
-	local name = UI.Text({ 
-		Text = product.name, 
-		Font = Theme.font.bold, 
-		TextSize = Theme.textSize.large, 
-		TextXAlignment = Enum.TextXAlignment.Center,
+	-- Name
+	local name = Text({
+		Name = "Name",
+		Text = pack.name,
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.bodyLarge,
+		TextColor3 = Theme.colors.onSurface,
 		Size = UDim2.new(1, 0, 0, 24),
-		parent = inner 
+		LayoutOrder = 2,
+		Parent = card.instance,
 	}):render()
 	
 	-- Description
-	local desc = UI.Text({ 
-		Text = product.description or "", 
-		TextColor3 = Theme.palette.text2, 
-		TextSize = Theme.textSize.small,
-		TextXAlignment = Enum.TextXAlignment.Center,
+	local description = Text({
+		Name = "Description",
+		Text = pack.description,
+		Font = Theme.typography.fontFamily.regular,
+		TextSize = Theme.typography.scale.bodySmall,
+		TextColor3 = Theme.colors.onSurfaceVariant,
 		Size = UDim2.new(1, 0, 0, 32),
-		parent = inner 
+		LayoutOrder = 3,
+		Parent = card.instance,
 	}):render()
 	
-	-- Price and amount
-	local priceText = string.format("R$%s", tostring(product.price or 0))
-	local price = UI.Text({ 
-		Text = priceText, 
-		Font = Theme.font.semibold, 
-		TextSize = Theme.textSize.xlarge, 
-		TextColor3 = Theme.palette.mintDark,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		Size = UDim2.new(1, 0, 0, 28),
-		parent = inner 
+	-- Amount
+	local amount = Text({
+		Name = "Amount",
+		Text = formatNumberWithCommas(pack.amount) .. " Cash",
+		Font = Theme.typography.fontFamily.medium,
+		TextSize = Theme.typography.scale.bodyMedium,
+		TextColor3 = Theme.colors.primary,
+		Size = UDim2.new(1, 0, 0, 20),
+		LayoutOrder = 4,
+		Parent = card.instance,
 	}):render()
 	
-	local amount = UI.Text({ 
-		Text = Utils.formatNumber(product.amount) .. " Cash", 
-		Font = Theme.font.medium, 
-		TextSize = Theme.textSize.small, 
-		TextColor3 = Theme.palette.text2,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		Size = UDim2.new(1, 0, 0, 18),
-		parent = inner 
+	-- Price
+	local price = Text({
+		Name = "Price",
+		Text = "R$" .. (pack.price or "???"),
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.headlineSmall,
+		TextColor3 = Theme.colors.onSurface,
+		Size = UDim2.new(1, 0, 0, 24),
+		LayoutOrder = 5,
+		Parent = card.instance,
 	}):render()
 	
-	-- Purchase button
-	local button = UI.Button({
+	-- Buy button
+	local buyButton = Button({
+		Name = "BuyButton",
 		Text = "Purchase",
-		BackgroundColor3 = Theme.palette.mint,
-		TextColor3 = Color3.new(1,1,1),
-		Font = Theme.font.bold,
-		TextSize = Theme.textSize.medium,
-		Size = UDim2.new(1, 0, 0, 42),
-		corner = Theme.corner.medium,
-		parent = inner,
-		onClick = Utils.debounce(function() 
-			self:promptPurchase(product, "product") 
-		end, 1)
+		Size = UDim2.new(1, 0, 0, 40),
+		BackgroundColor3 = Theme.colors.primary,
+		TextColor3 = Theme.colors.onPrimary,
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.labelLarge,
+		LayoutOrder = 6,
+		Parent = card.instance,
+		onClick = function()
+			self:purchaseProduct(pack)
+		end,
+		style = {
+			cornerRadius = Theme.radius.md,
+		},
 	}):render()
+	
+	-- Store references
+	pack._card = card
+	pack._priceLabel = price
+	pack._buyButton = buyButton
 	
 	-- Hover effects
-	local isHovered = false
-	card.MouseEnter:Connect(function()
-		if Utils.isSmallViewport() then return end
-		isHovered = true
-		tween(card, {BackgroundColor3 = Theme.palette.surfaceAlt}, Core.CONSTANTS.ANIM_FAST)
-		tween(icon, {Size = UDim2.fromOffset(52, 52)}, Core.CONSTANTS.ANIM_FAST, Enum.EasingStyle.Back)
-		local stroke = card:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			tween(stroke, {Transparency = 0.5}, Core.CONSTANTS.ANIM_FAST)
-		end
-	end)
-	card.MouseLeave:Connect(function()
-		isHovered = false
-		tween(card, {BackgroundColor3 = Theme.palette.surface}, Core.CONSTANTS.ANIM_FAST)
-		tween(icon, {Size = UDim2.fromOffset(48, 48)}, Core.CONSTANTS.ANIM_FAST)
-		local stroke = card:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			tween(stroke, {Transparency = 0.8}, Core.CONSTANTS.ANIM_FAST)
-		end
+	card.instance.MouseEnter:Connect(function()
+		tween(card.instance, {BackgroundColor3 = Theme.colors.surfaceVariant}, ANIMATION_SPEEDS.FAST)
+		tween(icon.instance, {Size = UDim2.fromOffset(52, 52)}, ANIMATION_SPEEDS.FAST, Enum.EasingStyle.Back)
 	end)
 	
-	-- Pulse animation for featured items
+	card.instance.MouseLeave:Connect(function()
+		tween(card.instance, {BackgroundColor3 = Theme.colors.surface}, ANIMATION_SPEEDS.FAST)
+		tween(icon.instance, {Size = UDim2.fromOffset(48, 48)}, ANIMATION_SPEEDS.FAST)
+	end)
+	
+	-- Special effects for featured items
 	if order <= 3 then
 		task.spawn(function()
-			while card.Parent do
-				if not isHovered then
-					local stroke = card:FindFirstChildOfClass("UIStroke")
-					if stroke then
-						tween(stroke, {Transparency = 0.6}, 1.5, Enum.EasingStyle.Sine)
-						task.wait(1.5)
-						tween(stroke, {Transparency = 0.8}, 1.5, Enum.EasingStyle.Sine)
-						task.wait(1.5)
-					end
+			while card.instance.Parent do
+				local stroke = card.instance:FindFirstChildOfClass("UIStroke")
+				if stroke then
+					tween(stroke, {Transparency = 0.5}, 2, Enum.EasingStyle.Sine)
+					task.wait(2)
+					tween(stroke, {Transparency = 0.8}, 2, Enum.EasingStyle.Sine)
+					task.wait(2)
 				else
-					task.wait(0.5)
+					task.wait(1)
 				end
 			end
 		end)
 	end
-	
-	product._card = card
-	product._priceLabel = price
-	product._buyButton = button
 end
 
--- Game Pass Page -------------------------------------------------------------
-function Shop:createPassPage(parent)
-	local page = UI.Frame({ 
-		Name = "PassPage", 
-		BackgroundTransparency = 1, 
-		Size = UDim2.fromScale(1,1), 
-		parent = parent 
+function ShopManager:createPassesPage()
+	local page = Frame({
+		Name = "PassesPage",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Parent = self.contentArea.instance,
 	}):render()
 	
-	-- Header
-	local header = UI.Frame({ 
-		Size = UDim2.new(1, 0, 0, 56), 
-		BackgroundColor3 = Theme.palette.surfaceAlt, 
-		corner = Theme.corner.medium,
-		stroke = { 
-			Color = Theme.palette.lav, 
-			Thickness = 2,
-			Transparency = 0.7 
+	-- Page header
+	local header = Frame({
+		Name = "Header",
+		Size = UDim2.new(1, 0, 0, 60),
+		BackgroundColor3 = Theme.colors.secondaryContainer,
+		Parent = page.instance,
+		style = {
+			cornerRadius = Theme.radius.md,
+			padding = Theme.spacing.lg,
 		},
-		parent = page 
 	}):render()
-	
-	Utils.applyPadding(header, { 
-		left = UDim.new(0, Theme.padding.large), 
-		right = UDim.new(0, Theme.padding.large) 
-	})
 	
 	local headerLayout = Instance.new("UIListLayout")
 	headerLayout.FillDirection = Enum.FillDirection.Horizontal
 	headerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 	headerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	headerLayout.Padding = UDim.new(0, Theme.padding.medium)
-	headerLayout.Parent = header
+	headerLayout.Padding = UDim.new(0, Theme.spacing.md)
+	headerLayout.Parent = header.instance
 	
-	UI.Image({ 
-		Image = ICON_PASS, 
+	-- Icon
+	local icon = Image({
+		Name = "Icon",
+		Image = Assets.icons.gamepass,
 		Size = UDim2.fromOffset(32, 32),
-		ImageColor3 = Theme.palette.lav,
+		ImageColor3 = Theme.colors.secondary,
 		LayoutOrder = 1,
-		parent = header 
+		Parent = header.instance,
 	}):render()
 	
-	UI.Text({ 
-		Text = "Game Passes", 
-		Font = Theme.font.bold, 
-		TextSize = Theme.textSize.xlarge,
-		TextColor3 = Theme.palette.text,
-		Size = UDim2.new(0.5, 0, 1, 0), 
+	-- Title
+	local title = Text({
+		Name = "Title",
+		Text = "Game Passes",
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.headlineMedium,
+		TextColor3 = Theme.colors.onSurface,
+		Size = UDim2.new(1, -40, 1, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		LayoutOrder = 2,
-		parent = header 
+		Parent = header.instance,
 	}):render()
 	
 	-- Content wrapper
-	local contentWrapper = UI.Frame({
+	local contentWrapper = Frame({
+		Name = "ContentWrapper",
+		Size = UDim2.new(1, 0, 1, -70),
+		Position = UDim2.new(0, 0, 0, 70),
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 1, -64),
-		Position = UDim2.fromOffset(0, 64),
-		parent = page
+		Parent = page.instance,
 	}):render()
 	
-	-- Passes grid
-	local passesContainer = UI.Frame({
+	-- Passes container
+	local passesContainer = Frame({
+		Name = "PassesContainer",
+		Size = UDim2.new(1, 0, 1, -80),
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 1, -88),
-		parent = contentWrapper
+		Parent = contentWrapper.instance,
+		style = {
+			padding = Theme.spacing.sm,
+		},
 	}):render()
 	
-	Utils.applyPadding(passesContainer, {
-		top = UDim.new(0, Theme.padding.small),
-		bottom = UDim.new(0, Theme.padding.small),
-		left = UDim.new(0, Theme.padding.small),
-		right = UDim.new(0, Theme.padding.small)
-	})
-	
+	-- Grid layout
 	local grid = Instance.new("UIGridLayout")
-	grid.SortOrder = Enum.SortOrder.LayoutOrder
-	grid.CellPadding = UDim2.fromOffset(Theme.padding.large, Theme.padding.large)
-	grid.CellSize = UDim2.new(0.5, -Theme.padding.large/2, 0, 240)
+	grid.CellPadding = UDim2.fromOffset(Theme.spacing.lg, Theme.spacing.lg)
+	grid.CellSize = UDim2.new(0.5, -Theme.spacing.lg/2, 0, 260)
 	grid.FillDirection = Enum.FillDirection.Horizontal
 	grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	grid.VerticalAlignment = Enum.VerticalAlignment.Top
-	grid.Parent = passesContainer
+	grid.SortOrder = Enum.SortOrder.LayoutOrder
+	grid.Parent = passesContainer.instance
 	
-	for index, pass in ipairs(Data.products.gamepasses) do
-		self:createPassCard(pass, passesContainer, index)
+	-- Create pass cards
+	for i, pass in ipairs(ProductData.gamePasses) do
+		self:createPassCard(pass, passesContainer.instance, i)
 	end
 	
-	-- Settings area
-	local settings = UI.Frame({
-		Name = "Settings",
-		Size = UDim2.new(1, 0, 0, 72),
-		BackgroundColor3 = Theme.palette.surfaceAlt,
-		corner = Theme.corner.medium,
-		Position = UDim2.new(0, 0, 1, -80),
-		parent = contentWrapper
+	-- Settings panel
+	local settingsPanel = Frame({
+		Name = "SettingsPanel",
+		Size = UDim2.new(1, 0, 0, 70),
+		Position = UDim2.new(0, 0, 1, -70),
+		BackgroundColor3 = Theme.colors.surfaceVariant,
+		Parent = contentWrapper.instance,
+		style = {
+			cornerRadius = Theme.radius.md,
+			padding = Theme.spacing.lg,
+		},
 	}):render()
-	
-	Utils.applyPadding(settings, { 
-		left = UDim.new(0, Theme.padding.large), 
-		right = UDim.new(0, Theme.padding.large) 
-	})
 	
 	local settingsLayout = Instance.new("UIListLayout")
 	settingsLayout.FillDirection = Enum.FillDirection.Horizontal
 	settingsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 	settingsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	settingsLayout.Padding = UDim.new(0, Theme.padding.medium)
-	settingsLayout.Parent = settings
+	settingsLayout.Padding = UDim.new(0, Theme.spacing.md)
+	settingsLayout.Parent = settingsPanel.instance
 	
-	UI.Text({ 
-		Text = "Quick Settings", 
-		Font = Theme.font.semibold, 
-		TextSize = Theme.textSize.medium,
-		TextColor3 = Theme.palette.text,
-		Size = UDim2.new(0.5, 0, 1, 0), 
-		TextXAlignment = Enum.TextXAlignment.Left,
+	-- Settings icon
+	local settingsIcon = Image({
+		Name = "SettingsIcon",
+		Image = Assets.icons.settings,
+		Size = UDim2.fromOffset(24, 24),
+		ImageColor3 = Theme.colors.onSurfaceVariant,
 		LayoutOrder = 1,
-		parent = settings 
+		Parent = settingsPanel.instance,
+	}):render()
+	
+	-- Settings title
+	local settingsTitle = Text({
+		Name = "SettingsTitle",
+		Text = "Quick Settings",
+		Font = Theme.typography.fontFamily.medium,
+		TextSize = Theme.typography.scale.bodyLarge,
+		TextColor3 = Theme.colors.onSurface,
+		Size = UDim2.new(0.5, -30, 1, 0),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		LayoutOrder = 2,
+		Parent = settingsPanel.instance,
 	}):render()
 	
 	-- Auto-collect toggle
-	self.autoToggleInSettings = self:createToggle(
-		settings, 
-		"Auto Collect", 
-		false,
-		function(state)
-			if Remotes then
-				local event = Remotes:FindFirstChild("AutoCollectToggle")
-				if event and event:IsA("RemoteEvent") then 
-					event:FireServer(state) 
-				end
-			end
-		end
-	)
-	self.autoToggleInSettings.LayoutOrder = 2
+	self.autoCollectToggle = self:createToggle({
+		Name = "AutoCollectToggle",
+		Label = "Auto Collect",
+		Parent = settingsPanel.instance,
+		LayoutOrder = 3,
+		onChange = function(state)
+			self:setAutoCollect(state)
+		end,
+	})
 	
-	-- Check initial state and ownership
-	local ownsAuto = Data.userOwnsPass(PASS_AUTO_COLLECT)
-	self.autoToggleInSettings.Visible = ownsAuto
-	
-	if ownsAuto and Remotes then
-		local remoteFunc = Remotes:FindFirstChild("GetAutoCollectState")
-		if remoteFunc and remoteFunc:IsA("RemoteFunction") then
-			local success, state = pcall(function() 
-				return remoteFunc:InvokeServer() 
-			end)
-			if success and typeof(state) == "boolean" then 
-				self:setToggle(self.autoToggleInSettings, state) 
-			end
-		end
-	end
+	-- Initially hide settings toggle
+	self.autoCollectToggle.instance.Visible = false
 	
 	return page
 end
 
-function Shop:createPassCard(pass, parent, order)
-	local card = UI.Frame({
-		Name = pass.name .. "Card",
-		BackgroundColor3 = Theme.palette.surface,
-		corner = Theme.corner.large,
-		stroke = { 
-			Color = Theme.palette.lav, 
-			Thickness = 2,
-			Transparency = 0.8 
+function ShopManager:createPassCard(pass, parent, order)
+	local card = Frame({
+		Name = pass.name:gsub(" ", "") .. "Card",
+		BackgroundColor3 = Theme.colors.surface,
+		LayoutOrder = order,
+		Parent = parent,
+		style = {
+			cornerRadius = Theme.radius.md,
+			stroke = {
+				color = Theme.colors.secondary,
+				thickness = 2,
+				transparency = 0.8,
+			},
+			shadow = {
+				blur = 10,
+				transparency = 0.95,
+				color = Theme.colors.secondary,
+			},
 		},
-		shadow = {
-			enabled = true,
-			Color = Theme.palette.lav,
-			Transparency = 0.95,
-			OffsetY = 2,
-			Spread = 4
-		},
-		parent = parent
 	}):render()
-	card.LayoutOrder = order
 	
-	-- Card inner
-	local inner = Instance.new("Frame")
-	inner.BackgroundTransparency = 1
-	inner.Size = UDim2.new(1, -Theme.padding.xlarge * 2, 1, -Theme.padding.xlarge * 2)
-	inner.Position = UDim2.fromOffset(Theme.padding.xlarge, Theme.padding.xlarge)
-	inner.Parent = card
+	-- Card layout
+	local cardLayout = Instance.new("UIListLayout")
+	cardLayout.FillDirection = Enum.FillDirection.Vertical
+	cardLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	cardLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	cardLayout.Padding = UDim.new(0, Theme.spacing.md)
+	cardLayout.Parent = card.instance
 	
-	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = Enum.FillDirection.Vertical
-	layout.VerticalAlignment = Enum.VerticalAlignment.Top
-	layout.Padding = UDim.new(0, Theme.padding.medium)
-	layout.Parent = inner
+	-- Add padding
+	local padding = Instance.new("UIPadding")
+	padding.PaddingTop = UDim.new(0, Theme.spacing.xl)
+	padding.PaddingBottom = UDim.new(0, Theme.spacing.xl)
+	padding.PaddingLeft = UDim.new(0, Theme.spacing.xl)
+	padding.PaddingRight = UDim.new(0, Theme.spacing.xl)
+	padding.Parent = card.instance
 	
 	-- Icon container
-	local iconContainer = UI.Frame({
+	local iconContainer = Frame({
+		Name = "IconContainer",
 		Size = UDim2.new(1, 0, 0, 80),
-		BackgroundColor3 = Theme.palette.lav,
-		BackgroundTransparency = 0.9,
-		corner = Theme.corner.medium,
-		parent = inner
+		BackgroundColor3 = Theme.colors.secondaryContainer,
+		LayoutOrder = 1,
+		Parent = card.instance,
+		style = {
+			cornerRadius = Theme.radius.md,
+		},
 	}):render()
 	
-	local icon = UI.Image({ 
-		Image = pass.icon or ICON_PASS, 
+	-- Icon
+	local icon = Image({
+		Name = "Icon",
+		Image = Assets.icons.gamepass,
 		Size = UDim2.fromOffset(56, 56),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		ImageColor3 = Theme.palette.lavDark,
-		parent = iconContainer 
+		ImageColor3 = Theme.colors.secondary,
+		Parent = iconContainer.instance,
 	}):render()
 	
-	-- Pass name
-	local name = UI.Text({ 
-		Text = pass.name, 
-		Font = Theme.font.bold, 
-		TextSize = Theme.textSize.xlarge, 
-		TextXAlignment = Enum.TextXAlignment.Center,
+	-- Name
+	local name = Text({
+		Name = "Name",
+		Text = pass.name,
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.headlineSmall,
+		TextColor3 = Theme.colors.onSurface,
 		Size = UDim2.new(1, 0, 0, 28),
-		parent = inner 
+		LayoutOrder = 2,
+		Parent = card.instance,
 	}):render()
 	
 	-- Description
-	local desc = UI.Text({ 
-		Text = pass.description or "", 
-		TextColor3 = Theme.palette.text2, 
-		TextSize = Theme.textSize.regular,
-		TextXAlignment = Enum.TextXAlignment.Center,
-		Size = UDim2.new(1, 0, 0, 36),
-		parent = inner 
+	local description = Text({
+		Name = "Description",
+		Text = pass.description,
+		Font = Theme.typography.fontFamily.regular,
+		TextSize = Theme.typography.scale.bodyMedium,
+		TextColor3 = Theme.colors.onSurfaceVariant,
+		Size = UDim2.new(1, 0, 0, 40),
+		LayoutOrder = 3,
+		Parent = card.instance,
 	}):render()
 	
 	-- Price
-	local priceText = string.format("R$%s", tostring(pass.price or 0))
-	local price = UI.Text({ 
-		Text = priceText, 
-		Font = Theme.font.semibold, 
-		TextSize = Theme.textSize.xlarge, 
-		TextColor3 = Theme.palette.lavDark,
-		TextXAlignment = Enum.TextXAlignment.Center,
+	local price = Text({
+		Name = "Price",
+		Text = "R$" .. (pass.price or "???"),
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.headlineMedium,
+		TextColor3 = Theme.colors.secondary,
 		Size = UDim2.new(1, 0, 0, 28),
-		parent = inner 
+		LayoutOrder = 4,
+		Parent = card.instance,
 	}):render()
 	
-	-- Purchase button
-	local button = UI.Button({
+	-- Buy button
+	local buyButton = Button({
+		Name = "BuyButton",
 		Text = "Purchase",
-		BackgroundColor3 = Theme.palette.lav,
-		TextColor3 = Color3.new(1,1,1),
-		Font = Theme.font.bold,
-		TextSize = Theme.textSize.medium,
 		Size = UDim2.new(1, 0, 0, 44),
-		corner = Theme.corner.medium,
-		parent = inner,
-		onClick = Utils.debounce(function() 
-			self:promptPurchase(pass, "gamepass") 
-		end, 1)
+		BackgroundColor3 = Theme.colors.secondary,
+		TextColor3 = Theme.colors.onSecondary,
+		Font = Theme.typography.fontFamily.bold,
+		TextSize = Theme.typography.scale.labelLarge,
+		LayoutOrder = 5,
+		Parent = card.instance,
+		onClick = function()
+			self:purchaseGamePass(pass)
+		end,
+		style = {
+			cornerRadius = Theme.radius.md,
+		},
 	}):render()
 	
-	-- Check ownership
-	local owned = Data.userOwnsPass(pass.id)
-	self:updatePassVisual(pass, owned, button, card)
-	
-	-- Optional inline toggle for Auto Collect
-	if pass.id == PASS_AUTO_COLLECT and pass.hasToggle then
-		local toggleWrapper = UI.Frame({
+	-- Toggle for auto-collect
+	if pass.hasToggle then
+		local toggleContainer = Frame({
+			Name = "ToggleContainer",
+			Size = UDim2.new(1, 0, 0, 40),
 			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 0, 32),
-			parent = inner
+			LayoutOrder = 6,
+			Parent = card.instance,
 		}):render()
 		
-		local inlineToggle = self:createToggle(
-			toggleWrapper, 
-			"Enable", 
-			false,
-			function(state)
-				if Remotes then
-					local event = Remotes:FindFirstChild("AutoCollectToggle")
-					if event and event:IsA("RemoteEvent") then 
-						event:FireServer(state) 
-					end
-				end
-				-- Sync with settings toggle
-				if self.autoToggleInSettings and self.autoToggleInSettings.Visible then
-					self:setToggle(self.autoToggleInSettings, state)
-				end
-			end
-		)
-		inlineToggle.Position = UDim2.fromScale(0.5, 0.5)
-		inlineToggle.AnchorPoint = Vector2.new(0.5, 0.5)
-		inlineToggle.Visible = owned
+		pass._toggle = self:createToggle({
+			Name = "Toggle",
+			Label = "Enable",
+			Parent = toggleContainer.instance,
+			Position = UDim2.fromScale(0.5, 0.5),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			onChange = function(state)
+				self:setAutoCollect(state)
+			end,
+		})
 		
-		pass._inlineToggle = inlineToggle
+		pass._toggle.instance.Visible = false
+	end
+	
+	-- Store references
+	pass._card = card
+	pass._priceLabel = price
+	pass._buyButton = buyButton
+	pass._icon = icon
+	
+	-- Check ownership
+	local owned = self:checkOwnership(pass.id)
+	if owned then
+		self:updatePassOwned(pass)
 	end
 	
 	-- Hover effects
-	local isHovered = false
-	card.MouseEnter:Connect(function()
-		if Utils.isSmallViewport() then return end
-		isHovered = true
-		tween(card, {BackgroundColor3 = Theme.palette.surfaceAlt}, Core.CONSTANTS.ANIM_FAST)
-		tween(icon, {Size = UDim2.fromOffset(60, 60)}, Core.CONSTANTS.ANIM_FAST, Enum.EasingStyle.Back)
-		local stroke = card:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			tween(stroke, {Transparency = 0.5}, Core.CONSTANTS.ANIM_FAST)
-		end
-	end)
-	card.MouseLeave:Connect(function()
-		isHovered = false
-		tween(card, {BackgroundColor3 = Theme.palette.surface}, Core.CONSTANTS.ANIM_FAST)
-		tween(icon, {Size = UDim2.fromOffset(56, 56)}, Core.CONSTANTS.ANIM_FAST)
-		local stroke = card:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			tween(stroke, {Transparency = 0.8}, Core.CONSTANTS.ANIM_FAST)
-		end
+	card.instance.MouseEnter:Connect(function()
+		tween(card.instance, {BackgroundColor3 = Theme.colors.surfaceVariant}, ANIMATION_SPEEDS.FAST)
+		tween(icon.instance, {Size = UDim2.fromOffset(60, 60)}, ANIMATION_SPEEDS.FAST, Enum.EasingStyle.Back)
 	end)
 	
-	pass._card = card
-	pass._priceLabel = price
-	pass._buyButton = button
+	card.instance.MouseLeave:Connect(function()
+		tween(card.instance, {BackgroundColor3 = Theme.colors.surface}, ANIMATION_SPEEDS.FAST)
+		tween(icon.instance, {Size = UDim2.fromOffset(56, 56)}, ANIMATION_SPEEDS.FAST)
+	end)
 end
 
-function Shop:updatePassVisual(pass, owned, button, card)
-	button = button or pass._buyButton
-	card = card or pass._card
-	if not button or not card then return end
-	
-	if owned then
-		button.Text = "✓ Owned"
-		button.Active = false
-		button.BackgroundColor3 = Theme.palette.ok
-		
-		local checkIcon = UI.Image({
-			Image = ICON_CHECK,
-			Size = UDim2.fromOffset(20, 20),
-			Position = UDim2.new(0, 8, 0.5, 0),
-			AnchorPoint = Vector2.new(0, 0.5),
-			ImageColor3 = Color3.new(1,1,1),
-			parent = button
-		}):render()
-		
-		local stroke = card:FindFirstChildOfClass("UIStroke")
-		if stroke then 
-			stroke.Color = Theme.palette.ok 
-			stroke.Transparency = 0.6
-		end
-		
-		-- Show inline toggle if exists
-		if pass._inlineToggle then
-			pass._inlineToggle.Visible = true
-		end
-	else
-		button.Text = "Purchase"
-		button.Active = true
-		button.BackgroundColor3 = Theme.palette.lav
-		
-		local stroke = card:FindFirstChildOfClass("UIStroke")
-		if stroke then 
-			stroke.Color = Theme.palette.lav 
-			stroke.Transparency = 0.8
-		end
-	end
-end
-
--- Toggle (pill) --------------------------------------------------------------
-function Shop:createToggle(parent, label, initial, onChange)
-	local wrapper = Instance.new("Frame")
-	wrapper.BackgroundTransparency = 1
-	wrapper.Size = UDim2.fromOffset(140, 36)
-	wrapper.Parent = parent
-	
-	-- Background
-	local bg = Instance.new("Frame")
-	bg.Size = UDim2.fromOffset(60, 30)
-	bg.Position = UDim2.fromOffset(80, 3)
-	bg.BackgroundColor3 = initial and Theme.palette.mint or Theme.palette.stroke
-	bg.Parent = wrapper
-	
-	local bgCorner = Instance.new("UICorner")
-	bgCorner.CornerRadius = UDim.new(1, 0)
-	bgCorner.Parent = bg
-	
-	-- Knob
-	local knob = Instance.new("Frame")
-	knob.Size = UDim2.fromOffset(26, 26)
-	knob.Position = initial and UDim2.fromOffset(32, 2) or UDim2.fromOffset(2, 2)
-	knob.BackgroundColor3 = Color3.new(1, 1, 1)
-	knob.Parent = bg
-	
-	local knobCorner = Instance.new("UICorner")
-	knobCorner.CornerRadius = UDim.new(1, 0)
-	knobCorner.Parent = knob
-	
-	-- Shadow for knob
-	local knobShadow = Instance.new("Frame")
-	knobShadow.Size = UDim2.new(1, 2, 1, 2)
-	knobShadow.Position = UDim2.fromOffset(1, 1)
-	knobShadow.BackgroundColor3 = Color3.new(0, 0, 0)
-	knobShadow.BackgroundTransparency = 0.8
-	knobShadow.ZIndex = knob.ZIndex - 1
-	knobShadow.Parent = knob
-	
-	local shadowCorner = Instance.new("UICorner")
-	shadowCorner.CornerRadius = UDim.new(1, 0)
-	shadowCorner.Parent = knobShadow
-	
-	-- Label
-	local labelText = UI.Text({ 
-		Text = label or "Toggle", 
-		TextColor3 = Theme.palette.text2, 
-		TextSize = Theme.textSize.regular,
-		Size = UDim2.fromOffset(75, 36),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		parent = wrapper 
+function ShopManager:createToggle(props)
+	local container = Frame({
+		Name = props.Name or "Toggle",
+		Size = UDim2.fromOffset(160, 36),
+		Position = props.Position,
+		AnchorPoint = props.AnchorPoint,
+		BackgroundTransparency = 1,
+		LayoutOrder = props.LayoutOrder,
+		Parent = props.Parent,
 	}):render()
 	
-	-- Button
-	local button = Instance.new("TextButton")
-	button.BackgroundTransparency = 1
-	button.Size = UDim2.fromScale(1, 1)
-	button.Text = ""
-	button.Parent = wrapper
+	-- Label
+	local label = Text({
+		Name = "Label",
+		Text = props.Label or "Toggle",
+		Font = Theme.typography.fontFamily.medium,
+		TextSize = Theme.typography.scale.bodyMedium,
+		TextColor3 = Theme.colors.onSurfaceVariant,
+		Size = UDim2.fromOffset(90, 36),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = container.instance,
+	}):render()
 	
-	local state = initial and true or false
-	local function updateVisual()
-		tween(bg, {
-			BackgroundColor3 = state and Theme.palette.mint or Theme.palette.stroke
-		}, Core.CONSTANTS.ANIM_FAST)
-		tween(knob, {
-			Position = state and UDim2.fromOffset(32, 2) or UDim2.fromOffset(2, 2)
-		}, Core.CONSTANTS.ANIM_FAST, Enum.EasingStyle.Back)
-	end
+	-- Toggle background
+	local toggleBg = Frame({
+		Name = "ToggleBackground",
+		Size = UDim2.fromOffset(52, 28),
+		Position = UDim2.fromOffset(100, 4),
+		BackgroundColor3 = Theme.colors.outline,
+		Parent = container.instance,
+		style = {
+			cornerRadius = Theme.radius.full,
+		},
+	}):render()
 	
-	button.MouseButton1Click:Connect(function()
-		state = not state
-		updateVisual()
-		SoundManager:play("click")
-		if onChange then onChange(state) end
-	end)
+	-- Toggle knob
+	local knob = Frame({
+		Name = "Knob",
+		Size = UDim2.fromOffset(24, 24),
+		Position = UDim2.fromOffset(2, 2),
+		BackgroundColor3 = Theme.colors.surface,
+		Parent = toggleBg.instance,
+		style = {
+			cornerRadius = Theme.radius.full,
+			shadow = {
+				blur = 4,
+				transparency = 0.9,
+			},
+		},
+	}):render()
 	
-	updateVisual()
-	wrapper:SetAttribute("_toggle_state", state)
-	return wrapper
-end
-
-function Shop:setToggle(toggleWrapper, value)
-	if not toggleWrapper then return end
-	toggleWrapper:SetAttribute("_toggle_state", value)
+	-- State
+	local state = false
 	
-	local bg = toggleWrapper:FindFirstChild("Frame")
-	if not bg then return end
-	local knob = bg:FindFirstChild("Frame")
-	if not knob then return end
-	
-	bg.BackgroundColor3 = value and Theme.palette.mint or Theme.palette.stroke
-	knob.Position = value and UDim2.fromOffset(32, 2) or UDim2.fromOffset(2, 2)
-end
-
--- Build ----------------------------------------------------------------------
-function Shop:build()
-	self:createGui()
-	self:createHeader()
-	self:createNav()
-	self:createContent()
-	
-	-- Initial data load
-	Data.refreshPrices()
-end
-
--- Open / Close ---------------------------------------------------------------
-function Shop:open()
-	if Core.State.isOpen or Core.State.isAnimating then return end
-	Core.State.isAnimating = true
-	Core.State.isOpen = true
-	
-	Data.refreshPrices()
-	self:refreshVisuals()
-	
-	self.gui.Enabled = true
-	SoundManager:play("open")
-	
-	-- Animations
-	tween(self.blur, { Size = 24 }, Core.CONSTANTS.ANIM_MED)
-	self.panel.Position = UDim2.fromScale(0.5, 0.55)
-	self.panel.Size = UDim2.new(0.85, 0, 0.8, 0)
-	tween(self.panel, { 
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.new(0.9, 0, 0.85, 0)
-	}, Core.CONSTANTS.ANIM_SLOW, Enum.EasingStyle.Back)
-	
-	-- Stagger tab animations
-	for _, tabData in pairs(self.tabButtons) do
-		tabData.button.BackgroundTransparency = 1
-		tween(tabData.button, {BackgroundTransparency = 0}, Core.CONSTANTS.ANIM_MED)
-	end
-	
-	task.delay(Core.CONSTANTS.ANIM_SLOW, function()
-		Core.State.isAnimating = false
-		Core.Events:emit("shopOpened")
-		
-		-- Start refresh timer
-		self.refreshTimer = task.spawn(function()
-			while Core.State.isOpen do
-				task.wait(Core.CONSTANTS.REFRESH_INTERVAL)
-				if Core.State.isOpen then
-					Data.refreshPrices()
-					self:refreshVisuals()
-				end
+	-- Toggle button
+	local toggleButton = Button({
+		Name = "ToggleButton",
+		Text = "",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Parent = container.instance,
+		onClick = function()
+			state = not state
+			self:updateToggleVisual(toggleBg.instance, knob.instance, state)
+			self.soundManager:play("click", 0.08)
+			if props.onChange then
+				props.onChange(state)
 			end
-		end)
-	end)
-end
-
-function Shop:close()
-	if not Core.State.isOpen or Core.State.isAnimating then return end
-	Core.State.isAnimating = true
-	Core.State.isOpen = false
+		end,
+	}):render()
 	
-	SoundManager:play("close")
-	
-	-- Cancel refresh timer
-	if self.refreshTimer then
-		task.cancel(self.refreshTimer)
-		self.refreshTimer = nil
+	-- Methods
+	container.setState = function(newState)
+		state = newState
+		self:updateToggleVisual(toggleBg.instance, knob.instance, state)
 	end
 	
-	tween(self.blur, { Size = 0 }, Core.CONSTANTS.ANIM_FAST)
-	tween(self.panel, { 
-		Position = UDim2.fromScale(0.5, 0.55),
-		Size = UDim2.new(0.85, 0, 0.8, 0)
-	}, Core.CONSTANTS.ANIM_FAST)
+	container.getState = function()
+		return state
+	end
 	
-	task.delay(Core.CONSTANTS.ANIM_FAST, function()
-		self.gui.Enabled = false
-		Core.State.isAnimating = false
-		Core.Events:emit("shopClosed")
-	end)
+	return container
 end
 
-function Shop:toggle()
-	if Core.State.isOpen then 
-		self:close() 
-	else 
-		self:open() 
+function ShopManager:updateToggleVisual(bg, knob, state)
+	if state then
+		tween(bg, {BackgroundColor3 = Theme.colors.primary}, ANIMATION_SPEEDS.FAST)
+		tween(knob, {Position = UDim2.fromOffset(26, 2)}, ANIMATION_SPEEDS.FAST, Enum.EasingStyle.Back)
+	else
+		tween(bg, {BackgroundColor3 = Theme.colors.outline}, ANIMATION_SPEEDS.FAST)
+		tween(knob, {Position = UDim2.fromOffset(2, 2)}, ANIMATION_SPEEDS.FAST, Enum.EasingStyle.Back)
 	end
 end
 
--- Select Tab -----------------------------------------------------------------
-function Shop:selectTab(id)
-	if Core.State.currentTab == id then
-		for pageName, page in pairs(self.pages) do 
-			page.Visible = (pageName == id) 
-		end
-		return
+function ShopManager:createToggleButton()
+	-- Clean up existing
+	if PlayerGui:FindFirstChild("TycoonShopToggle") then
+		PlayerGui.TycoonShopToggle:Destroy()
 	end
 	
-	for tabName, data in pairs(self.tabButtons) do
-		local isActive = (tabName == id)
-		tween(data.button, {
-			BackgroundColor3 = isActive and data.accent or Theme.palette.surface,
-		}, Core.CONSTANTS.ANIM_FAST)
-		tween(data.icon, {
-			ImageColor3 = isActive and Color3.new(1,1,1) or Theme.palette.text2,
-		}, Core.CONSTANTS.ANIM_FAST)
-		tween(data.text, {
-			TextColor3 = isActive and Color3.new(1,1,1) or Theme.palette.text2,
-		}, Core.CONSTANTS.ANIM_FAST)
-	end
-	
-	for pageName, page in pairs(self.pages) do 
-		page.Visible = (pageName == id) 
-	end
-	
-	Core.State.currentTab = id
-	Core.Events:emit("tabChanged", id)
-end
-
--- Refresh visuals (prices / ownership) ---------------------------------------
-function Shop:refreshVisuals()
-	ownershipCache:clear()
-	
-	-- Update gamepass visuals
-	for _, pass in ipairs(Data.products.gamepasses) do
-		local owned = Data.userOwnsPass(pass.id)
-		self:updatePassVisual(pass, owned)
-	end
-	
-	-- Update price labels for cash
-	for _, product in ipairs(Data.products.cash) do
-		if product._priceLabel then
-			product._priceLabel.Text = string.format("R$%s", tostring(product.price or 0))
-		end
-	end
-	
-	-- Update settings toggle visibility
-	local ownsAuto = Data.userOwnsPass(PASS_AUTO_COLLECT)
-	if self.autoToggleInSettings then 
-		self.autoToggleInSettings.Visible = ownsAuto 
-	end
-end
-
--- Purchase Flow --------------------------------------------------------------
-function Shop:promptPurchase(item, kind)
-	if kind == "gamepass" then
-		if Data.userOwnsPass(item.id) then
-			self:updatePassVisual(item, true)
-			return
-		end
-		
-		item._buyButton.Text = "Processing..."
-		item._buyButton.Active = false
-		Core.State.purchasePending[item.id] = { 
-			item = item, 
-			type = kind, 
-			time = os.clock() 
-		}
-		
-		local success = pcall(function()
-			MarketplaceService:PromptGamePassPurchase(Player, item.id)
-		end)
-		
-		if not success then
-			item._buyButton.Text = "Purchase"
-			item._buyButton.Active = true
-			Core.State.purchasePending[item.id] = nil
-		end
-		
-		-- Timeout fallback
-		task.delay(Core.CONSTANTS.PURCHASE_TIMEOUT, function()
-			if Core.State.purchasePending[item.id] then
-				item._buyButton.Text = "Purchase"
-				item._buyButton.Active = true
-				Core.State.purchasePending[item.id] = nil
-			end
-		end)
-	else -- dev product (cash)
-		Core.State.purchasePending[item.id] = { 
-			item = item, 
-			type = kind, 
-			time = os.clock() 
-		}
-		
-		local success = pcall(function()
-			MarketplaceService:PromptProductPurchase(Player, item.id)
-		end)
-		
-		if not success then
-			Core.State.purchasePending[item.id] = nil
-		end
-	end
-end
-
--- Input ----------------------------------------------------------------------
-function Shop:connectInputs()
-	-- Keyboard
-	table.insert(self.connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if gameProcessed then return end
-		if input.KeyCode == Enum.KeyCode.M then 
-			self:toggle() 
-		end
-		if input.KeyCode == Enum.KeyCode.Escape and Core.State.isOpen then 
-			self:close() 
-		end
-	end))
-	
-	-- Gamepad
-	if UserInputService.GamepadEnabled then
-		table.insert(self.connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
-			if gameProcessed then return end
-			if input.KeyCode == Enum.KeyCode.ButtonX then 
-				self:toggle() 
-			end
-		end))
-	end
-	
-	-- Floating toggle button
-	local toggleGui = PlayerGui:FindFirstChild("ShopToggle")
-	if toggleGui then toggleGui:Destroy() end
-	
-	toggleGui = Instance.new("ScreenGui")
-	toggleGui.Name = "ShopToggle"
+	local toggleGui = Instance.new("ScreenGui")
+	toggleGui.Name = "TycoonShopToggle"
 	toggleGui.ResetOnSpawn = false
-	toggleGui.DisplayOrder = 999
+	toggleGui.DisplayOrder = 50
 	toggleGui.Parent = PlayerGui
 	
-	local toggleButton = UI.Button({
-		Text = "",
-		BackgroundColor3 = Theme.palette.surface,
+	self.toggleButton = ImageButton({
+		Name = "ToggleButton",
+		Image = Assets.icons.shop,
 		Size = UDim2.fromOffset(64, 64),
 		Position = UDim2.new(1, -80, 1, -80),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		corner = Theme.corner.round,
-		stroke = {
-			Color = Theme.palette.mint,
-			Thickness = 2,
-			Transparency = 0.7
+		BackgroundColor3 = Theme.colors.surface,
+		ImageColor3 = Theme.colors.primary,
+		Parent = toggleGui,
+		onClick = function()
+			self:toggle()
+		end,
+		style = {
+			cornerRadius = Theme.radius.full,
+			stroke = {
+				color = Theme.colors.primary,
+				thickness = 2,
+				transparency = 0.7,
+			},
+			shadow = {
+				blur = 20,
+				transparency = 0.85,
+			},
 		},
-		shadow = {
-			enabled = true,
-			OffsetY = 3,
-			Spread = 6
-		},
-		parent = toggleGui,
-		onClick = function() self:toggle() end
-	}):render()
-	
-	local buttonIcon = UI.Image({
-		Image = ICON_SHOP,
-		Size = UDim2.fromScale(0.6, 0.6),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		ImageColor3 = Theme.palette.mint,
-		parent = toggleButton
 	}):render()
 	
 	-- Hover effects
-	toggleButton.MouseEnter:Connect(function()
-		tween(toggleButton, {
-			BackgroundColor3 = Theme.palette.mint,
-			Size = UDim2.fromOffset(72, 72)
-		}, Core.CONSTANTS.ANIM_FAST, Enum.EasingStyle.Back)
-		tween(buttonIcon, {ImageColor3 = Color3.new(1,1,1)}, Core.CONSTANTS.ANIM_FAST)
+	self.toggleButton.instance.MouseEnter:Connect(function()
+		self.soundManager:play("hover", 0.05)
+		tween(self.toggleButton.instance, {
+			Size = UDim2.fromOffset(72, 72),
+			BackgroundColor3 = Theme.colors.primary,
+		}, ANIMATION_SPEEDS.FAST, Enum.EasingStyle.Back)
+		tween(self.toggleButton.instance, {
+			ImageColor3 = Theme.colors.onPrimary,
+		}, ANIMATION_SPEEDS.FAST)
 	end)
-	toggleButton.MouseLeave:Connect(function()
-		tween(toggleButton, {
-			BackgroundColor3 = Theme.palette.surface,
-			Size = UDim2.fromOffset(64, 64)
-		}, Core.CONSTANTS.ANIM_FAST)
-		tween(buttonIcon, {ImageColor3 = Theme.palette.mint}, Core.CONSTANTS.ANIM_FAST)
+	
+	self.toggleButton.instance.MouseLeave:Connect(function()
+		tween(self.toggleButton.instance, {
+			Size = UDim2.fromOffset(64, 64),
+			BackgroundColor3 = Theme.colors.surface,
+		}, ANIMATION_SPEEDS.FAST)
+		tween(self.toggleButton.instance, {
+			ImageColor3 = Theme.colors.primary,
+		}, ANIMATION_SPEEDS.FAST)
 	end)
 	
 	-- Floating animation
 	task.spawn(function()
-		while toggleButton.Parent do
-			tween(toggleButton, {
-				Position = UDim2.new(1, -80, 1, -85)
-			}, 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-			task.wait(2)
-			tween(toggleButton, {
-				Position = UDim2.new(1, -80, 1, -75)
-			}, 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-			task.wait(2)
+		while self.toggleButton and self.toggleButton.instance.Parent do
+			tween(self.toggleButton.instance, {
+				Position = UDim2.new(1, -80, 1, -85),
+			}, 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+			task.wait(3)
+			tween(self.toggleButton.instance, {
+				Position = UDim2.new(1, -80, 1, -75),
+			}, 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+			task.wait(3)
 		end
 	end)
 end
 
--- Responsive Design ----------------------------------------------------------
-function Shop:setupResponsive()
-	local function updateLayout()
-		local viewportSize = Utils.getViewportSize()
-		Core.State.viewportSize = viewportSize
-		Core.State.gridColumns = Utils.getGridColumns()
+function ShopManager:setupInputHandling()
+	-- Keyboard
+	table.insert(self.connections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
 		
-		-- Update cash page grid
-		local cashPage = self.pages.Cash
-		if cashPage then
-			-- Find the scroll frame which contains the grid
-			local scroll = cashPage:FindFirstChild("ScrollingFrame")
-			if scroll and scroll.grid then
-				scroll.grid.FillDirectionMaxCells = Core.State.gridColumns
+		if input.KeyCode == Enum.KeyCode.M then
+			self:toggle()
+		elseif input.KeyCode == Enum.KeyCode.Escape and self.isOpen then
+			self:close()
+		end
+	end))
+	
+	-- Gamepad
+	ContextActionService:BindAction("ToggleShop", function(actionName, inputState, inputObject)
+		if inputState == Enum.UserInputState.Begin then
+			self:toggle()
+		end
+	end, false, Enum.KeyCode.ButtonX)
+end
+
+function ShopManager:setupResponsiveHandling()
+	local function updateLayout()
+		if not self.mainContainer then return end
+		
+		local viewport = getViewportSize()
+		local isMobile = viewport.X < UI_CONSTANTS.MOBILE_BREAKPOINT
+		local columns = getGridColumns()
+		
+		-- Update navigation
+		if self.navigation then
+			if isMobile then
+				self.navigation.instance.Size = UDim2.new(1, -32, 0, UI_CONSTANTS.NAV_HEIGHT_MOBILE)
+				self.navigation.instance.Position = UDim2.new(0, 16, 0, UI_CONSTANTS.HEADER_HEIGHT + 8)
 				
-				-- Adjust cell size based on columns
-				local cellWidth = 1 / Core.State.gridColumns
-				scroll.grid.CellSize = UDim2.new(
-					cellWidth, 
-					-Theme.padding.medium, 
-					0, 
-					Core.State.gridColumns == 1 and 260 or 220
-				)
+				local navLayout = self.navigation.instance:FindFirstChildOfClass("UIListLayout")
+				if navLayout then
+					navLayout.FillDirection = Enum.FillDirection.Horizontal
+					navLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+				end
+				
+				-- Update nav button sizes
+				for _, button in pairs(self.navButtons) do
+					button.instance.Size = UDim2.new(0.5, -4, 1, 0)
+				end
+			else
+				self.navigation.instance.Size = UDim2.new(0, UI_CONSTANTS.NAV_WIDTH_DESKTOP, 1, -UI_CONSTANTS.HEADER_HEIGHT - 16)
+				self.navigation.instance.Position = UDim2.new(0, 16, 0, UI_CONSTANTS.HEADER_HEIGHT + 8)
+				
+				local navLayout = self.navigation.instance:FindFirstChildOfClass("UIListLayout")
+				if navLayout then
+					navLayout.FillDirection = Enum.FillDirection.Vertical
+					navLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+				end
+				
+				-- Update nav button sizes
+				for _, button in pairs(self.navButtons) do
+					button.instance.Size = UDim2.new(1, 0, 0, 56)
+				end
 			end
 		end
 		
-		-- Update navigation layout for small screens
-		local isSmallScreen = viewportSize.X < 768
-		if self.nav then
-			if isSmallScreen then
-				-- Horizontal tabs for mobile
-				self.nav.Size = UDim2.new(1, -32, 0, 60)
-				self.nav.Position = UDim2.fromOffset(16, 80)
-				
-				local layout = self.nav:FindFirstChildOfClass("UIListLayout")
-				if layout then
-					layout.FillDirection = Enum.FillDirection.Horizontal
-					layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-				end
-				
-				-- Update tab button sizes
-				for _, data in pairs(self.tabButtons) do
-					data.button.Size = UDim2.new(0.5, -6, 1, 0)
-				end
-				
-				-- Update content position
-				if self.content then
-					self.content.Size = UDim2.new(1, -32, 1, -160)
-					self.content.Position = UDim2.fromOffset(16, 148)
-				end
+		-- Update content area
+		if self.contentArea then
+			if isMobile then
+				self.contentArea.instance.Size = UDim2.new(1, -32, 1, -UI_CONSTANTS.HEADER_HEIGHT - UI_CONSTANTS.NAV_HEIGHT_MOBILE - 32)
+				self.contentArea.instance.Position = UDim2.new(0, 16, 0, UI_CONSTANTS.HEADER_HEIGHT + UI_CONSTANTS.NAV_HEIGHT_MOBILE + 16)
 			else
-				-- Vertical nav for desktop
-				self.nav.Size = UDim2.new(0, 220, 1, -88)
-				self.nav.Position = UDim2.fromOffset(16, 80)
-				
-				local layout = self.nav:FindFirstChildOfClass("UIListLayout")
-				if layout then
-					layout.FillDirection = Enum.FillDirection.Vertical
-					layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-				end
-				
-				-- Update tab button sizes
-				for _, data in pairs(self.tabButtons) do
-					data.button.Size = UDim2.new(1, 0, 0, 54)
-				end
-				
-				-- Update content position
-				if self.content then
-					self.content.Size = UDim2.new(1, -252, 1, -96)
-					self.content.Position = UDim2.fromOffset(244, 88)
-				end
+				self.contentArea.instance.Size = UDim2.new(1, -UI_CONSTANTS.NAV_WIDTH_DESKTOP - 48, 1, -UI_CONSTANTS.HEADER_HEIGHT - 16)
+				self.contentArea.instance.Position = UDim2.new(0, UI_CONSTANTS.NAV_WIDTH_DESKTOP + 32, 0, UI_CONSTANTS.HEADER_HEIGHT + 8)
 			end
+		end
+		
+		-- Update grids
+		if self.pages.cash and self.pages.cash.grid then
+			self.pages.cash.grid.FillDirectionMaxCells = columns
+			self.pages.cash.grid.CellSize = UDim2.new(1/columns, -Theme.spacing.md * (columns-1)/columns, 0, columns == 1 and 280 or 240)
 		end
 	end
 	
 	-- Initial update
 	updateLayout()
 	
-	-- Listen for viewport changes
+	-- Listen for changes
 	local camera = workspace.CurrentCamera
 	if camera then
 		table.insert(self.connections, camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateLayout))
 	end
 end
 
--- Marketplace Callbacks ------------------------------------------------------
-MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, wasPurchased)
-	if player ~= Player then return end
-	
-	local pending = Core.State.purchasePending[passId]
-	if not pending then return end
-	
-	Core.State.purchasePending[passId] = nil
-	local item = pending.item
-	
-	if wasPurchased then
-		ownershipCache:clear()
+function ShopManager:setupMarketplaceCallbacks()
+	-- Game pass purchase finished
+	MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, wasPurchased)
+		if player ~= Player then return end
 		
-		-- Update visual
-		if item and item._buyButton then
-			item._buyButton.Text = "✓ Owned"
-			item._buyButton.BackgroundColor3 = Theme.palette.ok
-			item._buyButton.Active = false
-		end
+		debugPrint("Game pass purchase finished:", passId, wasPurchased)
 		
-		-- Refresh all visuals
-		if shop then 
-			shop:refreshVisuals() 
-		end
-		
-		-- Notify server
-		if Remotes then
-			local event = Remotes:FindFirstChild("GamepassPurchased")
-			if event and event:IsA("RemoteEvent") then 
-				event:FireServer(passId) 
+		if wasPurchased then
+			self.ownershipCache:clear()
+			self:refreshOwnership()
+			self.soundManager:play("purchase", 0.2)
+			
+			-- Notify server
+			if Remotes then
+				local event = Remotes:FindFirstChild("GamepassPurchased")
+				if event and event:IsA("RemoteEvent") then
+					event:FireServer(passId)
+				end
 			end
 		end
+	end)
+	
+	-- Product purchase finished
+	MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, productId, wasPurchased)
+		if player ~= Player then return end
 		
-		SoundManager:play("purchase")
+		debugPrint("Product purchase finished:", productId, wasPurchased)
+		
+		if wasPurchased and Remotes then
+			local event = Remotes:FindFirstChild("GrantProductCurrency")
+			if event and event:IsA("RemoteEvent") then
+				event:FireServer(productId)
+			end
+			
+			self.soundManager:play("purchase", 0.2)
+		end
+	end)
+end
+
+function ShopManager:switchTab(tabId)
+	if self.currentTab == tabId then return end
+	
+	debugPrint("Switching to tab:", tabId)
+	
+	self.currentTab = tabId
+	self.soundManager:play("click", 0.08)
+	
+	-- Update navigation buttons
+	for id, button in pairs(self.navButtons) do
+		local isActive = id == tabId
+		
+		tween(button.instance, {
+			BackgroundColor3 = isActive and button.color or Theme.colors.surface,
+		}, ANIMATION_SPEEDS.FAST)
+		
+		tween(button.icon.instance, {
+			ImageColor3 = isActive and Theme.colors.onPrimary or Theme.colors.onSurfaceVariant,
+		}, ANIMATION_SPEEDS.FAST)
+		
+		tween(button.label.instance, {
+			TextColor3 = isActive and Theme.colors.onPrimary or Theme.colors.onSurfaceVariant,
+		}, ANIMATION_SPEEDS.FAST)
+	end
+	
+	-- Update page visibility
+	for id, page in pairs(self.pages) do
+		page.instance.Visible = id == tabId
+	end
+	
+	-- Emit event
+	self.eventEmitter:emit("tabChanged", tabId)
+end
+
+function ShopManager:open()
+	if self.isOpen or self.isAnimating then return end
+	
+	debugPrint("Opening shop")
+	
+	self.isAnimating = true
+	self.isOpen = true
+	
+	-- Refresh data
+	self:refreshPrices()
+	self:refreshOwnership()
+	
+	-- Enable GUI
+	self.gui.Enabled = true
+	self.soundManager:play("open", 0.15)
+	
+	-- Animate blur
+	tween(self.blur, {Size = UI_CONSTANTS.BLUR_SIZE}, ANIMATION_SPEEDS.MEDIUM)
+	
+	-- Animate main container
+	self.mainContainer.instance.Position = UDim2.fromScale(0.5, 0.55)
+	self.mainContainer.instance.Size = UDim2.fromScale(0.9, 0.85)
+	
+	tween(self.mainContainer.instance, {
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.95, 0.9),
+	}, ANIMATION_SPEEDS.SLOW, Enum.EasingStyle.Back, Enum.EasingDirection.Out, function()
+		self.isAnimating = false
+		self.eventEmitter:emit("shopOpened")
+	end)
+	
+	-- Start auto-refresh
+	if self.settings.autoRefresh then
+		self:startAutoRefresh()
+	end
+end
+
+function ShopManager:close()
+	if not self.isOpen or self.isAnimating then return end
+	
+	debugPrint("Closing shop")
+	
+	self.isAnimating = true
+	self.isOpen = false
+	
+	-- Stop auto-refresh
+	self:stopAutoRefresh()
+	
+	self.soundManager:play("close", 0.15)
+	
+	-- Animate blur
+	tween(self.blur, {Size = 0}, ANIMATION_SPEEDS.FAST)
+	
+	-- Animate main container
+	tween(self.mainContainer.instance, {
+		Position = UDim2.fromScale(0.5, 0.55),
+		Size = UDim2.fromScale(0.9, 0.85),
+	}, ANIMATION_SPEEDS.FAST, Enum.EasingStyle.Quad, Enum.EasingDirection.In, function()
+		self.gui.Enabled = false
+		self.isAnimating = false
+		self.eventEmitter:emit("shopClosed")
+	end)
+end
+
+function ShopManager:toggle()
+	if self.isOpen then
+		self:close()
 	else
-		if item and item._buyButton then 
-			item._buyButton.Text = "Purchase"
-			item._buyButton.Active = true 
-		end
+		self:open()
 	end
-end)
+end
 
-MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, productId, wasPurchased)
-	if player ~= Player then return end
+function ShopManager:refreshPrices()
+	debugPrint("Refreshing prices")
 	
-	local pending = Core.State.purchasePending[productId]
-	if not pending then return end
-	
-	Core.State.purchasePending[productId] = nil
-	
-	if wasPurchased and Remotes then
-		local grant = Remotes:FindFirstChild("GrantProductCurrency")
-		if not grant then
-			grant = Remotes:FindFirstChild("ProductGranted")
-		end
-		if grant and grant:IsA("RemoteEvent") then 
-			grant:FireServer(productId) 
+	-- Cash packs
+	for _, pack in ipairs(ProductData.cashPacks) do
+		local cachedPrice = self.priceCache:get("product_" .. pack.id)
+		if not cachedPrice then
+			local success, info = pcall(function()
+				return MarketplaceService:GetProductInfo(pack.id, Enum.InfoType.Product)
+			end)
+			
+			if success and info then
+				pack.price = info.PriceInRobux
+				self.priceCache:set("product_" .. pack.id, info.PriceInRobux)
+			end
+		else
+			pack.price = cachedPrice
 		end
 		
-		SoundManager:play("purchase")
+		-- Update UI
+		if pack._priceLabel then
+			pack._priceLabel.instance.Text = "R$" .. (pack.price or "???")
+		end
 	end
-end)
+	
+	-- Game passes
+	for _, pass in ipairs(ProductData.gamePasses) do
+		local cachedPrice = self.priceCache:get("pass_" .. pass.id)
+		if not cachedPrice then
+			local success, info = pcall(function()
+				return MarketplaceService:GetProductInfo(pass.id, Enum.InfoType.GamePass)
+			end)
+			
+			if success and info then
+				pass.price = info.PriceInRobux
+				self.priceCache:set("pass_" .. pass.id, info.PriceInRobux)
+			end
+		else
+			pass.price = cachedPrice
+		end
+		
+		-- Update UI
+		if pass._priceLabel then
+			pass._priceLabel.instance.Text = "R$" .. (pass.price or "???")
+		end
+	end
+end
 
--- Cleanup --------------------------------------------------------------------
-function Shop:destroy()
-	Core.State.isOpen = false
+function ShopManager:refreshOwnership()
+	debugPrint("Refreshing ownership")
 	
-	if self.refreshTimer then
-		task.cancel(self.refreshTimer)
+	local hasAutoCollect = false
+	
+	for _, pass in ipairs(ProductData.gamePasses) do
+		local owned = self:checkOwnership(pass.id)
+		
+		if owned then
+			self:updatePassOwned(pass)
+			
+			if pass.id == 1412171840 then -- Auto collect ID
+				hasAutoCollect = true
+			end
+		end
 	end
 	
+	-- Update settings visibility
+	if self.autoCollectToggle then
+		self.autoCollectToggle.instance.Visible = hasAutoCollect
+		
+		-- Get current state from server
+		if hasAutoCollect and Remotes then
+			local func = Remotes:FindFirstChild("GetAutoCollectState")
+			if func and func:IsA("RemoteFunction") then
+				local success, state = pcall(function()
+					return func:InvokeServer()
+				end)
+				
+				if success and type(state) == "boolean" then
+					self.autoCollectToggle.setState(state)
+				end
+			end
+		end
+	end
+end
+
+function ShopManager:checkOwnership(passId)
+	local cacheKey = Player.UserId .. "_" .. passId
+	local cached = self.ownershipCache:get(cacheKey)
+	
+	if cached ~= nil then
+		return cached
+	end
+	
+	local success, owns = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(Player.UserId, passId)
+	end)
+	
+	if success then
+		self.ownershipCache:set(cacheKey, owns)
+		return owns
+	end
+	
+	return false
+end
+
+function ShopManager:updatePassOwned(pass)
+	if not pass._buyButton then return end
+	
+	-- Update button
+	pass._buyButton.instance.Text = "✓ Owned"
+	pass._buyButton.instance.Active = false
+	pass._buyButton.instance.BackgroundColor3 = Theme.colors.success
+	
+	-- Add check icon
+	local checkIcon = Image({
+		Name = "CheckIcon",
+		Image = Assets.icons.check,
+		Size = UDim2.fromOffset(20, 20),
+		Position = UDim2.new(0, 8, 0.5, 0),
+		AnchorPoint = Vector2.new(0, 0.5),
+		ImageColor3 = Theme.colors.onPrimary,
+		Parent = pass._buyButton.instance,
+	}):render()
+	
+	-- Update card stroke
+	local stroke = pass._card.instance:FindFirstChildOfClass("UIStroke")
+	if stroke then
+		stroke.Color = Theme.colors.success
+		stroke.Transparency = 0.6
+	end
+	
+	-- Show toggle if applicable
+	if pass._toggle then
+		pass._toggle.instance.Visible = true
+		
+		-- Get state from server
+		if Remotes then
+			local func = Remotes:FindFirstChild("GetAutoCollectState")
+			if func and func:IsA("RemoteFunction") then
+				local success, state = pcall(function()
+					return func:InvokeServer()
+				end)
+				
+				if success and type(state) == "boolean" then
+					pass._toggle.setState(state)
+				end
+			end
+		end
+	end
+end
+
+function ShopManager:purchaseProduct(product)
+	debugPrint("Purchasing product:", product.id)
+	
+	self.soundManager:play("click", 0.1)
+	
+	local success = pcall(function()
+		MarketplaceService:PromptProductPurchase(Player, product.id)
+	end)
+	
+	if not success then
+		self.soundManager:play("error", 0.15)
+	end
+end
+
+function ShopManager:purchaseGamePass(pass)
+	debugPrint("Purchasing game pass:", pass.id)
+	
+	-- Check if already owned
+	if self:checkOwnership(pass.id) then
+		return
+	end
+	
+	self.soundManager:play("click", 0.1)
+	
+	local success = pcall(function()
+		MarketplaceService:PromptGamePassPurchase(Player, pass.id)
+	end)
+	
+	if not success then
+		self.soundManager:play("error", 0.15)
+	end
+end
+
+function ShopManager:setAutoCollect(state)
+	debugPrint("Setting auto collect:", state)
+	
+	if Remotes then
+		local event = Remotes:FindFirstChild("AutoCollectToggle")
+		if event and event:IsA("RemoteEvent") then
+			event:FireServer(state)
+		end
+	end
+	
+	-- Sync all toggles
+	if self.autoCollectToggle then
+		self.autoCollectToggle.setState(state)
+	end
+	
+	for _, pass in ipairs(ProductData.gamePasses) do
+		if pass._toggle and pass.id == 1412171840 then
+			pass._toggle.setState(state)
+		end
+	end
+end
+
+function ShopManager:startAutoRefresh()
+	self:stopAutoRefresh()
+	
+	self.autoRefreshConnection = task.spawn(function()
+		while self.isOpen do
+			task.wait(UI_CONSTANTS.REFRESH_INTERVAL)
+			if self.isOpen then
+				self:refreshPrices()
+				self:refreshOwnership()
+			end
+		end
+	end)
+end
+
+function ShopManager:stopAutoRefresh()
+	if self.autoRefreshConnection then
+		task.cancel(self.autoRefreshConnection)
+		self.autoRefreshConnection = nil
+	end
+end
+
+function ShopManager:destroy()
+	debugPrint("Destroying shop manager")
+	
+	-- Stop auto refresh
+	self:stopAutoRefresh()
+	
+	-- Disconnect events
 	for _, connection in ipairs(self.connections) do
 		connection:Disconnect()
+	end
+	
+	-- Unbind actions
+	ContextActionService:UnbindAction("ToggleShop")
+	
+	-- Destroy UI
+	if self.gui then
+		self.gui:Destroy()
 	end
 	
 	if self.blur then
 		self.blur:Destroy()
 	end
 	
-	if self.gui then
-		self.gui:Destroy()
+	if self.toggleButton then
+		self.toggleButton:destroy()
 	end
 	
-	local toggleGui = PlayerGui:FindFirstChild("ShopToggle")
-	if toggleGui then
-		toggleGui:Destroy()
-	end
+	-- Clean up systems
+	self.eventEmitter:destroy()
 end
 
--- Exposed API ----------------------------------------------------------------
-function Core.OpenShop() 
-	if shop then shop:open() end 
-end
-
-function Core.CloseShop() 
-	if shop then shop:close() end 
-end
-
-function Core.ToggleShop() 
-	if shop then shop:toggle() end 
-end
-
--- Initialize -----------------------------------------------------------------
-shop = Shop.new()
+-- Initialize shop
+local shopManager = ShopManager.new()
 
 -- Character respawn handling
 Player.CharacterAdded:Connect(function()
 	task.wait(1)
-	-- Ensure toggle button exists after respawn
-	local toggleGui = PlayerGui:FindFirstChild("ShopToggle")
-	if not toggleGui then 
-		shop:connectInputs() 
+	-- Recreate toggle button if needed
+	if not PlayerGui:FindFirstChild("TycoonShopToggle") then
+		shopManager:createToggleButton()
 	end
 end)
 
--- Cleanup on leave
+-- Cleanup on close
 game:BindToClose(function()
-	if shop then
-		shop:destroy()
-	end
+	shopManager:destroy()
 end)
 
-print("[TycoonShop] Modern Cute UI ready (v"..Core.VERSION..")")
+print("[TycoonShop] Modern Cute UI v" .. SHOP_VERSION .. " initialized successfully!")
 
-return Core
+-- Export API
+return {
+	open = function() shopManager:open() end,
+	close = function() shopManager:close() end,
+	toggle = function() shopManager:toggle() end,
+	refresh = function() 
+		shopManager:refreshPrices()
+		shopManager:refreshOwnership()
+	end,
+	destroy = function() shopManager:destroy() end,
+	version = SHOP_VERSION,
+}
