@@ -980,7 +980,8 @@ function Shop:createCashPage(parent)
 	grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	grid.Parent = scroll
 	
-	page.grid = grid -- Store reference for responsive updates
+	-- Store grid reference on scroll frame instead of page
+	scroll.grid = grid
 	
 	for index, product in ipairs(Data.products.cash) do
 		self:createCashCard(product, scroll, index)
@@ -1895,17 +1896,21 @@ function Shop:setupResponsive()
 		
 		-- Update cash page grid
 		local cashPage = self.pages.Cash
-		if cashPage and cashPage.grid then
-			cashPage.grid.FillDirectionMaxCells = Core.State.gridColumns
-			
-			-- Adjust cell size based on columns
-			local cellWidth = 1 / Core.State.gridColumns
-			cashPage.grid.CellSize = UDim2.new(
-				cellWidth, 
-				-Theme.padding.medium, 
-				0, 
-				Core.State.gridColumns == 1 and 260 or 220
-			)
+		if cashPage then
+			-- Find the scroll frame which contains the grid
+			local scroll = cashPage:FindFirstChild("ScrollingFrame")
+			if scroll and scroll.grid then
+				scroll.grid.FillDirectionMaxCells = Core.State.gridColumns
+				
+				-- Adjust cell size based on columns
+				local cellWidth = 1 / Core.State.gridColumns
+				scroll.grid.CellSize = UDim2.new(
+					cellWidth, 
+					-Theme.padding.medium, 
+					0, 
+					Core.State.gridColumns == 1 and 260 or 220
+				)
+			end
 		end
 		
 		-- Update navigation layout for small screens
