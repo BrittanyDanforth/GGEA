@@ -17,7 +17,6 @@ local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContentProvider = game:GetService("ContentProvider")
-local SoundService = game:GetService("SoundService")
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
@@ -74,7 +73,6 @@ Core.State = {
 	productCache = {},
 	initialized = false,
 	settings = {
-		soundEnabled = true,
 		animationsEnabled = true,
 		reducedMotion = false,
 		autoRefresh = true,
@@ -216,42 +214,6 @@ function Core.Animation.tween(object, properties, duration, easingStyle, easingD
 	local tween = TweenService:Create(object, tweenInfo, properties)
 	tween:Play()
 	return tween
-end
-
--- Sound System
-Core.SoundSystem = {}
-
-function Core.SoundSystem.initialize()
-	-- Using working sound IDs
-	local sounds = {
-		click = {id = "rbxassetid://876939830", volume = 0.4},
-		hover = {id = "rbxassetid://10066936758", volume = 0.2},
-		open = {id = "rbxassetid://452267918", volume = 0.5},
-		close = {id = "rbxassetid://452267918", volume = 0.5},
-		success = {id = "rbxassetid://876939830", volume = 0.6},
-		error = {id = "rbxassetid://876939830", volume = 0.5},
-		notification = {id = "rbxassetid://876939830", volume = 0.5},
-	}
-
-	Core.SoundSystem.sounds = {}
-
-	for name, config in pairs(sounds) do
-		local sound = Instance.new("Sound")
-		sound.Name = "SanrioShop_" .. name
-		sound.SoundId = config.id
-		sound.Volume = config.volume
-		sound.Parent = SoundService
-		Core.SoundSystem.sounds[name] = sound
-	end
-end
-
-function Core.SoundSystem.play(soundName)
-	if not Core.State.settings.soundEnabled then return end
-
-	local sound = Core.SoundSystem.sounds[soundName]
-	if sound then
-		sound:Play()
-	end
 end
 
 -- Data Management
@@ -592,7 +554,6 @@ function UI.Components.Button(props)
 	local hoverScale = props.hoverScale or 1.05
 
 	component.instance.MouseEnter:Connect(function()
-		Core.SoundSystem.play("hover")
 		Core.Animation.tween(component.instance, {
 			Size = UDim2.new(
 				originalSize.X.Scale * hoverScale,
@@ -607,10 +568,6 @@ function UI.Components.Button(props)
 		Core.Animation.tween(component.instance, {
 			Size = originalSize
 		}, Core.CONSTANTS.ANIM_FAST)
-	end)
-
-	component.instance.MouseButton1Click:Connect(function()
-		Core.SoundSystem.play("click")
 	end)
 
 	return component
@@ -774,7 +731,6 @@ function Shop.new()
 end
 
 function Shop:initialize()
-	Core.SoundSystem.initialize()
 	Core.DataManager.refreshPrices()
 
 	self:createToggleButton()
@@ -862,13 +818,23 @@ function Shop:createMainInterface()
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		BackgroundColor3 = UI.Theme:get("background"),
-		cornerRadius = UDim.new(0, 24),
+		cornerRadius = UDim.new(0, 32),
 		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 1,
+			color = UI.Theme:get("accent"),
+			thickness = 2,
 		},
 		parent = self.gui,
 	}):render()
+
+	-- Add elegant gradient to main panel
+	local panelGradient = Instance.new("UIGradient")
+	panelGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(250, 252, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(245, 248, 255)),
+	})
+	panelGradient.Rotation = 45
+	panelGradient.Parent = self.mainPanel
 
 	UI.Responsive.scale(self.mainPanel)
 
@@ -890,48 +856,79 @@ end
 function Shop:createHeader()
 	local header = UI.Components.Frame({
 		Name = "Header",
-		Size = UDim2.new(1, -48, 0, 80),
+		Size = UDim2.new(1, -48, 0, 100),
 		Position = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 16),
+		BackgroundColor3 = UI.Theme:get("surface"),
+		cornerRadius = UDim.new(0, 20),
 		parent = self.mainPanel,
+	}):render()
+
+	-- Add subtle gradient to header
+	local headerGradient = Instance.new("UIGradient")
+	headerGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(248, 250, 252)),
+	})
+	headerGradient.Parent = header
+
+	local logoContainer = UI.Components.Frame({
+		Size = UDim2.fromOffset(80, 80),
+		Position = UDim2.fromOffset(20, 10),
+		BackgroundColor3 = UI.Theme:get("accent"),
+		cornerRadius = UDim.new(0.5, 0),
+		parent = header,
 	}):render()
 
 	local logo = UI.Components.Image({
 		Name = "Logo",
 		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromOffset(60, 60),
-		Position = UDim2.fromOffset(16, 10),
-		parent = header,
+		Size = UDim2.fromScale(0.8, 0.8),
+		Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		parent = logoContainer,
 	}):render()
 
 	local title = UI.Components.TextLabel({
 		Name = "Title",
-		Text = "Sanrio Shop",
-		Size = UDim2.new(1, -200, 1, 0),
-		Position = UDim2.fromOffset(92, 0),
+		Text = "✨ Sanrio Shop",
+		Size = UDim2.new(1, -220, 1, 0),
+		Position = UDim2.fromOffset(120, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Enum.Font.GothamBold,
-		TextSize = 32,
+		TextSize = 36,
+		TextColor3 = UI.Theme:get("text"),
 		parent = header,
 	}):render()
 
 	local closeButton = UI.Components.Button({
 		Name = "CloseButton",
-		Text = "X",
-		Size = UDim2.fromOffset(48, 48),
-		Position = UDim2.new(1, -64, 0.5, 0),
+		Text = "✕",
+		Size = UDim2.fromOffset(60, 60),
+		Position = UDim2.new(1, -80, 0.5, 0),
 		AnchorPoint = Vector2.new(0, 0.5),
 		BackgroundColor3 = UI.Theme:get("error"),
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
-		TextSize = 24,
+		TextSize = 28,
 		cornerRadius = UDim.new(0.5, 0),
 		parent = header,
 		onClick = function()
 			self:close()
 		end,
 	}):render()
+
+	-- Add hover effect to close button
+	closeButton.MouseEnter:Connect(function()
+		Core.Animation.tween(closeButton, {
+			BackgroundColor3 = Color3.fromRGB(220, 53, 69)
+		}, Core.CONSTANTS.ANIM_FAST)
+	end)
+
+	closeButton.MouseLeave:Connect(function()
+		Core.Animation.tween(closeButton, {
+			BackgroundColor3 = UI.Theme:get("error")
+		}, Core.CONSTANTS.ANIM_FAST)
+	end)
 end
 
 function Shop:createTabBar()
@@ -960,12 +957,13 @@ function Shop:createTab(data)
 	local tab = UI.Components.Button({
 		Name = data.id .. "Tab",
 		Text = "",
-		Size = UDim2.fromOffset(160, 48),
+		Size = UDim2.fromOffset(180, 56),
 		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0.5, 0),
+		cornerRadius = UDim.new(0, 14),
 		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 1,
+			color = data.color,
+			thickness = 2,
+			transparency = 0.7,
 		},
 		LayoutOrder = #self.tabs + 1,
 		parent = self.tabContainer,
@@ -974,6 +972,14 @@ function Shop:createTab(data)
 		end,
 	}):render()
 
+	-- Add gradient to tab
+	local tabGradient = Instance.new("UIGradient")
+	tabGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(248, 250, 252)),
+	})
+	tabGradient.Parent = tab
+
 	local content = UI.Components.Frame({
 		Name = "Content",
 		Size = UDim2.fromScale(1, 1),
@@ -981,12 +987,12 @@ function Shop:createTab(data)
 		parent = tab,
 	}):render()
 
-	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 8, {left = 16, right = 16})
+	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 12, {left = 20, right = 20})
 
 	local icon = UI.Components.Image({
 		Name = "Icon",
 		Image = data.icon,
-		Size = UDim2.fromOffset(24, 24),
+		Size = UDim2.fromOffset(28, 28),
 		LayoutOrder = 1,
 		parent = content,
 	}):render()
@@ -994,9 +1000,9 @@ function Shop:createTab(data)
 	local label = UI.Components.TextLabel({
 		Name = "Label",
 		Text = data.name,
-		Size = UDim2.new(1, -32, 1, 0),
-		Font = Enum.Font.GothamMedium,
-		TextSize = 16,
+		Size = UDim2.new(1, -40, 1, 0),
+		Font = Enum.Font.GothamBold,
+		TextSize = 18,
 		LayoutOrder = 2,
 		parent = content,
 	}):render()
@@ -1155,20 +1161,36 @@ end
 function Shop:createHeroSection(parent)
 	local hero = UI.Components.Frame({
 		Name = "HeroSection",
-		Size = UDim2.new(1, 0, 0, 200),
+		Size = UDim2.new(1, 0, 0, 240),
 		BackgroundColor3 = UI.Theme:get("accent"),
-		cornerRadius = UDim.new(0, 16),
+		cornerRadius = UDim.new(0, 24),
 		LayoutOrder = 1,
 		parent = parent,
 	}):render()
 
+	-- Enhanced gradient for hero section
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 200)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 240, 245)),
+		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(255, 220, 235)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 225)),
 	})
-	gradient.Rotation = 45
+	gradient.Rotation = 135
 	gradient.Parent = hero
+
+	-- Add sparkle effect
+	local sparkles = Instance.new("ImageLabel")
+	sparkles.Name = "Sparkles"
+	sparkles.BackgroundTransparency = 1
+	sparkles.Image = "rbxassetid://8992230672"
+	sparkles.ImageColor3 = Color3.fromRGB(255, 255, 255)
+	sparkles.ImageTransparency = 0.3
+	sparkles.ScaleType = Enum.ScaleType.Tile
+	sparkles.TileSize = UDim2.fromOffset(50, 50)
+	sparkles.Size = UDim2.fromScale(1, 1)
+	sparkles.ZIndex = 1
+	sparkles.Parent = hero
 
 	local content = UI.Components.Frame({
 		Size = UDim2.fromScale(1, 1),
@@ -1176,56 +1198,65 @@ function Shop:createHeroSection(parent)
 		parent = hero,
 	}):render()
 
-	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 24, {
-		left = 32,
-		right = 32,
-		top = 24,
-		bottom = 24,
+	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 32, {
+		left = 40,
+		right = 40,
+		top = 32,
+		bottom = 32,
 	})
 
 	local textContainer = UI.Components.Frame({
-		Size = UDim2.new(0.6, 0, 1, 0),
+		Size = UDim2.new(0.65, 0, 1, 0),
 		BackgroundTransparency = 1,
 		LayoutOrder = 1,
 		parent = content,
 	}):render()
 
 	local heroTitle = UI.Components.TextLabel({
-		Text = "Welcome to Sanrio Shop!",
-		Size = UDim2.new(1, 0, 0, 40),
+		Text = "🌟 Welcome to Sanrio Shop! 🌟",
+		Size = UDim2.new(1, 0, 0, 50),
 		Font = Enum.Font.GothamBold,
-		TextSize = 32,
+		TextSize = 36,
 		TextColor3 = Color3.new(1, 1, 1),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = textContainer,
 	}):render()
 
 	local heroDesc = UI.Components.TextLabel({
-		Text = "Get exclusive items and boosts for your tycoon!",
-		Size = UDim2.new(1, 0, 0, 60),
-		Position = UDim2.fromOffset(0, 50),
+		Text = "Discover exclusive items and powerful boosts to supercharge your tycoon adventure!",
+		Size = UDim2.new(1, 0, 0, 70),
+		Position = UDim2.fromOffset(0, 60),
 		Font = Enum.Font.Gotham,
-		TextSize = 18,
-		TextColor3 = Color3.new(1, 1, 1),
+		TextSize = 20,
+		TextColor3 = Color3.fromRGB(240, 240, 245),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextWrapped = true,
 		parent = textContainer,
 	}):render()
 
 	local ctaButton = UI.Components.Button({
-		Text = "Browse Items",
-		Size = UDim2.fromOffset(180, 48),
-		Position = UDim2.fromOffset(0, 120),
+		Text = "🛍️ Browse Items",
+		Size = UDim2.fromOffset(220, 60),
+		Position = UDim2.fromOffset(0, 140),
 		BackgroundColor3 = Color3.new(1, 1, 1),
 		TextColor3 = UI.Theme:get("accent"),
 		Font = Enum.Font.GothamBold,
-		TextSize = 18,
-		cornerRadius = UDim.new(0.5, 0),
+		TextSize = 20,
+		cornerRadius = UDim.new(0, 16),
 		parent = textContainer,
 		onClick = function()
 			self:selectTab("Cash")
 		end,
 	}):render()
+
+	-- Add glow effect to CTA button
+	local ctaGlow = Instance.new("UIGradient")
+	ctaGlow.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(245, 245, 245)),
+	})
+	ctaGlow.Parent = ctaButton
 
 	return hero
 end
@@ -1234,41 +1265,66 @@ function Shop:createProductCard(product, productType, parent)
 	local isGamepass = productType == "gamepass"
 	local cardColor = isGamepass and UI.Theme:get("kuromi") or UI.Theme:get("cinna")
 
+	-- Calculate responsive card size
+	local cardWidth = Core.Utils.isMobile() and 280 or 320
+	local cardHeight = Core.Utils.isMobile() and 380 or 420
+
 	local card = UI.Components.Frame({
 		Name = product.name .. "Card",
-		Size = UDim2.fromOffset(
-			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.X or Core.CONSTANTS.CARD_SIZE.X,
-			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.Y or Core.CONSTANTS.CARD_SIZE.Y
-		),
+		Size = UDim2.fromOffset(cardWidth, cardHeight),
 		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0, 16),
+		cornerRadius = UDim.new(0, 20),
 		stroke = {
 			color = cardColor,
-			thickness = 2,
-			transparency = 0.5,
+			thickness = 3,
 		},
 		parent = parent,
 	}):render()
 
+	-- Add subtle gradient overlay
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(240, 240, 245)),
+	})
+	gradient.Rotation = 90
+	gradient.Parent = card
+
 	self:addCardHoverEffect(card)
 
 	local content = UI.Components.Frame({
-		Size = UDim2.new(1, -24, 1, -24),
-		Position = UDim2.fromOffset(12, 12),
+		Size = UDim2.new(1, -20, 1, -20),
+		Position = UDim2.fromOffset(10, 10),
 		BackgroundTransparency = 1,
 		parent = card,
 	}):render()
 
+	-- Enhanced image container with better styling
 	local imageContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 140),
+		Size = UDim2.new(1, 0, 0, 160),
 		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 12),
+		cornerRadius = UDim.new(0, 16),
 		parent = content,
 	}):render()
 
+	-- Add subtle shadow to image container
+	local imageShadow = Instance.new("Frame")
+	imageShadow.Name = "Shadow"
+	imageShadow.BackgroundColor3 = Color3.new(0, 0, 0)
+	imageShadow.BackgroundTransparency = 0.8
+	imageShadow.BorderSizePixel = 0
+	imageShadow.Size = UDim2.new(1, 8, 1, 8)
+	imageShadow.Position = UDim2.fromOffset(4, 4)
+	imageShadow.ZIndex = imageContainer.ZIndex - 1
+	imageShadow.Parent = content
+
+	local imageCorner = Instance.new("UICorner")
+	imageCorner.CornerRadius = UDim.new(0, 16)
+	imageCorner.Parent = imageShadow
+
 	local productImage = UI.Components.Image({
-		Image = product.icon or "rbxassetid://0",
-		Size = UDim2.fromScale(0.8, 0.8),
+		Image = product.icon or "rbxassetid://10709728059",
+		Size = UDim2.fromScale(0.85, 0.85),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		ScaleType = Enum.ScaleType.Fit,
@@ -1276,59 +1332,63 @@ function Shop:createProductCard(product, productType, parent)
 	}):render()
 
 	local infoContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 1, -160),
-		Position = UDim2.fromOffset(0, 160),
+		Size = UDim2.new(1, 0, 1, -180),
+		Position = UDim2.fromOffset(0, 180),
 		BackgroundTransparency = 1,
 		parent = content,
 	}):render()
 
+	-- Enhanced title with better typography
 	local title = UI.Components.TextLabel({
 		Text = product.name,
-		Size = UDim2.new(1, 0, 0, 28),
+		Size = UDim2.new(1, 0, 0, 32),
 		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		TextXAlignment = Enum.TextXAlignment.Left,
+		TextSize = 22,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		TextColor3 = UI.Theme:get("text"),
 		parent = infoContainer,
 	}):render()
 
+	-- Enhanced description
 	local description = UI.Components.TextLabel({
 		Text = product.description,
-		Size = UDim2.new(1, 0, 0, 40),
-		Position = UDim2.fromOffset(0, 32),
+		Size = UDim2.new(1, 0, 0, 50),
+		Position = UDim2.fromOffset(0, 40),
 		Font = Enum.Font.Gotham,
-		TextSize = 14,
+		TextSize = 16,
 		TextColor3 = UI.Theme:get("textSecondary"),
-		TextXAlignment = Enum.TextXAlignment.Left,
+		TextXAlignment = Enum.TextXAlignment.Center,
 		TextWrapped = true,
 		parent = infoContainer,
 	}):render()
 
-	local priceText = isGamepass and 
-		("R$" .. tostring(product.price or 0)) or 
+	-- Enhanced price display
+	local priceText = isGamepass and
+		("R$" .. tostring(product.price or 0)) or
 		("R$" .. tostring(product.price or 0) .. " for " .. Core.Utils.formatNumber(product.amount) .. " Cash")
 
 	local priceLabel = UI.Components.TextLabel({
 		Text = priceText,
-		Size = UDim2.new(1, 0, 0, 24),
-		Position = UDim2.fromOffset(0, 76),
+		Size = UDim2.new(1, 0, 0, 28),
+		Position = UDim2.fromOffset(0, 100),
 		Font = Enum.Font.GothamBold,
-		TextSize = 18,
+		TextSize = 20,
 		TextColor3 = cardColor,
-		TextXAlignment = Enum.TextXAlignment.Left,
+		TextXAlignment = Enum.TextXAlignment.Center,
 		parent = infoContainer,
 	}):render()
 
 	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
 
 	local purchaseButton = UI.Components.Button({
-		Text = isOwned and "Owned" or "Purchase",
-		Size = UDim2.new(1, 0, 0, 40),
-		Position = UDim2.new(0, 0, 1, -40),
+		Text = isOwned and "✓ Owned" or "Purchase",
+		Size = UDim2.new(1, -20, 0, 50),
+		Position = UDim2.fromOffset(10, 0, 1, -50),
 		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
-		TextSize = 16,
-		cornerRadius = UDim.new(0, 8),
+		TextSize = 18,
+		cornerRadius = UDim.new(0, 12),
 		parent = infoContainer,
 		onClick = function()
 			if not isOwned then
@@ -1338,6 +1398,15 @@ function Shop:createProductCard(product, productType, parent)
 			end
 		end,
 	}):render()
+
+	-- Add subtle glow effect to purchase button
+	local buttonGlow = Instance.new("UIGradient")
+	buttonGlow.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.new(0.9, 0.9, 0.9)),
+	})
+	buttonGlow.Parent = purchaseButton
 
 	if isOwned and product.hasToggle then
 		self:addToggleSwitch(product, infoContainer)
@@ -1351,22 +1420,42 @@ end
 
 function Shop:addCardHoverEffect(card)
 	local originalPosition = card.Position
+	local originalStroke = card:FindFirstChildOfClass("UIStroke")
 
 	card.MouseEnter:Connect(function()
+		-- Enhanced hover effect with scale and lift
 		Core.Animation.tween(card, {
 			Position = UDim2.new(
 				originalPosition.X.Scale,
 				originalPosition.X.Offset,
 				originalPosition.Y.Scale,
-				originalPosition.Y.Offset - 8
-			)
+				originalPosition.Y.Offset - 12
+			),
+			Size = UDim2.fromOffset(card.Size.X.Offset * 1.02, card.Size.Y.Offset * 1.02)
 		}, Core.CONSTANTS.ANIM_FAST)
+
+		-- Enhance stroke on hover
+		if originalStroke then
+			Core.Animation.tween(originalStroke, {
+				Thickness = 4,
+				Transparency = 0.2
+			}, Core.CONSTANTS.ANIM_FAST)
+		end
 	end)
 
 	card.MouseLeave:Connect(function()
 		Core.Animation.tween(card, {
-			Position = originalPosition
+			Position = originalPosition,
+			Size = UDim2.fromOffset(card.Size.X.Offset, card.Size.Y.Offset)
 		}, Core.CONSTANTS.ANIM_FAST)
+
+		-- Restore original stroke
+		if originalStroke then
+			Core.Animation.tween(originalStroke, {
+				Thickness = 3,
+				Transparency = 0
+			}, Core.CONSTANTS.ANIM_FAST)
+		end
 	end)
 end
 
@@ -1435,7 +1524,6 @@ function Shop:addToggleSwitch(product, parent)
 			end
 		end
 
-		Core.SoundSystem.play("click")
 	end)
 end
 
@@ -1499,7 +1587,6 @@ function Shop:selectTab(tabId)
 	end
 
 	self.currentTab = tabId
-	Core.SoundSystem.play("click")
 	Core.Events:emit("tabChanged", tabId)
 end
 
@@ -1612,7 +1699,6 @@ function Shop:open()
 		)
 	}, Core.CONSTANTS.ANIM_BOUNCE, Enum.EasingStyle.Back)
 
-	Core.SoundSystem.play("open")
 
 	task.wait(Core.CONSTANTS.ANIM_BOUNCE)
 	Core.State.isAnimating = false
@@ -1638,7 +1724,6 @@ function Shop:close()
 		)
 	}, Core.CONSTANTS.ANIM_FAST)
 
-	Core.SoundSystem.play("close")
 
 	task.wait(Core.CONSTANTS.ANIM_FAST)
 	self.gui.Enabled = false
@@ -1663,14 +1748,12 @@ function Shop:setupRemoteHandlers()
 		purchaseConfirm.OnClientEvent:Connect(function(passId)
 			ownershipCache:clear()
 			self:refreshAllProducts()
-			Core.SoundSystem.play("success")
 		end)
 	end
 
 	local productGrant = Remotes:FindFirstChild("ProductGranted") or Remotes:FindFirstChild("GrantProductCurrency")
 	if productGrant and productGrant:IsA("RemoteEvent") then
 		productGrant.OnClientEvent:Connect(function(productId, amount)
-			Core.SoundSystem.play("success")
 		end)
 	end
 end
@@ -1715,7 +1798,6 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 			pending.product.purchaseButton.Active = false
 		end
 
-		Core.SoundSystem.play("success")
 
 		task.wait(0.5)
 		shop:refreshAllProducts()
@@ -1736,7 +1818,6 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, produc
 	Core.State.purchasePending[productId] = nil
 
 	if purchased then
-		Core.SoundSystem.play("success")
 
 		if Remotes then
 			local grantEvent = Remotes:FindFirstChild("GrantProductCurrency")
