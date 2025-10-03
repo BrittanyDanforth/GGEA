@@ -96,12 +96,12 @@ type ShopConfig = {
 	},
 }
 
-type CacheEntry<T> = { value: T, timestamp: number }
+type CacheEntry = { value: any, timestamp: number }
 
-type Cache<T> = {
-	get: (self: Cache<T>, key: string) -> T?,
-	set: (self: Cache<T>, key: string, value: T) -> (),
-	clear: (self: Cache<T>, key: string?) -> (),
+type Cache = {
+	get: (self: Cache, key: string) -> any,
+	set: (self: Cache, key: string, value: any) -> (),
+	clear: (self: Cache, key: string?) -> (),
 }
 
 type ShopState = {
@@ -121,8 +121,8 @@ type ShopController = {
 	_pages: { [string]: Frame },
 	_tabButtons: { [string]: { button: TextButton, accent: Color3 } },
 	_autoToggleSettings: Frame?,
-	_productCache: Cache<ProductInfo>,
-	_ownershipCache: Cache<boolean>,
+	_productCache: Cache,
+	_ownershipCache: Cache,
 	init: (self: ShopController) -> (),
 	destroy: (self: ShopController) -> (),
 	open: (self: ShopController) -> (),
@@ -266,15 +266,15 @@ end
 local CacheClass = {}
 CacheClass.__index = CacheClass
 
-function CacheClass.new<T>(ttl: number): Cache<T>
+function CacheClass.new(ttl: number)
 	local self = setmetatable({}, CacheClass)
 	(self :: any)._ttl = ttl
-	(self :: any)._store = {} :: { [string]: CacheEntry<T> }
-	return (self :: any) :: Cache<T>
+	(self :: any)._store = {}
+	return self
 end
 
-function CacheClass:get<T>(key: string): T?
-	local store = (self :: any)._store :: { [string]: CacheEntry<T> }
+function CacheClass:get(key: string): any
+	local store = (self :: any)._store
 	local entry = store[key]
 	if not entry then return nil end
 	
@@ -287,13 +287,13 @@ function CacheClass:get<T>(key: string): T?
 	return entry.value
 end
 
-function CacheClass:set<T>(key: string, value: T)
-	local store = (self :: any)._store :: { [string]: CacheEntry<T> }
+function CacheClass:set(key: string, value: any)
+	local store = (self :: any)._store
 	store[key] = { value = value, timestamp = os.clock() }
 end
 
-function CacheClass:clear<T>(key: string?)
-	local store = (self :: any)._store :: { [string]: CacheEntry<T> }
+function CacheClass:clear(key: string?)
+	local store = (self :: any)._store
 	if key then
 		store[key] = nil
 	else
@@ -422,8 +422,8 @@ function ShopController.new(config: ShopConfig): ShopController
 	self._pages = {}
 	self._tabButtons = {}
 	self._autoToggleSettings = nil
-	self._productCache = CacheClass.new(300) :: Cache<ProductInfo>
-	self._ownershipCache = CacheClass.new(60) :: Cache<boolean>
+	self._productCache = CacheClass.new(300)
+	self._ownershipCache = CacheClass.new(60)
 	
 	return (self :: any) :: ShopController
 end
