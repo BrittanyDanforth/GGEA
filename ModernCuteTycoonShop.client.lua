@@ -268,8 +268,8 @@ CacheClass.__index = CacheClass
 
 function CacheClass.new(ttl: number)
 	local self = setmetatable({}, CacheClass)
-	(self :: any)._ttl = ttl
-	(self :: any)._store = {}
+	;(self :: any)._ttl = ttl
+	;(self :: any)._store = {}
 	return self
 end
 
@@ -943,7 +943,7 @@ function ShopController:_createPassPage(parent: Frame): Frame
 		
 		local remote = remotes:FindFirstChild("AutoCollectToggle")
 		if remote and remote:IsA("RemoteEvent") then
-			(remote :: RemoteEvent):FireServer(state)
+			;(remote :: RemoteEvent):FireServer(state)
 		end
 	end)
 	
@@ -1103,7 +1103,7 @@ function ShopController:_updatePassVisual(
 	
 	local stroke = passCard:FindFirstChildOfClass("UIStroke")
 	if stroke then
-		(stroke :: UIStroke).Color = if owned then Tokens.colors.success else Tokens.colors.lavender
+		;(stroke :: UIStroke).Color = if owned then Tokens.colors.success else Tokens.colors.lavender
 	end
 end
 
@@ -1403,10 +1403,10 @@ function ShopController:_connectMarketplace()
 				
 				local remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes")
 				if remotes then
-					local remote = remotes:FindFirstChild("GamepassPurchased")
-					if remote and remote:IsA("RemoteEvent") then
-						(remote :: RemoteEvent):FireServer(passId)
-					end
+				local remote = remotes:FindFirstChild("GamepassPurchased")
+				if remote and remote:IsA("RemoteEvent") then
+					;(remote :: RemoteEvent):FireServer(passId)
+				end
 				end
 			end
 		end
@@ -1423,10 +1423,10 @@ function ShopController:_connectMarketplace()
 			if purchased then
 				local remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes")
 				if remotes then
-					local remote = remotes:FindFirstChild("GrantProductCurrency")
-					if remote and remote:IsA("RemoteEvent") then
-						(remote :: RemoteEvent):FireServer(productId)
-					end
+				local remote = remotes:FindFirstChild("GrantProductCurrency")
+				if remote and remote:IsA("RemoteEvent") then
+					;(remote :: RemoteEvent):FireServer(productId)
+				end
 				end
 			end
 		end
