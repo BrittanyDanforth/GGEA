@@ -707,7 +707,7 @@ function UI.Responsive.scale(instance)
 end
 
 -- ========================================
--- MAIN SHOP IMPLEMENTATION
+-- MAIN SHOP IMPLEMENTATION - MODERN DESIGN
 -- ========================================
 local Shop = {}
 Shop.__index = Shop
@@ -817,39 +817,44 @@ function Shop:createMainInterface()
 		Size = UDim2.fromOffset(panelSize.X, panelSize.Y),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = UI.Theme:get("background"),
-		cornerRadius = UDim.new(0, 40),
+		BackgroundColor3 = Color3.fromRGB(20, 20, 25),
+		cornerRadius = UDim.new(0, 32),
 		stroke = {
-			color = UI.Theme:get("accent"),
-			thickness = 3,
+			color = Color3.fromRGB(255, 64, 129),
+			thickness = 2,
 		},
 		parent = self.gui,
 	}):render()
 
-	-- Enhanced gradient background with multiple layers
+	-- Modern dark gradient background
 	local panelGradient = Instance.new("UIGradient")
 	panelGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.2, Color3.fromRGB(252, 254, 255)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(248, 252, 255)),
-		ColorSequenceKeypoint.new(0.8, Color3.fromRGB(245, 250, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(240, 248, 255)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 25, 30)),
+		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(22, 22, 28)),
+		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(18, 18, 24)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 20)),
 	})
 	panelGradient.Rotation = 135
 	panelGradient.Parent = self.mainPanel
 
-	-- Add subtle pattern overlay
-	local pattern = Instance.new("ImageLabel")
-	pattern.Name = "Pattern"
-	pattern.BackgroundTransparency = 1
-	pattern.Image = "rbxassetid://8992230672"
-	pattern.ImageColor3 = Color3.fromRGB(255, 192, 203)
-	pattern.ImageTransparency = 0.92
-	pattern.ScaleType = Enum.ScaleType.Tile
-	pattern.TileSize = UDim2.fromOffset(100, 100)
-	pattern.Size = UDim2.fromScale(1, 1)
-	pattern.ZIndex = 1
-	pattern.Parent = self.mainPanel
+	-- Modern accent lighting effect
+	local accentLight = Instance.new("Frame")
+	accentLight.Name = "AccentLight"
+	accentLight.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
+	accentLight.BackgroundTransparency = 0.95
+	accentLight.BorderSizePixel = 0
+	accentLight.Size = UDim2.new(1, 0, 0, 4)
+	accentLight.Position = UDim2.fromOffset(0, 0)
+	accentLight.ZIndex = 2
+	accentLight.Parent = self.mainPanel
+
+	local lightGradient = Instance.new("UIGradient")
+	lightGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 64, 129)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 140)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 64, 129)),
+	})
+	lightGradient.Parent = accentLight
 
 	UI.Responsive.scale(self.mainPanel)
 
@@ -871,59 +876,54 @@ end
 function Shop:createHeader()
 	local header = UI.Components.Frame({
 		Name = "Header",
-		Size = UDim2.new(1, -48, 0, 120),
+		Size = UDim2.new(1, -48, 0, 100),
 		Position = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0, 28),
+		BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+		cornerRadius = UDim.new(0, 24),
 		parent = self.mainPanel,
 	}):render()
 
-	-- Enhanced header gradient with depth
+	-- Modern dark header gradient
 	local headerGradient = Instance.new("UIGradient")
 	headerGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(252, 254, 255)),
-		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(248, 252, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(245, 250, 255)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 35, 40)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(32, 32, 37)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(28, 28, 33)),
 	})
 	headerGradient.Parent = header
 
-	-- Add subtle inner shadow
-	local headerShadow = Instance.new("Frame")
-	headerShadow.Name = "InnerShadow"
-	headerShadow.BackgroundColor3 = Color3.new(0, 0, 0)
-	headerShadow.BackgroundTransparency = 0.9
-	headerShadow.BorderSizePixel = 0
-	headerShadow.Size = UDim2.new(1, 8, 1, 8)
-	headerShadow.Position = UDim2.fromOffset(4, 4)
-	headerShadow.ZIndex = header.ZIndex - 1
-	headerShadow.Parent = self.mainPanel
-
-	local headerCorner = Instance.new("UICorner")
-	headerCorner.CornerRadius = UDim.new(0, 28)
-	headerCorner.Parent = headerShadow
+	-- Header accent line
+	local headerAccent = Instance.new("Frame")
+	headerAccent.Name = "Accent"
+	headerAccent.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
+	headerAccent.BackgroundTransparency = 0.8
+	headerAccent.BorderSizePixel = 0
+	headerAccent.Size = UDim2.new(1, 0, 0, 2)
+	headerAccent.Position = UDim2.fromOffset(0, 0)
+	headerAccent.ZIndex = 3
+	headerAccent.Parent = header
 
 	local logoContainer = UI.Components.Frame({
-		Size = UDim2.fromOffset(90, 90),
-		Position = UDim2.fromOffset(25, 15),
-		BackgroundColor3 = UI.Theme:get("accent"),
+		Size = UDim2.fromOffset(80, 80),
+		Position = UDim2.fromOffset(20, 10),
+		BackgroundColor3 = Color3.fromRGB(255, 64, 129),
 		cornerRadius = UDim.new(0.5, 0),
 		parent = header,
 	}):render()
 
-	-- Add glow effect to logo container
+	-- Logo glow effect
 	local logoGlow = Instance.new("UIGradient")
 	logoGlow.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 220, 235)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 220)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 140)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 64, 129)),
 	})
 	logoGlow.Parent = logoContainer
 
 	local logo = UI.Components.Image({
 		Name = "Logo",
 		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromScale(0.75, 0.75),
+		Size = UDim2.fromScale(0.8, 0.8),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		parent = logoContainer,
@@ -931,47 +931,26 @@ function Shop:createHeader()
 
 	local title = UI.Components.TextLabel({
 		Name = "Title",
-		Text = "🌸 Sanrio Shop ✨",
-		Size = UDim2.new(1, -240, 1, 0),
-		Position = UDim2.fromOffset(130, 0),
+		Text = "SANRIO SHOP",
+		Size = UDim2.new(1, -220, 1, 0),
+		Position = UDim2.fromOffset(115, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Enum.Font.GothamBold,
-		TextSize = 42,
-		TextColor3 = UI.Theme:get("text"),
+		TextSize = 38,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
 		parent = header,
 	}):render()
 
-	-- Add sparkle decorations
-	local sparkle1 = Instance.new("ImageLabel")
-	sparkle1.BackgroundTransparency = 1
-	sparkle1.Image = "rbxassetid://8992230672"
-	sparkle1.ImageColor3 = Color3.fromRGB(255, 192, 203)
-	sparkle1.ImageTransparency = 0.8
-	sparkle1.ScaleType = Enum.ScaleType.Fit
-	sparkle1.Size = UDim2.fromOffset(20, 20)
-	sparkle1.Position = UDim2.new(0, 85, 0, 10)
-	sparkle1.Parent = header
-
-	local sparkle2 = Instance.new("ImageLabel")
-	sparkle2.BackgroundTransparency = 1
-	sparkle2.Image = "rbxassetid://8992230672"
-	sparkle2.ImageColor3 = Color3.fromRGB(255, 192, 203)
-	sparkle2.ImageTransparency = 0.8
-	sparkle2.ScaleType = Enum.ScaleType.Fit
-	sparkle2.Size = UDim2.fromOffset(15, 15)
-	sparkle2.Position = UDim2.new(1, -50, 0, 15)
-	sparkle2.Parent = header
-
 	local closeButton = UI.Components.Button({
 		Name = "CloseButton",
-		Text = "✕",
-		Size = UDim2.fromOffset(70, 70),
-		Position = UDim2.new(1, -90, 0.5, 0),
+		Text = "×",
+		Size = UDim2.fromOffset(60, 60),
+		Position = UDim2.new(1, -80, 0.5, 0),
 		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundColor3 = UI.Theme:get("error"),
+		BackgroundColor3 = Color3.fromRGB(220, 53, 69),
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
-		TextSize = 32,
+		TextSize = 28,
 		cornerRadius = UDim.new(0.5, 0),
 		parent = header,
 		onClick = function()
@@ -979,27 +958,27 @@ function Shop:createHeader()
 		end,
 	}):render()
 
-	-- Add enhanced hover effects to close button
+	-- Modern hover effects for close button
 	closeButton.MouseEnter:Connect(function()
 		Core.Animation.tween(closeButton, {
-			BackgroundColor3 = Color3.fromRGB(220, 53, 69),
-			Size = UDim2.fromOffset(80, 80)
+			BackgroundColor3 = Color3.fromRGB(255, 69, 84),
+			Size = UDim2.fromOffset(70, 70)
 		}, Core.CONSTANTS.ANIM_FAST)
 	end)
 
 	closeButton.MouseLeave:Connect(function()
 		Core.Animation.tween(closeButton, {
-			BackgroundColor3 = UI.Theme:get("error"),
-			Size = UDim2.fromOffset(70, 70)
+			BackgroundColor3 = Color3.fromRGB(220, 53, 69),
+			Size = UDim2.fromOffset(60, 60)
 		}, Core.CONSTANTS.ANIM_FAST)
 	end)
 
-	-- Add glow effect to close button
+	-- Close button glow
 	local closeGlow = Instance.new("UIGradient")
 	closeGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 235, 235)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 220, 220)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 235, 240)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 220, 225)),
 	})
 	closeGlow.Parent = closeButton
 end
@@ -1007,28 +986,39 @@ end
 function Shop:createTabBar()
 	self.tabContainer = UI.Components.Frame({
 		Name = "TabContainer",
-		Size = UDim2.new(1, -48, 0, 70),
-		Position = UDim2.fromOffset(24, 160),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 20),
+		Size = UDim2.new(1, -48, 0, 60),
+		Position = UDim2.fromOffset(24, 140),
+		BackgroundColor3 = Color3.fromRGB(25, 25, 30),
+		cornerRadius = UDim.new(0, 16),
 		parent = self.mainPanel,
 	}):render()
 
-	-- Add gradient to tab container
+	-- Modern tab container gradient
 	local tabContainerGradient = Instance.new("UIGradient")
 	tabContainerGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 250, 252)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(245, 248, 252)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(240, 245, 252)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 35)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(27, 27, 32)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 24, 29)),
 	})
 	tabContainerGradient.Parent = self.tabContainer
 
-	UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 16)
+	-- Tab container accent border
+	local tabAccent = Instance.new("Frame")
+	tabAccent.Name = "Accent"
+	tabAccent.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
+	tabAccent.BackgroundTransparency = 0.9
+	tabAccent.BorderSizePixel = 0
+	tabAccent.Size = UDim2.new(1, 0, 0, 1)
+	tabAccent.Position = UDim2.fromOffset(0, 0)
+	tabAccent.ZIndex = 3
+	tabAccent.Parent = self.tabContainer
+
+	UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 20)
 
 	local tabData = {
-		{id = "Home", name = "🏠 Home", icon = "rbxassetid://17398522865", color = UI.Theme:get("kitty")},
-		{id = "Cash", name = "💰 Cash", icon = "rbxassetid://10709728059", color = UI.Theme:get("cinna")},
-		{id = "Gamepasses", name = "🎫 Passes", icon = "rbxassetid://10709727148", color = UI.Theme:get("kuromi")},
+		{id = "Home", name = "HOME", icon = "rbxassetid://17398522865", color = Color3.fromRGB(255, 64, 129)},
+		{id = "Cash", name = "CASH", icon = "rbxassetid://10709728059", color = Color3.fromRGB(64, 129, 255)},
+		{id = "Gamepasses", name = "PASSES", icon = "rbxassetid://10709727148", color = Color3.fromRGB(129, 64, 255)},
 	}
 
 	for _, data in ipairs(tabData) do
@@ -1040,13 +1030,13 @@ function Shop:createTab(data)
 	local tab = UI.Components.Button({
 		Name = data.id .. "Tab",
 		Text = "",
-		Size = UDim2.fromOffset(200, 60),
-		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0, 18),
+		Size = UDim2.fromOffset(180, 50),
+		BackgroundColor3 = Color3.fromRGB(35, 35, 40),
+		cornerRadius = UDim.new(0, 14),
 		stroke = {
 			color = data.color,
-			thickness = 3,
-			transparency = 0.5,
+			thickness = 2,
+			transparency = 0.7,
 		},
 		LayoutOrder = #self.tabs + 1,
 		parent = self.tabContainer,
@@ -1055,29 +1045,23 @@ function Shop:createTab(data)
 		end,
 	}):render()
 
-	-- Enhanced tab gradient with character-specific colors
+	-- Modern tab gradient
 	local tabGradient = Instance.new("UIGradient")
 	tabGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.5, data.color:Lerp(Color3.new(1, 1, 1), 0.1)),
-		ColorSequenceKeypoint.new(1, data.color:Lerp(Color3.fromRGB(240, 240, 245), 0.2)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 45)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(37, 37, 42)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(34, 34, 39)),
 	})
 	tabGradient.Parent = tab
 
-	-- Add subtle shadow to tab
-	local tabShadow = Instance.new("Frame")
-	tabShadow.Name = "Shadow"
-	tabShadow.BackgroundColor3 = Color3.new(0, 0, 0)
-	tabShadow.BackgroundTransparency = 0.85
-	tabShadow.BorderSizePixel = 0
-	tabShadow.Size = UDim2.new(1, 6, 1, 6)
-	tabShadow.Position = UDim2.fromOffset(3, 3)
-	tabShadow.ZIndex = tab.ZIndex - 1
-	tabShadow.Parent = self.tabContainer
-
-	local tabCorner = Instance.new("UICorner")
-	tabCorner.CornerRadius = UDim.new(0, 18)
-	tabCorner.Parent = tabShadow
+	-- Tab glow effect
+	local tabGlow = Instance.new("UIGradient")
+	tabGlow.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, data.color:Lerp(Color3.new(1, 1, 1), 0.3)),
+		ColorSequenceKeypoint.new(0.5, data.color:Lerp(Color3.new(1, 1, 1), 0.2)),
+		ColorSequenceKeypoint.new(1, data.color:Lerp(Color3.new(1, 1, 1), 0.3)),
+	})
+	tabGlow.Parent = tab
 
 	local content = UI.Components.Frame({
 		Name = "Content",
@@ -1086,12 +1070,12 @@ function Shop:createTab(data)
 		parent = tab,
 	}):render()
 
-	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 16, {left = 24, right = 24})
+	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 12, {left = 20, right = 20})
 
 	local icon = UI.Components.Image({
 		Name = "Icon",
 		Image = data.icon,
-		Size = UDim2.fromOffset(32, 32),
+		Size = UDim2.fromOffset(28, 28),
 		LayoutOrder = 1,
 		parent = content,
 	}):render()
@@ -1099,9 +1083,10 @@ function Shop:createTab(data)
 	local label = UI.Components.TextLabel({
 		Name = "Label",
 		Text = data.name,
-		Size = UDim2.new(1, -44, 1, 0),
+		Size = UDim2.new(1, -40, 1, 0),
 		Font = Enum.Font.GothamBold,
-		TextSize = 20,
+		TextSize = 18,
+		TextColor3 = Color3.fromRGB(240, 240, 245),
 		LayoutOrder = 2,
 		parent = content,
 	}):render()
@@ -1260,70 +1245,43 @@ end
 function Shop:createHeroSection(parent)
 	local hero = UI.Components.Frame({
 		Name = "HeroSection",
-		Size = UDim2.new(1, 0, 0, 280),
-		BackgroundColor3 = UI.Theme:get("accent"),
-		cornerRadius = UDim.new(0, 32),
+		Size = UDim2.new(1, 0, 0, 240),
+		BackgroundColor3 = Color3.fromRGB(15, 15, 20),
+		cornerRadius = UDim.new(0, 28),
 		LayoutOrder = 1,
 		parent = parent,
 	}):render()
 
-	-- Enhanced gradient for hero section with multiple color stops
+	-- Modern hero gradient with dark theme
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 245, 250)),
-		ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 235, 245)),
-		ColorSequenceKeypoint.new(0.6, Color3.fromRGB(255, 225, 240)),
-		ColorSequenceKeypoint.new(0.8, Color3.fromRGB(255, 215, 235)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 230)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 25)),
+		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(18, 18, 23)),
+		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(16, 16, 21)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(14, 14, 19)),
 	})
 	gradient.Rotation = 135
 	gradient.Parent = hero
 
-	-- Add animated sparkle pattern
-	local sparkles = Instance.new("ImageLabel")
-	sparkles.Name = "Sparkles"
-	sparkles.BackgroundTransparency = 1
-	sparkles.Image = "rbxassetid://8992230672"
-	sparkles.ImageColor3 = Color3.fromRGB(255, 255, 255)
-	sparkles.ImageTransparency = 0.25
-	sparkles.ScaleType = Enum.ScaleType.Tile
-	sparkles.TileSize = UDim2.fromOffset(60, 60)
-	sparkles.Size = UDim2.fromScale(1, 1)
-	sparkles.ZIndex = 1
-	sparkles.Parent = hero
+	-- Hero accent lighting
+	local heroAccent = Instance.new("Frame")
+	heroAccent.Name = "Accent"
+	heroAccent.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
+	heroAccent.BackgroundTransparency = 0.9
+	heroAccent.BorderSizePixel = 0
+	heroAccent.Size = UDim2.new(1, 0, 0, 3)
+	heroAccent.Position = UDim2.fromOffset(0, 0)
+	heroAccent.ZIndex = 2
+	heroAccent.Parent = hero
 
-	-- Add floating particles effect
-	local particles = Instance.new("Frame")
-	particles.Name = "Particles"
-	particles.BackgroundTransparency = 1
-	particles.Size = UDim2.fromScale(1, 1)
-	particles.ZIndex = 2
-	particles.Parent = hero
+	local accentGradient = Instance.new("UIGradient")
+	accentGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 64, 129)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 140)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 64, 129)),
+	})
+	accentGradient.Parent = heroAccent
 
-	-- Create floating sparkle particles
-	for i = 1, 8 do
-		local particle = Instance.new("ImageLabel")
-		particle.BackgroundTransparency = 1
-		particle.Image = "rbxassetid://8992230672"
-		particle.ImageColor3 = Color3.fromRGB(255, 192, 203)
-		particle.ImageTransparency = 0.6
-		particle.ScaleType = Enum.ScaleType.Fit
-		particle.Size = UDim2.fromOffset(12, 12)
-		particle.Position = UDim2.new(math.random(), 0, math.random(), 0)
-		particle.Parent = particles
-
-		-- Animate particle floating
-		task.spawn(function()
-			while particle.Parent do
-				Core.Animation.tween(particle, {
-					Position = UDim2.new(math.random(), 0, math.random(), 0),
-					ImageTransparency = math.random(0.3, 0.8)
-				}, 3 + math.random(), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-				task.wait(3 + math.random())
-			end
-		end)
-	end
 
 	local content = UI.Components.Frame({
 		Size = UDim2.fromScale(1, 1),
@@ -1346,60 +1304,65 @@ function Shop:createHeroSection(parent)
 	}):render()
 
 	local heroTitle = UI.Components.TextLabel({
-		Text = "🌟 Welcome to Sanrio Shop! 🌟",
+		Text = "WELCOME TO SANRIO SHOP",
 		Size = UDim2.new(1, 0, 0, 60),
 		Font = Enum.Font.GothamBold,
-		TextSize = 42,
-		TextColor3 = Color3.new(1, 1, 1),
+		TextSize = 40,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = textContainer,
 	}):render()
 
 	local heroDesc = UI.Components.TextLabel({
-		Text = "✨ Discover exclusive items and powerful boosts to supercharge your tycoon adventure! Collect cash, unlock gamepasses, and build your dream empire! ✨",
+		Text = "Premium items and powerful upgrades await. Purchase cash bundles and unlock exclusive gamepasses to dominate your tycoon empire.",
 		Size = UDim2.new(1, 0, 0, 80),
 		Position = UDim2.fromOffset(0, 70),
 		Font = Enum.Font.Gotham,
-		TextSize = 22,
-		TextColor3 = Color3.fromRGB(245, 245, 250),
+		TextSize = 20,
+		TextColor3 = Color3.fromRGB(220, 220, 225),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextWrapped = true,
 		parent = textContainer,
 	}):render()
 
 	local ctaButton = UI.Components.Button({
-		Text = "🛍️ Browse Items",
-		Size = UDim2.fromOffset(260, 70),
+		Text = "BROWSE ITEMS",
+		Size = UDim2.fromOffset(240, 60),
 		Position = UDim2.fromOffset(0, 160),
-		BackgroundColor3 = Color3.new(1, 1, 1),
-		TextColor3 = UI.Theme:get("accent"),
+		BackgroundColor3 = Color3.fromRGB(255, 64, 129),
+		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
-		TextSize = 24,
-		cornerRadius = UDim.new(0, 20),
+		TextSize = 22,
+		cornerRadius = UDim.new(0, 16),
 		parent = textContainer,
 		onClick = function()
 			self:selectTab("Cash")
 		end,
 	}):render()
 
-	-- Enhanced CTA button with multiple gradients and glow
-	local ctaGlow = Instance.new("UIGradient")
-	ctaGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 255, 255)),
-		ColorSequenceKeypoint.new(0.7, Color3.fromRGB(250, 250, 255)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(245, 245, 255)),
+	-- Modern CTA button gradient
+	local ctaGradient = Instance.new("UIGradient")
+	ctaGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 64, 129)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 80, 140)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 64, 129)),
 	})
-	ctaGlow.Parent = ctaButton
+	ctaGradient.Parent = ctaButton
 
-	-- Add outer glow effect
-	local ctaOuterGlow = Instance.new("UIGradient")
-	ctaOuterGlow.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 240, 250)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 220, 240)),
-	})
-	ctaOuterGlow.Parent = ctaButton
+	-- CTA button hover effect
+	ctaButton.MouseEnter:Connect(function()
+		Core.Animation.tween(ctaButton, {
+			Size = UDim2.fromOffset(250, 65),
+			BackgroundColor3 = Color3.fromRGB(255, 80, 140)
+		}, Core.CONSTANTS.ANIM_FAST)
+	end)
+
+	ctaButton.MouseLeave:Connect(function()
+		Core.Animation.tween(ctaButton, {
+			Size = UDim2.fromOffset(240, 60),
+			BackgroundColor3 = Color3.fromRGB(255, 64, 129)
+		}, Core.CONSTANTS.ANIM_FAST)
+	end)
 
 	return hero
 end
@@ -1530,9 +1493,9 @@ function Shop:createProductCard(product, productType, parent)
 		parent = content,
 	}):render()
 
-	-- Enhanced title with premium typography and emoji
+	-- Enhanced title with premium typography
 	local title = UI.Components.TextLabel({
-		Text = "✨ " .. product.name .. " ✨",
+		Text = product.name,
 		Size = UDim2.new(1, 0, 0, 40),
 		Font = Enum.Font.GothamBold,
 		TextSize = 26,
@@ -1556,8 +1519,8 @@ function Shop:createProductCard(product, productType, parent)
 
 	-- Enhanced price display with character-specific styling
 	local priceText = isGamepass and
-		("💎 R$" .. tostring(product.price or 0)) or
-		("💰 R$" .. tostring(product.price or 0) .. " for " .. Core.Utils.formatNumber(product.amount) .. " Cash")
+		("R$" .. tostring(product.price or 0)) or
+		("R$" .. tostring(product.price or 0) .. " for " .. Core.Utils.formatNumber(product.amount) .. " Cash")
 
 	local priceLabel = UI.Components.TextLabel({
 		Text = priceText,
@@ -1573,7 +1536,7 @@ function Shop:createProductCard(product, productType, parent)
 	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
 
 	local purchaseButton = UI.Components.Button({
-		Text = isOwned and "✅ Owned" or "🛒 Purchase",
+		Text = isOwned and "Owned" or "Purchase",
 		Size = UDim2.new(1, -24, 0, 60),
 		Position = UDim2.fromOffset(12, 0, 1, -60),
 		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
@@ -1600,18 +1563,6 @@ function Shop:createProductCard(product, productType, parent)
 		ColorSequenceKeypoint.new(1, Color3.fromRGB(245, 248, 255)),
 	})
 	buttonGlow.Parent = purchaseButton
-
-	-- Add sparkle effect to button text
-	local sparkleEffect = Instance.new("ImageLabel")
-	sparkleEffect.BackgroundTransparency = 1
-	sparkleEffect.Image = "rbxassetid://8992230672"
-	sparkleEffect.ImageColor3 = Color3.fromRGB(255, 255, 255)
-	sparkleEffect.ImageTransparency = 0.7
-	sparkleEffect.ScaleType = Enum.ScaleType.Fit
-	sparkleEffect.Size = UDim2.fromOffset(16, 16)
-	sparkleEffect.Position = UDim2.new(0, 8, 0.5, 0)
-	sparkleEffect.AnchorPoint = Vector2.new(0, 0.5)
-	sparkleEffect.Parent = purchaseButton
 
 	if isOwned and product.hasToggle then
 		self:addToggleSwitch(product, infoContainer)
