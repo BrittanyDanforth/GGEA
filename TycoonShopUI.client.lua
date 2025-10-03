@@ -656,7 +656,8 @@ function Shop:_buildCashPage(parent)
 	grid.FillDirectionMaxCells = gridColumns()
 	grid.SortOrder = Enum.SortOrder.LayoutOrder
 	grid.Parent = scroll
-	page._grid = grid
+	-- store grid reference on manager (Instances cannot hold arbitrary fields reliably)
+	self.cashGrid = grid
 
 	for i, pack in ipairs(ProductData.cash) do
 		self:_cashCard(scroll, grid, pack, i)
@@ -978,10 +979,15 @@ function Shop:_setupInputs()
 			self.contentArea.Position = isMobile and UDim2.new(0,16,0,72+64+16) or UDim2.new(0,240+32,0,72+8)
 		end
 
-		if self.pages.cash and self.pages.cash._grid then
+		local gridRef = self.cashGrid
+		if not gridRef and self.pages.cash then
+			gridRef = self.pages.cash:FindFirstChildOfClass("UIGridLayout")
+			self.cashGrid = gridRef
+		end
+		if gridRef then
 			local cols = gridColumns()
-			self.pages.cash._grid.FillDirectionMaxCells = cols
-			self.pages.cash._grid.CellSize = UDim2.new(1/cols, -8, 0, cols == 1 and 280 or 240)
+			gridRef.FillDirectionMaxCells = cols
+			gridRef.CellSize = UDim2.new(1/cols, -8, 0, cols == 1 and 280 or 240)
 		end
 	end
 
