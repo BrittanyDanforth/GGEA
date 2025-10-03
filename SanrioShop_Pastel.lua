@@ -348,8 +348,8 @@ function Component:render()
 	if self.props.glass then
 		local glassEffect = Instance.new("Frame")
 		glassEffect.Name = "GlassEffect"
-		glassEffect.BackgroundTransparency = props.glass.transparency or 0.05
-		glassEffect.BackgroundColor3 = props.glass.color or UI.Theme:get("glass")
+		glassEffect.BackgroundTransparency = self.props.glass.transparency or 0.05
+		glassEffect.BackgroundColor3 = self.props.glass.color or UI.Theme:get("glass")
 		glassEffect.BorderSizePixel = 0
 		glassEffect.Size = UDim2.fromScale(1, 1)
 		glassEffect.ZIndex = -1
@@ -498,15 +498,15 @@ function UI.Components.Button(props)
 	-- Soft gradient background
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, props.BackgroundColor3 or UI.Theme:get("accent")),
-		ColorSequenceKeypoint.new(1, Core.Utils.blend(props.BackgroundColor3 or UI.Theme:get("accent"), Color3.new(1, 1, 1), 0.1)),
+		ColorSequenceKeypoint.new(0, component.props.BackgroundColor3 or UI.Theme:get("accent")),
+		ColorSequenceKeypoint.new(1, Core.Utils.blend(component.props.BackgroundColor3 or UI.Theme:get("accent"), Color3.new(1, 1, 1), 0.1)),
 	})
 	gradient.Rotation = 45
 	gradient.Parent = component.instance
 
 	-- Hover animations (gentle)
-	local originalSize = props.Size or defaultProps.Size
-	local hoverScale = props.hoverScale or 1.03
+	local originalSize = component.props.Size or defaultProps.Size
+	local hoverScale = component.props.hoverScale or 1.03
 
 	component.instance.MouseEnter:Connect(function()
 		Core.Animation.tween(component.instance, {
@@ -519,8 +519,8 @@ function UI.Components.Button(props)
 		}, Core.CONSTANTS.ANIM_FAST)
 
 		gradient.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Core.Utils.blend(props.BackgroundColor3 or UI.Theme:get("accent"), Color3.new(1, 1, 1), 0.15)),
-			ColorSequenceKeypoint.new(1, props.BackgroundColor3 or UI.Theme:get("accent")),
+			ColorSequenceKeypoint.new(0, Core.Utils.blend(component.props.BackgroundColor3 or UI.Theme:get("accent"), Color3.new(1, 1, 1), 0.15)),
+			ColorSequenceKeypoint.new(1, component.props.BackgroundColor3 or UI.Theme:get("accent")),
 		})
 	end)
 
@@ -530,8 +530,8 @@ function UI.Components.Button(props)
 		}, Core.CONSTANTS.ANIM_FAST)
 
 		gradient.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, props.BackgroundColor3 or UI.Theme:get("accent")),
-			ColorSequenceKeypoint.new(1, Core.Utils.blend(props.BackgroundColor3 or UI.Theme:get("accent"), Color3.new(1, 1, 1), 0.1)),
+			ColorSequenceKeypoint.new(0, component.props.BackgroundColor3 or UI.Theme:get("accent")),
+			ColorSequenceKeypoint.new(1, Core.Utils.blend(component.props.BackgroundColor3 or UI.Theme:get("accent"), Color3.new(1, 1, 1), 0.1)),
 		})
 	end)
 
@@ -581,7 +581,7 @@ function UI.Components.ScrollingFrame(props)
 		ScrollBarImageColor3 = UI.Theme:get("strokeSoft"),
 		Size = UDim2.fromScale(1, 1),
 		CanvasSize = UDim2.new(0, 0, 0, 0),
-		ScrollingDirection = props.ScrollingDirection or Enum.ScrollingDirection.Y,
+		ScrollingDirection = component.props.ScrollingDirection or Enum.ScrollingDirection.Y,
 	}
 
 	for key, value in pairs(defaultProps) do
@@ -608,11 +608,11 @@ function UI.Components.ScrollingFrame(props)
 	end
 
 	-- Layout
-	if props.layout then
-		local layoutType = props.layout.type or "List"
+	if component.props.layout then
+		local layoutType = component.props.layout.type or "List"
 		local layout = Instance.new("UI" .. layoutType .. "Layout")
 
-		for key, value in pairs(props.layout) do
+		for key, value in pairs(component.props.layout) do
 			if key ~= "type" then
 				pcall(function()
 					layout[key] = value
@@ -626,7 +626,7 @@ function UI.Components.ScrollingFrame(props)
 		task.defer(function()
 			if layoutType == "List" then
 				layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-					if props.ScrollingDirection == Enum.ScrollingDirection.X then
+					if component.props.ScrollingDirection == Enum.ScrollingDirection.X then
 						component.instance.CanvasSize = UDim2.new(0, layout.AbsoluteContentSize.X + 20, 0, 0)
 					else
 						component.instance.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
@@ -641,12 +641,12 @@ function UI.Components.ScrollingFrame(props)
 	end
 
 	-- Padding
-	if props.padding then
+	if component.props.padding then
 		local padding = Instance.new("UIPadding")
-		if props.padding.top then padding.PaddingTop = props.padding.top end
-		if props.padding.bottom then padding.PaddingBottom = props.padding.bottom end
-		if props.padding.left then padding.PaddingLeft = props.padding.left end
-		if props.padding.right then padding.PaddingRight = props.padding.right end
+		if component.props.padding.top then padding.PaddingTop = component.props.padding.top end
+		if component.props.padding.bottom then padding.PaddingBottom = component.props.padding.bottom end
+		if component.props.padding.left then padding.PaddingLeft = component.props.padding.left end
+		if component.props.padding.right then padding.PaddingRight = component.props.padding.right end
 		padding.Parent = component.instance
 	end
 
