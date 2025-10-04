@@ -73,7 +73,7 @@ while true do
 	mesh.MeshType = Enum.MeshType.FileMesh
 	mesh.MeshId = "rbxassetid://17087317963"  -- Kuromi mesh
 	mesh.TextureId = "rbxassetid://17087030178"  -- Kuromi texture
-	mesh.Scale = Vector3.new(2, 2, 2) -- Adjust scale as needed
+	mesh.Scale = Vector3.new(1.5, 1.5, 1.5) -- Adjusted smaller scale
 	mesh.Parent = orb
 
 	-- COLLISION FIXED!
@@ -148,8 +148,8 @@ while true do
 	dropPattern = (dropPattern % #patterns) + 1
 
 	-- Spawn with 180 degree rotation + turn to face forward
-	-- To turn 90 degrees to the left from its current rotation
-	orb.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0) + offset) * CFrame.Angles(math.rad(180), math.rad(270), 0)
+	-- To turn left a bit from its current rotation
+	orb.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0) + offset) * CFrame.Angles(math.rad(180), math.rad(300), 0)
 	-- Float down gently
 	orb.AssemblyLinearVelocity = Vector3.new(
 		offset.X * 2,
@@ -167,7 +167,7 @@ while true do
 	orb.Parent = PartStorage
 
 	-- Smooth fade-in with bounce animation
-	mesh.Scale = Vector3.new(0.5, 0.5, 0.5)
+	mesh.Scale = Vector3.new(0.4, 0.4, 0.4)
 
 	-- Fade in
 	local fadeTween = TweenService:Create(orb,
@@ -179,7 +179,7 @@ while true do
 	-- Bounce scale
 	local spawnTween = TweenService:Create(mesh,
 		TweenInfo.new(0.6, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
-		{Scale = Vector3.new(2, 2, 2)}
+		{Scale = Vector3.new(1.5, 1.5, 1.5)}
 	)
 	spawnTween:Play()
 
