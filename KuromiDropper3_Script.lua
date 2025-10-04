@@ -116,26 +116,7 @@ while true do
 	glow.Color = Color3.fromRGB(200, 150, 230) -- Purple light
 	glow.Parent = drop
 
-	-- Purple/pink sparkles
-	local sparkles = Instance.new("ParticleEmitter")
-	sparkles.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	sparkles.Rate = 25
-	sparkles.Lifetime = NumberRange.new(1.5, 2.5)
-	sparkles.Speed = NumberRange.new(1, 2)
-	sparkles.SpreadAngle = Vector2.new(45, 45)
-	sparkles.Color = ColorSequence.new{
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 100, 200)), -- Purple
-		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(200, 150, 230)), -- Light purple
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 150, 220)) -- Pink
-	}
-	sparkles.Size = NumberSequence.new{
-		NumberSequenceKeypoint.new(0, 0.4),
-		NumberSequenceKeypoint.new(0.5, 0.6),
-		NumberSequenceKeypoint.new(1, 0)
-	}
-	sparkles.LightEmission = 0.8
-	sparkles.VelocityInheritance = 0.3
-	sparkles.Parent = drop
+	-- No sparkles - keeping it clean
 
 	-- Pink star pattern particles
 	local starParticles = Instance.new("ParticleEmitter")
@@ -158,8 +139,8 @@ while true do
 	cash.Value = 50 -- Premium value
 	cash.Parent = drop
 
-	-- Position at dropper
-	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(180), 0, 0)
+	-- Position at dropper (laying flat)
+	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(90), 0, 0)
 
 	-- Drop with slight spin
 	drop.AssemblyLinearVelocity = Vector3.new(0, -10, 0)
