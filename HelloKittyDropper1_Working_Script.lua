@@ -132,8 +132,8 @@ while true do
 	local offsetX = (math.random(-2, 2) * 0.1)
 	local offsetZ = (math.random(-2, 2) * 0.1)
 
-	-- Scale up the model a bit (1.2x bigger)
-	local scaleFactor = 1.2
+	-- Scale up the model (bigger size)
+	local scaleFactor = 1.8
 	for _, part in ipairs(newDrop:GetDescendants()) do
 		if part:IsA("BasePart") then
 			part.Size = part.Size * scaleFactor
@@ -146,9 +146,9 @@ while true do
 	end
 
 	-- Position BELOW the dropper with proper orientation
-	-- Add 180 degree rotation to flip it right-side up
+	-- Add 180 degree rotation to flip it right-side up + turn left a bit
 	newDrop:SetPrimaryPartCFrame(
-		dropPart.CFrame * CFrame.new(offsetX, 2, offsetZ) * CFrame.Angles(math.rad(180), 0, 0)
+		dropPart.CFrame * CFrame.new(offsetX, 3.5, offsetZ) * CFrame.Angles(math.rad(180), math.rad(15), 0)
 	)
 
 	-- Better drop control using AlignOrientation to prevent flipping
