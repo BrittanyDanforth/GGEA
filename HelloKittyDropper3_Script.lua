@@ -76,7 +76,7 @@ while true do
 	mesh.MeshType = Enum.MeshType.FileMesh
 	mesh.MeshId = "rbxassetid://3071180788" -- Hello Kitty mesh
 	mesh.TextureId = "" -- No texture
-	mesh.Scale = Vector3.new(6, 6, 6) -- HUGE scale - 4x bigger
+	mesh.Scale = Vector3.new(4, 4, 4) -- Smaller, more reasonable size
 	mesh.Parent = drop
 
 	-- COLLISION
@@ -127,8 +127,8 @@ while true do
 	cash.Value = 50 -- Premium value
 	cash.Parent = drop
 
-	-- Position at dropper (laying flat, no spin interference)
-	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(90), math.rad(0), math.rad(180))
+	-- Position at dropper (slightly angled down so bow is visible)
+	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(75), math.rad(0), math.rad(180))
 
 	-- Drop straight down, NO SPIN
 	drop.AssemblyLinearVelocity = Vector3.new(0, -10, 0)
@@ -138,11 +138,11 @@ while true do
 	drop.Parent = PartStorage
 
 	-- Spawn animation - start tiny, grow to normal
-	mesh.Scale = Vector3.new(1.5, 1.5, 1.5)
+	mesh.Scale = Vector3.new(1, 1, 1)
 
 	TweenService:Create(mesh,
 		TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{Scale = Vector3.new(6, 6, 6)}
+		{Scale = Vector3.new(4, 4, 4)}
 	):Play()
 
 	-- Flash effect
