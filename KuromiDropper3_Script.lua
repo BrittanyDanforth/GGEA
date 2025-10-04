@@ -88,7 +88,7 @@ while true do
 	mesh.MeshType = Enum.MeshType.FileMesh
 	mesh.MeshId = "rbxassetid://431221914" -- Kuromi mesh
 	mesh.TextureId = "" -- No texture, using black color
-	mesh.Scale = Vector3.new(0.2, 0.2, 0.2) -- Scale for visibility
+	mesh.Scale = Vector3.new(0.25, 0.25, 0.25) -- Slightly bigger scale
 	mesh.Parent = drop
 
 	-- COLLISION
@@ -139,8 +139,8 @@ while true do
 	cash.Value = 50 -- Premium value
 	cash.Parent = drop
 
-	-- Position at dropper (laying flat)
-	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(90), 0, 0)
+	-- Position at dropper (laying flat, turned around and left a bit)
+	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(90), math.rad(195), 0)
 
 	-- Drop with slight spin
 	drop.AssemblyLinearVelocity = Vector3.new(0, -10, 0)
@@ -150,11 +150,11 @@ while true do
 	drop.Parent = PartStorage
 
 	-- Spawn animation - start tiny, grow to normal
-	mesh.Scale = Vector3.new(0.05, 0.05, 0.05)
+	mesh.Scale = Vector3.new(0.06, 0.06, 0.06)
 
 	TweenService:Create(mesh,
 		TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{Scale = Vector3.new(0.2, 0.2, 0.2)}
+		{Scale = Vector3.new(0.25, 0.25, 0.25)}
 	):Play()
 
 	-- Flash effect
