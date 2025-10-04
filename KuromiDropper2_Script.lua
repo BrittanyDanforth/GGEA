@@ -25,8 +25,13 @@ local PLAYER_GROUP = "Players"
 pcall(function()
 	PhysicsService:RegisterCollisionGroup(ORB_GROUP)
 	PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
+	PhysicsService:RegisterCollisionGroup("KuromiOrbs") -- Register Dropper 1 group
+	-- Orbs don't collide with players
 	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, PLAYER_GROUP, false)
+	-- Orbs don't collide with each other
 	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, ORB_GROUP, false)
+	-- Dropper 2 orbs don't collide with Dropper 1 orbs
+	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, "KuromiOrbs", false)
 end)
 
 -- Setup player collision groups
@@ -148,8 +153,8 @@ while true do
 	dropPattern = (dropPattern % #patterns) + 1
 
 	-- Spawn with 180 degree rotation + turn to face forward
-	-- To turn left a bit from its current rotation
-	orb.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0) + offset) * CFrame.Angles(math.rad(180), math.rad(300), 0)
+	-- To turn left a bit more from its current rotation
+	orb.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0) + offset) * CFrame.Angles(math.rad(180), math.rad(320), 0)
 	-- Float down gently
 	orb.AssemblyLinearVelocity = Vector3.new(
 		offset.X * 2,

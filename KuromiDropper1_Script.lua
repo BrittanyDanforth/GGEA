@@ -45,10 +45,13 @@ local PLAYER_GROUP = "Players"
 pcall(function()
 	PhysicsService:RegisterCollisionGroup(ORB_GROUP)
 	PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
+	PhysicsService:RegisterCollisionGroup("KuromiOrbs2") -- Register Dropper 2 group
 	-- Orbs don't collide with players
 	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, PLAYER_GROUP, false)
 	-- Orbs don't collide with each other
 	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, ORB_GROUP, false)
+	-- Dropper 1 orbs don't collide with Dropper 2 orbs
+	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, "KuromiOrbs2", false)
 end)
 
 -- Setup player collision groups
