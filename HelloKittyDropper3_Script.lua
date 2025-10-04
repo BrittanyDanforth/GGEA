@@ -127,12 +127,12 @@ while true do
 	cash.Value = 50 -- Premium value
 	cash.Parent = drop
 
-	-- Position at dropper (laying flat, completely turned around)
-	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(90), math.rad(180), 0)
+	-- Position at dropper (laying flat, no spin interference)
+	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(90), math.rad(0), math.rad(180))
 
-	-- Drop with slight spin
+	-- Drop straight down, NO SPIN
 	drop.AssemblyLinearVelocity = Vector3.new(0, -10, 0)
-	drop.AssemblyAngularVelocity = Vector3.new(0, 5, 0)
+	drop.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 
 	-- Parent to workspace
 	drop.Parent = PartStorage
