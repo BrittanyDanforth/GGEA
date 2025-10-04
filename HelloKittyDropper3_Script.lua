@@ -127,8 +127,8 @@ while true do
 	cash.Value = 50 -- Premium value
 	cash.Parent = drop
 
-	-- Position at dropper (laying flat, turned around)
-	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(90), math.rad(15), 0)
+	-- Position at dropper (laying flat, completely turned around)
+	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(90), math.rad(180), 0)
 
 	-- Drop with slight spin
 	drop.AssemblyLinearVelocity = Vector3.new(0, -10, 0)
