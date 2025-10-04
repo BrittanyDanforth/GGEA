@@ -128,7 +128,20 @@ while true do
 	cash.Parent = drop
 
 	-- Position at dropper (slightly angled down so bow is visible)
-	drop.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(75), math.rad(0), math.rad(180))
+	local spawnCFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0)) * CFrame.Angles(math.rad(75), math.rad(0), math.rad(180))
+	drop.CFrame = spawnCFrame
+
+	-- LOCK ROTATION - Keep the angle!
+	local attachment = Instance.new("Attachment")
+	attachment.Parent = drop
+
+	local alignOrientation = Instance.new("AlignOrientation")
+	alignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+	alignOrientation.Attachment0 = attachment
+	alignOrientation.MaxTorque = 100000 -- Strong lock
+	alignOrientation.Responsiveness = 200 -- Very responsive
+	alignOrientation.CFrame = spawnCFrame -- Lock to spawn rotation
+	alignOrientation.Parent = drop
 
 	-- Drop straight down, NO SPIN
 	drop.AssemblyLinearVelocity = Vector3.new(0, -10, 0)
