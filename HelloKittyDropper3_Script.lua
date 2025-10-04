@@ -76,7 +76,7 @@ while true do
 	mesh.MeshType = Enum.MeshType.FileMesh
 	mesh.MeshId = "rbxassetid://3071180788" -- Hello Kitty mesh
 	mesh.TextureId = "" -- No texture
-	mesh.Scale = Vector3.new(1.5, 1.5, 1.5) -- Much bigger scale
+	mesh.Scale = Vector3.new(6, 6, 6) -- HUGE scale - 4x bigger
 	mesh.Parent = drop
 
 	-- COLLISION
@@ -138,11 +138,11 @@ while true do
 	drop.Parent = PartStorage
 
 	-- Spawn animation - start tiny, grow to normal
-	mesh.Scale = Vector3.new(0.4, 0.4, 0.4)
+	mesh.Scale = Vector3.new(1.5, 1.5, 1.5)
 
 	TweenService:Create(mesh,
 		TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{Scale = Vector3.new(1.5, 1.5, 1.5)}
+		{Scale = Vector3.new(6, 6, 6)}
 	):Play()
 
 	-- Flash effect
