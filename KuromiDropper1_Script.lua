@@ -140,8 +140,8 @@ while true do
 	-- Position with small offset (WITH ROTATION)
 	local offsetX = math.random(-2, 2) * 0.1
 	local offsetZ = math.random(-2, 2) * 0.1
-	-- Rotate 180 degrees vertically + 180 degrees horizontally to face forward
-	orb.CFrame = (dropPart.CFrame - Vector3.new(offsetX, 2, offsetZ)) * CFrame.Angles(math.rad(180), math.rad(180), 0)
+	-- Rotate 180 degrees vertically to face forward (turned around)
+	orb.CFrame = (dropPart.CFrame - Vector3.new(offsetX, 2, offsetZ)) * CFrame.Angles(math.rad(180), math.rad(0), 0)
 
 	-- Gentle drop
 	orb.AssemblyLinearVelocity = Vector3.new(0, -12, 0)
