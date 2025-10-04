@@ -52,10 +52,27 @@ for _, player in ipairs(Players:GetPlayers()) do
 	if player.Character then setupPlayerCollision(player.Character) end
 end
 
--- Check PrimaryPart
-if not templateModel.PrimaryPart then
-	warn("ERROR: HelloKittyPL model needs PrimaryPart set!")
-	return
+-- Function to find a suitable primary part
+local function findPrimaryPart(model)
+	if model.PrimaryPart then
+		return model.PrimaryPart
+	end
+	
+	-- Find the largest part by volume
+	local largestPart = nil
+	local largestVolume = 0
+	
+	for _, child in ipairs(model:GetDescendants()) do
+		if child:IsA("BasePart") then
+			local volume = child.Size.X * child.Size.Y * child.Size.Z
+			if volume > largestVolume then
+				largestVolume = volume
+				largestPart = child
+			end
+		end
+	end
+	
+	return largestPart
 end
 
 -- Welding function
@@ -80,11 +97,18 @@ while true do
 	local newDrop = templateModel:Clone()
 	newDrop.Name = "HelloKitty_" .. count
 
-	-- Weld all parts
-	weldAllParts(newDrop, newDrop.PrimaryPart)
+	-- Find primary part (auto-detect if not set)
+	local primaryPart = findPrimaryPart(newDrop)
+	if not primaryPart then
+		warn("ERROR: HelloKittyPL model has no BaseParts!")
+		newDrop:Destroy()
+		continue
+	end
 
-	-- Set physical properties and collision for ALL parts
-	local primaryPart = newDrop.PrimaryPart
+	-- Weld all parts
+	weldAllParts(newDrop, primaryPart)
+
+	-- Set physical properties and collision for ALL parts  
 	for _, part in ipairs(newDrop:GetDescendants()) do
 		if part:IsA("BasePart") then
 			part.Anchored = false
@@ -118,10 +142,15 @@ while true do
 	local offsetX = math.random(-2, 2) * 0.1
 	local offsetZ = math.random(-2, 2) * 0.1
 
-	-- Position and rotate
-	newDrop:SetPrimaryPartCFrame(
-		(dropPart.CFrame - Vector3.new(offsetX, 2, offsetZ)) * CFrame.Angles(math.rad(180), math.rad(180), 0)
-	)
+	-- Position and rotate (manually move all parts relative to primary part)
+	local targetCFrame = (dropPart.CFrame - Vector3.new(offsetX, 2, offsetZ)) * CFrame.Angles(math.rad(180), math.rad(180), 0)
+	local offset = targetCFrame * primaryPart.CFrame:Inverse()
+	
+	for _, part in ipairs(newDrop:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.CFrame = offset * part.CFrame
+		end
+	end
 
 	-- Set initial velocity
 	primaryPart.AssemblyLinearVelocity = Vector3.new(0, -12, 0)
