@@ -49,8 +49,15 @@ local dropPart = script.Parent:WaitForChild("Drop")
 
 -- Setup collision groups (prevents lag from collisions)
 local function setupCollisionGroups()
-    local CollisionGroups = require(script.Parent.Parent.CollisionGroups)
-    CollisionGroups.setupDropperCollisionGroup(DROP_GROUP)
+    pcall(function()
+        -- Register our collision groups (safe - won't error if already registered)
+        PhysicsService:RegisterCollisionGroup(DROP_GROUP)
+        PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
+
+        -- Set collision relationships (safe - only if groups exist)
+        pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, PLAYER_GROUP, false) end)
+        pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, DROP_GROUP, false) end)
+    end)
 end
 
 -- Setup player collision (prevents player-drop collisions)

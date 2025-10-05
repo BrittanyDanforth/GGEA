@@ -71,36 +71,17 @@ if not success or not dropPart then
     return
 end
 
--- Setup collision groups (prevents lag from collisions)
+-- Setup collision groups (simple approach)
 local function setupCollisionGroups()
-    local success, errorMsg = pcall(function()
+    pcall(function()
+        -- Register our collision groups (safe - won't error if already registered)
         PhysicsService:RegisterCollisionGroup(DROP_GROUP)
         PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
 
-        -- Don't collide with players
-        PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, PLAYER_GROUP, false)
-        PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, DROP_GROUP, false)
-
-        -- Don't collide with other droppers (only if they exist)
-        local allDropperGroups = {
-            "KuromiOrbs", "KuromiOrbs2", "KuromiOrbs3",
-            "CinnamorollOrbs", "Dropper5Orbs",
-            "KuromiOrbs6", "KuromiOrbs8", "KuromiOrbs9",
-            "KuromiOrbs10", "KuromiOrbs11", "KuromiOrbs12", "KuromiOrbs13"
-        }
-
-        for _, group in ipairs(allDropperGroups) do
-            if group ~= DROP_GROUP then
-                -- Only try to set collision if both groups are registered
-                pcall(function()
-                    PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, group, false)
-                end)
-            end
-        end
+        -- Set collision relationships (safe - only if groups exist)
+        pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, PLAYER_GROUP, false) end)
+        pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, DROP_GROUP, false) end)
     end)
-    if not success then
-        warn("Collision group setup failed:", errorMsg)
-    end
 end
 
 -- Setup player collision (prevents player-drop collisions)
