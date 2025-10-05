@@ -1,6 +1,7 @@
 -- MoneyCollectedListener.lua
--- Put in: StarterPlayer → StarterPlayerScripts
--- Receives MoneyCollected events (fixes "did you forget to implement OnClientEvent?" error)
+-- Put in: StarterPlayer → StarterPlayerScripts → MoneyCollectedListener
+-- Type: LocalScript
+-- THIS IS THE ONLY FILE YOU NEED - FIXES THE SPAM!
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -18,15 +19,10 @@ if not MoneyCollected then
 	return
 end
 
--- =================== LISTENER ===================
--- This receives the events from server so they don't pile up
+-- Receive the events so they don't pile up and cause spam
 MoneyCollected.OnClientEvent:Connect(function(giver, amount, has2x, isAutoCollect)
-	-- Just receive it - no need to do anything fancy
-	-- Your UI systems handle the rest
-	
-	-- Optional: Add client-side effects here if you want
-	-- e.g., play a sound, show a particle effect, etc.
+	-- Just receive it - your existing UI handles the rest
 end)
 
 print("✅ [CLIENT] MoneyCollected Listener ACTIVE!")
-print("🎯 Now receiving money collection events from server")
+print("🎯 MoneyCollected spam = FIXED!")
