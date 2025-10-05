@@ -204,7 +204,7 @@ local function setupMesh(part)
         m.MeshType = Enum.MeshType.FileMesh
         m.MeshId = MESH_ID
         m.TextureId = TEXTURE_ID
-        m.Scale = FINAL_SCALE * 0.5 -- Start smaller for spawn animation
+        m.Scale = Vector3.new(0.1, 0.1, 0.1) -- Start very small for spawn animation
         m.Parent = part
         return m
     end)
@@ -365,6 +365,12 @@ local function createDrops()
         -- Start fade in
         fadeIn(fadeData)
 
+        -- Animate mesh to final scale
+        TweenService:Create(mesh,
+            TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {Scale = FINAL_SCALE}
+        ):Play()
+
         -- Collection detection (optimized)
         local collected = false
         local touchConnection
@@ -407,12 +413,6 @@ local function createDrops()
             part:Destroy()
             continue
         end
-
-        -- Pop animation (small and fast)
-        TweenService:Create(mesh,
-            TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-            {Scale = FINAL_SCALE}
-        ):Play()
 
         -- Set lifetime (backup cleanup)
         Debris:AddItem(part, LIFETIME)
