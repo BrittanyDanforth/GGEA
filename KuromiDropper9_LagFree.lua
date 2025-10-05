@@ -31,7 +31,7 @@ local DROP_SIZE = Vector3.new(1, 1, 1)
 
 local COLLECTOR_NAMES = { "Collector", "CollectorZone", "Receiver", "Sell", "SellPad" }
 local COLLECTOR_TAGS = { "Collector", "SellZone" }
-local DROP_GROUP = "KuromiDrops"
+local DROP_GROUP = "KuromiOrbs9"
 local PLAYER_GROUP = "Players"
 -- =================== END CONFIG ===================
 
@@ -43,8 +43,24 @@ local function setupCollisionGroups()
     pcall(function()
         PhysicsService:RegisterCollisionGroup(DROP_GROUP)
         PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
+
+        -- Don't collide with players
         PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, PLAYER_GROUP, false)
         PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, DROP_GROUP, false)
+
+        -- Don't collide with other droppers (1-13)
+        local allDropperGroups = {
+            "KuromiOrbs", "KuromiOrbs2", "KuromiOrbs3",
+            "CinnamorollOrbs", "Dropper5Orbs",
+            "KuromiOrbs6", "KuromiOrbs7", "KuromiOrbs8", "KuromiOrbs9",
+            "KuromiOrbs10", "KuromiOrbs11", "KuromiOrbs12", "KuromiOrbs13"
+        }
+
+        for _, group in ipairs(allDropperGroups) do
+            if group ~= DROP_GROUP then
+                PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, group, false)
+            end
+        end
     end)
 end
 
