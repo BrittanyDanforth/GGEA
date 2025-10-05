@@ -104,7 +104,12 @@ while true do
         if isCollector then
             collected = true
 
-            -- Simple fade out and destroy
+            -- Safety freeze - prevent duplicate touches while fading
+            part.Anchored = true
+            part.CanCollide = false
+            part.CanTouch = false
+
+            -- Simple fade out and destroy (no money collection triggering)
             TweenService:Create(part,
                 TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
                 {Transparency = 1}
