@@ -50,8 +50,26 @@ local PLAYER_GROUP = "Players"
 
 -- Initialize (error-safe)
 task.wait(2)
-local PartStorage = workspace:WaitForChild("PartStorage")
-local dropPart = script.Parent:WaitForChild("Drop")
+
+-- Safely get PartStorage
+local PartStorage
+local success, errorMsg = pcall(function()
+    PartStorage = workspace:WaitForChild("PartStorage")
+end)
+if not success or not PartStorage then
+    warn("Failed to get PartStorage:", errorMsg)
+    return
+end
+
+-- Safely get dropPart
+local dropPart
+success, errorMsg = pcall(function()
+    dropPart = script.Parent:WaitForChild("Drop")
+end)
+if not success or not dropPart then
+    warn("Failed to get Drop part:", errorMsg)
+    return
+end
 
 -- Setup collision groups (prevents lag from collisions)
 local function setupCollisionGroups()
@@ -63,7 +81,7 @@ local function setupCollisionGroups()
         PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, PLAYER_GROUP, false)
         PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, DROP_GROUP, false)
 
-        -- Don't collide with other droppers (1-13)
+        -- Don't collide with other droppers (only if they exist)
         local allDropperGroups = {
             "KuromiOrbs", "KuromiOrbs2", "KuromiOrbs3",
             "CinnamorollOrbs", "Dropper5Orbs",
@@ -73,7 +91,10 @@ local function setupCollisionGroups()
 
         for _, group in ipairs(allDropperGroups) do
             if group ~= DROP_GROUP then
-                PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, group, false)
+                -- Only try to set collision if both groups are registered
+                pcall(function()
+                    PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, group, false)
+                end)
             end
         end
     end)
@@ -178,20 +199,20 @@ end
 
 -- Setup mesh (optimized)
 local function setupMesh(part)
-    local success, errorMsg = pcall(function()
-        local mesh = Instance.new("SpecialMesh")
-        mesh.MeshType = Enum.MeshType.FileMesh
-        mesh.MeshId = MESH_ID
-        mesh.TextureId = TEXTURE_ID
-        mesh.Scale = FINAL_SCALE * 0.5 -- Start smaller for spawn animation
-        mesh.Parent = part
-        return mesh
+    local success, mesh = pcall(function()
+        local m = Instance.new("SpecialMesh")
+        m.MeshType = Enum.MeshType.FileMesh
+        m.MeshId = MESH_ID
+        m.TextureId = TEXTURE_ID
+        m.Scale = FINAL_SCALE * 0.5 -- Start smaller for spawn animation
+        m.Parent = part
+        return m
     end)
-    if not success then
-        warn("Mesh setup failed:", errorMsg)
+    if not success or not mesh then
+        warn("Mesh setup failed:", success and "Mesh creation failed" or "Unknown error")
         return nil
     end
-    return success
+    return mesh
 end
 
 -- Setup fade system (smooth, no lag)
@@ -277,6 +298,11 @@ end
 local function createDrops()
     local count = 0
     while true do
+        if not PartStorage or not dropPart then
+            warn("PartStorage or dropPart became nil, stopping dropper")
+            break
+        end
+
         task.wait(DROP_RATE)
         count += 1
 
@@ -284,7 +310,6 @@ local function createDrops()
         local success, part = pcall(function()
             local p = Instance.new("Part")
             p.Name = "IceCream_" .. count
-            p.Parent = PartStorage
 
             -- Visual properties
             p.Size = Vector3.new(2, 2, 2) -- Compact collision
@@ -297,6 +322,8 @@ local function createDrops()
             -- Position (optimized calculation)
             p.CFrame = calculateSpawnPosition()
 
+            -- Set parent last to avoid issues
+            p.Parent = PartStorage
             return p
         end)
 
@@ -398,11 +425,27 @@ local function initialize()
     initializePlayers()
 
     -- Start the drop loop with error handling
-    local success, errorMsg = pcall(createDrops)
+    local success, errorMsg = pcall(function()
+        if PartStorage and dropPart then
+            if type(createDrops) == "function" then
+                createDrops()
+            else
+                error("createDrops is not a function")
+            end
+        else
+            error("PartStorage or dropPart is nil")
+        end
+    end)
+
     if not success then
         warn("CRITICAL: Kuromi Dropper 5 failed to start:", errorMsg)
     end
 end
 
 -- Start initialization
-initialize()
+local success, initError = pcall(function()
+    initialize()
+end)
+if not success then
+    warn("CRITICAL: Initialization failed:", initError)
+end
