@@ -1,0 +1,72 @@
+╔══════════════════════════════════════════════════════════════════╗
+║          ✅ KUROMI DROPPERS 1-3 COLLISION FIX                   ║
+╚══════════════════════════════════════════════════════════════════╝
+
+🎯 THE PROBLEM:
+Droppers were landing on each other instead of passing through!
+
+WHY:
+- Dropper 1 used "KuromiOrbs1" 
+- Droppers 2 & 3 were looking for "KuromiOrbs" (wrong name!)
+- They didn't register each other properly
+
+═══════════════════════════════════════════════════════════════════
+
+✅ THE FIX:
+
+ALL 3 droppers now:
+1. Use consistent names (KuromiOrbs1, KuromiOrbs2, KuromiOrbs3)
+2. Register ALL other dropper groups
+3. Set collision = FALSE for all other droppers
+
+RESULT: All Kuromi drops pass through each other smoothly! 🎀
+
+═══════════════════════════════════════════════════════════════════
+
+📁 FIXED FILES:
+
+1. KUROMI_DROPPER_1_FIXED.lua
+   - Uses: KuromiOrbs1
+   - Registers: KuromiOrbs2, KuromiOrbs3
+   - Sets no collision with both
+
+2. KUROMI_DROPPER_2_FIXED.lua
+   - Uses: KuromiOrbs2
+   - Registers: KuromiOrbs1, KuromiOrbs3
+   - Sets no collision with both
+
+3. KUROMI_DROPPER_3_FIXED.lua
+   - Uses: KuromiOrbs3
+   - Registers: KuromiOrbs1, KuromiOrbs2
+   - Sets no collision with both
+
+═══════════════════════════════════════════════════════════════════
+
+🚀 WHAT TO DO:
+
+1. Replace Dropper1 script with KUROMI_DROPPER_1_FIXED.lua
+2. Replace Dropper2 script with KUROMI_DROPPER_2_FIXED.lua
+3. Replace Dropper3 script with KUROMI_DROPPER_3_FIXED.lua
+4. Test - all drops should pass through each other!
+
+═══════════════════════════════════════════════════════════════════
+
+💡 FOR DROPPERS 4-13:
+
+Use the same pattern:
+- Dropper 4: "KuromiOrbs4" (register 1-3, 5-13)
+- Dropper 5: "KuromiOrbs5" (register 1-4, 6-13)
+- etc.
+
+Each one needs to register ALL OTHER dropper groups!
+
+═══════════════════════════════════════════════════════════════════
+
+✅ STILL NEED TO ADD:
+
+JUST_ADD_THIS.lua → StarterPlayerScripts
+(Fixes MoneyCollected spam)
+
+═══════════════════════════════════════════════════════════════════
+
+NOW YOUR KUROMI DROPS FLOW SMOOTH AS BUTTER! 💜🎀
