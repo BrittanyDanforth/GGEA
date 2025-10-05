@@ -297,6 +297,8 @@ end
 -- Main drop creation function (LAG-FREE)
 local function createDrops()
     local count = 0
+    local lastCollectionTime = 0
+
     while true do
         if not PartStorage or not dropPart then
             warn("PartStorage or dropPart became nil, stopping dropper")
@@ -387,6 +389,9 @@ local function createDrops()
                     {Brightness = 1}
                 ):Play()
             end
+
+            -- Don't trigger money collection from droppers - let purchase handler handle it
+            -- The purchase handler will detect when parts with Cash are collected
 
             -- Fade out and cleanup (immediate)
             fadeOut(fadeData, function()
