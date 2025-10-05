@@ -1,0 +1,126 @@
+═══════════════════════════════════════════════════════════════
+     🎀 KUROMI DROPPER CONFIGS - What to Change Per Dropper
+═══════════════════════════════════════════════════════════════
+
+BASE CODE: Use KUROMI_DROPPER_1_FIXED.lua as your template!
+
+For EACH dropper, ONLY change these lines:
+
+═══════════════════════════════════════════════════════════════
+DROPPER 1 (Starter)
+═══════════════════════════════════════════════════════════════
+Line 18: local templateModel = ReplicatedStorage:WaitForChild("KuromiPL")
+Line 21: local DROP_RATE    = 1.2
+Line 22: local CASH_VALUE   = 10
+Line 23: local SCALE_FACTOR = 0.9
+Line 30: local DROP_GROUP   = "KuromiDrops1"
+Line 137: model.Name = "Kuromi_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 2
+═══════════════════════════════════════════════════════════════
+Line 18: local templateModel = ReplicatedStorage:WaitForChild("KuromiPL")
+Line 21: local DROP_RATE    = 1.0   ← FASTER
+Line 22: local CASH_VALUE   = 15    ← MORE $$$
+Line 23: local SCALE_FACTOR = 0.9
+Line 30: local DROP_GROUP   = "KuromiDrops2"  ← UNIQUE
+Line 137: model.Name = "Kuromi2_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 3
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.8
+Line 22: local CASH_VALUE   = 25
+Line 23: local SCALE_FACTOR = 1.0   ← NORMAL SIZE
+Line 30: local DROP_GROUP   = "KuromiDrops3"
+Line 137: model.Name = "Kuromi3_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 4
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.7
+Line 22: local CASH_VALUE   = 40
+Line 23: local SCALE_FACTOR = 1.1   ← BIGGER
+Line 30: local DROP_GROUP   = "KuromiDrops4"
+Line 137: model.Name = "Kuromi4_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 5
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.6
+Line 22: local CASH_VALUE   = 60
+Line 23: local SCALE_FACTOR = 1.2
+Line 30: local DROP_GROUP   = "KuromiDrops5"
+Line 137: model.Name = "Kuromi5_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 6
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.5
+Line 22: local CASH_VALUE   = 80
+Line 23: local SCALE_FACTOR = 1.3
+Line 30: local DROP_GROUP   = "KuromiDrops6"
+Line 137: model.Name = "Kuromi6_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 8 (No Dropper 7!)
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.5
+Line 22: local CASH_VALUE   = 100
+Line 23: local SCALE_FACTOR = 1.4   ← BEAST SIZE
+Line 30: local DROP_GROUP   = "KuromiDrops8"
+Line 137: model.Name = "Kuromi8_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 9
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.5
+Line 22: local CASH_VALUE   = 120
+Line 23: local SCALE_FACTOR = 1.5
+Line 30: local DROP_GROUP   = "KuromiDrops9"
+Line 137: model.Name = "Kuromi9_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 10
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.5
+Line 22: local CASH_VALUE   = 150
+Line 23: local SCALE_FACTOR = 1.6
+Line 30: local DROP_GROUP   = "KuromiDrops10"
+Line 137: model.Name = "Kuromi10_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 11
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.4   ← FASTER
+Line 22: local CASH_VALUE   = 200
+Line 23: local SCALE_FACTOR = 1.7
+Line 30: local DROP_GROUP   = "KuromiDrops11"
+Line 137: model.Name = "Kuromi11_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 12
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.4
+Line 22: local CASH_VALUE   = 250
+Line 23: local SCALE_FACTOR = 1.8
+Line 30: local DROP_GROUP   = "KuromiDrops12"
+Line 137: model.Name = "Kuromi12_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 13 (OMEGA)
+═══════════════════════════════════════════════════════════════
+Line 21: local DROP_RATE    = 0.3   ← FASTEST
+Line 22: local CASH_VALUE   = 300   ← MAX $$$
+Line 23: local SCALE_FACTOR = 2.0   ← BIGGEST
+Line 30: local DROP_GROUP   = "KuromiDrops13"
+Line 137: model.Name = "Kuromi13_" .. tostring(count)
+
+═══════════════════════════════════════════════════════════════
+                      ✅ THAT'S IT!
+═══════════════════════════════════════════════════════════════
+
+ALL YOUR MESHES, DECALS, MODELS STAY UNTOUCHED! ✅
+Synchronized fades work perfectly! ✅
+Purple Kuromi theme! ✅
+No spam! ✅
