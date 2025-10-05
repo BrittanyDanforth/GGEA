@@ -371,6 +371,11 @@ local function createDrops()
                 ):Play()
             end
 
+            -- Safety freeze - prevent duplicate touches while fading
+            part.Anchored = true
+            part.CanCollide = false
+            part.CanTouch = false
+
             -- Don't trigger money collection from droppers - let purchase handler handle it
             -- The purchase handler will detect when parts with Cash are collected
 

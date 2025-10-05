@@ -211,6 +211,8 @@ local function createDrops()
         local function onCollected()
             if collected then return end
             collected = true
+
+            -- Flash effect
             if light then
                 light.Brightness = 3
                 TweenService:Create(light,
@@ -218,6 +220,12 @@ local function createDrops()
                     {Brightness = 1}
                 ):Play()
             end
+
+            -- Safety freeze - prevent duplicate touches while fading
+            part.Anchored = true
+            part.CanCollide = false
+            part.CanTouch = false
+
             fadeOut(fadeData, function()
                 pcall(function()
                     if touchConnection then touchConnection:Disconnect() end
