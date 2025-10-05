@@ -1,0 +1,47 @@
+==========================================
+RECOMMENDED SETTINGS TO FIX LAG
+==========================================
+
+PROBLEM: You're running 13+ droppers simultaneously, causing 100+ items/second
+         This overwhelms the remote event system (events get dropped)
+
+SOLUTIONS:
+----------
+
+1. **DISABLE MOST DROPPERS** (BEST SOLUTION)
+   - Only run 2-3 droppers MAX at once
+   - Disable droppers 5, 6, 9, 10, 11, 12, 13
+   - Keep only 1-3 active droppers
+
+2. **INCREASE DROP_RATE** (if you keep multiple droppers)
+   Change in each dropper script:
+   
+   FROM:  local DROP_RATE = 0.5   -- Too fast!
+   FROM:  local DROP_RATE = 1.0   -- Still too fast!
+   FROM:  local DROP_RATE = 1.5   -- Still too fast!
+   
+   TO:    local DROP_RATE = 3.0   -- Slower, less lag
+   TO:    local DROP_RATE = 5.0   -- Even slower
+
+3. **USE BATCHED MONEY COLLECTOR**
+   - Replace your current collector with BatchedMoneyCollector.lua
+   - This batches 100 events into 1 event
+   - Prevents remote event exhaustion
+
+4. **REDUCE LIFETIME** (if items pile up)
+   Change in each dropper script:
+   
+   FROM:  local LIFETIME = 20     -- Items last 20 seconds
+   FROM:  local LIFETIME = 2000   -- WAY TOO LONG!
+   
+   TO:    local LIFETIME = 10     -- Items despawn faster
+
+==========================================
+CURRENT DROPPER COUNT: 13+ active
+RECOMMENDED COUNT: 2-3 active MAX
+==========================================
+
+PRIORITY ACTIONS:
+1. Disable droppers 5, 6, 9-13 (comment out or delete)
+2. Change DROP_RATE to 3.0+ in remaining droppers
+3. Implement BatchedMoneyCollector.lua
