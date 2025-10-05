@@ -54,11 +54,11 @@ local function setupCollisionGroups()
         PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, PLAYER_GROUP, false)
         PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, DROP_GROUP, false)
 
-        -- Don't collide with other droppers (1-13)
+        -- Don't collide with other droppers (1-6, 8-13)
         local allDropperGroups = {
             "KuromiOrbs", "KuromiOrbs2", "KuromiOrbs3",
             "CinnamorollOrbs", "Dropper5Orbs",
-            "KuromiOrbs6", "KuromiOrbs7", "KuromiOrbs8", "KuromiOrbs9",
+            "KuromiOrbs6", "KuromiOrbs8", "KuromiOrbs9",
             "KuromiOrbs10", "KuromiOrbs11", "KuromiOrbs12", "KuromiOrbs13"
         }
 
