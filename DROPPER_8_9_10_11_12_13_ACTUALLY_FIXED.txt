@@ -1,0 +1,40 @@
+For Droppers 8-13, replace the setupCollisionGroups() function with this:
+
+local function setupCollisionGroups()
+	pcall(function()
+		PhysicsService:RegisterCollisionGroup(DROP_GROUP)
+		PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
+		
+		-- Register ALL other dropper groups
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs1")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs2")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs3")
+		PhysicsService:RegisterCollisionGroup("CinnamorollOrbs4")
+		PhysicsService:RegisterCollisionGroup("CinnamorollOrbs5")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs6")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs8")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs9")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs10")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs11")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs12")
+		PhysicsService:RegisterCollisionGroup("KuromiOrbs13")
+
+		-- Set them all to not collide
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, PLAYER_GROUP, false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, DROP_GROUP, false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs1", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs2", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs3", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "CinnamorollOrbs4", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "CinnamorollOrbs5", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs6", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs8", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs9", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs10", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs11", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs12", false) end)
+		pcall(function() PhysicsService:CollisionGroupSetCollidable(DROP_GROUP, "KuromiOrbs13", false) end)
+	end)
+end
+
+THAT'S IT! Just replace the setupCollisionGroups() function in your 8-13 droppers with this!
