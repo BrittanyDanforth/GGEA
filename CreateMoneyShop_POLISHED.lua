@@ -533,8 +533,9 @@ function Shop:createProductCard(product, productType, parent)
 
 	local content=Instance.new("Frame"); content.BackgroundTransparency=1; content.Size=UDim2.new(1,-24,1,-24); content.Position=UDim2.fromOffset(12,12); content.Parent=card
 
-	-- Image container (POLISHED with gradient)
-	local imageContainer=Instance.new("Frame"); imageContainer.Size=UDim2.new(1,0,0,140); imageContainer.BackgroundColor3=UI.Theme:get("surfaceAlt"); imageContainer.BorderSizePixel=0; imageContainer.Parent=content
+	-- Image container (RESPONSIVE HEIGHT)
+	local imageHeight = Core.Utils.isMobile() and 100 or 140
+	local imageContainer=Instance.new("Frame"); imageContainer.Size=UDim2.new(1,0,0,imageHeight); imageContainer.BackgroundColor3=UI.Theme:get("surfaceAlt"); imageContainer.BorderSizePixel=0; imageContainer.Parent=content
 	local ic=Instance.new("UICorner"); ic.CornerRadius=UDim.new(0,14); ic.Parent=imageContainer
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new(Color3.new(1,1,1), Color3.fromRGB(250,250,252))
@@ -542,21 +543,36 @@ function Shop:createProductCard(product, productType, parent)
 	gradient.Parent = imageContainer
 	UI.Components.Image({ Image=product.icon or "rbxassetid://0", Size=UDim2.fromScale(0.7,0.7), Position=UDim2.fromScale(0.5,0.5), AnchorPoint=Vector2.new(0.5,0.5), parent=imageContainer }):render()
 
-	local info=Instance.new("Frame"); info.BackgroundTransparency=1; info.Size=UDim2.new(1,0,1,-160); info.Position=UDim2.fromOffset(0,160); info.Parent=content
-	UI.Components.TextLabel({ Text=product.name, Size=UDim2.new(1,0,0,28), Font=Enum.Font.GothamBold, TextSize=20, TextXAlignment=Enum.TextXAlignment.Left, parent=info }):render()
+	-- Info area (RESPONSIVE LAYOUT)
+	local infoTop = imageHeight + 10
+	local info=Instance.new("Frame"); info.BackgroundTransparency=1; info.Size=UDim2.new(1,0,1,-infoTop-10); info.Position=UDim2.fromOffset(0,infoTop); info.Parent=content
+	
+	-- Responsive text sizing
+	local titleSize = Core.Utils.isMobile() and 16 or 20
+	local descSize = Core.Utils.isMobile() and 12 or 14
+	local priceSize = Core.Utils.isMobile() and 14 or 18
+	
+	-- Title (RESPONSIVE)
+	UI.Components.TextLabel({ Text=product.name, Size=UDim2.new(1,0,0,24), Font=Enum.Font.GothamBold, TextSize=titleSize, TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Top, parent=info }):render()
 
+	-- Description (RESPONSIVE)
 	local descText = isGamepass and product.description or ("Includes "..Core.Utils.formatNumber(product.amount).." Cash")
-	UI.Components.TextLabel({ Text=descText, Size=UDim2.new(1,0,0,40), Position=UDim2.fromOffset(0,32), Font=Enum.Font.Gotham, TextSize=14, TextColor3=UI.Theme:get("textSecondary"), TextXAlignment=Enum.TextXAlignment.Left, parent=info }):render()
+	UI.Components.TextLabel({ Text=descText, Size=UDim2.new(1,0,0,32), Position=UDim2.fromOffset(0,28), Font=Enum.Font.Gotham, TextSize=descSize, TextColor3=UI.Theme:get("textSecondary"), TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Top, parent=info }):render()
 
-	local priceText = isGamepass and ("R$"..tostring(product.price or 0)) or "Tap to purchase"
-	UI.Components.TextLabel({ Text=priceText, Size=UDim2.new(1,0,0,24), Position=UDim2.fromOffset(0,76), Font=Enum.Font.GothamBold, TextSize=18, TextColor3=cardColor, TextXAlignment=Enum.TextXAlignment.Left, parent=info }):render()
+	-- Price (RESPONSIVE - Positioned ABOVE button)
+	local priceText = isGamepass and ("R$"..tostring(product.price or 0)) or ""
+	if priceText ~= "" then
+		UI.Components.TextLabel({ Text=priceText, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,0,1,-70), Font=Enum.Font.GothamBold, TextSize=priceSize, TextColor3=cardColor, TextXAlignment=Enum.TextXAlignment.Left, parent=info }):render()
+	end
 
+	-- Button (RESPONSIVE HEIGHT)
+	local buttonHeight = Core.Utils.isMobile() and 40 or 44
 	local owned = isGamepass and Core.DataManager.checkOwnership(product.id)
 	local btnInst = UI.Components.Button({
 		Text = owned and "Owned" or "Purchase",
-		Size = UDim2.new(1,0,0,44), Position=UDim2.new(0,0,1,-44),
+		Size = UDim2.new(1,0,0,buttonHeight), Position=UDim2.new(0,0,1,-buttonHeight-4),
 		BackgroundColor3 = owned and UI.Theme:get("success") or cardColor,
-		TextColor3 = Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=16, cornerRadius=UDim.new(0,10),
+		TextColor3 = Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=Core.Utils.isMobile() and 14 or 16, cornerRadius=UDim.new(0,10),
 		parent=info
 	}):render()
 
