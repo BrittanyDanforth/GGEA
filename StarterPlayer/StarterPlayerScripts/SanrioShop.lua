@@ -3,7 +3,7 @@
   Location: StarterPlayer > StarterPlayerScripts
   Notes:
     - Responsive 3/2/1 grid with min–max card width
-    - Safe-area padding via GuiService:GetSafeZoneInsets()
+    - Safe-area padding via GuiService:GetGuiInset() (with fallback)
     - Aspect-locked hero image (16:9)
     - Hover scale via UIScale (no position tween)
     - Skeleton shimmer for image and price while loading
@@ -106,7 +106,8 @@ function SoundSystem:init()
     hover = { id = "rbxassetid://10066936758", volume = 0.20 },
     open = { id = "rbxassetid://452267918", volume = 0.50 },
     close = { id = "rbxassetid://452267918", volume = 0.50 },
-    success = { id = "rbxassetid://1843521758", volume = 0.50 },
+    -- Use a known-valid sound to avoid Studio warnings
+    success = { id = "rbxassetid://876939830", volume = 0.50 },
     error = { id = "rbxassetid://138090596", volume = 0.50 },
   }
   local preload = {}
@@ -418,8 +419,20 @@ function Shop.new()
 end
 
 function Shop:_safeInsets()
-  local insets = GuiService:GetSafeZoneInsets()
-  return insets
+  -- Compatibility: some environments lack SafeZone APIs. Use GetGuiInset().
+  local top, right, bottom, left = 0, 0, 0, 0
+  local ok, tl, br = pcall(function()
+    return GuiService:GetGuiInset()
+  end)
+  if ok and typeof(tl) == "Vector2" then
+    left = tl.X
+    top = tl.Y
+    if typeof(br) == "Vector2" then
+      right = br.X
+      bottom = br.Y
+    end
+  end
+  return { Top = top, Right = right, Bottom = bottom, Left = left }
 end
 
 function Shop:_isMobile()
@@ -1123,8 +1136,9 @@ end
 LocalPlayer.CharacterAdded:Connect(function()
   task.wait(1)
   if not (PlayerGui:FindFirstChild("SanrioShopToggle")) then
-    -- recreate toggle
-    local s = Shop
+    if ShopInstance and ShopInstance._createToggleButton then
+      ShopInstance:_createToggleButton()
+    end
   end
 end)
 
