@@ -1,6 +1,7 @@
 --[[
-	Kuromi Dropper 6
-	Location: Workspace.Kuromi.Dropper6.Script
+	Kuromi Dropper 6 - Classic Kuromi Style
+	✅ Uses classic Kuromi mesh
+	✅ Purple glow
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
@@ -11,25 +12,41 @@ Core.Run({
 	model = script.Parent,
 	partStorage = workspace:WaitForChild("PartStorage"),
 	
-	namePrefix   = "Kuromi6_",
-	dropGroup    = "KuromiOrbs6",
+	namePrefix = "KuromiDrop_",
+	dropGroup = "KuromiOrbs6",
 	
-	-- Tuning
-	dropRate     = 0.50,
-	cashValue    = 100,
-	lifetime     = 2000,
+	dropRate = 1.5,
+	cashValue = 12,
+	lifetime = 20,
 	
-	-- Visuals/Physics
-	size         = Vector3.new(1, 1, 1),
-	color        = BrickColor.new("Lime green"),
-	material     = Enum.Material.Fabric,
-	shape        = Enum.PartType.Block,
+	size = Vector3.new(1, 5, 4),
+	material = Enum.Material.SmoothPlastic,
 	
-	-- Spawn lower & same as your working one
+	mesh = {
+		meshId = "http://www.roblox.com/asset?id=160003363",
+		textureId = "http://www.roblox.com/asset/?id=192068356",
+		scale = Vector3.new(1, 1, 1),
+	},
+	
+	light = {
+		brightness = 1,
+		range = 8,
+		color = Color3.fromRGB(200, 100, 255),
+	},
+	
+	spawn = {
+		velocity = Vector3.new(0, -8, 0),
+	},
 	spawnYOffset = -2.5,
-	fadeTime     = 0.30,
 	
-	density      = 0.05,
-	friction     = 0.2,
-	elasticity   = 0.0,
+	animation = {
+		pop = true,
+		popStartSize = Vector3.new(0.1, 0.1, 0.1),
+		popDuration = 0.3,
+	},
+	
+	fadeTime = 0.4,
+	density = 0.1,
+	friction = 0.3,
+	elasticity = 0,
 })

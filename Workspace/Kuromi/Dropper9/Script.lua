@@ -1,6 +1,7 @@
 --[[
-	Kuromi Dropper 9
-	Location: Workspace.Kuromi.Dropper9.Script
+	Kuromi Dropper 9 - Simple Fabric Style
+	✅ No mesh - just fabric blocks
+	✅ Lime green color
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
@@ -11,25 +12,36 @@ Core.Run({
 	model = script.Parent,
 	partStorage = workspace:WaitForChild("PartStorage"),
 	
-	namePrefix   = "Kuromi9_",
-	dropGroup    = "KuromiOrbs9",
+	namePrefix = "Kuromi9_",
+	dropGroup = "KuromiOrbs9",
 	
-	-- Tuning
-	dropRate     = 0.50,
-	cashValue    = 100,
-	lifetime     = 2000,
+	dropRate = 0.5,
+	cashValue = 100,
+	lifetime = 2000,
 	
-	-- Visuals/Physics
-	size         = Vector3.new(1, 1, 1),
-	color        = BrickColor.new("Lime green"),
-	material     = Enum.Material.Fabric,
-	shape        = Enum.PartType.Block,
+	size = Vector3.new(1, 1, 1),
+	brickColor = BrickColor.new("Lime green"),
+	material = Enum.Material.Fabric,
 	
-	-- Spawn lower & same as your working one
+	light = {
+		brightness = 1,
+		range = 6,
+		color = Color3.fromRGB(50, 255, 50),
+	},
+	
+	spawn = {
+		velocity = Vector3.new(0, -8, 0),
+	},
 	spawnYOffset = -2.5,
-	fadeTime     = 0.30,
 	
-	density      = 0.05,
-	friction     = 0.2,
-	elasticity   = 0.0,
+	animation = {
+		pop = true,
+		popStartSize = Vector3.new(0.1, 0.1, 0.1),
+		popDuration = 0.2,
+	},
+	
+	fadeTime = 0.3,
+	density = 0.05,
+	friction = 0.2,
+	elasticity = 0,
 })

@@ -1,14 +1,15 @@
 --[[
-	DropperCore - Unified Dropper System
+	DropperCore - Unified Dropper System with FULL Visual Support
 	Location: ReplicatedStorage/Modules/DropperCore
 	
-	Handles all dropper logic with per-dropper config.
-	Features:
-	- Collision groups for performance
-	- Fade in/out effects
-	- Single touch collection
-	- Automatic cleanup
-	- Customizable per dropper
+	✅ Supports custom meshes, textures, and scales
+	✅ Supports custom particle effects
+	✅ Supports custom spawn animations
+	✅ Preserves all visual characteristics
+	✅ Collision groups for performance
+	✅ Fade in/out effects
+	✅ Single touch collection
+	✅ Automatic cleanup
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -109,6 +110,52 @@ local function fadeOut(part, t)
 	return tw
 end
 
+-- Setup mesh (supports full customization)
+local function setupMesh(part, meshConfig)
+	if not meshConfig then return nil end
+	
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = meshConfig.meshType or Enum.MeshType.FileMesh
+	mesh.MeshId = meshConfig.meshId or ""
+	mesh.TextureId = meshConfig.textureId or ""
+	mesh.Scale = meshConfig.scale or Vector3.new(1, 1, 1)
+	mesh.Parent = part
+	
+	return mesh
+end
+
+-- Setup custom particles
+local function setupParticles(part, particleConfigs)
+	if not particleConfigs then return {} end
+	
+	local particles = {}
+	for _, pConfig in ipairs(particleConfigs) do
+		local emitter = Instance.new("ParticleEmitter")
+		
+		-- Apply all properties from config
+		for property, value in pairs(pConfig) do
+			if property ~= "emit" then
+				pcall(function()
+					emitter[property] = value
+				end)
+			end
+		end
+		
+		emitter.Parent = part
+		table.insert(particles, emitter)
+		
+		-- Handle one-time emit
+		if pConfig.emit then
+			emitter:Emit(pConfig.emit)
+			if pConfig.autoDestroy then
+				Debris:AddItem(emitter, pConfig.lifetime or 1)
+			end
+		end
+	end
+	
+	return particles
+end
+
 -- Main dropper logic
 function Core.Run(config)
 	-- REQUIRED:
@@ -120,18 +167,56 @@ function Core.Run(config)
 	local CASH_VALUE = config.cashValue or 100
 	local LIFETIME = config.lifetime or 120
 	local SIZE = config.size or Vector3.new(1, 1, 1)
-	local COLOR = config.color or BrickColor.new("Hot pink")
+	local COLOR = config.color or Color3.new(1, 1, 1)
+	local BRICKCOLOR = config.brickColor or BrickColor.new("White")
 	local MATERIAL = typeof(config.material) == "EnumItem" and config.material or Enum.Material.SmoothPlastic
 	local SHAPE = config.shape or Enum.PartType.Block
 	local GROUP = config.dropGroup or "Drops"
 	local PLAYER_GRP = config.playerGroup or "Players"
-	local SPAWN_Y_OFF = config.spawnYOffset or -2.5 -- negative = lower
+	local SPAWN_Y_OFF = config.spawnYOffset or -2.5
 	local FADE_TIME = config.fadeTime or 0.3
 	local DENSITY = config.density or 0.05
 	local FRICTION = config.friction or 0.2
 	local ELASTICITY = config.elasticity or 0.0
+	local REFLECTANCE = config.reflectance or 0
+	local TRANSPARENCY = config.transparency or 0
+	
 	local collectorNames = config.collectorNames or {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"}
 	local collectorTags = config.collectorTags or {"Collector", "SellZone"}
+	
+	-- Mesh configuration
+	local meshConfig = config.mesh
+	
+	-- Particle configurations
+	local particleConfigs = config.particles
+	local spawnParticleConfigs = config.spawnParticles
+	
+	-- Light configuration
+	local lightConfig = config.light or {
+		brightness = 1,
+		range = 6,
+		color = Color3.fromRGB(50, 255, 50)
+	}
+	
+	-- Spawn configuration
+	local spawnConfig = config.spawn or {}
+	local spawnRotation = spawnConfig.rotation or CFrame.Angles(0, 0, 0)
+	local spawnVelocity = spawnConfig.velocity or Vector3.new(0, -8, 0)
+	local spawnAngularVelocity = spawnConfig.angularVelocity or Vector3.new(0, 0, 0)
+	
+	-- Animation configuration
+	local animConfig = config.animation or {}
+	local popAnimation = animConfig.pop ~= false -- default true
+	local popStartSize = animConfig.popStartSize or Vector3.new(0.1, 0.1, 0.1)
+	local popDuration = animConfig.popDuration or 0.2
+	local popStyle = animConfig.popStyle or Enum.EasingStyle.Back
+	
+	-- Mesh animation (if mesh exists)
+	local meshAnimConfig = animConfig.mesh or {}
+	local meshStartScale = meshAnimConfig.startScale
+	local meshEndScale = meshAnimConfig.endScale
+	local meshDuration = meshAnimConfig.duration or 0.3
+	local meshStyle = meshAnimConfig.style or Enum.EasingStyle.Back
 	
 	local dropPart = config.model:WaitForChild("Drop")
 	local storage = config.partStorage
@@ -145,26 +230,52 @@ function Core.Run(config)
 		task.wait(DROP_RATE)
 		count += 1
 		
-		-- Create part fast
+		-- Create part
 		local part = Instance.new("Part")
-		part.Name = (config.namePrefix or "KuromiDrop_") .. count
+		part.Name = (config.namePrefix or "Drop_") .. count
 		part.Size = SIZE
-		part.BrickColor = COLOR
+		
+		-- Set color (prefer Color over BrickColor if both provided)
+		if config.color then
+			part.Color = COLOR
+		else
+			part.BrickColor = BRICKCOLOR
+		end
+		
 		part.Material = MATERIAL
 		part.Shape = SHAPE
 		part.TopSurface = Enum.SurfaceType.Smooth
 		part.BottomSurface = Enum.SurfaceType.Smooth
+		part.Reflectance = REFLECTANCE
+		part.Transparency = TRANSPARENCY
 		part.Anchored = false
 		part.CanQuery = true
 		part.CanTouch = true
 		part.CollisionGroup = GROUP
 		part.CustomPhysicalProperties = PhysicalProperties.new(DENSITY, FRICTION, ELASTICITY, 0.5, 0.5)
 		
-		-- Spawn slightly randomized & LOWER
+		-- Spawn position (slightly randomized & offset)
 		local ox = math.random(-2, 2) * 0.1
 		local oz = math.random(-2, 2) * 0.1
 		local pos = dropPart.Position + Vector3.new(-ox, SPAWN_Y_OFF, -oz)
-		part.CFrame = CFrame.new(pos)
+		part.CFrame = CFrame.new(pos) * spawnRotation
+		
+		-- Set velocity
+		part.AssemblyLinearVelocity = spawnVelocity
+		if spawnAngularVelocity.Magnitude > 0 then
+			part.AssemblyAngularVelocity = spawnAngularVelocity
+		end
+		
+		-- Setup mesh (if configured)
+		local mesh
+		if meshConfig then
+			mesh = setupMesh(part, meshConfig)
+			
+			-- Set initial scale for animation
+			if meshStartScale then
+				mesh.Scale = meshStartScale
+			end
+		end
 		
 		-- Cash value
 		local cash = Instance.new("IntValue")
@@ -172,29 +283,66 @@ function Core.Run(config)
 		cash.Value = CASH_VALUE
 		cash.Parent = part
 		
-		-- Effects (optional)
-		local light = Instance.new("PointLight")
-		light.Brightness = 1
-		light.Range = 6
-		light.Color = Color3.fromRGB(50, 255, 50)
-		light.Parent = part
+		-- Setup light
+		local light
+		if lightConfig then
+			light = Instance.new("PointLight")
+			light.Brightness = lightConfig.brightness or 1
+			light.Range = lightConfig.range or 6
+			light.Color = lightConfig.color or Color3.fromRGB(50, 255, 50)
+			light.Parent = part
+		end
 		
-		-- Fade in
-		fadeIn(part, FADE_TIME, 0)
+		-- Setup continuous particles
+		if particleConfigs then
+			setupParticles(part, particleConfigs)
+		end
+		
+		-- Fade in (if transparency > 0)
+		if TRANSPARENCY > 0 then
+			fadeIn(part, FADE_TIME, TRANSPARENCY)
+		end
 		
 		-- Add to world
 		part.Parent = storage
 		
-		-- Pop effect
-		local orig = part.Size
-		part.Size = Vector3.new(0.1, 0.1, 0.1)
-		TweenService:Create(
-			part,
-			TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-			{ Size = orig }
-		):Play()
+		-- Spawn particles (one-time)
+		if spawnParticleConfigs then
+			setupParticles(part, spawnParticleConfigs)
+		end
 		
-		-- Collect once
+		-- Pop animation (part size)
+		if popAnimation then
+			local originalSize = part.Size
+			part.Size = popStartSize
+			TweenService:Create(
+				part,
+				TweenInfo.new(popDuration, popStyle, Enum.EasingDirection.Out),
+				{ Size = originalSize }
+			):Play()
+		end
+		
+		-- Mesh scale animation
+		if mesh and meshEndScale then
+			TweenService:Create(
+				mesh,
+				TweenInfo.new(meshDuration, meshStyle, Enum.EasingDirection.Out),
+				{ Scale = meshEndScale }
+			):Play()
+		end
+		
+		-- Flash effect on spawn
+		if light and lightConfig.spawnFlash then
+			local originalBrightness = light.Brightness
+			light.Brightness = lightConfig.spawnBrightness or (originalBrightness * 2.5)
+			TweenService:Create(
+				light,
+				TweenInfo.new(lightConfig.flashDuration or 0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+				{ Brightness = originalBrightness }
+			):Play()
+		end
+		
+		-- Collection detection
 		local collected = false
 		local touchConn
 		touchConn = part.Touched:Connect(function(hit)
@@ -206,13 +354,15 @@ function Core.Run(config)
 			part.CanTouch = false
 			part.CanCollide = false
 			
-			-- Flash effect
-			light.Brightness = 3
-			TweenService:Create(
-				light,
-				TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-				{ Brightness = 1 }
-			):Play()
+			-- Flash effect on collection
+			if light then
+				light.Brightness = lightConfig.collectBrightness or 3
+				TweenService:Create(
+					light,
+					TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+					{ Brightness = lightConfig.brightness or 1 }
+				):Play()
+			end
 			
 			fadeOut(part, FADE_TIME * 0.7)
 			
