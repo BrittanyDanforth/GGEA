@@ -152,13 +152,27 @@ function Core.Utils.blend(a, b, t)
 end
 
 function Core.Utils.getSafeAreaInsets()
-	local insets = GuiService:GetSafeZoneInsets()
-	return {
-		top = math.max(insets.Y, 20),
-		bottom = math.max(20, 20),
-		left = math.max(insets.X, 20),
-		right = math.max(insets.X, 20),
-	}
+	-- Try to get safe zone insets (newer API)
+	local success, insets = pcall(function()
+		return GuiService:GetSafeZoneInsets()
+	end)
+	
+	if success and insets then
+		return {
+			top = math.max(insets.Y, 20),
+			bottom = math.max(20, 20),
+			left = math.max(insets.X, 20),
+			right = math.max(insets.X, 20),
+		}
+	else
+		-- Fallback for older Roblox versions
+		return {
+			top = 20,
+			bottom = 20,
+			left = 20,
+			right = 20,
+		}
+	end
 end
 
 function Core.Utils.getGridColumns(viewportWidth)

@@ -22,16 +22,41 @@ local Core = {}
 
 -- Setup collision groups to prevent drop-drop and drop-player collisions
 local function setupCollisionGroups(dropGroup, playerGroup)
+	-- All known dropper groups
+	local allDropperGroups = {
+		"KuromiOrbs1", "KuromiOrbs2", "KuromiOrbs3",
+		"CinnamorollOrbs", "Dropper5Orbs", "KuromiOrbs6",
+		"KuromiOrbs8", "KuromiOrbs9", "KuromiOrbs10",
+		"KuromiOrbs11", "KuromiOrbs12", "KuromiOrbs13"
+	}
+	
+	-- Register this group
 	pcall(function()
 		PhysicsService:RegisterCollisionGroup(dropGroup)
 		PhysicsService:RegisterCollisionGroup(playerGroup)
 	end)
+	
+	-- This group doesn't collide with players
 	pcall(function()
 		PhysicsService:CollisionGroupSetCollidable(dropGroup, playerGroup, false)
 	end)
+	
+	-- This group doesn't collide with itself
 	pcall(function()
 		PhysicsService:CollisionGroupSetCollidable(dropGroup, dropGroup, false)
 	end)
+	
+	-- This group doesn't collide with ANY other dropper groups
+	for _, otherGroup in ipairs(allDropperGroups) do
+		if otherGroup ~= dropGroup then
+			pcall(function()
+				PhysicsService:RegisterCollisionGroup(otherGroup)
+			end)
+			pcall(function()
+				PhysicsService:CollisionGroupSetCollidable(dropGroup, otherGroup, false)
+			end)
+		end
+	end
 end
 
 -- Make all player parts not collide with drops

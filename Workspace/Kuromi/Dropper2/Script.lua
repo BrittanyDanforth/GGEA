@@ -22,7 +22,7 @@ Core.Run({
 	size = Vector3.new(1.782, 1.103, 1.714),
 	color = Color3.new(1, 1, 1),
 	material = Enum.Material.SmoothPlastic,
-	transparency = 0.7,
+	transparency = 0, -- Set to 0 so fade works properly
 	
 	mesh = {
 		meshId = "rbxassetid://17087317963",
@@ -40,7 +40,7 @@ Core.Run({
 	},
 	
 	spawn = {
-		rotation = CFrame.Angles(math.rad(180), math.rad(320), 0),
+		rotation = CFrame.Angles(0, math.rad(140), 0), -- Upright with slight rotation
 		velocity = Vector3.new(0, -10, 0),
 	},
 	spawnYOffset = -1.75,

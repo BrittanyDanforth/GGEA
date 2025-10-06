@@ -26,7 +26,7 @@ Core.Run({
 	color = Color3.new(1, 1, 1),
 	material = Enum.Material.SmoothPlastic,
 	shape = Enum.PartType.Block,
-	transparency = 0.7,
+	transparency = 0, -- Set to 0 so fade works properly
 	
 	-- Mesh configuration
 	mesh = {
@@ -49,7 +49,7 @@ Core.Run({
 	
 	-- Spawn configuration
 	spawn = {
-		rotation = CFrame.Angles(math.rad(180), 0, 0),
+		rotation = CFrame.Angles(0, 0, 0), -- No rotation, face upright
 		velocity = Vector3.new(0, -12, 0),
 	},
 	spawnYOffset = -2,
