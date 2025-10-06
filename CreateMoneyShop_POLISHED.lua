@@ -309,7 +309,27 @@ function Shop:createMainInterface()
 	self.blur = Lighting:FindFirstChild("SanrioShopBlur") or Instance.new("BlurEffect"); self.blur.Name="SanrioShopBlur"; self.blur.Size=0; self.blur.Parent=Lighting
 
 	local dim = UI.Components.Frame({ Size=UDim2.fromScale(1,1), BackgroundColor3=Color3.new(0,0,0), BackgroundTransparency=0.35, parent=self.gui }):render()
-	dim.Active=true; dim.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then self:close() end end)
+	dim.Active=true
+	-- Only close when clicking the BACKGROUND, not inside the panel!
+	dim.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			local mousePos = input.Position
+			local guiInset = game:GetService("GuiService"):GetGuiInset()
+			local adjustedPos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
+			
+			-- Check if click is inside the main panel
+			local panelPos = self.mainPanel.AbsolutePosition
+			local panelSize = self.mainPanel.AbsoluteSize
+			
+			local isInsidePanel = adjustedPos.X >= panelPos.X and adjustedPos.X <= (panelPos.X + panelSize.X) and
+			                      adjustedPos.Y >= panelPos.Y and adjustedPos.Y <= (panelPos.Y + panelSize.Y)
+			
+			-- Only close if clicking OUTSIDE the panel
+			if not isInsidePanel then
+				self:close()
+			end
+		end
+	end)
 
 	local size = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
 	self.mainPanel = UI.Components.Frame({
@@ -324,9 +344,9 @@ function Shop:createMainInterface()
 	UI.Components.TextLabel({ Text="Sanrio Shop", Size=UDim2.new(1,-200,1,0), Position=UDim2.fromOffset(92,0), TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=32, parent=header }):render()
 	UI.Components.Button({ Text="✕", Size=UDim2.fromOffset(48,48), Position=UDim2.new(1,-64,0.5,0), AnchorPoint=Vector2.new(0,0.5), BackgroundColor3=UI.Theme:get("accent"), TextColor3=Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=24, cornerRadius=UDim.new(0.5,0), parent=header, onClick=function() self:close() end }):render()
 
-	-- Tabs (POLISHED - NO MORE OVERLAP!)
+	-- Tabs (RESPONSIVE - ALWAYS SIDE BY SIDE!)
 	self.tabContainer = UI.Components.Frame({ Size=UDim2.new(1,-48,0,60), Position=UDim2.fromOffset(24,120), BackgroundTransparency=1, parent=self.mainPanel }):render()
-	local tabLayout = UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 20)
+	local tabLayout = UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, Core.Utils.isMobile() and 12 or 20)
 	tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 	
@@ -334,17 +354,24 @@ function Shop:createMainInterface()
 		{ id="Cash",       name="Cash",   icon="rbxassetid://10709728059", color=UI.Theme:get("cinna")   },
 		{ id="Gamepasses", name="Passes", icon="rbxassetid://10709727148", color=UI.Theme:get("kuromi")  },
 	}
+	
+	-- Responsive tab sizing
+	local tabWidth = Core.Utils.isMobile() and 160 or 220
+	local tabHeight = Core.Utils.isMobile() and 50 or 60
+	local iconSize = Core.Utils.isMobile() and 24 or 32
+	local textSize = Core.Utils.isMobile() and 16 or 20
+	
 	for _,d in ipairs(tabs) do
 		local tab = UI.Components.Button({
-			Text="", Size=UDim2.fromOffset(220,60), BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(0,18), stroke={color=UI.Theme:get("stroke"),thickness=2},
+			Text="", Size=UDim2.fromOffset(tabWidth,tabHeight), BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(0,18), stroke={color=UI.Theme:get("stroke"),thickness=2},
 			parent=self.tabContainer, onClick=function() self:selectTab(d.id) end
 		}):render()
 		local content = UI.Components.Frame({ Size=UDim2.fromScale(1,1), BackgroundTransparency=1, parent=tab }):render()
-		local contentLayout = UI.Layout.stack(content, Enum.FillDirection.Horizontal, 14)
+		local contentLayout = UI.Layout.stack(content, Enum.FillDirection.Horizontal, 10)
 		contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		contentLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-		local icon = UI.Components.Image({ Image=d.icon, Size=UDim2.fromOffset(32,32), parent=content }):render()
-		local label = UI.Components.TextLabel({ Text=d.name, Size=UDim2.new(0,100,1,0), Font=Enum.Font.GothamBold, TextSize=20, parent=content }):render()
+		local icon = UI.Components.Image({ Image=d.icon, Size=UDim2.fromOffset(iconSize,iconSize), parent=content }):render()
+		local label = UI.Components.TextLabel({ Text=d.name, Size=UDim2.new(0,80,1,0), Font=Enum.Font.GothamBold, TextSize=textSize, parent=content }):render()
 		self.tabs[d.id]={button=tab,data=d,icon=icon,label=label}
 	end
 
@@ -355,24 +382,103 @@ function Shop:createMainInterface()
 end
 
 function Shop:createPages()
-	-- Cash (POLISHED)
+	-- Cash (RESPONSIVE - SCALES DOWN, NO STACKING!)
 	local cashPage = UI.Components.Frame({ Name="CashPage", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Visible=false, parent=self.contentContainer }):render()
 	local sfCash = Instance.new("ScrollingFrame")
-	sfCash.BackgroundTransparency=1; sfCash.ScrollBarThickness=6; sfCash.ScrollBarImageColor3=UI.Theme:get("accent"); sfCash.BorderSizePixel=0; sfCash.Size=UDim2.fromScale(1,1); sfCash.Parent=cashPage
-	local gridCash=Instance.new("UIGridLayout"); gridCash.CellPadding=UDim2.fromOffset(24,24)
-	gridCash.CellSize = Core.Utils.isMobile() and UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE_MOBILE.X, Core.CONSTANTS.CARD_SIZE_MOBILE.Y) or UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y)
-	gridCash.HorizontalAlignment=Enum.HorizontalAlignment.Center; gridCash.Parent=sfCash
-	gridCash:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() sfCash.CanvasSize=UDim2.new(0,0,0,gridCash.AbsoluteContentSize.Y+40) end)
+	sfCash.BackgroundTransparency=1
+	sfCash.ScrollBarThickness=6
+	sfCash.ScrollBarImageColor3=UI.Theme:get("accent")
+	sfCash.BorderSizePixel=0
+	sfCash.Size=UDim2.fromScale(1,1)
+	sfCash.ScrollingDirection = Enum.ScrollingDirection.Y
+	sfCash.CanvasSize = UDim2.new(0,0,0,0)
+	sfCash.Parent=cashPage
+	
+	-- Responsive card sizing (scales down on small screens)
+	local function updateCashGrid()
+		local viewportSize = workspace.CurrentCamera.ViewportSize.X
+		local cardWidth, cardHeight, padding
+		
+		if viewportSize < 600 then
+			-- Very small screens
+			cardWidth, cardHeight, padding = 280, 180, 16
+		elseif viewportSize < 900 then
+			-- Small screens  
+			cardWidth, cardHeight, padding = 380, 240, 20
+		else
+			-- Normal/large screens
+			cardWidth, cardHeight, padding = 520, 300, 24
+		end
+		
+		local gridCash = sfCash:FindFirstChildOfClass("UIGridLayout")
+		if gridCash then
+			gridCash.CellSize = UDim2.fromOffset(cardWidth, cardHeight)
+			gridCash.CellPadding = UDim2.fromOffset(padding, padding)
+		end
+	end
+	
+	local gridCash=Instance.new("UIGridLayout")
+	gridCash.CellPadding=UDim2.fromOffset(24,24)
+	gridCash.CellSize = UDim2.fromOffset(520, 300)
+	gridCash.HorizontalAlignment=Enum.HorizontalAlignment.Center
+	gridCash.Parent=sfCash
+	
+	gridCash:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		sfCash.CanvasSize=UDim2.new(0,0,0,gridCash.AbsoluteContentSize.Y+60)
+	end)
+	
+	-- Update on viewport change
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateCashGrid)
+	updateCashGrid()
+	
 	for _,p in ipairs(Core.DataManager.products.cash) do self:createProductCard(p, "cash", sfCash) end
 
-	-- Passes (POLISHED)
+	-- Passes (RESPONSIVE - SCALES DOWN, NO STACKING!)
 	local passPage = UI.Components.Frame({ Name="GamepassesPage", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Visible=false, parent=self.contentContainer }):render()
 	local sfPass = Instance.new("ScrollingFrame")
-	sfPass.BackgroundTransparency=1; sfPass.ScrollBarThickness=6; sfPass.ScrollBarImageColor3=UI.Theme:get("accent"); sfPass.BorderSizePixel=0; sfPass.Size=UDim2.fromScale(1,1); sfPass.Parent=passPage
-	local gridPass=Instance.new("UIGridLayout"); gridPass.CellPadding=UDim2.fromOffset(24,24)
-	gridPass.CellSize = Core.Utils.isMobile() and UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE_MOBILE.X, Core.CONSTANTS.CARD_SIZE_MOBILE.Y) or UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y)
-	gridPass.HorizontalAlignment=Enum.HorizontalAlignment.Center; gridPass.Parent=sfPass
-	gridPass:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() sfPass.CanvasSize=UDim2.new(0,0,0,gridPass.AbsoluteContentSize.Y+40) end)
+	sfPass.BackgroundTransparency=1
+	sfPass.ScrollBarThickness=6
+	sfPass.ScrollBarImageColor3=UI.Theme:get("accent")
+	sfPass.BorderSizePixel=0
+	sfPass.Size=UDim2.fromScale(1,1)
+	sfPass.ScrollingDirection = Enum.ScrollingDirection.Y
+	sfPass.CanvasSize = UDim2.new(0,0,0,0)
+	sfPass.Parent=passPage
+	
+	-- Responsive card sizing
+	local function updatePassGrid()
+		local viewportSize = workspace.CurrentCamera.ViewportSize.X
+		local cardWidth, cardHeight, padding
+		
+		if viewportSize < 600 then
+			cardWidth, cardHeight, padding = 280, 180, 16
+		elseif viewportSize < 900 then
+			cardWidth, cardHeight, padding = 380, 240, 20
+		else
+			cardWidth, cardHeight, padding = 520, 300, 24
+		end
+		
+		local gridPass = sfPass:FindFirstChildOfClass("UIGridLayout")
+		if gridPass then
+			gridPass.CellSize = UDim2.fromOffset(cardWidth, cardHeight)
+			gridPass.CellPadding = UDim2.fromOffset(padding, padding)
+		end
+	end
+	
+	local gridPass=Instance.new("UIGridLayout")
+	gridPass.CellPadding=UDim2.fromOffset(24,24)
+	gridPass.CellSize = UDim2.fromOffset(520, 300)
+	gridPass.HorizontalAlignment=Enum.HorizontalAlignment.Center
+	gridPass.Parent=sfPass
+	
+	gridPass:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		sfPass.CanvasSize=UDim2.new(0,0,0,gridPass.AbsoluteContentSize.Y+60)
+	end)
+	
+	-- Update on viewport change
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updatePassGrid)
+	updatePassGrid()
+	
 	for _,gp in ipairs(Core.DataManager.products.gamepasses) do self:createProductCard(gp, "gamepass", sfPass) end
 
 	self.pages = { Cash=cashPage, Gamepasses=passPage }
