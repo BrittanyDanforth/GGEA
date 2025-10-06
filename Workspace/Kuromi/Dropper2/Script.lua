@@ -40,7 +40,7 @@ Core.Run({
 	},
 	
 	spawn = {
-		rotation = CFrame.Angles(0, math.rad(140), 0), -- Upright with slight rotation
+		rotation = CFrame.Angles(0, math.rad(320), 0), -- Face the other direction (180 + 140)
 		velocity = Vector3.new(0, -10, 0),
 	},
 	spawnYOffset = -1.75,
