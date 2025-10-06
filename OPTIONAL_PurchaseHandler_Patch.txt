@@ -1,0 +1,36 @@
+═══════════════════════════════════════════════════════════════
+  OPTIONAL: Remove MoneyCollected from Auto-Collect
+═══════════════════════════════════════════════════════════════
+
+IF you're still getting MoneyCollected spam after fixing MoneyUpdateBridge,
+you can OPTIONALLY comment out this line in your PurchaseHandler:
+
+LOCATION: Line 455 in PurchaseHandler.lua (inside performAutoCollect function)
+
+FIND THIS (around line 455):
+────────────────────────────────────────────────────────────────
+	-- Send visual feedback to client
+	local moneyCollectRemote = remotesFolder:FindFirstChild("MoneyCollected")
+	if moneyCollectRemote and giver then
+		moneyCollectRemote:FireClient(player, giver, finalAmount, has2x, true) -- true = auto-collect
+	end
+────────────────────────────────────────────────────────────────
+
+CHANGE TO:
+────────────────────────────────────────────────────────────────
+	-- Send visual feedback to client
+	-- DISABLED: Causes remote event spam with multiple droppers
+	--[[
+	local moneyCollectRemote = remotesFolder:FindFirstChild("MoneyCollected")
+	if moneyCollectRemote and giver then
+		moneyCollectRemote:FireClient(player, giver, finalAmount, has2x, true)
+	end
+	]]--
+────────────────────────────────────────────────────────────────
+
+This disables the visual effect but stops the spam.
+
+═══════════════════════════════════════════════════════════════
+NOTE: Only do this if you're STILL seeing MoneyCollected spam
+after replacing MoneyUpdateBridge! Try that fix first.
+═══════════════════════════════════════════════════════════════

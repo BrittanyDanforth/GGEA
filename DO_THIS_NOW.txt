@@ -1,0 +1,77 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                    🚨 DO THIS NOW 🚨                            ║
+╚══════════════════════════════════════════════════════════════════╝
+
+STEP 1: Open Your MoneyUpdateBridge
+──────────────────────────────────────────────────────────────────
+   Go to: ServerScriptService → MoneyUpdateBridge
+   Double-click to open it
+
+STEP 2: Delete Everything
+──────────────────────────────────────────────────────────────────
+   Press: Ctrl+A (select all)
+   Press: Delete
+
+STEP 3: Paste Fixed Version
+──────────────────────────────────────────────────────────────────
+   Open: YOUR_MoneyUpdateBridge_FIXED.lua
+   Press: Ctrl+A (select all)
+   Press: Ctrl+C (copy)
+   Go back to Roblox Studio
+   Press: Ctrl+V (paste)
+
+STEP 4: Save and Test
+──────────────────────────────────────────────────────────────────
+   Press: Ctrl+S (save)
+   Press: F5 (test)
+
+STEP 5: Check Output
+──────────────────────────────────────────────────────────────────
+   Look for:
+   ✅ [MoneyUpdateBridge] Initialized - Monitoring with BATCHED updates
+
+STEP 6: Play Normally
+──────────────────────────────────────────────────────────────────
+   Claim Kuromi tycoon
+   Auto-collect should work
+   NO MORE LAG!
+   NO MORE "Remote event queue exhausted" errors!
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    ⚠️ ALSO DO THIS ⚠️                            ║
+╚══════════════════════════════════════════════════════════════════╝
+
+DELETE THIS (if you added it):
+   ServerScriptService → ULTRA_ADVANCED_RemoteEventOptimizer
+   (Right-click → Delete)
+
+WHY? It doesn't work for your setup. The MoneyUpdateBridge fix is all you need.
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    🎯 WHAT IT FIXES                              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+BEFORE:
+   ❌ Remote event queue exhausted (128 events dropped)
+   ❌ 165 auto-collects = 165 remote calls
+   ❌ Game lagging
+
+AFTER:
+   ✅ No remote event errors
+   ✅ 165 auto-collects = 1 remote call (batched)
+   ✅ No lag
+
+╔══════════════════════════════════════════════════════════════════╗
+║                    💡 WHAT CHANGED                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+OLD updatePlayerCurrencies():
+   CurrencyUpdated:FireClient(player, currencies)  ← Fires immediately!
+
+NEW updatePlayerCurrencies():
+   pendingUpdates[player].coins = newCoins  ← Just stores it!
+   (Batch loop sends it every 0.2 seconds)
+
+═══════════════════════════════════════════════════════════════════
+
+THAT'S IT! JUST REPLACE ONE FILE!

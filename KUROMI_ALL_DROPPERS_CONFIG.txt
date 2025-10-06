@@ -1,0 +1,149 @@
+═══════════════════════════════════════════════════════════════
+  🎀 KUROMI ALL DROPPERS - Copy Base, Change These Lines
+═══════════════════════════════════════════════════════════════
+
+BASE: Use KUROMI_DROPPER_1_CORRECT.lua and change these values:
+
+═══════════════════════════════════════════════════════════════
+DROPPER 1 (Current - already perfect!)
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs1"
+Line 38: task.wait(1.2)
+Line 58: cash.Value = 10
+Line 66: mesh.Scale = Vector3.new(2, 2, 2)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 2
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs2"
+Line 38: task.wait(1.0)         ← faster
+Line 41: orb.Name = "KuromiDrop2_" .. orbCount
+Line 58: cash.Value = 15        ← more $$$
+Line 66: mesh.Scale = Vector3.new(2.2, 2.2, 2.2)  ← bigger
+
+═══════════════════════════════════════════════════════════════
+DROPPER 3
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs3"
+Line 38: task.wait(0.8)
+Line 41: orb.Name = "KuromiDrop3_" .. orbCount
+Line 58: cash.Value = 25
+Line 66: mesh.Scale = Vector3.new(2.5, 2.5, 2.5)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 4
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs4"
+Line 38: task.wait(0.7)
+Line 41: orb.Name = "KuromiDrop4_" .. orbCount
+Line 58: cash.Value = 40
+Line 66: mesh.Scale = Vector3.new(2.8, 2.8, 2.8)
+
+═══════════════════════════════════════════════════════════════
+DROPPER 5
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs5"
+Line 38: task.wait(0.6)
+Line 41: orb.Name = "KuromiDrop5_" .. orbCount
+Line 58: cash.Value = 60
+Line 66: mesh.Scale = Vector3.new(3, 3, 3)
+Line 62: pointLight.Brightness = 0.6  ← brighter
+Line 63: pointLight.Range = 5
+
+═══════════════════════════════════════════════════════════════
+DROPPER 6
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs6"
+Line 38: task.wait(0.5)
+Line 41: orb.Name = "KuromiDrop6_" .. orbCount
+Line 58: cash.Value = 80
+Line 66: mesh.Scale = Vector3.new(3.5, 3.5, 3.5)
+Line 62: pointLight.Brightness = 0.8
+Line 63: pointLight.Range = 7
+
+═══════════════════════════════════════════════════════════════
+DROPPER 8 (NO DROPPER 7!)
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs8"
+Line 38: task.wait(0.5)
+Line 41: orb.Name = "KuromiDrop8_" .. orbCount
+Line 58: cash.Value = 100
+Line 66: mesh.Scale = Vector3.new(4, 4, 4)  ← BIG
+Line 62: pointLight.Brightness = 1.0
+Line 63: pointLight.Range = 10
+
+═══════════════════════════════════════════════════════════════
+DROPPER 9
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs9"
+Line 38: task.wait(0.5)
+Line 41: orb.Name = "KuromiDrop9_" .. orbCount
+Line 58: cash.Value = 120
+Line 66: mesh.Scale = Vector3.new(4.5, 4.5, 4.5)
+Line 62: pointLight.Brightness = 1.2
+Line 63: pointLight.Range = 12
+
+═══════════════════════════════════════════════════════════════
+DROPPER 10
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs10"
+Line 38: task.wait(0.5)
+Line 41: orb.Name = "KuromiDrop10_" .. orbCount
+Line 58: cash.Value = 150
+Line 66: mesh.Scale = Vector3.new(5, 5, 5)
+Line 62: pointLight.Brightness = 1.5
+Line 63: pointLight.Range = 15
+
+═══════════════════════════════════════════════════════════════
+DROPPER 11
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs11"
+Line 38: task.wait(0.4)         ← FASTER
+Line 41: orb.Name = "KuromiDrop11_" .. orbCount
+Line 58: cash.Value = 200
+Line 66: mesh.Scale = Vector3.new(5.5, 5.5, 5.5)
+Line 62: pointLight.Brightness = 2.0
+Line 63: pointLight.Range = 18
+
+═══════════════════════════════════════════════════════════════
+DROPPER 12
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs12"
+Line 38: task.wait(0.4)
+Line 41: orb.Name = "KuromiDrop12_" .. orbCount
+Line 58: cash.Value = 250
+Line 66: mesh.Scale = Vector3.new(6, 6, 6)
+Line 62: pointLight.Brightness = 2.5
+Line 63: pointLight.Range = 20
+
+═══════════════════════════════════════════════════════════════
+DROPPER 13 (OMEGA!!!)
+═══════════════════════════════════════════════════════════════
+Line 13: local ORB_GROUP = "KuromiOrbs13"
+Line 38: task.wait(0.3)         ← FASTEST
+Line 41: orb.Name = "KuromiDrop13_" .. orbCount
+Line 58: cash.Value = 300       ← MAX $$$
+Line 66: mesh.Scale = Vector3.new(7, 7, 7)  ← MASSIVE
+Line 62: pointLight.Brightness = 3.0        ← BRIGHT AF
+Line 63: pointLight.Range = 25              ← HUGE GLOW
+
+═══════════════════════════════════════════════════════════════
+
+QUICK SUMMARY:
+
+Dropper 1:  1.2s, $10,  2x scale    (Starter)
+Dropper 2:  1.0s, $15,  2.2x scale
+Dropper 3:  0.8s, $25,  2.5x scale
+Dropper 4:  0.7s, $40,  2.8x scale
+Dropper 5:  0.6s, $60,  3x scale
+Dropper 6:  0.5s, $80,  3.5x scale
+Dropper 8:  0.5s, $100, 4x scale    (Beast)
+Dropper 9:  0.5s, $120, 4.5x scale
+Dropper 10: 0.5s, $150, 5x scale
+Dropper 11: 0.4s, $200, 5.5x scale
+Dropper 12: 0.4s, $250, 6x scale
+Dropper 13: 0.3s, $300, 7x scale    (OMEGA!)
+
+✅ ALL USE SAME KUROMI MESH!
+✅ JUST DIFFERENT SIZE/SPEED/VALUE!
+✅ PURPLE GLOW GETS BRIGHTER AS YOU GO UP!

@@ -1,0 +1,160 @@
+╔══════════════════════════════════════════════════════════════════╗
+║              🎀 WHERE TO PUT THE SCRIPT - VISUAL GUIDE          ║
+╚══════════════════════════════════════════════════════════════════╝
+
+YOUR TYCOON STRUCTURE (probably looks like this):
+───────────────────────────────────────────────────────────────────
+
+📁 Workspace
+  └─ 📁 KuromiTycoon (or your tycoon name)
+      ├─ 📄 Owner (StringValue or ObjectValue)
+      ├─ 📁 Purchases
+      │   ├─ 📁 Dropper1
+      │   │   ├─ 📄 Drop (Part)
+      │   │   └─ 📄 [Dropper Script]
+      │   ├─ 📁 Dropper2
+      │   ├─ 📁 Dropper3
+      │   ├─ 📁 Dropper4
+      │   ├─ 📁 Dropper5
+      │   ├─ 📁 Dropper6
+      │   ├─ 📁 Dropper9
+      │   ├─ 📁 Dropper10
+      │   ├─ 📁 Dropper11
+      │   ├─ 📁 Dropper12
+      │   └─ 📁 Dropper13
+      └─ 📁 Buttons
+          └─ 📦 Collector (or Sell, SellPad, etc.)
+
+───────────────────────────────────────────────────────────────────
+         ⬇️ WHERE TO PUT BatchedCollectorHandler.lua ⬇️
+───────────────────────────────────────────────────────────────────
+
+OPTION 1 (RECOMMENDED): In Purchases folder
+═════════════════════════════════════════════════════════════════
+
+📁 Workspace
+  └─ 📁 KuromiTycoon
+      ├─ 📄 Owner
+      └─ 📁 Purchases
+          ├─ 📁 Dropper1
+          ├─ 📁 Dropper2
+          ├─ ... (all your droppers)
+          └─ 📄 BatchedCollectorHandler  ⬅️ PUT IT HERE! ✅
+
+Then in script line 17, use:
+   local tycoonModel = script.Parent.Parent
+
+───────────────────────────────────────────────────────────────────
+
+OPTION 2: In Tycoon Root
+═════════════════════════════════════════════════════════════════
+
+📁 Workspace
+  └─ 📁 KuromiTycoon
+      ├─ 📄 Owner
+      ├─ 📁 Purchases
+      │   └─ (all your droppers)
+      └─ 📄 BatchedCollectorHandler  ⬅️ OR PUT IT HERE! ✅
+
+Then in script line 17, use:
+   local tycoonModel = script.Parent
+
+───────────────────────────────────────────────────────────────────
+
+OPTION 3 (EMERGENCY): Literally Anywhere
+═════════════════════════════════════════════════════════════════
+
+📁 Workspace
+  └─ 📁 KuromiTycoon
+      ├─ 📄 Owner
+      ├─ 📁 Purchases
+      └─ 📁 RandomFolder
+          └─ 📄 EMERGENCY_CollectorFix  ⬅️ USE EMERGENCY VERSION! ✅
+
+The EMERGENCY version auto-finds everything!
+
+───────────────────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════════════════╗
+║                   📝 STEP-BY-STEP INSERTION                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+1. Open Roblox Studio
+2. Open your game
+3. Go to: Workspace → KuromiTycoon → Purchases
+4. Right-click "Purchases"
+5. Select: "Insert Object" → "Script" (NOT LocalScript!)
+6. Double-click the new Script
+7. Delete all the default code (print("Hello world!"))
+8. Copy ALL code from "BatchedCollectorHandler.lua"
+9. Paste it in
+10. Press Ctrl+S to save
+11. Rename the script to "BatchedCollectorHandler"
+12. Close the script tab
+13. Press F5 to test
+14. Check Output window for ✅ messages
+
+───────────────────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════════════════╗
+║                  🔍 HOW TO VERIFY IT WORKS                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Press F5 to test your game, then check the Output window:
+
+✅ GOOD OUTPUT (It's working!):
+────────────────────────────────────────────────────────────────
+  ✅ Found 1 collectors - Setting up batched collection...
+  ✅ Collector connected: Collector
+  ✅ Batched Collector Handler active - Remote event spam fixed!
+
+❌ BAD OUTPUT (Something's wrong):
+────────────────────────────────────────────────────────────────
+  ⚠️ No collectors found!
+  (Check your collector part name)
+
+───────────────────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════════════════╗
+║                  🎯 FOR ALL 4 TYCOONS                            ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Repeat the same steps for EACH tycoon:
+
+📁 Workspace
+  ├─ 📁 KuromiTycoon
+  │   └─ 📁 Purchases
+  │       └─ 📄 BatchedCollectorHandler ✅ COPY 1
+  │
+  ├─ 📁 HelloKittyTycoon
+  │   └─ 📁 Purchases
+  │       └─ 📄 BatchedCollectorHandler ✅ COPY 2
+  │
+  ├─ 📁 CinnamorollTycoon
+  │   └─ 📁 Purchases
+  │       └─ 📄 BatchedCollectorHandler ✅ COPY 3
+  │
+  └─ 📁 [Your4thTycoon]
+      └─ 📁 Purchases
+          └─ 📄 BatchedCollectorHandler ✅ COPY 4
+
+Each tycoon gets its own INDEPENDENT copy!
+
+───────────────────────────────────────────────────────────────────
+
+╔══════════════════════════════════════════════════════════════════╗
+║                  ⚡ STILL CONFUSED?                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Use the EMERGENCY version:
+
+1. Copy code from "EMERGENCY_CollectorFix.lua"
+2. Put it ANYWHERE inside your tycoon folder
+3. It will auto-configure everything
+4. Done!
+
+The EMERGENCY version is more forgiving and auto-detects everything!
+
+═══════════════════════════════════════════════════════════════════
+
+🎉 That's it! Your lag should be completely fixed!

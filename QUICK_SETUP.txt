@@ -1,0 +1,108 @@
+╔══════════════════════════════════════════════════════════════════╗
+║  🎀 KUROMI TYCOON - QUICK FIX FOR REMOTE EVENT LAG             ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📌 THE PROBLEM:
+   13 droppers → 100+ items/sec → Remote event spam → LAG
+
+📌 THE SOLUTION:
+   ONE script batches ALL money from ALL 13 droppers
+
+╔══════════════════════════════════════════════════════════════════╗
+║  ⚡ COPY-PASTE SETUP (30 SECONDS)                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+1. Open your Kuromi Tycoon in Workspace
+2. Find the "Purchases" folder (or wherever your droppers are)
+3. Insert a NEW SCRIPT (not LocalScript)
+4. Copy ALL code from "BatchedCollectorHandler.lua"
+5. Paste into the new script
+6. DONE! Test it
+
+╔══════════════════════════════════════════════════════════════════╗
+║  📁 WHERE IT GOES                                                ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Option A (Recommended):
+   Workspace > KuromiTycoon > Purchases > [NEW SCRIPT HERE]
+
+Option B (Also works):
+   Workspace > KuromiTycoon > [NEW SCRIPT HERE]
+
+╔══════════════════════════════════════════════════════════════════╗
+║  🔧 IF IT DOESN'T WORK                                           ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Check these in the script:
+
+Line 17: local tycoonModel = script.Parent.Parent
+         ↓
+         Change to: script.Parent  (if script is in tycoon root)
+
+Line 10: ENABLE_DEBUG = false
+         ↓
+         Change to: true  (to see what's happening in Output)
+
+╔══════════════════════════════════════════════════════════════════╗
+║  ✅ WHAT YOU'LL SEE IN OUTPUT                                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+✅ Found 1 collectors - Setting up batched collection...
+✅ Collector connected: Collector
+✅ Batched Collector Handler active - Remote event spam fixed!
+
+(No more "Remote event invocation queue exhausted" errors!)
+
+╔══════════════════════════════════════════════════════════════════╗
+║  🎯 WHICH SCRIPT TO USE?                                         ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Normal lag?    → Use "BatchedCollectorHandler.lua"
+Extreme lag?   → Use "ULTRA_BatchedCollector.lua"
+
+╔══════════════════════════════════════════════════════════════════╗
+║  🔥 SETTINGS TO ADJUST (if needed)                               ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Still lagging? Change this in the script:
+
+   local BATCH_INTERVAL = 0.15
+                          ↓
+   local BATCH_INTERVAL = 0.3  ← Slower batching (less lag)
+
+╔══════════════════════════════════════════════════════════════════╗
+║  📊 BEFORE vs AFTER                                              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+BEFORE:
+   • 13 droppers firing 100+ events/sec
+   • "Remote event queue exhausted" errors
+   • Game lagging badly
+   
+AFTER:
+   • Same 13 droppers, same drops
+   • 1 event every 0.15 seconds (batched)
+   • No errors, no lag, smooth gameplay
+
+╔══════════════════════════════════════════════════════════════════╗
+║  🚀 REPEAT FOR OTHER TYCOONS                                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+You have 4 tycoons? Put this script in EACH ONE:
+   • Kuromi Tycoon    ← Script #1
+   • Hello Kitty      ← Script #2
+   • Cinnamoroll      ← Script #3
+   • [Your 4th tycoon]← Script #4
+
+Each tycoon gets its OWN copy of the script!
+
+╔══════════════════════════════════════════════════════════════════╗
+║  💡 YOU DON'T NEED TO CHANGE YOUR DROPPERS!                      ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Keep all 13 droppers as-is. This script intercepts the collection
+and batches everything automatically. No dropper changes needed!
+
+═══════════════════════════════════════════════════════════════════
+
+Need help? Check "SETUP_INSTRUCTIONS_KUROMI.md" for full guide!
