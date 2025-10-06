@@ -3,13 +3,11 @@
     Clean, Professional, Modern Design
     
     Place in: StarterPlayer > StarterPlayerScripts
+    Name: CreateMoneyShop (LocalScript)
     
-    Fixed Issues:
-    ✓ Home page displays correctly on open
-    ✓ Tab switching works immediately  
-    ✓ Purchase error handling
-    ✓ Toggle properly positioned
-    ✓ Clean, minimal design
+    Inside this LocalScript, add 2 ModuleScripts:
+    - SanrioShop_Core
+    - SanrioShop_UI
 --]]
 
 local Players = game:GetService("Players")
@@ -20,7 +18,7 @@ local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- Load modules
+-- Load modules (they're inside this LocalScript)
 local Core = require(script.SanrioShop_Core)
 local UI = require(script.SanrioShop_UI)
 
@@ -52,7 +50,7 @@ function Notifications.show(message, type)
 	local notifGui = PlayerGui:FindFirstChild("SanrioNotifications") or Instance.new("ScreenGui")
 	notifGui.Name = "SanrioNotifications"
 	notifGui.ResetOnSpawn = false
-	notifGui.DisplayOrder = Core.CONSTANTS.Z_NOTIFICATION
+	notifGui.DisplayOrder = 9999
 	notifGui.Parent = PlayerGui
 
 	local notif = UI.Components.Frame({
@@ -61,19 +59,16 @@ function Notifications.show(message, type)
 		AnchorPoint = Vector2.new(0.5, 0),
 		BackgroundColor3 = UI.Theme:get("surface"),
 		cornerRadius = UDim.new(0, 10),
-		stroke = {
-			color = colors[type],
-			thickness = 2,
-		},
+		stroke = {color = colors[type], thickness = 2},
 		parent = notifGui,
 	}):render()
 
-	-- Icon
 	local iconLabel = UI.Components.TextLabel({
 		Text = icons[type],
 		Size = UDim2.fromOffset(40, 40),
 		Position = UDim2.fromOffset(15, 15),
 		BackgroundColor3 = colors[type],
+		BackgroundTransparency = 0,
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
 		TextSize = 24,
@@ -81,7 +76,6 @@ function Notifications.show(message, type)
 		parent = notif,
 	}):render()
 
-	-- Message
 	local messageLabel = UI.Components.TextLabel({
 		Text = message,
 		Size = UDim2.new(1, -75, 1, -20),
@@ -89,7 +83,6 @@ function Notifications.show(message, type)
 		Font = Enum.Font.GothamMedium,
 		TextSize = 15,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		TextWrapped = true,
 		parent = notif,
 	}):render()
 
@@ -160,14 +153,10 @@ function Shop:createToggleButton()
 		AnchorPoint = Vector2.new(1, 1),
 		BackgroundColor3 = UI.Theme:get("surface"),
 		cornerRadius = UDim.new(0, 28),
-		stroke = {
-			color = UI.Theme:get("accent"),
-			thickness = 2,
-		},
+		stroke = {color = UI.Theme:get("accent"), thickness = 2},
 		parent = screen,
 	}):render()
 
-	-- Icon
 	local icon = UI.Components.Image({
 		Image = "rbxassetid://17398522865",
 		Size = UDim2.fromOffset(32, 32),
@@ -175,7 +164,6 @@ function Shop:createToggleButton()
 		parent = self.toggleButton,
 	}):render()
 
-	-- Label
 	local label = UI.Components.TextLabel({
 		Text = "Shop",
 		Size = UDim2.new(1, -60, 1, 0),
@@ -231,10 +219,7 @@ function Shop:createShopUI()
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		BackgroundColor3 = UI.Theme:get("background"),
 		cornerRadius = UDim.new(0, 16),
-		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 1,
-		},
+		stroke = {color = UI.Theme:get("stroke"), thickness = 1},
 		parent = self.gui,
 	}):render()
 
@@ -259,7 +244,6 @@ function Shop:createHeader()
 		parent = self.mainFrame,
 	}):render()
 
-	-- Title
 	local title = UI.Components.TextLabel({
 		Text = "Sanrio Shop",
 		Size = UDim2.new(1, -80, 1, 0),
@@ -269,7 +253,6 @@ function Shop:createHeader()
 		parent = header,
 	}):render()
 
-	-- Close button
 	local close = UI.Components.Button({
 		Text = "✕",
 		Size = UDim2.fromOffset(50, 50),
@@ -317,14 +300,10 @@ function Shop:createTab(data, parent)
 		Size = UDim2.fromOffset(140, 50),
 		BackgroundColor3 = UI.Theme:get("surface"),
 		cornerRadius = UDim.new(0, 10),
-		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 2,
-		},
+		stroke = {color = UI.Theme:get("stroke"), thickness = 2},
 		parent = parent,
 	}):render()
 
-	-- Icon
 	local icon = UI.Components.TextLabel({
 		Text = data.icon,
 		Size = UDim2.fromOffset(24, 24),
@@ -334,7 +313,6 @@ function Shop:createTab(data, parent)
 		parent = tab,
 	}):render()
 
-	-- Label
 	local label = UI.Components.TextLabel({
 		Text = data.name,
 		Size = UDim2.new(1, -50, 1, 0),
@@ -386,11 +364,13 @@ function Shop:createHomePage(parent)
 
 	local scroll = UI.Components.ScrollingFrame({
 		Size = UDim2.fromScale(1, 1),
-		CanvasSize = UDim2.new(0, 0, 0, 800),
+		layout = {
+			type = "List",
+			Padding = UDim.new(0, 20),
+		},
+		padding = {top = 10, bottom = 10},
 		parent = page,
 	}):render()
-
-	UI.Layout.stack(scroll, Enum.FillDirection.Vertical, 20, {top = 10, bottom = 10})
 
 	-- Hero banner
 	self:createHero(scroll)
@@ -406,7 +386,7 @@ function Shop:createHomePage(parent)
 		parent = scroll,
 	}):render()
 
-	-- Featured products
+	-- Featured products container
 	local featContainer = UI.Components.Frame({
 		Size = UDim2.new(1, 0, 0, 280),
 		BackgroundTransparency = 1,
@@ -417,11 +397,13 @@ function Shop:createHomePage(parent)
 	local featScroll = UI.Components.ScrollingFrame({
 		Size = UDim2.fromScale(1, 1),
 		ScrollingDirection = Enum.ScrollingDirection.X,
-		CanvasSize = UDim2.new(0, 1200, 0, 0),
+		layout = {
+			type = "List",
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, 16),
+		},
 		parent = featContainer,
 	}):render()
-
-	UI.Layout.stack(featScroll, Enum.FillDirection.Horizontal, 16)
 
 	-- Add featured items
 	for _, product in ipairs(Core.DataManager.products.cash) do
@@ -442,7 +424,7 @@ function Shop:createHero(parent)
 		parent = parent,
 	}):render()
 
-	-- Gradient overlay
+	-- Gradient
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 80, 130)),
@@ -451,7 +433,6 @@ function Shop:createHero(parent)
 	gradient.Rotation = 45
 	gradient.Parent = hero
 
-	-- Content
 	local heroTitle = UI.Components.TextLabel({
 		Text = "Welcome to Sanrio Shop",
 		Size = UDim2.new(1, -40, 0, 36),
@@ -470,7 +451,6 @@ function Shop:createHero(parent)
 		Font = Enum.Font.Gotham,
 		TextSize = 16,
 		TextColor3 = Color3.new(1, 1, 1),
-		TextTransparency = 0.2,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = hero,
 	}):render()
@@ -505,14 +485,14 @@ function Shop:createCashPage(parent)
 
 	local scroll = UI.Components.ScrollingFrame({
 		Size = UDim2.fromScale(1, 1),
-		CanvasSize = UDim2.new(0, 0, 0, 700),
+		layout = {
+			type = "Grid",
+			CellSize = UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
+			CellPadding = UDim2.fromOffset(16, 16),
+		},
+		padding = {top = 10, bottom = 10, left = 10, right = 10},
 		parent = page,
 	}):render()
-
-	local grid = UI.Layout.grid(scroll, 
-		UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
-		UDim2.fromOffset(16, 16)
-	)
 
 	for _, product in ipairs(Core.DataManager.products.cash) do
 		self:createProductCard(product, "cash", scroll)
@@ -534,14 +514,14 @@ function Shop:createGamepassPage(parent)
 
 	local scroll = UI.Components.ScrollingFrame({
 		Size = UDim2.fromScale(1, 1),
-		CanvasSize = UDim2.new(0, 0, 0, 700),
+		layout = {
+			type = "Grid",
+			CellSize = UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
+			CellPadding = UDim2.fromOffset(16, 16),
+		},
+		padding = {top = 10, bottom = 10, left = 10, right = 10},
 		parent = page,
 	}):render()
-
-	local grid = UI.Layout.grid(scroll,
-		UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
-		UDim2.fromOffset(16, 16)
-	)
 
 	for _, pass in ipairs(Core.DataManager.products.gamepasses) do
 		self:createProductCard(pass, "gamepass", scroll)
@@ -560,10 +540,7 @@ function Shop:createProductCard(product, productType, parent)
 		Size = UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
 		BackgroundColor3 = UI.Theme:get("surface"),
 		cornerRadius = UDim.new(0, 12),
-		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 1,
-		},
+		stroke = {color = UI.Theme:get("stroke"), thickness = 1},
 		parent = parent,
 	}):render()
 
@@ -592,7 +569,6 @@ function Shop:createProductCard(product, productType, parent)
 		parent = card,
 	}):render()
 
-	-- Title
 	local title = UI.Components.TextLabel({
 		Text = product.name,
 		Size = UDim2.new(1, 0, 0, 24),
@@ -602,7 +578,6 @@ function Shop:createProductCard(product, productType, parent)
 		parent = info,
 	}):render()
 
-	-- Description
 	local desc = UI.Components.TextLabel({
 		Text = product.description,
 		Size = UDim2.new(1, 0, 0, 36),
@@ -611,11 +586,9 @@ function Shop:createProductCard(product, productType, parent)
 		TextSize = 14,
 		TextColor3 = UI.Theme:get("textSecondary"),
 		TextXAlignment = Enum.TextXAlignment.Left,
-		TextWrapped = true,
 		parent = info,
 	}):render()
 
-	-- Price
 	local priceText = isGamepass and 
 		string.format("R$ %d", product.price or 0) or
 		string.format("R$ %d • %s Cash", product.price or 0, Core.Utils.formatNumber(product.amount))
@@ -631,7 +604,6 @@ function Shop:createProductCard(product, productType, parent)
 		parent = info,
 	}):render()
 
-	-- Purchase button
 	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
 
 	local btn = UI.Components.Button({
@@ -652,7 +624,6 @@ function Shop:createProductCard(product, productType, parent)
 		end
 	end)
 
-	-- Add toggle for owned gamepasses with toggle
 	if isOwned and product.hasToggle then
 		self:addToggle(product, card)
 	end
@@ -675,10 +646,7 @@ function Shop:addToggle(product, card)
 		AnchorPoint = Vector2.new(1, 0),
 		BackgroundColor3 = UI.Theme:get("stroke"),
 		cornerRadius = UDim.new(1, 0),
-		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 2,
-		},
+		stroke = {color = UI.Theme:get("stroke"), thickness = 2},
 		parent = card,
 	}):render()
 
@@ -692,7 +660,6 @@ function Shop:addToggle(product, card)
 
 	local state = false
 
-	-- Get initial state
 	if Remotes then
 		local getState = Remotes:FindFirstChild("GetAutoCollectState")
 		if getState and getState:IsA("RemoteFunction") then
@@ -749,7 +716,6 @@ end
 function Shop:selectTab(tabId, silent)
 	if self.currentTab == tabId and not silent then return end
 
-	-- Update tab appearance
 	for id, tab in pairs(self.tabs) do
 		local isActive = id == tabId
 		local stroke = tab.button:FindFirstChildOfClass("UIStroke")
@@ -767,7 +733,6 @@ function Shop:selectTab(tabId, silent)
 		end
 	end
 
-	-- Update page visibility
 	for id, page in pairs(self.pages) do
 		page.Visible = id == tabId
 	end
@@ -785,7 +750,6 @@ end
 -- ========================================
 function Shop:purchase(product, productType)
 	if productType == "gamepass" then
-		-- Check ownership first
 		if Core.DataManager.checkOwnership(product.id) then
 			self:refreshProduct(product, productType)
 			return
@@ -820,7 +784,6 @@ function Shop:purchase(product, productType)
 			end
 		end)
 	else
-		-- Dev product
 		Core.State.purchasePending[product.id] = {
 			product = product,
 			type = productType,
