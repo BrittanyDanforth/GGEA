@@ -559,10 +559,11 @@ function Shop:addToggleSwitch(product, imageContainer)
 	pad.PaddingRight = UDim.new(0, 12)
 	pad.Parent = row
 
-	-- LEFT: icon + feature label (auto width)
+	-- LEFT: icon + feature label (clipped to prevent overlap)
 	local left = Instance.new("Frame")
 	left.BackgroundTransparency = 1
 	left.Size = UDim2.new(1, -60, 1, 0)   -- leave room on the right for the state text
+	left.ClipsDescendants = true          -- prevent text overflow
 	left.Parent = row
 
 	local leftList = Instance.new("UIListLayout")
@@ -583,10 +584,12 @@ function Shop:addToggleSwitch(product, imageContainer)
 	label.Font = Enum.Font.GothamMedium
 	label.TextSize = 14
 	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextWrapped = false
+	label.TextTruncate = Enum.TextTruncate.AtEnd  -- ellipsis if text is too long
 	label.Text = "Auto Collect"
 	label.TextColor3 = UI.Theme:get("text")
-	label.AutomaticSize = Enum.AutomaticSize.X
-	label.Size = UDim2.new(0, 0, 1, 0)   -- width comes from AutomaticSize
+	label.AutomaticSize = Enum.AutomaticSize.None
+	label.Size = UDim2.new(1, 0, 1, 0)           -- fill available space
 	label.Parent = left
 
 	-- RIGHT: state text pinned to the right edge with chip style
@@ -879,10 +882,8 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, produc
 	Core.State.purchasePending[productId]=nil
 	if purchased then
 		Core.SoundSystem.play("success")
-		if Remotes then
-			local grant=Remotes:FindFirstChild("GrantProductCurrency")
-			if grant and grant:IsA("RemoteEvent") then grant:FireServer(productId) end
-		end
+		-- Money is granted server-side via ProcessReceipt, no need for RemoteEvent
+		print("✅ Purchase completed for product", productId)
 	end
 end)
 
