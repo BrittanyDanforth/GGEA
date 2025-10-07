@@ -30,7 +30,7 @@ local Remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes")
 local Core = {}
 
 Core.CONSTANTS = {
-	PANEL_SIZE = Vector2.new(1140, 920),  -- Increased height from 860 to 920
+	PANEL_SIZE = Vector2.new(1140, 1020),  -- Increased height significantly for PC
 	PANEL_SIZE_MOBILE = Vector2.new(920, 720),
 
 	ANIM_FAST   = 0.15,
@@ -845,6 +845,24 @@ task.spawn(function()
 	while true do
 		task.wait(30)
 		if Core.State.isOpen then shop:refreshAllProducts() end
+	end
+end)
+
+-- Purchase callbacks
+MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
+	if player~=Player then return end
+	local p=Core.State.purchasePending[passId]; if p and p.button and p.button.Parent then p.button.Text, p.button.Active = "Purchase", true end
+	Core.State.purchasePending[passId]=nil
+	if purchased then ownershipCache:clear(); shop:refreshAllProducts(); Core.SoundSystem.play("success") end
+end)
+MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, productId, purchased)
+	if player~=Player then return end
+	local p=Core.State.purchasePending[productId]; if p and p.button and p.button.Parent then p.button.Text, p.button.Active = "Purchase", true end
+	Core.State.purchasePending[productId]=nil
+	if purchased then
+		Core.SoundSystem.play("success")
+		-- Money is granted server-side via ProcessReceipt, no need for RemoteEvent
+		print("✅ Purchase completed for product", productId)
 	end
 end)
 
