@@ -30,7 +30,7 @@ local Remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes")
 local Core = {}
 
 Core.CONSTANTS = {
-	PANEL_SIZE = Vector2.new(1140, 860),
+	PANEL_SIZE = Vector2.new(1140, 920),  -- Increased height from 860 to 920
 	PANEL_SIZE_MOBILE = Vector2.new(920, 720),
 
 	ANIM_FAST   = 0.15,
@@ -74,7 +74,7 @@ Core.Utils.panelSizeForViewport = function()
 	local v = Core.Utils.safeViewport()
 	local scale = Core.Utils.isPhone() and 0.94 or (Core.Utils.isTablet() and 0.88 or 0.78)
 	local w = math.floor(v.X*scale); local h=math.floor(v.Y*scale)
-	local target = Core.Utils.isPhone() and Core.CONSTANTS.PANEL_SIZE_MOBILE or (Core.Utils.isTablet() and Vector2.new(1020,780) or Core.CONSTANTS.PANEL_SIZE)
+	local target = Core.Utils.isPhone() and Core.CONSTANTS.PANEL_SIZE_MOBILE or (Core.Utils.isTablet() and Vector2.new(1020,820) or Core.CONSTANTS.PANEL_SIZE)
 	w = math.min(w, target.X); h = math.min(h, target.Y)
 	w = math.max(Core.Utils.isPhone() and 320 or 720, w)
 	h = math.max(Core.Utils.isPhone() and 300 or 520, h)
