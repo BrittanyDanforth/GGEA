@@ -65,9 +65,11 @@ local ownershipCache = Cache.new(Core.CONSTANTS.CACHE_OWNERSHIP)
 -- Utils
 Core.Utils = {}
 function Core.Utils.isMobile()
-	local cam = workspace.CurrentCamera; if not cam then return false end
-	local v = cam.ViewportSize
-	return v.X < 1024 or GuiService:IsTenFootInterface()
+	-- Real mobile if touch is primary and there's no mouse/keyboard
+	return UserInputService.TouchEnabled
+	   and not UserInputService.KeyboardEnabled
+	   and not UserInputService.MouseEnabled
+	   or GuiService:IsTenFootInterface()
 end
 function Core.Utils.formatNumber(n)
 	local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end; return s
@@ -91,14 +93,12 @@ end
 -- Calculate panel size that fits safely in viewport
 Core.Utils.panelSizeForViewport = function()
 	local sv = Core.Utils.safeViewport()
-	-- target "design" sizes
 	local target = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
-	-- margins around the panel so it never kisses edges
-	local marginX, marginY = 24, 32
-	-- never exceed the safe area
-	local w = math.min(target.X, math.max(320, sv.X - marginX*2))
-	local h = math.min(target.Y, math.max(280, sv.Y - marginY*2))
-	return Vector2.new(w, h)
+	-- Fill up to 90% of safe area, but never exceed our target design size
+	local w = math.min(target.X, math.floor(sv.X * 0.90))
+	local h = math.min(target.Y, math.floor(sv.Y * 0.90))
+	-- Keep some sane minimums
+	return Vector2.new(math.max(720, w), math.max(520, h))
 end
 
 -- Animation
@@ -367,6 +367,11 @@ function Shop:createMainInterface()
 	}):render()
 	-- NO UIScale - panelSizeForViewport already handles sizing!
 
+	-- Helper to get panel width (for responsive elements inside)
+	local function getPanelWidth()
+		return self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X
+	end
+
 	-- Header (POLISHED)
 	local header = UI.Components.Frame({ Size=UDim2.new(1,-48,0,80), Position=UDim2.fromOffset(24,24), BackgroundColor3=UI.Theme:get("surfaceAlt"), cornerRadius=UDim.new(0,18), parent=self.mainPanel }):render()
 	UI.Components.Image({ Image="rbxassetid://17398522865", Size=UDim2.fromOffset(60,60), Position=UDim2.fromOffset(16,10), parent=header }):render()
@@ -384,12 +389,12 @@ function Shop:createMainInterface()
 		{ id="Gamepasses", name="Passes", icon="rbxassetid://10709727148", color=UI.Theme:get("kuromi")  },
 	}
 	
-	-- Responsive tab sizing (never wraps!)
-	local vw = Core.Utils.viewportX()
-	local tabWidth = (vw < 450) and 120 or (Core.Utils.isMobile() and 160 or 220)
-	local tabHeight = Core.Utils.isMobile() and 50 or 60
-	local iconSize = (vw < 450) and 20 or (Core.Utils.isMobile() and 24 or 32)
-	local textSize = (vw < 450) and 14 or (Core.Utils.isMobile() and 16 or 20)
+	-- Responsive tab sizing (keys off panel width, not viewport!)
+	local vw = getPanelWidth()
+	local tabWidth = (vw < 600) and 140 or 220
+	local tabHeight = 60
+	local iconSize = (vw < 600) and 22 or 32
+	local textSize = (vw < 600) and 16 or 20
 	
 	for _,d in ipairs(tabs) do
 		local tab = UI.Components.Button({
@@ -525,8 +530,8 @@ function Shop:createPages()
 		else
 			-- Two columns LOCKED; only HEIGHT changes
 			if vx < 600 then cardH = 200
-			elseif vx < 900 then cardH = 260
-			else cardH = 320  -- Taller so all content fits
+			elseif vx < 900 then cardH = 240
+			else cardH = 280  -- Was 320; smaller feels less zoomed
 			end
 			gridPass.CellSize = UDim2.new(0.5, -8, 0, cardH)
 		end
