@@ -479,7 +479,8 @@ function Shop:createPages()
 		local titleH   = (Core.Utils.isPhone() and 22) or (Core.Utils.isTablet() and 24) or 24
 		local descH    = (Core.Utils.isPhone() and 18) or (Core.Utils.isTablet() and 22) or 22
 		local buttonH  = (Core.Utils.isPhone() and 40) or (Core.Utils.isTablet() and 42) or 42
-		local paddings = 12 + 2 + 6 + 6 + 6  -- content inset + infoPadTop + infoPadBottom + vlist spacing
+		local INNER = 12
+		local paddings = INNER*2 + 2 + 6 + 6 + 6  -- content inset*2 + infoPadTop + infoPadBottom + vlist spacing + footer offset
 		local cardH    = imageH + titleH + descH + buttonH + paddings
 
 		local innerW = (self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X) - 48
@@ -508,7 +509,8 @@ function Shop:createPages()
 		local titleH   = (Core.Utils.isPhone() and 22) or (Core.Utils.isTablet() and 24) or 24
 		local descH    = (Core.Utils.isPhone() and 18) or (Core.Utils.isTablet() and 22) or 22
 		local buttonH  = (Core.Utils.isPhone() and 40) or (Core.Utils.isTablet() and 42) or 42
-		local paddings = 12 + 2 + 6 + 6 + 6
+		local INNER = 12
+		local paddings = INNER*2 + 2 + 6 + 6 + 6
 		local cardH    = imageH + titleH + descH + buttonH + paddings
 		
 		local innerW = (self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X) - 48
@@ -526,27 +528,107 @@ end
 
 -- Optional toggle
 function Shop:addToggleSwitch(product, imageContainer)
-	local container=Instance.new("Frame"); container.Name="ToggleContainer"; container.Size=UDim2.fromOffset(56,28); container.Position=UDim2.new(1,-64,0,8)
-	container.BackgroundColor3=UI.Theme:get("stroke"); container.BorderSizePixel=0; container.ZIndex=2; container.Parent=imageContainer
-	local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(0.5,0); c.Parent=container
-	local knob=Instance.new("Frame"); knob.Name="Knob"; knob.Size=UDim2.fromOffset(24,24); knob.Position=UDim2.fromOffset(2,2); knob.BackgroundColor3=UI.Theme:get("surface"); knob.BorderSizePixel=0; knob.Parent=container
-	local kc=Instance.new("UICorner"); kc.CornerRadius=UDim.new(0.5,0); kc.Parent=knob
-	local click=Instance.new("TextButton"); click.BackgroundTransparency=1; click.Text=""; click.Size=UDim2.fromScale(1,1); click.Parent=container
+	-- container in the banner (right side)
+	local wrap = Instance.new("Frame")
+	wrap.Name = "ToggleContainer"
+	wrap.AnchorPoint = Vector2.new(1,0)
+	wrap.Position = UDim2.new(1, -8, 0, 8)
+	wrap.Size = UDim2.fromOffset(160, 36)  -- bigger, easy to tap
+	wrap.BackgroundColor3 = UI.Theme:get("surface")
+	wrap.BorderSizePixel = 0
+	wrap.Parent = imageContainer
+	local rc = Instance.new("UICorner"); rc.CornerRadius = UDim.new(0, 18); rc.Parent = wrap
+	local stroke = Instance.new("UIStroke"); stroke.Color = UI.Theme:get("stroke"); stroke.Thickness = 1; stroke.Transparency = 0.2; stroke.Parent = wrap
 
-	local state=false
+	-- inner button fills container
+	local btn = Instance.new("TextButton")
+	btn.BackgroundTransparency = 1
+	btn.AutoButtonColor = false
+	btn.Text = ""
+	btn.Size = UDim2.fromScale(1,1)
+	btn.Parent = wrap
+
+	-- layout: icon + label + state
+	local row = Instance.new("Frame")
+	row.BackgroundTransparency = 1
+	row.Size = UDim2.fromScale(1,1)
+	row.Parent = btn
+	local hlist = Instance.new("UIListLayout")
+	hlist.FillDirection = Enum.FillDirection.Horizontal
+	hlist.Padding = UDim.new(0, 8)
+	hlist.VerticalAlignment = Enum.VerticalAlignment.Center
+	hlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	hlist.Parent = row
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 12)
+	pad.PaddingRight = UDim.new(0, 12)
+	pad.Parent = row
+
+	local icon = Instance.new("ImageLabel")
+	icon.BackgroundTransparency = 1
+	icon.Size = UDim2.fromOffset(18,18)
+	icon.Image = "rbxassetid://10709727148" -- your pass icon
+	icon.Parent = row
+
+	local label = Instance.new("TextLabel")
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.GothamMedium
+	label.TextSize = 14
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Text = "Auto Collect"
+	label.TextColor3 = UI.Theme:get("text")
+	label.Parent = row
+
+	local stateTxt = Instance.new("TextLabel")
+	stateTxt.BackgroundTransparency = 1
+	stateTxt.Font = Enum.Font.GothamBold
+	stateTxt.TextSize = 14
+	stateTxt.TextXAlignment = Enum.TextXAlignment.Left
+	stateTxt.Parent = row
+
+	-- fetch initial state
+	local state = false
 	if Remotes then
-		local rf=Remotes:FindFirstChild("GetAutoCollectState")
-		if rf and rf:IsA("RemoteFunction") then local ok,val=pcall(function() return rf:InvokeServer() end); if ok and type(val)=="boolean" then state=val end end
+		local rf = Remotes:FindFirstChild("GetAutoCollectState")
+		if rf and rf:IsA("RemoteFunction") then
+			local ok,val = pcall(function() return rf:InvokeServer() end)
+			if ok and type(val)=="boolean" then state = val end
+		end
 	end
-	local function render()
-		if state then container.BackgroundColor3=UI.Theme:get("success"); Core.Animation.tween(knob,{Position=UDim2.fromOffset(30,2)},Core.CONSTANTS.ANIM_FAST)
-		else container.BackgroundColor3=UI.Theme:get("stroke"); Core.Animation.tween(knob,{Position=UDim2.fromOffset(2,2)},Core.CONSTANTS.ANIM_FAST) end
+
+	local function paint(on)
+		state = on
+		if on then
+			wrap.BackgroundColor3 = UI.Theme:get("success")
+			stroke.Color = UI.Theme:get("success")
+			icon.ImageColor3 = Color3.new(1,1,1)
+			label.TextColor3 = Color3.new(1,1,1)
+			stateTxt.TextColor3 = Color3.new(1,1,1)
+			stateTxt.Text = "ON"
+		else
+			wrap.BackgroundColor3 = UI.Theme:get("surface")
+			stroke.Color = UI.Theme:get("stroke")
+			icon.ImageColor3 = UI.Theme:get("textSecondary")
+			label.TextColor3 = UI.Theme:get("text")
+			stateTxt.TextColor3 = UI.Theme:get("textSecondary")
+			stateTxt.Text = "OFF"
+		end
 	end
-	render()
-	click.MouseButton1Click:Connect(function()
-		state=not state; render()
-		if Remotes then local ev=Remotes:FindFirstChild("AutoCollectToggle"); if ev and ev:IsA("RemoteEvent") then ev:FireServer(state) end end
+	paint(state)
+
+	-- hover micro-feedback (PC)
+	local scale = Instance.new("UIScale"); scale.Scale = 1; scale.Parent = wrap
+	wrap.MouseEnter:Connect(function() Core.Animation.tween(scale,{Scale=1.03}, Core.CONSTANTS.ANIM_FAST) end)
+	wrap.MouseLeave:Connect(function() Core.Animation.tween(scale,{Scale=1.00}, Core.CONSTANTS.ANIM_FAST) end)
+
+	btn.MouseButton1Click:Connect(function()
+		local nextState = not state
+		paint(nextState)                -- optimistic UI
 		Core.SoundSystem.play("click")
+		if Remotes then
+			local ev = Remotes:FindFirstChild("AutoCollectToggle")
+			if ev and ev:IsA("RemoteEvent") then ev:FireServer(nextState) end
+		end
 	end)
 end
 
@@ -561,12 +643,14 @@ function Shop:createProductCard(product, productType, parent)
 		BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(0,18),
 		stroke={color=cardColor,thickness=strokeThickness,transparency=strokeTransparency}, parent=parent
 	}):render()
+	card.ClipsDescendants = true  -- Ensure nothing spills past the rounded border
 
 	local hoverScale = Instance.new("UIScale"); hoverScale.Scale = 1; hoverScale.Parent = card
 	card.MouseEnter:Connect(function() Core.SoundSystem.play("hover"); Core.Animation.tween(hoverScale,{Scale=1.03},Core.CONSTANTS.ANIM_FAST) end)
 	card.MouseLeave:Connect(function() Core.Animation.tween(hoverScale,{Scale=1},Core.CONSTANTS.ANIM_FAST) end)
 
-	local content=Instance.new("Frame"); content.BackgroundTransparency=1; content.Size=UDim2.new(1,-24,1,-24); content.Position=UDim2.fromOffset(12,12); content.Parent=card
+	local INNER = 12  -- Consistent padding
+	local content=Instance.new("Frame"); content.BackgroundTransparency=1; content.Size=UDim2.new(1,-INNER*2,1,-INNER*2); content.Position=UDim2.fromOffset(INNER,INNER); content.Parent=card
 
 	-- deterministic internal rows (match grid sizing!)
 	local imageHeight = (Core.Utils.isPhone() and 96) or (Core.Utils.isTablet() and 120) or 120
@@ -610,19 +694,35 @@ function Shop:createProductCard(product, productType, parent)
 	local descLabel = buildDescription(info, descText, descH, descSize)
 	descLabel.LayoutOrder = 2
 
-	-- button pinned to bottom
+	-- Create footer container for button
+	local footer = Instance.new("Frame")
+	footer.Name = "Footer"
+	footer.BackgroundTransparency = 1
+	footer.AnchorPoint = Vector2.new(0,1)
+	footer.Position = UDim2.new(0,0,1,-INNER)
+	footer.Size = UDim2.new(1,0,0,buttonH)
+	footer.Parent = info
+
+	-- button in footer
 	local owned = isGamepass and Core.DataManager.checkOwnership(product.id)
 	local btnTextSize = Core.Utils.isPhone() and 14 or (Core.Utils.isTablet() and 15 or 15)
 	local btn = UI.Components.Button({
 		Text = owned and "Owned" or "Purchase",
-		Size = UDim2.new(1,0,0,buttonH),
-		Position = UDim2.new(0,0,1,-buttonH-6),
+		Size = UDim2.fromScale(1,1),
 		BackgroundColor3 = owned and UI.Theme:get("success") or cardColor,
 		TextColor3 = Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=btnTextSize, cornerRadius=UDim.new(0,10),
-		parent=info
+		parent=footer
 	}):render()
 	btn.Active = not owned
-	btn.LayoutOrder = 3
+	btn.AutoButtonColor = not owned
+	
+	-- Add subtle inner stroke for better readability
+	local bstroke = Instance.new("UIStroke")
+	bstroke.Thickness = 1
+	bstroke.Transparency = owned and 0.7 or 0.6
+	bstroke.Color = Color3.new(0,0,0)
+	bstroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	bstroke.Parent = btn
 
 	btn.MouseButton1Click:Connect(function()
 		if not btn or not btn.Parent then return end
