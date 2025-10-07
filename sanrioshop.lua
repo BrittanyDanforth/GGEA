@@ -285,7 +285,7 @@ function Shop:createToggleButton()
 	elseif isTablet then
 		pos = UDim2.new(1,-16,0.5,0);      anchor=Vector2.new(1,0.5)
 	else
-		pos = UDim2.new(1,-20,1,-20);      anchor=Vector2.new(1,1)
+		pos = UDim2.new(1,-16,0.5,0);      anchor=Vector2.new(1,0.5)
 	end
 
 	local iconSize = isPhone and 28 or (isTablet and 30 or 32)
@@ -332,13 +332,17 @@ function Shop:createMainInterface()
 	}):render()
 
 	-- Header
-	local header = UI.Components.Frame({ Size=UDim2.new(1,-48,0,80), Position=UDim2.fromOffset(24,24), BackgroundColor3=UI.Theme:get("surfaceAlt"), cornerRadius=UDim.new(0,18), parent=self.mainPanel }):render()
+	local headerHeight = Core.Utils.isPhone() and 80 or (Core.Utils.isTablet() and 80 or 64)
+	local headerTextSize = Core.Utils.isPhone() and 32 or (Core.Utils.isTablet() and 32 or 28)
+	local header = UI.Components.Frame({ Size=UDim2.new(1,-48,0,headerHeight), Position=UDim2.fromOffset(24,24), BackgroundColor3=UI.Theme:get("surfaceAlt"), cornerRadius=UDim.new(0,18), parent=self.mainPanel }):render()
 	UI.Components.Image({ Image="rbxassetid://17398522865", Size=UDim2.fromOffset(60,60), Position=UDim2.fromOffset(16,10), parent=header }):render()
-	UI.Components.TextLabel({ Text="Sanrio Shop", Size=UDim2.new(1,-200,1,0), Position=UDim2.fromOffset(92,0), TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=32, parent=header }):render()
+	UI.Components.TextLabel({ Text="Sanrio Shop", Size=UDim2.new(1,-200,1,0), Position=UDim2.fromOffset(92,0), TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=headerTextSize, parent=header }):render()
 	UI.Components.Button({ Text="✕", Size=UDim2.fromOffset(48,48), Position=UDim2.new(1,-64,0.5,0), AnchorPoint=Vector2.new(0,0.5), BackgroundColor3=UI.Theme:get("accent"), TextColor3=Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=24, cornerRadius=UDim.new(0.5,0), parent=header, onClick=function() self:close() end }):render()
 
 	-- Tabs
-	self.tabContainer = UI.Components.Frame({ Size=UDim2.new(1,-48,0,60), Position=UDim2.fromOffset(24,120), BackgroundTransparency=1, parent=self.mainPanel }):render()
+	local tabContainerHeight = Core.Utils.isPhone() and 60 or (Core.Utils.isTablet() and 60 or 48)
+	local tabSpacing = Core.Utils.isPhone() and 24 or (Core.Utils.isTablet() and 24 or 16)
+	self.tabContainer = UI.Components.Frame({ Size=UDim2.new(1,-48,0,tabContainerHeight), Position=UDim2.fromOffset(24,24+headerHeight+tabSpacing), BackgroundTransparency=1, parent=self.mainPanel }):render()
 	local tabLayout = UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, Core.Utils.isPhone() and 12 or 20)
 	tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
@@ -349,10 +353,10 @@ function Shop:createMainInterface()
 	}
 
 	local vw = self.mainPanel.AbsoluteSize.X > 0 and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X
-	local tabWidth = (vw < 600) and 140 or 220
-	local tabHeight = 60
-	local iconSize = (vw < 600) and 22 or 32
-	local textSize = (vw < 600) and 16 or 20
+	local tabWidth = Core.Utils.isPhone() and 140 or (Core.Utils.isTablet() and 180 or 200)
+	local tabHeight = Core.Utils.isPhone() and 60 or (Core.Utils.isTablet() and 60 or 48)
+	local iconSize = Core.Utils.isPhone() and 22 or (Core.Utils.isTablet() and 28 or 26)
+	local textSize = Core.Utils.isPhone() and 16 or (Core.Utils.isTablet() and 18 or 18)
 
 	for _,d in ipairs(tabs) do
 		local tab = UI.Components.Button({
@@ -369,7 +373,8 @@ function Shop:createMainInterface()
 	end
 
 	-- Content
-	self.contentContainer = UI.Components.Frame({ Size=UDim2.new(1,-48,1,-210), Position=UDim2.fromOffset(24,196), BackgroundTransparency=1, parent=self.mainPanel }):render()
+	local contentTop = 24 + headerHeight + tabSpacing + tabContainerHeight + 16
+	self.contentContainer = UI.Components.Frame({ Size=UDim2.new(1,-48,1,-contentTop-24), Position=UDim2.fromOffset(24,contentTop), BackgroundTransparency=1, parent=self.mainPanel }):render()
 	self:createPages()
 	self:selectTab("Cash")
 
@@ -403,6 +408,7 @@ local function buildTitlePriceRow(parent, titleText, priceText, sizes, accentCol
 	title.TextYAlignment = Enum.TextYAlignment.Center
 	title.Text           = titleText
 	title.Size           = UDim2.new(1, -sizes.priceWidth, 1, 0)
+	title.TextTruncate   = Enum.TextTruncate.AtEnd
 	title.Parent         = row
 
 	local price = Instance.new("TextLabel")
@@ -432,6 +438,7 @@ local function buildDescription(parent, text, sizePx, fontSize)
 	desc.TextYAlignment = Enum.TextYAlignment.Top
 	desc.Text = text
 	desc.Size = UDim2.new(1, 0, 0, sizePx)
+	desc.LineHeight = 1.1
 	desc.Parent = parent
 	return desc
 end
@@ -467,21 +474,19 @@ function Shop:createPages()
 	gridCash.Parent = cashContent
 
 	local function sizeCashGrid()
-		local panelW = self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X
-		local oneCol = panelW < 700
 		-- card height must equal sum of internal rows below
-		local imageH   = (Core.Utils.isPhone() and 96) or (Core.Utils.isTablet() and 120) or 140
-		local titleH   = (Core.Utils.isPhone() and 22) or (Core.Utils.isTablet() and 24) or 26
-		local descH    = (Core.Utils.isPhone() and 18) or (Core.Utils.isTablet() and 22) or 24 -- single line height
-		local buttonH  = (Core.Utils.isPhone() and 40) or (Core.Utils.isTablet() and 42) or 44
-		local paddings = 12 + 6 + 6  -- content inset + spacing
+		local imageH   = (Core.Utils.isPhone() and 96) or (Core.Utils.isTablet() and 120) or 120
+		local titleH   = (Core.Utils.isPhone() and 22) or (Core.Utils.isTablet() and 24) or 24
+		local descH    = (Core.Utils.isPhone() and 18) or (Core.Utils.isTablet() and 22) or 22
+		local buttonH  = (Core.Utils.isPhone() and 40) or (Core.Utils.isTablet() and 42) or 42
+		local paddings = 12 + 2 + 6 + 6 + 6  -- content inset + infoPadTop + infoPadBottom + vlist spacing
 		local cardH    = imageH + titleH + descH + buttonH + paddings
 
-		if oneCol then
-			gridCash.CellSize = UDim2.new(1, -8, 0, cardH)
-		else
-			gridCash.CellSize = UDim2.new(0.5, -12, 0, cardH)
-		end
+		local innerW = (self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X) - 48
+		local targetMin = 420
+		local cols = math.clamp(math.floor(innerW / targetMin), 1, 2)
+		gridCash.CellPadding = UDim2.fromOffset(14, 14)
+		gridCash.CellSize = UDim2.new(1/cols, (cols==1 and -8 or -12), 0, cardH - 12)
 	end
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizeCashGrid); sizeCashGrid()
 
@@ -499,15 +504,18 @@ function Shop:createPages()
 	local gridPass = Instance.new("UIGridLayout"); gridPass.SortOrder=Enum.SortOrder.LayoutOrder; gridPass.FillDirection=Enum.FillDirection.Horizontal; gridPass.HorizontalAlignment=Enum.HorizontalAlignment.Center; gridPass.VerticalAlignment=Enum.VerticalAlignment.Top; gridPass.CellPadding=UDim2.fromOffset(16,16); gridPass.Parent=passContent
 
 	local function sizePassGrid()
-		local panelW = self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X
-		local oneCol = panelW < 700
-		local imageH   = (Core.Utils.isPhone() and 96) or (Core.Utils.isTablet() and 120) or 140
-		local titleH   = (Core.Utils.isPhone() and 22) or (Core.Utils.isTablet() and 24) or 26
-		local descH    = (Core.Utils.isPhone() and 18) or (Core.Utils.isTablet() and 22) or 24
-		local buttonH  = (Core.Utils.isPhone() and 40) or (Core.Utils.isTablet() and 42) or 44
-		local paddings = 12 + 6 + 6
+		local imageH   = (Core.Utils.isPhone() and 96) or (Core.Utils.isTablet() and 120) or 120
+		local titleH   = (Core.Utils.isPhone() and 22) or (Core.Utils.isTablet() and 24) or 24
+		local descH    = (Core.Utils.isPhone() and 18) or (Core.Utils.isTablet() and 22) or 22
+		local buttonH  = (Core.Utils.isPhone() and 40) or (Core.Utils.isTablet() and 42) or 42
+		local paddings = 12 + 2 + 6 + 6 + 6
 		local cardH    = imageH + titleH + descH + buttonH + paddings
-		if oneCol then gridPass.CellSize=UDim2.new(1,-8,0,cardH) else gridPass.CellSize=UDim2.new(0.5,-12,0,cardH) end
+		
+		local innerW = (self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X) - 48
+		local targetMin = 420
+		local cols = math.clamp(math.floor(innerW / targetMin), 1, 2)
+		gridPass.CellPadding = UDim2.fromOffset(14, 14)
+		gridPass.CellSize = UDim2.new(1/cols, (cols==1 and -8 or -12), 0, cardH - 12)
 	end
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizePassGrid); sizePassGrid()
 
@@ -546,10 +554,12 @@ function Shop:createProductCard(product, productType, parent)
 	local isGamepass = (productType=="gamepass")
 	local cardColor  = isGamepass and UI.Theme:get("kuromi") or UI.Theme:get("cinna")
 
+	local strokeThickness = Core.Utils.isPhone() and 2 or (Core.Utils.isTablet() and 2 or 1.5)
+	local strokeTransparency = Core.Utils.isPhone() and 0.4 or (Core.Utils.isTablet() and 0.4 or 0.55)
 	local card = UI.Components.Frame({
 		Name=product.name.."Card",
 		BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(0,18),
-		stroke={color=cardColor,thickness=2,transparency=0.4}, parent=parent
+		stroke={color=cardColor,thickness=strokeThickness,transparency=strokeTransparency}, parent=parent
 	}):render()
 
 	local hoverScale = Instance.new("UIScale"); hoverScale.Scale = 1; hoverScale.Parent = card
@@ -559,10 +569,10 @@ function Shop:createProductCard(product, productType, parent)
 	local content=Instance.new("Frame"); content.BackgroundTransparency=1; content.Size=UDim2.new(1,-24,1,-24); content.Position=UDim2.fromOffset(12,12); content.Parent=card
 
 	-- deterministic internal rows (match grid sizing!)
-	local imageHeight = (Core.Utils.isPhone() and 96) or (Core.Utils.isTablet() and 120) or 140
-	local titleH      = (Core.Utils.isPhone() and 22) or (Core.Utils.isTablet() and 24) or 26
-	local descH       = (Core.Utils.isPhone() and 18) or (Core.Utils.isTablet() and 22) or 24
-	local buttonH     = (Core.Utils.isPhone() and 40) or (Core.Utils.isTablet() and 42) or 44
+	local imageHeight = (Core.Utils.isPhone() and 96) or (Core.Utils.isTablet() and 120) or 120
+	local titleH      = (Core.Utils.isPhone() and 22) or (Core.Utils.isTablet() and 24) or 24
+	local descH       = (Core.Utils.isPhone() and 18) or (Core.Utils.isTablet() and 22) or 22
+	local buttonH     = (Core.Utils.isPhone() and 40) or (Core.Utils.isTablet() and 42) or 42
 
 	-- banner
 	local imageContainer=Instance.new("Frame"); imageContainer.Size=UDim2.new(1,0,0,imageHeight); imageContainer.BackgroundColor3=UI.Theme:get("surfaceAlt"); imageContainer.BorderSizePixel=0; imageContainer.Parent=content
@@ -573,30 +583,46 @@ function Shop:createProductCard(product, productType, parent)
 	-- info block with fixed height (title+desc+button)
 	local infoTop = imageHeight + 6
 	local info=Instance.new("Frame"); info.BackgroundTransparency=1; info.Size=UDim2.new(1,0,1,-infoTop-6); info.Position=UDim2.fromOffset(0,infoTop); info.Parent=content
+	
+	-- Add vertical layout to info frame
+	local infoPad = Instance.new("UIPadding")
+	infoPad.PaddingTop = UDim.new(0, 2)
+	infoPad.PaddingBottom = UDim.new(0, 6)
+	infoPad.Parent = info
+	
+	local vlist = Instance.new("UIListLayout")
+	vlist.FillDirection = Enum.FillDirection.Vertical
+	vlist.SortOrder = Enum.SortOrder.LayoutOrder
+	vlist.Padding = UDim.new(0, 6)
+	vlist.Parent = info
 
 	-- title + price
-	local priceText = isGamepass and ("R$"..tostring(product.price or 0)) or ""
-	local titleSize = (Core.Utils.isPhone() and 16) or (Core.Utils.isTablet() and 18) or 20
+	local priceText = isGamepass and ("R$"..tostring(product.price or 0)) or ("R$"..tostring(product.price or 0))
+	local titleSize = (Core.Utils.isPhone() and 16) or (Core.Utils.isTablet() and 18) or 18
 	local priceSize = (Core.Utils.isPhone() and 14) or (Core.Utils.isTablet() and 16) or 18
-	local priceWidth= (Core.Utils.isPhone() and 84) or (Core.Utils.isTablet() and 92) or 108
-	buildTitlePriceRow(info, product.name, priceText, { titleH=titleH, titleSize=titleSize, priceSize=priceSize, priceWidth=priceWidth }, cardColor)
+	local priceWidth= (Core.Utils.isPhone() and 78) or (Core.Utils.isTablet() and 92) or 96
+	local titleRow = buildTitlePriceRow(info, product.name, priceText, { titleH=titleH, titleSize=titleSize, priceSize=priceSize, priceWidth=priceWidth }, cardColor)
+	titleRow.LayoutOrder = 1
 
 	-- description (fixed)
 	local descText = isGamepass and product.description or ("Includes "..Core.Utils.formatNumber(product.amount).." Cash")
-	local descSize = (Core.Utils.isPhone() and 12) or (Core.Utils.isTablet() and 13) or 14
-	buildDescription(info, descText, descH, descSize)
+	local descSize = (Core.Utils.isPhone() and 12) or (Core.Utils.isTablet() and 13) or 13
+	local descLabel = buildDescription(info, descText, descH, descSize)
+	descLabel.LayoutOrder = 2
 
 	-- button pinned to bottom
 	local owned = isGamepass and Core.DataManager.checkOwnership(product.id)
+	local btnTextSize = Core.Utils.isPhone() and 14 or (Core.Utils.isTablet() and 15 or 15)
 	local btn = UI.Components.Button({
 		Text = owned and "Owned" or "Purchase",
 		Size = UDim2.new(1,0,0,buttonH),
-		Position = UDim2.new(0,0,1,-buttonH),
+		Position = UDim2.new(0,0,1,-buttonH-6),
 		BackgroundColor3 = owned and UI.Theme:get("success") or cardColor,
-		TextColor3 = Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=(Core.Utils.isPhone() and 14 or 16), cornerRadius=UDim.new(0,10),
+		TextColor3 = Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=btnTextSize, cornerRadius=UDim.new(0,10),
 		parent=info
 	}):render()
 	btn.Active = not owned
+	btn.LayoutOrder = 3
 
 	btn.MouseButton1Click:Connect(function()
 		if not btn or not btn.Parent then return end
@@ -658,6 +684,13 @@ function Shop:refreshAllProducts()
 			gp.purchaseButton.Text=owned and "Owned" or "Purchase"
 			gp.purchaseButton.BackgroundColor3=owned and UI.Theme:get("success") or UI.Theme:get("kuromi")
 			gp.purchaseButton.Active=not owned
+		end
+		-- Add toggle if newly owned
+		if owned and gp.hasToggle and gp.cardInstance then
+			local imageContainer = gp.cardInstance:FindFirstChild("Frame"):FindFirstChild("Frame")
+			if imageContainer and not imageContainer:FindFirstChild("ToggleContainer") then
+				self:addToggleSwitch(gp, imageContainer)
+			end
 		end
 	end
 end
