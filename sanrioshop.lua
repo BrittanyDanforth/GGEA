@@ -547,28 +547,36 @@ function Shop:addToggleSwitch(product, imageContainer)
 	btn.Text = ""
 	btn.Size = UDim2.fromScale(1,1)
 	btn.Parent = wrap
+	wrap.ClipsDescendants = true  -- nothing bleeds outside rounded pill
 
-	-- layout: icon + label + state
+	-- ROW container fills the pill
 	local row = Instance.new("Frame")
 	row.BackgroundTransparency = 1
 	row.Size = UDim2.fromScale(1,1)
 	row.Parent = btn
-	local hlist = Instance.new("UIListLayout")
-	hlist.FillDirection = Enum.FillDirection.Horizontal
-	hlist.Padding = UDim.new(0, 8)
-	hlist.VerticalAlignment = Enum.VerticalAlignment.Center
-	hlist.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	hlist.Parent = row
 	local pad = Instance.new("UIPadding")
 	pad.PaddingLeft = UDim.new(0, 12)
 	pad.PaddingRight = UDim.new(0, 12)
 	pad.Parent = row
 
+	-- LEFT: icon + feature label (auto width)
+	local left = Instance.new("Frame")
+	left.BackgroundTransparency = 1
+	left.Size = UDim2.new(1, -60, 1, 0)   -- leave room on the right for the state text
+	left.Parent = row
+
+	local leftList = Instance.new("UIListLayout")
+	leftList.FillDirection = Enum.FillDirection.Horizontal
+	leftList.Padding = UDim.new(0, 8)
+	leftList.VerticalAlignment = Enum.VerticalAlignment.Center
+	leftList.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	leftList.Parent = left
+
 	local icon = Instance.new("ImageLabel")
 	icon.BackgroundTransparency = 1
 	icon.Size = UDim2.fromOffset(18,18)
-	icon.Image = "rbxassetid://10709727148" -- your pass icon
-	icon.Parent = row
+	icon.Image = "rbxassetid://10709727148"
+	icon.Parent = left
 
 	local label = Instance.new("TextLabel")
 	label.BackgroundTransparency = 1
@@ -577,14 +585,23 @@ function Shop:addToggleSwitch(product, imageContainer)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Text = "Auto Collect"
 	label.TextColor3 = UI.Theme:get("text")
-	label.Parent = row
+	label.AutomaticSize = Enum.AutomaticSize.X
+	label.Size = UDim2.new(0, 0, 1, 0)   -- width comes from AutomaticSize
+	label.Parent = left
 
+	-- RIGHT: state text pinned to the right edge with chip style
 	local stateTxt = Instance.new("TextLabel")
 	stateTxt.BackgroundTransparency = 1
 	stateTxt.Font = Enum.Font.GothamBold
 	stateTxt.TextSize = 14
-	stateTxt.TextXAlignment = Enum.TextXAlignment.Left
+	stateTxt.TextXAlignment = Enum.TextXAlignment.Center
+	stateTxt.AnchorPoint = Vector2.new(1, 0.5)
+	stateTxt.Position = UDim2.new(1, -12, 0.5, 0)  -- stick to right padding
+	stateTxt.Size = UDim2.fromOffset(44, 22)       -- fixed space, no overlap
+	stateTxt.BackgroundTransparency = 0.4
+	stateTxt.BackgroundColor3 = UI.Theme:get("stroke")
 	stateTxt.Parent = row
+	local stc = Instance.new("UICorner"); stc.CornerRadius = UDim.new(0, 8); stc.Parent = stateTxt
 
 	-- fetch initial state
 	local state = false
@@ -605,6 +622,8 @@ function Shop:addToggleSwitch(product, imageContainer)
 			label.TextColor3 = Color3.new(1,1,1)
 			stateTxt.TextColor3 = Color3.new(1,1,1)
 			stateTxt.Text = "ON"
+			stateTxt.BackgroundTransparency = 0.2
+			stateTxt.BackgroundColor3 = UI.Theme:get("success")
 		else
 			wrap.BackgroundColor3 = UI.Theme:get("surface")
 			stroke.Color = UI.Theme:get("stroke")
@@ -612,6 +631,8 @@ function Shop:addToggleSwitch(product, imageContainer)
 			label.TextColor3 = UI.Theme:get("text")
 			stateTxt.TextColor3 = UI.Theme:get("textSecondary")
 			stateTxt.Text = "OFF"
+			stateTxt.BackgroundTransparency = 0.4
+			stateTxt.BackgroundColor3 = UI.Theme:get("stroke")
 		end
 	end
 	paint(state)
@@ -621,7 +642,11 @@ function Shop:addToggleSwitch(product, imageContainer)
 	wrap.MouseEnter:Connect(function() Core.Animation.tween(scale,{Scale=1.03}, Core.CONSTANTS.ANIM_FAST) end)
 	wrap.MouseLeave:Connect(function() Core.Animation.tween(scale,{Scale=1.00}, Core.CONSTANTS.ANIM_FAST) end)
 
+	-- debounce to prevent spam
+	local busy = false
 	btn.MouseButton1Click:Connect(function()
+		if busy then return end
+		busy = true
 		local nextState = not state
 		paint(nextState)                -- optimistic UI
 		Core.SoundSystem.play("click")
@@ -629,6 +654,7 @@ function Shop:addToggleSwitch(product, imageContainer)
 			local ev = Remotes:FindFirstChild("AutoCollectToggle")
 			if ev and ev:IsA("RemoteEvent") then ev:FireServer(nextState) end
 		end
+		task.delay(0.15, function() busy = false end)
 	end)
 end
 
