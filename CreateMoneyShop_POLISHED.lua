@@ -446,7 +446,7 @@ function Shop:createPages()
 	gridCash.SortOrder = Enum.SortOrder.LayoutOrder
 	gridCash.FillDirection = Enum.FillDirection.Horizontal
 	gridCash.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	gridCash.VerticalAlignment = Enum.VerticalAlignment.Begin
+	gridCash.VerticalAlignment = Enum.VerticalAlignment.Top
 	gridCash.CellPadding = UDim2.fromOffset(16, 16)
 	gridCash.Parent = sfCash
 	
@@ -502,7 +502,7 @@ function Shop:createPages()
 	gridPass.SortOrder = Enum.SortOrder.LayoutOrder
 	gridPass.FillDirection = Enum.FillDirection.Horizontal
 	gridPass.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	gridPass.VerticalAlignment = Enum.VerticalAlignment.Begin
+	gridPass.VerticalAlignment = Enum.VerticalAlignment.Top
 	gridPass.CellPadding = UDim2.fromOffset(16, 16)
 	gridPass.Parent = sfPass
 	
