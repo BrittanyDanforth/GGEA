@@ -92,23 +92,28 @@ Core.Utils.panelSizeForViewport = function()
 	local cam = workspace.CurrentCamera
 	local v = cam and cam.ViewportSize or Vector2.new(800, 600)
 
-	-- Safe margins
-	local mx, my = 16, 24
-	local safeW, safeH = math.max(320, v.X - mx*2), math.max(280, v.Y - my*2)
-
-	-- Design targets (caps)
 	local target = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
 
-	-- Final size: never exceed safe area, never exceed target
-	local w = math.min(target.X, safeW)
-	local h = math.min(target.Y, safeH)
-
-	-- On very small phones, shrink a bit more so it never feels cropped
 	if Core.Utils.isMobile() then
+		-- Mobile/Tablet: fill most of screen (tight margins for max space)
+		local mx, my = 16, 24
+		local safeW, safeH = math.max(320, v.X - mx*2), math.max(280, v.Y - my*2)
+		local w = math.min(target.X, safeW)
+		local h = math.min(target.Y, safeH)
 		w = math.max(300, w)
 		h = math.max(280, h)
+		return Vector2.new(w, h)
+	else
+		-- Desktop: BREATHING ROOM! (75-80% of viewport so you can see the blur!)
+		local maxW = math.floor(v.X * 0.75)  -- 75% width
+		local maxH = math.floor(v.Y * 0.82)  -- 82% height
+		local w = math.min(target.X, maxW)
+		local h = math.min(target.Y, maxH)
+		-- Never too small on desktop
+		w = math.max(900, w)
+		h = math.max(600, h)
+		return Vector2.new(w, h)
 	end
-	return Vector2.new(w, h)
 end
 
 -- Animation
