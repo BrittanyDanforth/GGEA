@@ -74,6 +74,29 @@ function Core.Utils.formatNumber(n)
 end
 function Core.Utils.blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
 
+-- Safe viewport calculation (accounts for topbar inset)
+Core.Utils.safeViewport = function()
+	local cam = workspace.CurrentCamera
+	if not cam then return Vector2.new(800,600) end
+	local inset = GuiService:GetGuiInset()
+	local v = cam.ViewportSize
+	-- subtract only top inset; left/right/bottom are 0 on Roblox
+	return Vector2.new(v.X, math.max(0, v.Y - inset.Y))
+end
+
+-- Calculate panel size that fits safely in viewport
+Core.Utils.panelSizeForViewport = function()
+	local sv = Core.Utils.safeViewport()
+	-- target "design" sizes
+	local target = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
+	-- margins around the panel so it never kisses edges
+	local marginX, marginY = 24, 32
+	-- never exceed the safe area
+	local w = math.min(target.X, math.max(320, sv.X - marginX*2))
+	local h = math.min(target.Y, math.max(280, sv.Y - marginY*2))
+	return Vector2.new(w, h)
+end
+
 -- Animation
 Core.Animation = {}
 function Core.Animation.tween(inst,props,d,style,dir)
@@ -305,6 +328,7 @@ end
 function Shop:createMainInterface()
 	self.gui = PlayerGui:FindFirstChild("SanrioShopMain") or Instance.new("ScreenGui")
 	self.gui.Name="SanrioShopMain"; self.gui.ResetOnSpawn=false; self.gui.DisplayOrder=1000; self.gui.Enabled=false; self.gui.Parent=PlayerGui
+	self.gui.IgnoreGuiInset = true -- we account for inset ourselves
 
 	self.blur = Lighting:FindFirstChild("SanrioShopBlur") or Instance.new("BlurEffect"); self.blur.Name="SanrioShopBlur"; self.blur.Size=0; self.blur.Parent=Lighting
 
@@ -314,7 +338,7 @@ function Shop:createMainInterface()
 	dim.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			local mousePos = input.Position
-			local guiInset = game:GetService("GuiService"):GetGuiInset()
+			local guiInset = GuiService:GetGuiInset()
 			local adjustedPos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
 			
 			-- Check if click is inside the main panel
@@ -331,9 +355,10 @@ function Shop:createMainInterface()
 		end
 	end)
 
-	local size = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
+	-- Safe panel sizing (never overflows!)
+	local panelSize = Core.Utils.panelSizeForViewport()
 	self.mainPanel = UI.Components.Frame({
-		Size=UDim2.fromOffset(size.X,size.Y), Position=UDim2.fromScale(0.5,0.5), AnchorPoint=Vector2.new(0.5,0.5),
+		Size=UDim2.fromOffset(panelSize.X, panelSize.Y), Position=UDim2.fromScale(0.5,0.5), AnchorPoint=Vector2.new(0.5,0.5),
 		BackgroundColor3=UI.Theme:get("background"), cornerRadius=UDim.new(0,24), stroke={color=UI.Theme:get("stroke"),thickness=1}, parent=self.gui
 	}):render()
 	UI.Responsive.scale(self.mainPanel)
@@ -379,6 +404,15 @@ function Shop:createMainInterface()
 	self.contentContainer = UI.Components.Frame({ Size=UDim2.new(1,-48,1,-210), Position=UDim2.fromOffset(24,196), BackgroundTransparency=1, parent=self.mainPanel }):render()
 	self:createPages()
 	self:selectTab("Cash")
+	
+	-- Reflow on viewport/inset changes (handles rotation, notches, etc.)
+	local function _reflow()
+		local s = Core.Utils.panelSizeForViewport()
+		self.mainPanel.Size = UDim2.fromOffset(s.X, s.Y)
+	end
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(_reflow)
+	GuiService:GetPropertyChangedSignal("GuiInset"):Connect(_reflow)
+	task.defer(_reflow)
 end
 
 function Shop:createPages()
@@ -663,22 +697,42 @@ end
 
 function Shop:open()
 	if Core.State.isOpen or Core.State.isAnimating then return end
-	Core.State.isAnimating=true; Core.State.isOpen=true
-	Core.DataManager.refreshPrices(); self:refreshAllProducts(); self.gui.Enabled=true
-	Core.Animation.tween(self.blur,{Size=24},Core.CONSTANTS.ANIM_MEDIUM)
-	local size = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
-	self.mainPanel.Position=UDim2.fromScale(0.5,0.55); self.mainPanel.Size=UDim2.fromOffset(size.X*0.92,size.Y*0.92)
-	Core.Animation.tween(self.mainPanel,{Position=UDim2.fromScale(0.5,0.5), Size=UDim2.fromOffset(size.X,size.Y)},Core.CONSTANTS.ANIM_BOUNCE,Enum.EasingStyle.Back)
+	Core.State.isAnimating = true; Core.State.isOpen = true
+	Core.DataManager.refreshPrices(); self:refreshAllProducts(); self.gui.Enabled = true
+	Core.Animation.tween(self.blur, {Size=24}, Core.CONSTANTS.ANIM_MEDIUM)
+	
+	-- Use safe viewport size (never overflows!)
+	local goal = Core.Utils.panelSizeForViewport()
+	self.mainPanel.Position = UDim2.fromScale(0.5, 0.55)
+	self.mainPanel.Size = UDim2.fromOffset(goal.X*0.92, goal.Y*0.92)
+	Core.Animation.tween(self.mainPanel, {
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(goal.X, goal.Y)
+	}, Core.CONSTANTS.ANIM_BOUNCE, Enum.EasingStyle.Back)
+	
 	self:selectTab(self.currentTab or "Cash")
-	Core.SoundSystem.play("open"); task.wait(Core.CONSTANTS.ANIM_BOUNCE); Core.State.isAnimating=false
+	Core.SoundSystem.play("open")
+	task.wait(Core.CONSTANTS.ANIM_BOUNCE)
+	Core.State.isAnimating = false
 end
 
 function Shop:close()
 	if not Core.State.isOpen or Core.State.isAnimating then return end
-	Core.State.isAnimating=true; Core.State.isOpen=false
-	Core.Animation.tween(self.blur,{Size=0},Core.CONSTANTS.ANIM_FAST)
-	Core.Animation.tween(self.mainPanel,{Position=UDim2.fromScale(0.5,0.55), Size=UDim2.fromOffset(self.mainPanel.Size.X.Offset*0.92,self.mainPanel.Size.Y.Offset*0.92)},Core.CONSTANTS.ANIM_FAST)
-	Core.SoundSystem.play("close"); task.wait(Core.CONSTANTS.ANIM_FAST); self.gui.Enabled=false; Core.State.isAnimating=false
+	Core.State.isAnimating = true; Core.State.isOpen = false
+	Core.Animation.tween(self.blur, {Size=0}, Core.CONSTANTS.ANIM_FAST)
+	
+	-- Use current size for close animation
+	local currentW = self.mainPanel.AbsoluteSize.X
+	local currentH = self.mainPanel.AbsoluteSize.Y
+	Core.Animation.tween(self.mainPanel, {
+		Position = UDim2.fromScale(0.5, 0.55),
+		Size = UDim2.fromOffset(currentW*0.92, currentH*0.92)
+	}, Core.CONSTANTS.ANIM_FAST)
+	
+	Core.SoundSystem.play("close")
+	task.wait(Core.CONSTANTS.ANIM_FAST)
+	self.gui.Enabled = false
+	Core.State.isAnimating = false
 end
 
 function Shop:toggle() if Core.State.isOpen then self:close() else self:open() end end
