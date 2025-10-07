@@ -329,11 +329,11 @@ function Shop:createToggleButton()
 	local sg=PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
 	sg.Name="SanrioShopToggle"; sg.ResetOnSpawn=false; sg.DisplayOrder=999; sg.Parent=PlayerGui
 
-	-- MOBILE: top-right to avoid jump button! DESKTOP: bottom-right
+	-- MOBILE/TABLET: middle-right (90% down) to avoid BOTH leaderboard AND jump button! DESKTOP: bottom-right
 	local onMobile = Core.Utils.isMobile()
 	local buttonSize = onMobile and UDim2.fromOffset(140, 50) or UDim2.fromOffset(180, 60)
-	local pos = onMobile and UDim2.new(1, -16, 0, 80) or UDim2.new(1, -20, 1, -20)
-	local anchor = onMobile and Vector2.new(1, 0) or Vector2.new(1, 1)
+	local pos = onMobile and UDim2.new(1, -12, 0.90, 0) or UDim2.new(1, -20, 1, -20)  -- 90% = perfect spot!
+	local anchor = onMobile and Vector2.new(1, 0.5) or Vector2.new(1, 1)
 	local iconSize = onMobile and 28 or 32
 	local iconPos = onMobile and UDim2.fromOffset(12, 11) or UDim2.fromOffset(16, 14)
 	local textSize = onMobile and 18 or 20
@@ -645,19 +645,20 @@ function Shop:createProductCard(product, productType, parent)
 	-- Title (ULTRA RESPONSIVE)
 	UI.Components.TextLabel({ Text=product.name, Size=UDim2.new(1,0,0,20), Font=Enum.Font.GothamBold, TextSize=titleSize, TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Top, parent=info }):render()
 
-	-- Description (ULTRA RESPONSIVE - Compact)
+	-- Description (ULTRA RESPONSIVE - Taller for tablets to avoid price overlap!)
 	local descText = isGamepass and product.description or ("Includes "..Core.Utils.formatNumber(product.amount).." Cash")
-	UI.Components.TextLabel({ Text=descText, Size=UDim2.new(1,0,0,28), Position=UDim2.fromOffset(0,22), Font=Enum.Font.Gotham, TextSize=descSize, TextColor3=UI.Theme:get("textSecondary"), TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Top, parent=info }):render()
+	local descHeight = Core.Utils.isMobile() and 42 or 28  -- Taller on tablets/mobile!
+	UI.Components.TextLabel({ Text=descText, Size=UDim2.new(1,0,0,descHeight), Position=UDim2.fromOffset(0,22), Font=Enum.Font.Gotham, TextSize=descSize, TextColor3=UI.Theme:get("textSecondary"), TextXAlignment=Enum.TextXAlignment.Left, TextYAlignment=Enum.TextYAlignment.Top, parent=info }):render()
 
-	-- Price (ULTRA RESPONSIVE - ALWAYS ABOVE BUTTON)
+	-- Price (ULTRA RESPONSIVE - ALWAYS ABOVE BUTTON - More space for tablets!)
 	local priceText = isGamepass and ("R$"..tostring(product.price or 0)) or ""
 	if priceText ~= "" then
-		local priceOffset = viewportX < 400 and -60 or -70
+		local priceOffset = viewportX < 400 and -58 or (Core.Utils.isMobile() and -66 or -70)  -- Extra spacing for tablets!
 		UI.Components.TextLabel({ Text=priceText, Size=UDim2.new(1,0,0,18), Position=UDim2.new(0,0,1,priceOffset), Font=Enum.Font.GothamBold, TextSize=priceSize, TextColor3=cardColor, TextXAlignment=Enum.TextXAlignment.Left, parent=info }):render()
 	end
 
 	-- Button (ULTRA RESPONSIVE HEIGHT)
-	local buttonHeight = viewportX < 400 and 36 or (Core.Utils.isMobile() and 40 or 44)
+	local buttonHeight = viewportX < 400 and 34 or (Core.Utils.isMobile() and 38 or 44)
 	local owned = isGamepass and Core.DataManager.checkOwnership(product.id)
 	local btnInst = UI.Components.Button({
 		Text = owned and "Owned" or "Purchase",
