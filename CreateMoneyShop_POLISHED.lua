@@ -73,6 +73,10 @@ function Core.Utils.formatNumber(n)
 	local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end; return s
 end
 function Core.Utils.blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
+function Core.Utils.viewportX()
+	local cam = workspace.CurrentCamera
+	return (cam and cam.ViewportSize.X) or 1920
+end
 
 -- Safe viewport calculation (accounts for topbar inset)
 Core.Utils.safeViewport = function()
@@ -380,11 +384,12 @@ function Shop:createMainInterface()
 		{ id="Gamepasses", name="Passes", icon="rbxassetid://10709727148", color=UI.Theme:get("kuromi")  },
 	}
 	
-	-- Responsive tab sizing
-	local tabWidth = Core.Utils.isMobile() and 160 or 220
+	-- Responsive tab sizing (never wraps!)
+	local vw = Core.Utils.viewportX()
+	local tabWidth = (vw < 450) and 120 or (Core.Utils.isMobile() and 160 or 220)
 	local tabHeight = Core.Utils.isMobile() and 50 or 60
-	local iconSize = Core.Utils.isMobile() and 24 or 32
-	local textSize = Core.Utils.isMobile() and 16 or 20
+	local iconSize = (vw < 450) and 20 or (Core.Utils.isMobile() and 24 or 32)
+	local textSize = (vw < 450) and 14 or (Core.Utils.isMobile() and 16 or 20)
 	
 	for _,d in ipairs(tabs) do
 		local tab = UI.Components.Button({
@@ -415,7 +420,7 @@ function Shop:createMainInterface()
 end
 
 function Shop:createPages()
-	-- Cash (RESPONSIVE - SCALES DOWN, NO STACKING!)
+	-- Cash (TWO COLUMNS LOCKED - SCALE-BASED!)
 	local cashPage = UI.Components.Frame({ Name="CashPage", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Visible=false, parent=self.contentContainer }):render()
 	local sfCash = Instance.new("ScrollingFrame")
 	sfCash.BackgroundTransparency=1
@@ -427,49 +432,51 @@ function Shop:createPages()
 	sfCash.CanvasSize = UDim2.new(0,0,0,0)
 	sfCash.Parent=cashPage
 	
-	-- Responsive card sizing (scales down on small screens)
-	local function updateCashGrid()
-		local viewportSize = workspace.CurrentCamera.ViewportSize.X
-		local cardWidth, cardHeight, padding
-		
-		if viewportSize < 400 then
-			-- EXTRA TINY screens (phones in portrait)
-			cardWidth, cardHeight, padding = 240, 160, 12
-		elseif viewportSize < 600 then
-			-- Very small screens
-			cardWidth, cardHeight, padding = 280, 180, 16
-		elseif viewportSize < 900 then
-			-- Small screens  
-			cardWidth, cardHeight, padding = 380, 240, 20
+	-- Padding for scroll frame
+	local padCash = 20
+	local padInstCash = Instance.new("UIPadding")
+	padInstCash.PaddingTop = UDim.new(0, padCash)
+	padInstCash.PaddingBottom = UDim.new(0, padCash)
+	padInstCash.PaddingLeft = UDim.new(0, padCash)
+	padInstCash.PaddingRight = UDim.new(0, padCash)
+	padInstCash.Parent = sfCash
+	
+	-- Grid with SCALE-BASED width (2 columns locked!)
+	local gridCash = Instance.new("UIGridLayout")
+	gridCash.SortOrder = Enum.SortOrder.LayoutOrder
+	gridCash.FillDirection = Enum.FillDirection.Horizontal
+	gridCash.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	gridCash.VerticalAlignment = Enum.VerticalAlignment.Begin
+	gridCash.CellPadding = UDim2.fromOffset(16, 16)
+	gridCash.Parent = sfCash
+	
+	local function sizeCashGrid()
+		local vx = Core.Utils.viewportX()
+		local cardH
+		if vx < 370 then
+			-- Super tiny: single column (readable)
+			cardH = 180
+			gridCash.CellSize = UDim2.new(1, -4, 0, cardH)
 		else
-			-- Normal/large screens
-			cardWidth, cardHeight, padding = 520, 300, 24
-		end
-		
-		local gridCash = sfCash:FindFirstChildOfClass("UIGridLayout")
-		if gridCash then
-			gridCash.CellSize = UDim2.fromOffset(cardWidth, cardHeight)
-			gridCash.CellPadding = UDim2.fromOffset(padding, padding)
+			-- Two columns LOCKED; only HEIGHT changes
+			if vx < 600 then cardH = 180
+			elseif vx < 900 then cardH = 240
+			else cardH = 300
+			end
+			gridCash.CellSize = UDim2.new(0.5, -8, 0, cardH)
 		end
 	end
 	
-	local gridCash=Instance.new("UIGridLayout")
-	gridCash.CellPadding=UDim2.fromOffset(24,24)
-	gridCash.CellSize = UDim2.fromOffset(520, 300)
-	gridCash.HorizontalAlignment=Enum.HorizontalAlignment.Center
-	gridCash.Parent=sfCash
-	
 	gridCash:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		sfCash.CanvasSize=UDim2.new(0,0,0,gridCash.AbsoluteContentSize.Y+60)
+		sfCash.CanvasSize = UDim2.new(0, 0, 0, gridCash.AbsoluteContentSize.Y + padCash*2)
 	end)
 	
-	-- Update on viewport change
-	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateCashGrid)
-	updateCashGrid()
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizeCashGrid)
+	sizeCashGrid()
 	
 	for _,p in ipairs(Core.DataManager.products.cash) do self:createProductCard(p, "cash", sfCash) end
 
-	-- Passes (RESPONSIVE - SCALES DOWN, NO STACKING!)
+	-- Passes (TWO COLUMNS LOCKED - SCALE-BASED!)
 	local passPage = UI.Components.Frame({ Name="GamepassesPage", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Visible=false, parent=self.contentContainer }):render()
 	local sfPass = Instance.new("ScrollingFrame")
 	sfPass.BackgroundTransparency=1
@@ -481,42 +488,47 @@ function Shop:createPages()
 	sfPass.CanvasSize = UDim2.new(0,0,0,0)
 	sfPass.Parent=passPage
 	
-	-- Responsive card sizing
-	local function updatePassGrid()
-		local viewportSize = workspace.CurrentCamera.ViewportSize.X
-		local cardWidth, cardHeight, padding
-		
-		if viewportSize < 400 then
-			-- EXTRA TINY screens (phones in portrait)
-			cardWidth, cardHeight, padding = 240, 160, 12
-		elseif viewportSize < 600 then
-			cardWidth, cardHeight, padding = 280, 180, 16
-		elseif viewportSize < 900 then
-			cardWidth, cardHeight, padding = 380, 240, 20
+	-- Padding for scroll frame
+	local padPass = 20
+	local padInstPass = Instance.new("UIPadding")
+	padInstPass.PaddingTop = UDim.new(0, padPass)
+	padInstPass.PaddingBottom = UDim.new(0, padPass)
+	padInstPass.PaddingLeft = UDim.new(0, padPass)
+	padInstPass.PaddingRight = UDim.new(0, padPass)
+	padInstPass.Parent = sfPass
+	
+	-- Grid with SCALE-BASED width (2 columns locked!)
+	local gridPass = Instance.new("UIGridLayout")
+	gridPass.SortOrder = Enum.SortOrder.LayoutOrder
+	gridPass.FillDirection = Enum.FillDirection.Horizontal
+	gridPass.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	gridPass.VerticalAlignment = Enum.VerticalAlignment.Begin
+	gridPass.CellPadding = UDim2.fromOffset(16, 16)
+	gridPass.Parent = sfPass
+	
+	local function sizePassGrid()
+		local vx = Core.Utils.viewportX()
+		local cardH
+		if vx < 370 then
+			-- Super tiny: single column (readable)
+			cardH = 180
+			gridPass.CellSize = UDim2.new(1, -4, 0, cardH)
 		else
-			cardWidth, cardHeight, padding = 520, 300, 24
-		end
-		
-		local gridPass = sfPass:FindFirstChildOfClass("UIGridLayout")
-		if gridPass then
-			gridPass.CellSize = UDim2.fromOffset(cardWidth, cardHeight)
-			gridPass.CellPadding = UDim2.fromOffset(padding, padding)
+			-- Two columns LOCKED; only HEIGHT changes
+			if vx < 600 then cardH = 180
+			elseif vx < 900 then cardH = 240
+			else cardH = 300
+			end
+			gridPass.CellSize = UDim2.new(0.5, -8, 0, cardH)
 		end
 	end
 	
-	local gridPass=Instance.new("UIGridLayout")
-	gridPass.CellPadding=UDim2.fromOffset(24,24)
-	gridPass.CellSize = UDim2.fromOffset(520, 300)
-	gridPass.HorizontalAlignment=Enum.HorizontalAlignment.Center
-	gridPass.Parent=sfPass
-	
 	gridPass:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		sfPass.CanvasSize=UDim2.new(0,0,0,gridPass.AbsoluteContentSize.Y+60)
+		sfPass.CanvasSize = UDim2.new(0, 0, 0, gridPass.AbsoluteContentSize.Y + padPass*2)
 	end)
 	
-	-- Update on viewport change
-	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updatePassGrid)
-	updatePassGrid()
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizePassGrid)
+	sizePassGrid()
 	
 	for _,gp in ipairs(Core.DataManager.products.gamepasses) do self:createProductCard(gp, "gamepass", sfPass) end
 
@@ -552,10 +564,9 @@ function Shop:createProductCard(product, productType, parent)
 	local isGamepass = (productType=="gamepass")
 	local cardColor = isGamepass and UI.Theme:get("kuromi") or UI.Theme:get("cinna")
 
+	-- Card (grid controls size via CellSize)
 	local card = UI.Components.Frame({
 		Name=product.name.."Card",
-		Size=UDim2.fromOffset(Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.X or Core.CONSTANTS.CARD_SIZE.X,
-			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.Y or Core.CONSTANTS.CARD_SIZE.Y),
 		BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(0,18),
 		stroke={color=cardColor,thickness=2,transparency=0.4}, parent=parent
 	}):render()
