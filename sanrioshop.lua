@@ -283,9 +283,9 @@ function Shop:createToggleButton()
 	if isPhone then
 		pos = UDim2.new(1,-16,0,80);       anchor=Vector2.new(1,0)
 	elseif isTablet then
-		pos = UDim2.new(1,-16,0.5,0);      anchor=Vector2.new(1,0.5)
+		pos = UDim2.new(1,-16,0.5,-60);     anchor=Vector2.new(1,0.5)  -- 60px above center
 	else
-		pos = UDim2.new(1,-16,0.5,0);      anchor=Vector2.new(1,0.5)
+		pos = UDim2.new(1,-16,0.5,-70);     anchor=Vector2.new(1,0.5)  -- 70px above center for desktop
 	end
 
 	local iconSize = isPhone and 28 or (isTablet and 30 or 32)
