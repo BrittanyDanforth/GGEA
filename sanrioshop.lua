@@ -40,7 +40,7 @@ Core.CONSTANTS = {
 	CACHE_PRODUCT_INFO = 300,
 	CACHE_OWNERSHIP    = 60,
 
-	PURCHASE_TIMEOUT = 15,
+	PURCHASE_TIMEOUT = 5,  -- Reduced from 15 to 5 seconds
 }
 
 Core.State = {
@@ -549,62 +549,14 @@ function Shop:addToggleSwitch(product, imageContainer)
 	btn.Parent = wrap
 	wrap.ClipsDescendants = true  -- nothing bleeds outside rounded pill
 
-	-- ROW container fills the pill
-	local row = Instance.new("Frame")
-	row.BackgroundTransparency = 1
-	row.Size = UDim2.fromScale(1,1)
-	row.Parent = btn
-	local pad = Instance.new("UIPadding")
-	pad.PaddingLeft = UDim.new(0, 12)
-	pad.PaddingRight = UDim.new(0, 12)
-	pad.Parent = row
-
-	-- LEFT: icon + feature label (clipped to prevent overlap)
-	local left = Instance.new("Frame")
-	left.BackgroundTransparency = 1
-	left.Size = UDim2.new(1, -60, 1, 0)   -- leave room on the right for the state text
-	left.ClipsDescendants = true          -- prevent text overflow
-	left.Parent = row
-
-	local leftList = Instance.new("UIListLayout")
-	leftList.FillDirection = Enum.FillDirection.Horizontal
-	leftList.Padding = UDim.new(0, 8)
-	leftList.VerticalAlignment = Enum.VerticalAlignment.Center
-	leftList.HorizontalAlignment = Enum.HorizontalAlignment.Left
-	leftList.Parent = left
-
-	local icon = Instance.new("ImageLabel")
-	icon.BackgroundTransparency = 1
-	icon.Size = UDim2.fromOffset(18,18)
-	icon.Image = "rbxassetid://10709727148"
-	icon.Parent = left
-
-	local label = Instance.new("TextLabel")
-	label.BackgroundTransparency = 1
-	label.Font = Enum.Font.GothamMedium
-	label.TextSize = 14
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.TextWrapped = false
-	label.TextTruncate = Enum.TextTruncate.AtEnd  -- ellipsis if text is too long
-	label.Text = "Auto Collect"
-	label.TextColor3 = UI.Theme:get("text")
-	label.AutomaticSize = Enum.AutomaticSize.None
-	label.Size = UDim2.new(1, 0, 1, 0)           -- fill available space
-	label.Parent = left
-
-	-- RIGHT: state text pinned to the right edge with chip style
-	local stateTxt = Instance.new("TextLabel")
-	stateTxt.BackgroundTransparency = 1
-	stateTxt.Font = Enum.Font.GothamBold
-	stateTxt.TextSize = 14
-	stateTxt.TextXAlignment = Enum.TextXAlignment.Center
-	stateTxt.AnchorPoint = Vector2.new(1, 0.5)
-	stateTxt.Position = UDim2.new(1, -12, 0.5, 0)  -- stick to right padding
-	stateTxt.Size = UDim2.fromOffset(44, 22)       -- fixed space, no overlap
-	stateTxt.BackgroundTransparency = 0.4
-	stateTxt.BackgroundColor3 = UI.Theme:get("stroke")
-	stateTxt.Parent = row
-	local stc = Instance.new("UICorner"); stc.CornerRadius = UDim.new(0, 8); stc.Parent = stateTxt
+	-- Single label solution - no overlap possible
+	local chip = Instance.new("TextLabel")
+	chip.BackgroundTransparency = 1
+	chip.Size = UDim2.fromScale(1,1)
+	chip.Font = Enum.Font.GothamBold
+	chip.TextSize = 14
+	chip.TextXAlignment = Enum.TextXAlignment.Center
+	chip.Parent = btn
 
 	-- fetch initial state
 	local state = false
@@ -621,21 +573,13 @@ function Shop:addToggleSwitch(product, imageContainer)
 		if on then
 			wrap.BackgroundColor3 = UI.Theme:get("success")
 			stroke.Color = UI.Theme:get("success")
-			icon.ImageColor3 = Color3.new(1,1,1)
-			label.TextColor3 = Color3.new(1,1,1)
-			stateTxt.TextColor3 = Color3.new(1,1,1)
-			stateTxt.Text = "ON"
-			stateTxt.BackgroundTransparency = 0.2
-			stateTxt.BackgroundColor3 = UI.Theme:get("success")
+			chip.TextColor3 = Color3.new(1,1,1)
+			chip.Text = "Auto Collect : ON"
 		else
 			wrap.BackgroundColor3 = UI.Theme:get("surface")
 			stroke.Color = UI.Theme:get("stroke")
-			icon.ImageColor3 = UI.Theme:get("textSecondary")
-			label.TextColor3 = UI.Theme:get("text")
-			stateTxt.TextColor3 = UI.Theme:get("textSecondary")
-			stateTxt.Text = "OFF"
-			stateTxt.BackgroundTransparency = 0.4
-			stateTxt.BackgroundColor3 = UI.Theme:get("stroke")
+			chip.TextColor3 = UI.Theme:get("text")
+			chip.Text = "Auto Collect : OFF"
 		end
 	end
 	paint(state)
@@ -798,8 +742,13 @@ function Shop:promptPurchase(product, kind, button)
 		Core.State.purchasePending[product.id] = nil
 		Core.SoundSystem.play("error"); warn("[SanrioShop] Prompt failed:", err)
 	else
-		task.delay(Core.CONSTANTS.PURCHASE_TIMEOUT,function()
-			local p=Core.State.purchasePending[product.id]; if p and p.button and p.button.Parent then p.button.Text, p.button.Active = "Purchase", true end
+		-- Shorter timeout - 5 seconds instead of 15
+		task.delay(5,function()
+			local p=Core.State.purchasePending[product.id]
+			if p and p.button and p.button.Parent then 
+				p.button.Text, p.button.Active = "Purchase", true
+				print("[SanrioShop] Reset button after timeout for product", product.id)
+			end
 			Core.State.purchasePending[product.id]=nil
 		end)
 	end
