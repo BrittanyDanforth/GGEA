@@ -77,6 +77,30 @@ local function syncFade(parts, decals, toTransparency, duration, useOriginal)
     for i, dd in ipairs(decals) do if dd.Parent then dd.Transparency = targetD[i] end end
 end
 
+-- Prepare template once: pre-weld and pre-scale to avoid per-spawn hitch
+local preparedTemplates = setmetatable({}, { __mode = "k" })
+local function prepareOnce(srcModel, scale)
+    local cached = preparedTemplates[srcModel]
+    if cached and cached.Parent == nil then
+        return cached
+    end
+    local m = srcModel:Clone()
+    local primary = findPrimaryPart(m) or m:FindFirstChildWhichIsA("BasePart", true)
+    if primary then m.PrimaryPart = primary end
+    for _, j in ipairs(m:GetDescendants()) do
+        if j:IsA("WeldConstraint") or j:IsA("Motor6D") then j:Destroy() end
+    end
+    if scale and scale ~= 1 then
+        local pivot = m:GetPivot()
+        m:ScaleTo(scale)
+        m:PivotTo(pivot)
+    end
+    if primary then weldAllParts(m, primary) end
+    m.Parent = nil -- keep out of world; used as clone base
+    preparedTemplates[srcModel] = m
+    return m
+end
+
 local function setupCollisionGroups(dropGroup, playerGroup)
 	pcall(function()
 		PhysicsService:RegisterCollisionGroup(dropGroup)
@@ -255,12 +279,15 @@ function Core.RunModel(config)
     setupCollisionGroups(GROUP, PLAYER_GRP)
     setupPlayerCollision(PLAYER_GRP)
 
+    -- Prepare a welded, scaled base clone once
+    local base = prepareOnce(template, SCALE_FACTOR)
+
     local count = 0
     while true do
         task.wait(DROP_RATE)
         count += 1
 
-        local model = template:Clone()
+        local model = base:Clone()
         model.Name = namePrefix .. tostring(count)
 
         local primary = findPrimaryPart(model)
@@ -270,16 +297,7 @@ function Core.RunModel(config)
             continue
         end
 
-        -- remove pre-welds that might fight ours
-        for _, j in ipairs(model:GetDescendants()) do
-            if j:IsA("WeldConstraint") or j:IsA("Motor6D") then j:Destroy() end
-        end
-
-        -- scale & weld
-        local pivot = model:GetPivot()
-        model:ScaleTo(SCALE_FACTOR)
-        model:PivotTo(pivot)
-        weldAllParts(model, primary)
+        -- Model already welded and scaled via prepareOnce
 
         -- physics + cash
         for _, p in ipairs(model:GetDescendants()) do
@@ -318,8 +336,9 @@ function Core.RunModel(config)
         primary.AssemblyLinearVelocity = Vector3.new(0, -8, 0)
         primary:SetAttribute("SpawnTime", tick())
 
-        -- synchronized FADE-IN
+        -- synchronized FADE-IN (parent after initial state is set)
         local partsIn, decalsIn = gatherRenderable(model)
+        -- Set to hidden before parenting to avoid visible pop
         for _, bp in ipairs(partsIn) do bp:SetAttribute("OrigT", bp.Transparency); bp.Transparency = 1 end
         for _, dd in ipairs(decalsIn) do dd:SetAttribute("OrigT", dd.Transparency); dd.Transparency = 1 end
         model.Parent = storage
