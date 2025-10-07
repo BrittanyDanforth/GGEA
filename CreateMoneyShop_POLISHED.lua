@@ -65,11 +65,8 @@ local ownershipCache = Cache.new(Core.CONSTANTS.CACHE_OWNERSHIP)
 -- Utils
 Core.Utils = {}
 function Core.Utils.isMobile()
-	-- Real mobile if touch is primary and there's no mouse/keyboard
-	return UserInputService.TouchEnabled
-	   and not UserInputService.KeyboardEnabled
-	   and not UserInputService.MouseEnabled
-	   or GuiService:IsTenFootInterface()
+	-- Treat as mobile when touch is present; don't require KB/mouse absence
+	return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface()
 end
 function Core.Utils.formatNumber(n)
 	local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end; return s
@@ -92,13 +89,26 @@ end
 
 -- Calculate panel size that fits safely in viewport
 Core.Utils.panelSizeForViewport = function()
-	local sv = Core.Utils.safeViewport()
+	local cam = workspace.CurrentCamera
+	local v = cam and cam.ViewportSize or Vector2.new(800, 600)
+
+	-- Safe margins
+	local mx, my = 16, 24
+	local safeW, safeH = math.max(320, v.X - mx*2), math.max(280, v.Y - my*2)
+
+	-- Design targets (caps)
 	local target = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
-	-- Fill up to 90% of safe area, but never exceed our target design size
-	local w = math.min(target.X, math.floor(sv.X * 0.90))
-	local h = math.min(target.Y, math.floor(sv.Y * 0.90))
-	-- Keep some sane minimums
-	return Vector2.new(math.max(720, w), math.max(520, h))
+
+	-- Final size: never exceed safe area, never exceed target
+	local w = math.min(target.X, safeW)
+	local h = math.min(target.Y, safeH)
+
+	-- On very small phones, shrink a bit more so it never feels cropped
+	if Core.Utils.isMobile() then
+		w = math.max(300, w)
+		h = math.max(280, h)
+	end
+	return Vector2.new(w, h)
 end
 
 -- Animation
@@ -319,20 +329,31 @@ function Shop:createToggleButton()
 	local sg=PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
 	sg.Name="SanrioShopToggle"; sg.ResetOnSpawn=false; sg.DisplayOrder=999; sg.Parent=PlayerGui
 
+	-- MOBILE: top-right to avoid jump button! DESKTOP: bottom-right
+	local onMobile = Core.Utils.isMobile()
+	local buttonSize = onMobile and UDim2.fromOffset(140, 50) or UDim2.fromOffset(180, 60)
+	local pos = onMobile and UDim2.new(1, -16, 0, 80) or UDim2.new(1, -20, 1, -20)
+	local anchor = onMobile and Vector2.new(1, 0) or Vector2.new(1, 1)
+	local iconSize = onMobile and 28 or 32
+	local iconPos = onMobile and UDim2.fromOffset(12, 11) or UDim2.fromOffset(16, 14)
+	local textSize = onMobile and 18 or 20
+	local textPos = onMobile and UDim2.fromOffset(48, 0) or UDim2.fromOffset(56, 0)
+
 	self.toggleButton = UI.Components.Button({
-		Text="", Size=UDim2.fromOffset(180,60), Position=UDim2.new(1,-20,1,-20), AnchorPoint=Vector2.new(1,1),
+		Text="", Size=buttonSize, Position=pos, AnchorPoint=anchor,
 		BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(1,0),
 		stroke={color=UI.Theme:get("accent"),thickness=2}, parent=sg, onClick=function() self:toggle() end
 	}):render()
 
-	UI.Components.Image({ Image="rbxassetid://17398522865", Size=UDim2.fromOffset(32,32), Position=UDim2.fromOffset(16,14), parent=self.toggleButton }):render()
-	UI.Components.TextLabel({ Text="Shop", Size=UDim2.new(1,-64,1,0), Position=UDim2.fromOffset(56,0), TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=20, parent=self.toggleButton }):render()
+	UI.Components.Image({ Image="rbxassetid://17398522865", Size=UDim2.fromOffset(iconSize,iconSize), Position=iconPos, parent=self.toggleButton }):render()
+	UI.Components.TextLabel({ Text="Shop", Size=UDim2.new(1,-64,1,0), Position=textPos, TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=textSize, parent=self.toggleButton }):render()
 end
 
 function Shop:createMainInterface()
 	self.gui = PlayerGui:FindFirstChild("SanrioShopMain") or Instance.new("ScreenGui")
-	self.gui.Name="SanrioShopMain"; self.gui.ResetOnSpawn=false; self.gui.DisplayOrder=1000; self.gui.Enabled=false; self.gui.Parent=PlayerGui
-	self.gui.IgnoreGuiInset = true -- we account for inset ourselves
+	self.gui.Name="SanrioShopMain"; self.gui.ResetOnSpawn=false; self.gui.DisplayOrder=1000; self.gui.Enabled=false
+	self.gui.IgnoreGuiInset=false  -- Let Roblox offset for topbar!
+	self.gui.Parent=PlayerGui
 
 	self.blur = Lighting:FindFirstChild("SanrioShopBlur") or Instance.new("BlurEffect"); self.blur.Name="SanrioShopBlur"; self.blur.Size=0; self.blur.Parent=Lighting
 
@@ -464,18 +485,16 @@ function Shop:createPages()
 	gridCash.Parent = cashContent
 	
 	local function sizeCashGrid()
-		local vx = Core.Utils.viewportX()
+		local panelW = self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X
+		local oneCol = panelW < 700  -- Earlier single-column on phones!
+		
 		local cardH
-		if vx < 370 then
+		if oneCol then
 			cardH = 200
-			gridCash.CellSize = UDim2.new(1, -4, 0, cardH)
+			gridCash.CellSize = UDim2.new(1, -8, 0, cardH)
 		else
-			-- Two columns LOCKED; only HEIGHT changes
-			if vx < 600 then cardH = 200
-			elseif vx < 900 then cardH = 260
-			else cardH = 320  -- Taller so all content fits
-			end
-			gridCash.CellSize = UDim2.new(0.5, -8, 0, cardH)
+			cardH = (panelW < 950) and 240 or 280
+			gridCash.CellSize = UDim2.new(0.5, -12, 0, cardH)
 		end
 	end
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizeCashGrid)
@@ -522,18 +541,16 @@ function Shop:createPages()
 	gridPass.Parent = passContent
 	
 	local function sizePassGrid()
-		local vx = Core.Utils.viewportX()
+		local panelW = self.mainPanel and self.mainPanel.AbsoluteSize.X or Core.Utils.safeViewport().X
+		local oneCol = panelW < 700  -- Earlier single-column on phones!
+		
 		local cardH
-		if vx < 370 then
+		if oneCol then
 			cardH = 200
-			gridPass.CellSize = UDim2.new(1, -4, 0, cardH)
+			gridPass.CellSize = UDim2.new(1, -8, 0, cardH)
 		else
-			-- Two columns LOCKED; only HEIGHT changes
-			if vx < 600 then cardH = 200
-			elseif vx < 900 then cardH = 240
-			else cardH = 280  -- Was 320; smaller feels less zoomed
-			end
-			gridPass.CellSize = UDim2.new(0.5, -8, 0, cardH)
+			cardH = (panelW < 950) and 240 or 280
+			gridPass.CellSize = UDim2.new(0.5, -12, 0, cardH)
 		end
 	end
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizePassGrid)
