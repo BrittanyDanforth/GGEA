@@ -405,13 +405,12 @@ function Shop:createMainInterface()
 	self:createPages()
 	self:selectTab("Cash")
 	
-	-- Reflow on viewport/inset changes (handles rotation, notches, etc.)
+	-- Reflow on viewport changes (handles rotation, resize, etc.)
 	local function _reflow()
 		local s = Core.Utils.panelSizeForViewport()
 		self.mainPanel.Size = UDim2.fromOffset(s.X, s.Y)
 	end
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(_reflow)
-	GuiService:GetPropertyChangedSignal("GuiInset"):Connect(_reflow)
 	task.defer(_reflow)
 end
 
