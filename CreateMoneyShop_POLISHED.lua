@@ -365,7 +365,7 @@ function Shop:createMainInterface()
 		Size=UDim2.fromOffset(panelSize.X, panelSize.Y), Position=UDim2.fromScale(0.5,0.5), AnchorPoint=Vector2.new(0.5,0.5),
 		BackgroundColor3=UI.Theme:get("background"), cornerRadius=UDim.new(0,24), stroke={color=UI.Theme:get("stroke"),thickness=1}, parent=self.gui
 	}):render()
-	UI.Responsive.scale(self.mainPanel)
+	-- NO UIScale - panelSizeForViewport already handles sizing!
 
 	-- Header (POLISHED)
 	local header = UI.Components.Frame({ Size=UDim2.new(1,-48,0,80), Position=UDim2.fromOffset(24,24), BackgroundColor3=UI.Theme:get("surfaceAlt"), cornerRadius=UDim.new(0,18), parent=self.mainPanel }):render()
@@ -422,24 +422,32 @@ end
 function Shop:createPages()
 	-- Cash (TWO COLUMNS LOCKED - SCALE-BASED!)
 	local cashPage = UI.Components.Frame({ Name="CashPage", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Visible=false, parent=self.contentContainer }):render()
-	local sfCash = Instance.new("ScrollingFrame")
-	sfCash.BackgroundTransparency=1
-	sfCash.ScrollBarThickness=6
-	sfCash.ScrollBarImageColor3=UI.Theme:get("accent")
-	sfCash.BorderSizePixel=0
-	sfCash.Size=UDim2.fromScale(1,1)
-	sfCash.ScrollingDirection = Enum.ScrollingDirection.Y
-	sfCash.CanvasSize = UDim2.new(0,0,0,0)
-	sfCash.Parent=cashPage
 	
-	-- Padding for scroll frame
+	local sfCash = Instance.new("ScrollingFrame")
+	sfCash.BackgroundTransparency = 1
+	sfCash.ScrollBarThickness = 6
+	sfCash.ScrollBarImageColor3 = UI.Theme:get("accent")
+	sfCash.BorderSizePixel = 0
+	sfCash.Size = UDim2.fromScale(1,1)
+	sfCash.ScrollingDirection = Enum.ScrollingDirection.Y
+	sfCash.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- Auto-grow canvas!
+	sfCash.Parent = cashPage
+	
+	-- Content container inside the scrolling frame
+	local cashContent = Instance.new("Frame")
+	cashContent.BackgroundTransparency = 1
+	cashContent.Size = UDim2.new(1, 0, 0, 0)
+	cashContent.AutomaticSize = Enum.AutomaticSize.Y
+	cashContent.Parent = sfCash
+	
+	-- Padding
 	local padCash = 20
 	local padInstCash = Instance.new("UIPadding")
 	padInstCash.PaddingTop = UDim.new(0, padCash)
-	padInstCash.PaddingBottom = UDim.new(0, padCash)
+	padInstCash.PaddingBottom = UDim.new(0, padCash + 8)  -- Extra bottom so last row never clips
 	padInstCash.PaddingLeft = UDim.new(0, padCash)
 	padInstCash.PaddingRight = UDim.new(0, padCash)
-	padInstCash.Parent = sfCash
+	padInstCash.Parent = cashContent
 	
 	-- Grid with SCALE-BASED width (2 columns locked!)
 	local gridCash = Instance.new("UIGridLayout")
@@ -448,54 +456,56 @@ function Shop:createPages()
 	gridCash.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gridCash.VerticalAlignment = Enum.VerticalAlignment.Top
 	gridCash.CellPadding = UDim2.fromOffset(16, 16)
-	gridCash.Parent = sfCash
+	gridCash.Parent = cashContent
 	
 	local function sizeCashGrid()
 		local vx = Core.Utils.viewportX()
 		local cardH
 		if vx < 370 then
-			-- Super tiny: single column (readable)
-			cardH = 180
+			cardH = 200
 			gridCash.CellSize = UDim2.new(1, -4, 0, cardH)
 		else
 			-- Two columns LOCKED; only HEIGHT changes
-			if vx < 600 then cardH = 180
-			elseif vx < 900 then cardH = 240
-			else cardH = 300
+			if vx < 600 then cardH = 200
+			elseif vx < 900 then cardH = 260
+			else cardH = 320  -- Taller so all content fits
 			end
 			gridCash.CellSize = UDim2.new(0.5, -8, 0, cardH)
 		end
 	end
-	
-	gridCash:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		sfCash.CanvasSize = UDim2.new(0, 0, 0, gridCash.AbsoluteContentSize.Y + padCash*2)
-	end)
-	
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizeCashGrid)
 	sizeCashGrid()
 	
-	for _,p in ipairs(Core.DataManager.products.cash) do self:createProductCard(p, "cash", sfCash) end
+	for _,p in ipairs(Core.DataManager.products.cash) do self:createProductCard(p, "cash", cashContent) end
 
 	-- Passes (TWO COLUMNS LOCKED - SCALE-BASED!)
 	local passPage = UI.Components.Frame({ Name="GamepassesPage", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Visible=false, parent=self.contentContainer }):render()
-	local sfPass = Instance.new("ScrollingFrame")
-	sfPass.BackgroundTransparency=1
-	sfPass.ScrollBarThickness=6
-	sfPass.ScrollBarImageColor3=UI.Theme:get("accent")
-	sfPass.BorderSizePixel=0
-	sfPass.Size=UDim2.fromScale(1,1)
-	sfPass.ScrollingDirection = Enum.ScrollingDirection.Y
-	sfPass.CanvasSize = UDim2.new(0,0,0,0)
-	sfPass.Parent=passPage
 	
-	-- Padding for scroll frame
+	local sfPass = Instance.new("ScrollingFrame")
+	sfPass.BackgroundTransparency = 1
+	sfPass.ScrollBarThickness = 6
+	sfPass.ScrollBarImageColor3 = UI.Theme:get("accent")
+	sfPass.BorderSizePixel = 0
+	sfPass.Size = UDim2.fromScale(1,1)
+	sfPass.ScrollingDirection = Enum.ScrollingDirection.Y
+	sfPass.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- Auto-grow canvas!
+	sfPass.Parent = passPage
+	
+	-- Content container inside the scrolling frame
+	local passContent = Instance.new("Frame")
+	passContent.BackgroundTransparency = 1
+	passContent.Size = UDim2.new(1, 0, 0, 0)
+	passContent.AutomaticSize = Enum.AutomaticSize.Y
+	passContent.Parent = sfPass
+	
+	-- Padding
 	local padPass = 20
 	local padInstPass = Instance.new("UIPadding")
 	padInstPass.PaddingTop = UDim.new(0, padPass)
-	padInstPass.PaddingBottom = UDim.new(0, padPass)
+	padInstPass.PaddingBottom = UDim.new(0, padPass + 8)  -- Extra bottom so last row never clips
 	padInstPass.PaddingLeft = UDim.new(0, padPass)
 	padInstPass.PaddingRight = UDim.new(0, padPass)
-	padInstPass.Parent = sfPass
+	padInstPass.Parent = passContent
 	
 	-- Grid with SCALE-BASED width (2 columns locked!)
 	local gridPass = Instance.new("UIGridLayout")
@@ -504,33 +514,27 @@ function Shop:createPages()
 	gridPass.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gridPass.VerticalAlignment = Enum.VerticalAlignment.Top
 	gridPass.CellPadding = UDim2.fromOffset(16, 16)
-	gridPass.Parent = sfPass
+	gridPass.Parent = passContent
 	
 	local function sizePassGrid()
 		local vx = Core.Utils.viewportX()
 		local cardH
 		if vx < 370 then
-			-- Super tiny: single column (readable)
-			cardH = 180
+			cardH = 200
 			gridPass.CellSize = UDim2.new(1, -4, 0, cardH)
 		else
 			-- Two columns LOCKED; only HEIGHT changes
-			if vx < 600 then cardH = 180
-			elseif vx < 900 then cardH = 240
-			else cardH = 300
+			if vx < 600 then cardH = 200
+			elseif vx < 900 then cardH = 260
+			else cardH = 320  -- Taller so all content fits
 			end
 			gridPass.CellSize = UDim2.new(0.5, -8, 0, cardH)
 		end
 	end
-	
-	gridPass:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		sfPass.CanvasSize = UDim2.new(0, 0, 0, gridPass.AbsoluteContentSize.Y + padPass*2)
-	end)
-	
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizePassGrid)
 	sizePassGrid()
 	
-	for _,gp in ipairs(Core.DataManager.products.gamepasses) do self:createProductCard(gp, "gamepass", sfPass) end
+	for _,gp in ipairs(Core.DataManager.products.gamepasses) do self:createProductCard(gp, "gamepass", passContent) end
 
 	self.pages = { Cash=cashPage, Gamepasses=passPage }
 end
