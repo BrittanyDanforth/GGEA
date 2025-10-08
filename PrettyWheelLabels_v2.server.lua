@@ -76,13 +76,13 @@ gui.Parent = wheel
 
 local SEG = 360/N
 
--- Create curved text that follows the wheel's circular path
-local function createCurvedText(i, text)
+-- Create text that curves along each pie slice segment
+local function createPieSliceText(i, text)
 	local segmentStart = (i - 1) * SEG + OFFSET_DEG
 	local segmentEnd = i * SEG + OFFSET_DEG
 	local segmentCenter = (segmentStart + segmentEnd) / 2
 	
-	-- Split text into characters for curved positioning
+	-- Split text into characters for smooth curve
 	local chars = {}
 	for char in text:gmatch(".") do
 		table.insert(chars, char)
@@ -91,25 +91,25 @@ local function createCurvedText(i, text)
 	local charCount = #chars
 	if charCount == 0 then return end
 	
-	-- Calculate spacing along the arc
-	local arcSpan = SEG * 0.8 -- Use 80% of segment width for text
-	local charSpacing = arcSpan / math.max(charCount - 1, 1)
+	-- Calculate spacing along the pie slice arc
+	local arcSpan = SEG * 0.6 -- Use 60% of segment width for text
+	local startAngle = segmentStart + (SEG - arcSpan) / 2 -- Center the text in the slice
 	
 	for charIndex = 1, charCount do
 		local char = chars[charIndex]
 		if char ~= " " then -- Skip spaces for cleaner look
-			-- Calculate position along the arc
+			-- Calculate position along the pie slice arc
 			local arcProgress = (charIndex - 1) / math.max(charCount - 1, 1)
-			local angle = segmentStart + (arcProgress * arcSpan)
+			local angle = startAngle + (arcProgress * arcSpan)
 			local rad = math.rad(90 - angle)
 			
-			-- Position along the circle
+			-- Position along the circle (pie slice edge)
 			local pos = UDim2.fromScale(
 				0.5 + math.cos(rad) * RADIUS,
 				0.5 - math.sin(rad) * RADIUS
 			)
 			
-			-- Rotation to be tangent to the circle
+			-- Rotation to be tangent to the circle at this point
 			local rotation = -(angle - 90)
 			
 			-- Auto-flip text if it would be upside down
@@ -123,7 +123,7 @@ local function createCurvedText(i, text)
 			holder.Name = ("Slice_%02d_Char_%02d"):format(i, charIndex)
 			holder.AnchorPoint = Vector2.new(0.5, 0.5)
 			holder.Position = pos
-			holder.Size = UDim2.fromScale(0.08, 0.12) -- Smaller size for individual chars
+			holder.Size = UDim2.fromScale(0.06, 0.10) -- Smaller size for individual chars
 			holder.BackgroundTransparency = 1
 			holder.Rotation = rotation
 			holder.ZIndex = 2
@@ -145,91 +145,16 @@ local function createCurvedText(i, text)
 			
 			-- Constrain text size
 			local maxSize = Instance.new("UITextSizeConstraint")
-			maxSize.MaxTextSize = 80
+			maxSize.MaxTextSize = 60
 			maxSize.Parent = tl
 		end
 	end
 end
 
--- Alternative: Create text that follows the arc more smoothly
-local function createArcText(i, text)
-	local segmentStart = (i - 1) * SEG + OFFSET_DEG
-	local segmentEnd = i * SEG + OFFSET_DEG
-	local segmentCenter = (segmentStart + segmentEnd) / 2
-	
-	-- Split text into words for better arc distribution
-	local words = {}
-	for word in text:gmatch("%S+") do
-		table.insert(words, word)
-	end
-	
-	local wordCount = #words
-	if wordCount == 0 then return end
-	
-	-- Calculate spacing along the arc
-	local arcSpan = SEG * 0.7 -- Use 70% of segment width for text
-	local wordSpacing = arcSpan / math.max(wordCount - 1, 1)
-	
-	for wordIndex = 1, wordCount do
-		local word = words[wordIndex]
-		
-		-- Calculate position along the arc
-		local arcProgress = (wordIndex - 1) / math.max(wordCount - 1, 1)
-		local angle = segmentStart + (arcProgress * arcSpan)
-		local rad = math.rad(90 - angle)
-		
-		-- Position along the circle
-		local pos = UDim2.fromScale(
-			0.5 + math.cos(rad) * RADIUS,
-			0.5 - math.sin(rad) * RADIUS
-		)
-		
-		-- Rotation to be tangent to the circle
-		local rotation = -(angle - 90)
-		
-		-- Auto-flip text if it would be upside down
-		local normalizedRot = ((rotation % 360) + 360) % 360
-		if normalizedRot > 90 and normalizedRot < 270 then
-			rotation = rotation + 180
-		end
-		
-		-- Create holder for this word
-		local holder = Instance.new("Frame")
-		holder.Name = ("Slice_%02d_Word_%02d"):format(i, wordIndex)
-		holder.AnchorPoint = Vector2.new(0.5, 0.5)
-		holder.Position = pos
-		holder.Size = UDim2.fromScale(0.15, 0.12) -- Size for words
-		holder.BackgroundTransparency = 1
-		holder.Rotation = rotation
-		holder.ZIndex = 2
-		holder.Parent = gui
-		
-		-- Create text label for this word
-		local tl = Instance.new("TextLabel")
-		tl.Size = UDim2.fromScale(1, 1)
-		tl.BackgroundTransparency = 1
-		tl.TextScaled = true
-		tl.TextWrapped = true
-		tl.Font = FONT
-		tl.Text = word
-		tl.TextColor3 = Color3.new(1, 1, 1)
-		tl.TextStrokeColor3 = Color3.new(0, 0, 0)
-		tl.TextStrokeTransparency = STROKE_ALPHA
-		tl.TextXAlignment = Enum.TextXAlignment.Center
-		tl.TextYAlignment = Enum.TextYAlignment.Center
-		tl.Parent = holder
-		
-		-- Constrain text size
-		local maxSize = Instance.new("UITextSizeConstraint")
-		maxSize.MaxTextSize = 100
-		maxSize.Parent = tl
-	end
-end
-
--- Create curved text for each segment
+-- Create pie slice text for each segment
 for i = 1, N do
 	local text = prettify(names[((i-1)%#names)+1])
 	
-	-- Use arc text for better readability
-	createArcText(i, text)
+	-- Create curved text along each pie slice
+	createPieSliceText(i, text)
 end
