@@ -137,10 +137,16 @@ end
 local Data = {}
 Data.products = {
   cash = {
-    { id = 3366419712, amount = 1000,  name = "1,000 Cash",  description = "A small boost to get you started", icon = "rbxassetid://10709728059", price = 0 },
-    { id = 3366420012, amount = 5000,  name = "5,000 Cash",  description = "Perfect for mid-game expansion",   icon = "rbxassetid://10709728059", price = 0 },
-    { id = 3366420478, amount = 10000, name = "10,000 Cash", description = "Accelerate your progress",          icon = "rbxassetid://10709728059", price = 0 },
-    { id = 3366420800, amount = 25000, name = "25,000 Cash", description = "Great value bundle",                 icon = "rbxassetid://10709728059", price = 0 },
+    -- Extended tier list matching MoneyShop.server.lua mapping
+    { id = 3366419712, amount = 1000,    name = "1,000 Cash",    description = "Includes 1,000 Cash",    icon = "rbxassetid://10709728059", price = 0 },
+    { id = 3366420012, amount = 5000,    name = "5,000 Cash",    description = "Includes 5,000 Cash",    icon = "rbxassetid://10709728059", price = 0 },
+    { id = 3366420478, amount = 10000,   name = "10,000 Cash",   description = "Includes 10,000 Cash",   icon = "rbxassetid://10709728059", price = 0 },
+    { id = 3366420800, amount = 25000,   name = "25,000 Cash",   description = "Includes 25,000 Cash",   icon = "rbxassetid://10709728059", price = 0 },
+    { id = 3424973374, amount = 50000,   name = "50,000 Cash",   description = "Includes 50,000 Cash",   icon = "rbxassetid://10709728059", price = 0 },
+    { id = 3424974046, amount = 100000,  name = "100,000 Cash",  description = "Includes 100,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
+    { id = 3424974161, amount = 250000,  name = "250,000 Cash",  description = "Includes 250,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
+    { id = 3424974327, amount = 500000,  name = "500,000 Cash",  description = "Includes 500,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
+    { id = 3424974402, amount = 1000000, name = "1,000,000 Cash",description = "Includes 1,000,000 Cash",icon = "rbxassetid://10709728059", price = 0 },
   },
   gamepasses = {
     { id = 1412171840, name = "Auto Collect", description = "Automatically collect all cash drops", icon = "rbxassetid://10709727148", price = 99, hasToggle = true },
@@ -902,7 +908,8 @@ function Shop:_createProductCard(product, kind, parent)
   -- Price label (for skeleton fade-in)
   local priceLabel = Instance.new("TextLabel")
   priceLabel.BackgroundTransparency = 1
-  priceLabel.Text = isGamepass and "Tap to purchase" or "Tap to purchase"
+  -- For dev products, if PriceInRobux is hidden, still show CTA; server will grant via ProcessReceipt
+  priceLabel.Text = (product.price and product.price > 0) and ("R$"..tostring(product.price)) or "Tap to purchase"
   priceLabel.TextColor3 = tint
   priceLabel.Font = Enum.Font.GothamBold
   priceLabel.TextSize = Theme.type.b14
@@ -1180,7 +1187,14 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, produc
     ShopInstance._pending[productId] = nil
   end
   if purchased then
-    -- Server must grant via ProcessReceipt. Client only shows success.
+    -- Live servers: currency is granted via ProcessReceipt.
+    -- Studio: trigger fallback grant so testing pays instantly.
+    if RunService:IsStudio() and Remotes then
+      local grant = Remotes:FindFirstChild("GrantProductCurrency")
+      if grant and grant:IsA("RemoteEvent") then
+        grant:FireServer(productId)
+      end
+    end
     if ShopInstance and ShopInstance.mainPanel then
       showBanner(ShopInstance.mainPanel, "Purchase successful!", "success")
     end
