@@ -1606,7 +1606,7 @@ function processPurchase(button, playerStats)
 			startTime = tick(),
 			originalCFrame = originalButtonStates[button.Name].CFrame,
 			cancelled = false
-		end
+		}
 
 		head.CanCollide = false
 
