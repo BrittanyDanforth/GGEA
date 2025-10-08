@@ -315,14 +315,14 @@ function Core.RunModel(config: {
 			Debris:AddItem(light, 0.6)
 		end
 
-		-- DEBUG: Print when model is spawned
-		print(string.format("🎯 [DEBUG] Spawned %s | CanTouch=%s | CanCollide=%s | CollisionGroup=%s | Scale=%.2f", 
-			model.Name, 
-			tostring(primary.CanTouch),
-			tostring(primary.CanCollide),
-			primary.CollisionGroup,
-			SCALE
-			))
+		-- DEBUG: Print when model is spawned (DISABLED TO REDUCE SPAM)
+		-- print(string.format("🎯 [DEBUG] Spawned %s | CanTouch=%s | CanCollide=%s | CollisionGroup=%s | Scale=%.2f", 
+		--	model.Name, 
+		--	tostring(primary.CanTouch),
+		--	tostring(primary.CanCollide),
+		--	primary.CollisionGroup,
+		--	SCALE
+		--	))
 
 		-- Collection handler
 		local collected = false
@@ -332,7 +332,7 @@ function Core.RunModel(config: {
 			if collected then return end
 			collected = true
 
-			print(string.format("✅ [COLLECTING] %s", model.Name))
+			-- print(string.format("✅ [COLLECTING] %s", model.Name)) -- DISABLED TO REDUCE SPAM
 
 			-- Disconnect all connections
 			for _, conn in ipairs(connections) do
@@ -375,7 +375,7 @@ function Core.RunModel(config: {
 				-- Check Cash IMMEDIATELY (before it gets destroyed!)
 				local cashVal = primary:FindFirstChild("Cash")
 				if cashVal then
-					print(string.format("💰 [CASH DETECTED] %s = $%d - Collecting NOW!", model.Name, cashVal.Value))
+					-- print(string.format("💰 [CASH DETECTED] %s = $%d - Collecting NOW!", model.Name, cashVal.Value)) -- DISABLED TO REDUCE SPAM
 				else
 					warn(string.format("⚠️ [NO CASH!] %s is missing Cash IntValue!", model.Name))
 				end
@@ -393,7 +393,7 @@ function Core.RunModel(config: {
 						-- Check Cash IMMEDIATELY
 						local cashVal = part:FindFirstChild("Cash")
 						if cashVal then
-							print(string.format("💰 [CASH] %s.%s = $%d", model.Name, part.Name, cashVal.Value))
+							-- print(string.format("💰 [CASH] %s.%s = $%d", model.Name, part.Name, cashVal.Value)) -- DISABLED TO REDUCE SPAM
 						end
 						collectAndReturn()
 					end
