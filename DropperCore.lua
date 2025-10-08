@@ -141,17 +141,8 @@ end
 -- TEMPLATE MANAGEMENT
 -- =========================
 
-local TemplateCache = {}
-
 local function prepareTemplate(sourceModel: Model, scale: number): Model
-	local cacheKey = sourceModel
-	local cached = TemplateCache[cacheKey]
-	
-	if cached and cached.Parent == nil then
-		return cached
-	end
-	
-	-- Create fresh clone
+	-- ALWAYS create fresh clone from ReplicatedStorage - no caching!
 	local template = sourceModel:Clone()
 	local primary = findPrimaryPart(template)
 	
@@ -180,7 +171,6 @@ local function prepareTemplate(sourceModel: Model, scale: number): Model
 	
 	-- Hide template
 	template.Parent = nil
-	TemplateCache[cacheKey] = template
 	
 	return template
 end
@@ -201,7 +191,7 @@ type DropItem = {
 local DropPool = {}
 DropPool.__index = DropPool
 
-function DropPool.new(template: Model, config: {
+function DropPool.new(sourceModel: Model, scale: number, config: {
 	dropGroup: string,
 	density: number,
 	friction: number,
@@ -212,13 +202,14 @@ function DropPool.new(template: Model, config: {
 })
 	local self = setmetatable({}, DropPool)
 	
-	self._template = template
+	self._sourceModel = sourceModel
+	self._scale = scale
 	self._config = config
 	self._availableItems = {} :: {DropItem}
 	self._activeItems = {} :: {[Model]: DropItem}
 	self._prewarmCount = math.max(config.prewarmCount or 4, 0)
 	
-	-- Prewarm the pool
+	-- Prewarm the pool with fresh templates
 	for _ = 1, self._prewarmCount do
 		local item = self:_createNewItem()
 		self:_resetItem(item)
@@ -229,7 +220,9 @@ function DropPool.new(template: Model, config: {
 end
 
 function DropPool:_createNewItem(): DropItem
-	local model = self._template:Clone()
+	-- Create fresh template from source model each time
+	local template = prepareTemplate(self._sourceModel, self._scale)
+	local model = template:Clone()
 	local primary = findPrimaryPart(model) :: BasePart
 	local parts = {}
 	local decals = {}
@@ -492,9 +485,8 @@ function Core.RunModel(config: {
 	setupCollisionGroups(settings.dropGroup, settings.playerGroup)
 	tagCharacterParts(settings.playerGroup)
 	
-	-- Prepare template and create pool
-	local preparedTemplate = prepareTemplate(template, settings.scaleFactor)
-	local pool = DropPool.new(preparedTemplate, {
+	-- Create pool with source model (no template caching)
+	local pool = DropPool.new(template, settings.scaleFactor, {
 		dropGroup = settings.dropGroup,
 		density = settings.density,
 		friction = settings.friction,
