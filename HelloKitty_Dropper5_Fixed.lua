@@ -67,7 +67,7 @@ Core.RunModel({
 	templateModel = templateModel,
 
 	namePrefix = "IceCream_",
-	dropGroup = "IceCreamDrops",
+	dropGroup = "HelloKittyDrops5",
 	playerGroup = "Players",
 
 	dropRate = 1.5,

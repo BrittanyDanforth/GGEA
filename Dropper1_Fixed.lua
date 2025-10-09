@@ -10,7 +10,7 @@ Core.RunModel({
 	templateModel = RS:WaitForChild("HelloKittyPL"),
 
 	namePrefix    = "Drop_",
-	dropGroup     = "Drops",
+	dropGroup     = "HelloKittyDrops1",
 	playerGroup   = "Players",
 	dropRate      = 1.2,
 	cashValue     = 10,
