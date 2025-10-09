@@ -474,14 +474,24 @@ local function cleanupAutoCollect(player)
 	print("🤖 [Kuromi] Auto-Collect deactivated for", player and player.Name or "unknown")
 end
 
+-- Debounce for DataStore saves (prevent spam)
+local datastoreSaveQueue = {}
+local DATASTORE_SAVE_DELAY = 2 -- Wait 2 seconds before saving
+
 -- Auto-collect toggle handler
 autoCollectToggle.OnServerEvent:Connect(function(player, enabled)
 	if not checkAutoCollectOwnership(player) then return end
 
 	autoCollectEnabled[player] = enabled
 
-	task.spawn(function()
+	-- Debounced DataStore save
+	if datastoreSaveQueue[player.UserId] then
+		datastoreSaveQueue[player.UserId]:Disconnect()
+	end
+
+	datastoreSaveQueue[player.UserId] = task.delay(DATASTORE_SAVE_DELAY, function()
 		saveAutoCollectPreference(player, enabled)
+		datastoreSaveQueue[player.UserId] = nil
 	end)
 
 	if script.Parent.Owner.Value ~= player then return end
@@ -833,6 +843,16 @@ tycoonOwner.Changed:Connect(function()
 	local newOwner = tycoonOwner.Value
 
 	if newOwner == nil and currentOwner ~= nil then
+		-- Save final auto-collect state before leaving
+		if datastoreSaveQueue[currentOwner.UserId] then
+			datastoreSaveQueue[currentOwner.UserId]:Disconnect()
+			datastoreSaveQueue[currentOwner.UserId] = nil
+			-- Save immediately on leave
+			if autoCollectEnabled[currentOwner] ~= nil then
+				saveAutoCollectPreference(currentOwner, autoCollectEnabled[currentOwner])
+			end
+		end
+		
 		cleanupAutoCollect(currentOwner)
 		print("👋 [Kuromi] Owner left, resetting purchases...")
 		resetTycoonPurchases()
@@ -862,6 +882,18 @@ tycoonOwner.Changed:Connect(function()
 
 		if ownsAutoCollect then
 			setupAutoCollect(newOwner)
+		end
+	end
+end)
+
+-- Cleanup pending saves when player leaves entirely
+Players.PlayerRemoving:Connect(function(player)
+	if datastoreSaveQueue[player.UserId] then
+		datastoreSaveQueue[player.UserId]:Disconnect()
+		datastoreSaveQueue[player.UserId] = nil
+		-- Save final state immediately
+		if autoCollectEnabled[player] ~= nil then
+			saveAutoCollectPreference(player, autoCollectEnabled[player])
 		end
 	end
 end)
