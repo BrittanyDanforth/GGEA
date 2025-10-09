@@ -1,80 +1,91 @@
+--!strict
 --[[
-	Dropper 4 NEW - White Heart Style
-	Uses DropperCore
+	Dropper 4 NEW - White Heart (FIXED)
 --]]
 
-local Core = require(game.ReplicatedStorage.Modules.DropperCore)
+local TweenService = game:GetService("TweenService")
+local PhysicsService = game:GetService("PhysicsService")
 
-task.wait(1)
+task.wait(2)
+local PartStorage = workspace:WaitForChild("PartStorage")
+local dropPart = script.Parent:WaitForChild("Drop")
 
--- Create template model
-local templateModel = Instance.new("Model")
-templateModel.Name = "WhiteHeartTemplate"
+local ORB_GROUP = "HelloKittyDrops4"
+local PLAYER_GROUP = "Players"
 
-local mainPart = Instance.new("Part")
-mainPart.Name = "PrimaryPart"
-mainPart.Size = Vector3.new(2, 2, 2)
-mainPart.BrickColor = BrickColor.new("Institutional white")
-mainPart.Material = Enum.Material.SmoothPlastic
-mainPart.TopSurface = Enum.SurfaceType.Smooth
-mainPart.BottomSurface = Enum.SurfaceType.Smooth
-mainPart.Reflectance = 0.2
-mainPart.Transparency = 0
-mainPart.Anchored = false
-mainPart.CanCollide = true
-mainPart.Parent = templateModel
+pcall(function()
+	PhysicsService:RegisterCollisionGroup(ORB_GROUP)
+	PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
+	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, PLAYER_GROUP, false)
+	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, ORB_GROUP, false)
+end)
 
--- Add heart mesh
-local mesh = Instance.new("SpecialMesh")
-mesh.MeshType = Enum.MeshType.FileMesh
-mesh.MeshId = "rbxassetid://601198887"
-mesh.TextureId = ""
-mesh.Scale = Vector3.new(0.04, 0.04, 0.04)
-mesh.Parent = mainPart
-
--- Add sweet glow
-local light = Instance.new("PointLight")
-light.Brightness = 0.6
-light.Range = 7
-light.Color = Color3.fromRGB(255, 204, 204)
-light.Parent = mainPart
-
--- Set primary part
-templateModel.PrimaryPart = mainPart
-
--- Store template
-local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
-if not templateStorage then
-	templateStorage = Instance.new("Folder")
-	templateStorage.Name = "DropperTemplates"
-	templateStorage.Parent = game.ReplicatedStorage
+local function setupPlayer(character)
+	task.wait(0.1)
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") then
+			pcall(function() part.CollisionGroup = PLAYER_GROUP end)
+		end
+	end
 end
-templateModel.Parent = templateStorage
 
--- Run dropper
-Core.RunModel({
-	model = script.Parent,
-	partStorage = workspace:WaitForChild("PartStorage"),
-	templateModel = templateModel,
+game.Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(setupPlayer)
+end)
 
-	namePrefix = "WhiteHeart_",
-	dropGroup = "HelloKittyDrops4",
-	playerGroup = "Players",
+for _, player in ipairs(game.Players:GetPlayers()) do
+	if player.Character then setupPlayer(player.Character) end
+end
 
-	dropRate = 0.9,
-	cashValue = 40,
-	lifetime = 180,
+local dropCount = 0
 
-	scaleFactor = 1.0,
-	density = 0.4,
-	friction = 0.6,
-	elasticity = 0.1,
-	
-	extraLower = 1.75,
-	fadeTime = 0.4,
-	
-	cashOn = "primary",
-	
-	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
-	collectorTags = {"Collector", "SellZone"},
-})
+while true do
+	task.wait(0.9)
+	dropCount = dropCount + 1
+
+	local cake = Instance.new("Part")
+	cake.Name = "WhiteHeart_" .. dropCount
+	cake.Size = Vector3.new(2, 2, 2)
+	cake.Material = Enum.Material.SmoothPlastic
+	cake.BrickColor = BrickColor.new("Institutional white")
+	cake.TopSurface = Enum.SurfaceType.Smooth
+	cake.BottomSurface = Enum.SurfaceType.Smooth
+	cake.Reflectance = 0.2
+	cake.Transparency = 0.7
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.FileMesh
+	mesh.MeshId = "rbxassetid://601198887"
+	mesh.TextureId = ""
+	mesh.Scale = Vector3.new(0.001, 0.001, 0.001)
+	mesh.Parent = cake
+
+	cake.CanCollide = true
+	cake.CanTouch = true
+	cake.CanQuery = true
+	cake.CollisionGroup = ORB_GROUP
+	cake.CustomPhysicalProperties = PhysicalProperties.new(0.4, 0.6, 0.1, 1, 1)
+
+	local cash = Instance.new("IntValue")
+	cash.Name = "Cash"
+	cash.Value = 40
+	cash.Parent = cake
+
+	local glow = Instance.new("PointLight")
+	glow.Brightness = 0.6
+	glow.Range = 6
+	glow.Color = Color3.fromRGB(255, 204, 204)
+	glow.Parent = cake
+
+	local offsetX = math.random(-2, 2) * 0.1
+	local offsetZ = math.random(-2, 2) * 0.1
+	cake.CFrame = (dropPart.CFrame - Vector3.new(offsetX, 1.75, offsetZ))
+	cake.AssemblyLinearVelocity = Vector3.new(offsetX * 2, -10, offsetZ * 2)
+	cake:SetAttribute("SpawnTime", os.clock())
+	cake.Parent = PartStorage
+
+	TweenService:Create(cake, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 0}):Play()
+	TweenService:Create(mesh, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = Vector3.new(0.04, 0.04, 0.04)}):Play()
+
+	task.delay(180, function() if cake and cake.Parent then cake:Destroy() end end)
+end

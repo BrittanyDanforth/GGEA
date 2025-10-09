@@ -1,71 +1,77 @@
+--!strict
 --[[
-	Dropper 6 NEW - Custom Mesh Style
-	Uses DropperCore
+	Dropper 6 NEW - Custom Mesh (FIXED)
 --]]
 
-local Core = require(game.ReplicatedStorage.Modules.DropperCore)
+local PhysicsService = game:GetService("PhysicsService")
 
-task.wait(1)
+task.wait(2)
+local PartStorage = workspace:WaitForChild("PartStorage")
+local dropPart = script.Parent:WaitForChild("Drop")
 
--- Create template model
-local templateModel = Instance.new("Model")
-templateModel.Name = "Dropper6Template"
+local ORB_GROUP = "HelloKittyDrops6"
+local PLAYER_GROUP = "Players"
 
-local mainPart = Instance.new("Part")
-mainPart.Name = "PrimaryPart"
-mainPart.Size = Vector3.new(1, 5, 4)
-mainPart.Material = Enum.Material.SmoothPlastic
-mainPart.TopSurface = Enum.SurfaceType.Smooth
-mainPart.BottomSurface = Enum.SurfaceType.Smooth
-mainPart.Transparency = 0
-mainPart.Anchored = false
-mainPart.CanCollide = true
-mainPart.Parent = templateModel
+pcall(function()
+	PhysicsService:RegisterCollisionGroup(ORB_GROUP)
+	PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
+	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, PLAYER_GROUP, false)
+	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, ORB_GROUP, false)
+end)
 
--- Add mesh
-local mesh = Instance.new("SpecialMesh")
-mesh.MeshType = Enum.MeshType.FileMesh
-mesh.MeshId = "http://www.roblox.com/asset?id=160003363"
-mesh.TextureId = "http://www.roblox.com/asset/?id=192068356"
-mesh.Scale = Vector3.new(1, 1, 1)
-mesh.Parent = mainPart
-
--- Set primary part
-templateModel.PrimaryPart = mainPart
-
--- Store template
-local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
-if not templateStorage then
-	templateStorage = Instance.new("Folder")
-	templateStorage.Name = "DropperTemplates"
-	templateStorage.Parent = game.ReplicatedStorage
+local function setupPlayer(character)
+	task.wait(0.1)
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") then
+			pcall(function() part.CollisionGroup = PLAYER_GROUP end)
+		end
+	end
 end
-templateModel.Parent = templateStorage
 
--- Run dropper
-Core.RunModel({
-	model = script.Parent,
-	partStorage = workspace:WaitForChild("PartStorage"),
-	templateModel = templateModel,
+game.Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(setupPlayer)
+end)
 
-	namePrefix = "Drop6_",
-	dropGroup = "HelloKittyDrops6",
-	playerGroup = "Players",
+for _, player in ipairs(game.Players:GetPlayers()) do
+	if player.Character then setupPlayer(player.Character) end
+end
 
-	dropRate = 1.5,
-	cashValue = 12,
-	lifetime = 20,
+local dropCount = 0
 
-	scaleFactor = 1.0,
-	density = 0.3,
-	friction = 0.4,
-	elasticity = 0.1,
-	
-	extraLower = 5.0,
-	fadeTime = 0.4,
-	
-	cashOn = "primary",
-	
-	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
-	collectorTags = {"Collector", "SellZone"},
-})
+while true do
+	task.wait(1.5)
+	dropCount = dropCount + 1
+
+	local part = Instance.new("Part")
+	part.Name = "MeshDrop_" .. dropCount
+	part.FormFactor = "Custom"
+	part.Size = Vector3.new(1, 5, 4)
+	part.TopSurface = "Smooth"
+	part.BottomSurface = "Smooth"
+	part.Material = Enum.Material.SmoothPlastic
+
+	local m = Instance.new("SpecialMesh")
+	m.MeshId = "http://www.roblox.com/asset?id=160003363"
+	m.TextureId = "http://www.roblox.com/asset/?id=192068356"
+	m.Parent = part
+
+	part.CanCollide = true
+	part.CanTouch = true
+	part.CanQuery = true
+	part.CollisionGroup = ORB_GROUP
+	part.CustomPhysicalProperties = PhysicalProperties.new(0.3, 0.4, 0.1, 1, 1)
+
+	local cash = Instance.new("IntValue")
+	cash.Name = "Cash"
+	cash.Value = 12
+	cash.Parent = part
+
+	local offsetX = math.random(-2, 2) * 0.1
+	local offsetZ = math.random(-2, 2) * 0.1
+	part.CFrame = (dropPart.CFrame - Vector3.new(offsetX, 5, offsetZ))
+	part.AssemblyLinearVelocity = Vector3.new(offsetX * 2, -10, offsetZ * 2)
+	part:SetAttribute("SpawnTime", os.clock())
+	part.Parent = PartStorage
+
+	task.delay(20, function() if part and part.Parent then part:Destroy() end end)
+end
