@@ -62,7 +62,7 @@ while true do
 	-- Cash value
 	local cash = Instance.new("IntValue")
 	cash.Name = "Cash"
-	cash.Value = 100
+	cash.Value = 200
 	cash.Parent = part
 
 	-- Apply anti-stack physics (with higher drop offset for small parts)
