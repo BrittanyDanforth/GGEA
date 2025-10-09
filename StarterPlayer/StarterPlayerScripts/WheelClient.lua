@@ -223,6 +223,20 @@ local function showResult(label: string, amount: number?, boostSecs: number?)
 	claimBtn.Visible = true
 	claimBtn.Text = "CLAIM"
 	claimMode = "award"
+	
+	-- Add a pulse animation to the modal for big wins
+	if (amount and amount >= 50000) or (boostSecs and boostSecs > 0) then
+		local originalSize = modal.Size
+		TweenService:Create(modal, 
+			TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+			{Size = originalSize + UDim2.fromScale(0.05, 0.05)}
+		):Play()
+		task.wait(0.3)
+		TweenService:Create(modal,
+			TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+			{Size = originalSize}
+		):Play()
+	end
 end
 
 -- ===== proximity with exit logic & claim priority =====

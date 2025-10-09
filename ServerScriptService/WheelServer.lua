@@ -289,6 +289,16 @@ local function doSpin(p: Player): (boolean, string, any)
 	local resetAt = nextUtcReset()
 	SpinResult:FireClient(p, true, "done", prize.name, amount, boostSec, resetAt)
 	SpinBroadcast:FireAllClients({player = p, name = prize.name, boostUntil = p:GetAttribute("TwoXUntil")})
+	
+	-- Play celebration sound at the wheel
+	local celebrationSound = Instance.new("Sound")
+	celebrationSound.SoundId = "rbxassetid://9043887091" -- Celebration sound
+	celebrationSound.Volume = 0.5
+	celebrationSound.Parent = wheelModel.PrimaryPart
+	celebrationSound:Play()
+	celebrationSound.Ended:Connect(function()
+		celebrationSound:Destroy()
+	end)
 
 	serverBusy = false
 	return true, "done", prize.name
