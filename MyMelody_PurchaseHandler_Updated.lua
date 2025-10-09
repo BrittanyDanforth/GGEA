@@ -8,6 +8,7 @@
 	- Re-initializes all systems after reset
 	- Properly tracks purchased items
 	- INSTANT MODEL DROP COLLECTION for DropperCore compatibility
+	- AUTO-COLLECT & 2X CASH INDICATORS VISIBLE TO ALL NEARBY PLAYERS!
 --]]
 
 local Players = game:GetService("Players")
@@ -38,6 +39,10 @@ local dependencyConnections = {}
 
 -- Track collected parts to prevent double collection
 local collectedParts = {}
+
+-- Auto-collect settings (if you want to add this feature)
+local AUTO_COLLECT_GAMEPASS_ID = 1412171840  -- Your auto-collect gamepass ID
+local DOUBLE_CASH_GAMEPASS_ID = 1398974710   -- Your 2x cash gamepass ID
 
 -- Set spawn colors
 local essentials = script.Parent:WaitForChild("Essentials")
@@ -89,6 +94,110 @@ local function createMinimalParticles(position)
 	task.wait(0.1)
 	emitter.Enabled = false
 	Debris:AddItem(attachment, 1)
+end
+
+-- Check gamepass ownership functions
+local function checkAutoCollectOwnership(player)
+	local success, hasPass = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(player.UserId, AUTO_COLLECT_GAMEPASS_ID)
+	end)
+	return success and hasPass or false
+end
+
+local function check2xCashOwnership(player)
+	local success, hasPass = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(player.UserId, DOUBLE_CASH_GAMEPASS_ID)
+	end)
+	return success and hasPass or false
+end
+
+-- Update visual indicators - VISIBLE TO ALL PLAYERS!
+local function updateGamepassIndicators(giver)
+	if not giver or not currentOwner then return end
+	
+	-- 2x Cash indicator
+	local has2xCash = check2xCashOwnership(currentOwner)
+	local indicator2x = giver:FindFirstChild("2xCashIndicator")
+	
+	if has2xCash then
+		if not indicator2x then
+			local billboard2x = Instance.new("BillboardGui")
+			billboard2x.Name = "2xCashIndicator"
+			billboard2x.MaxDistance = 50  -- Visible within 50 studs to ALL players
+			billboard2x.Size = UDim2.new(3, 0, 1, 0)
+			billboard2x.StudsOffset = Vector3.new(0, 5, 0)
+			billboard2x.AlwaysOnTop = false  -- Don't show through walls
+			billboard2x.Parent = giver
+
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(1, 0, 1, 0)
+			frame.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Gold
+			frame.BackgroundTransparency = 0.2
+			frame.BorderSizePixel = 0
+			frame.Parent = billboard2x
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0.2, 0)
+			corner.Parent = frame
+
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, 0, 1, 0)
+			label.BackgroundTransparency = 1
+			label.Text = "2X CASH"
+			label.TextScaled = true
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.Font = Enum.Font.SourceSansBold
+			label.TextStrokeTransparency = 0
+			label.TextStrokeColor3 = Color3.new(0, 0, 0)
+			label.Parent = frame
+		end
+	else
+		if indicator2x then
+			indicator2x:Destroy()
+		end
+	end
+	
+	-- Auto-collect indicator
+	local hasAutoCollect = checkAutoCollectOwnership(currentOwner)
+	local indicatorAuto = giver:FindFirstChild("AutoCollectIndicator")
+	
+	if hasAutoCollect then
+		if not indicatorAuto then
+			local billboardAuto = Instance.new("BillboardGui")
+			billboardAuto.Name = "AutoCollectIndicator"
+			billboardAuto.MaxDistance = 50  -- Visible within 50 studs to ALL players
+			billboardAuto.Size = UDim2.new(3, 0, 0.8, 0)
+			billboardAuto.StudsOffset = Vector3.new(0, 3.5, 0)
+			billboardAuto.AlwaysOnTop = false  -- Don't show through walls
+			billboardAuto.Parent = giver
+
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(1, 0, 1, 0)
+			frame.BackgroundColor3 = Color3.new(0, 0.7, 0.7) -- Cyan
+			frame.BackgroundTransparency = 0.2
+			frame.BorderSizePixel = 0
+			frame.Parent = billboardAuto
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0.2, 0)
+			corner.Parent = frame
+
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, 0, 1, 0)
+			label.BackgroundTransparency = 1
+			label.Text = "AUTO"
+			label.TextScaled = true
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.Font = Enum.Font.SourceSansBold
+			label.TextStrokeTransparency = 0
+			label.TextStrokeColor3 = Color3.new(0, 0, 0)
+			label.Parent = frame
+		end
+	else
+		if indicatorAuto then
+			indicatorAuto:Destroy()
+		end
+	end
 end
 
 -- Store original button states
@@ -428,6 +537,13 @@ local function resetTycoonPurchases()
 	local giver = essentials:FindFirstChild("Giver")
 	if giver then
 		giver.BrickColor = BrickColor.new("Sea green")
+		
+		-- Remove gamepass indicators
+		local indicator2x = giver:FindFirstChild("2xCashIndicator")
+		if indicator2x then indicator2x:Destroy() end
+		
+		local indicatorAuto = giver:FindFirstChild("AutoCollectIndicator")
+		if indicatorAuto then indicatorAuto:Destroy() end
 	end
 
 	-- Clear any BuyObject entries
@@ -466,6 +582,12 @@ tycoonOwner.Changed:Connect(function()
 		local playerStats = ServerStorage.PlayerMoney:FindFirstChild(newOwner.Name)
 		if playerStats then
 			updateButtonColors(buttons, playerStats)
+		end
+		
+		-- Update gamepass indicators
+		local giver = essentials:FindFirstChild("Giver")
+		if giver then
+			updateGamepassIndicators(giver)
 		end
 	end
 end)
@@ -561,6 +683,28 @@ for _, collector in ipairs(essentials:GetChildren()) do
 	end
 end
 
+-- Auto-collect functionality
+local autoCollectConnection = nil
+local function setupAutoCollect()
+	if not currentOwner or not checkAutoCollectOwnership(currentOwner) then return end
+	
+	if autoCollectConnection then
+		autoCollectConnection:Disconnect()
+	end
+	
+	autoCollectConnection = Money.Changed:Connect(function(newValue)
+		if newValue > 0 and currentOwner and script.Parent.Owner.Value == currentOwner then
+			local playerStats = ServerStorage.PlayerMoney:FindFirstChild(currentOwner.Name)
+			if playerStats then
+				-- Apply 2x multiplier if owned
+				local multiplier = check2xCashOwnership(currentOwner) and 2 or 1
+				playerStats.Value = playerStats.Value + (newValue * multiplier)
+				Money.Value = 0
+			end
+		end
+	end)
+end
+
 -- MONEY COLLECTOR
 local collectorDebounce = {}
 local giver = essentials:WaitForChild("Giver")
@@ -573,6 +717,11 @@ giver.Touched:Connect(function(hit)
 	if not player then return end
 
 	if script.Parent.Owner.Value == player then
+		-- Skip if auto-collect is handling it
+		if checkAutoCollectOwnership(player) then
+			return
+		end
+		
 		if collectorDebounce[player] then return end
 		collectorDebounce[player] = true
 
@@ -588,7 +737,12 @@ giver.Touched:Connect(function(hit)
 		local playerStats = ServerStorage.PlayerMoney:FindFirstChild(player.Name)
 		if playerStats and Money.Value > 0 then
 			local moneyCollected = Money.Value
-			playerStats.Value = playerStats.Value + moneyCollected
+			
+			-- Apply 2x multiplier if owned
+			local multiplier = check2xCashOwnership(player) and 2 or 1
+			local finalAmount = moneyCollected * multiplier
+			
+			playerStats.Value = playerStats.Value + finalAmount
 			Money.Value = 0
 
 			local billboardGui = Instance.new("BillboardGui")
@@ -599,9 +753,9 @@ giver.Touched:Connect(function(hit)
 			local textLabel = Instance.new("TextLabel")
 			textLabel.Size = UDim2.new(1, 0, 1, 0)
 			textLabel.BackgroundTransparency = 1
-			textLabel.Text = "+$" .. tostring(moneyCollected)
+			textLabel.Text = multiplier > 1 and ("+$" .. tostring(finalAmount) .. " (2X!)") or ("+$" .. tostring(finalAmount))
 			textLabel.TextScaled = true
-			textLabel.TextColor3 = Color3.new(0, 1, 0)
+			textLabel.TextColor3 = multiplier > 1 and Color3.fromRGB(255, 215, 0) or Color3.new(0, 1, 0)
 			textLabel.Font = Enum.Font.SourceSans
 			textLabel.Parent = billboardGui
 
@@ -656,6 +810,11 @@ task.defer(function()
 	-- Setup all button dependencies
 	for _, button in ipairs(buttons:GetChildren()) do
 		setupButtonDependency(button)
+	end
+	
+	-- Setup auto-collect if owner has it
+	if currentOwner and checkAutoCollectOwnership(currentOwner) then
+		setupAutoCollect()
 	end
 end)
 
@@ -857,6 +1016,20 @@ end)
 MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, gamePassId, wasPurchased)
 	if not wasPurchased then return end
 
+	-- Check if it's auto-collect or 2x cash gamepass
+	if gamePassId == AUTO_COLLECT_GAMEPASS_ID and player == currentOwner then
+		setupAutoCollect()
+		local giver = essentials:FindFirstChild("Giver")
+		if giver then
+			updateGamepassIndicators(giver)
+		end
+	elseif gamePassId == DOUBLE_CASH_GAMEPASS_ID and player == currentOwner then
+		local giver = essentials:FindFirstChild("Giver")
+		if giver then
+			updateGamepassIndicators(giver)
+		end
+	end
+
 	for _, button in ipairs(buttons:GetChildren()) do
 		local gamepass = button:FindFirstChild("Gamepass")
 		if gamepass and gamepass.Value == gamePassId then
@@ -900,6 +1073,17 @@ script.Parent.Owner.Changed:Connect(function()
 				updateButtonColors(buttons, playerStats)
 			end)
 		end
+		
+		-- Setup auto-collect if they have it
+		if checkAutoCollectOwnership(owner) then
+			setupAutoCollect()
+		end
+	else
+		-- Clean up auto-collect when owner leaves
+		if autoCollectConnection then
+			autoCollectConnection:Disconnect()
+			autoCollectConnection = nil
+		end
 	end
 end)
 
@@ -914,12 +1098,18 @@ if initialOwner then
 			updateButtonColors(buttons, initialStats)
 		end)
 	end
+	
+	-- Setup auto-collect if they have it
+	if checkAutoCollectOwnership(initialOwner) then
+		setupAutoCollect()
+	end
 end
 
 print("✅ [MyMelody] Purchase Handler ULTIMATE FIXED loaded with INSTANT DROP COLLECTION!")
 print("🔄 [MyMelody] Dependencies now check for spawned objects, not button names")
 print("📋 [MyMelody] Properly resets and re-initializes everything")
 print("⚡ [MyMelody] INSTANT MODEL DROP COLLECTION for DropperCore compatibility")
+print("👀 [MyMelody] AUTO-COLLECT & 2X CASH INDICATORS VISIBLE TO ALL NEARBY PLAYERS!")
 
 -- Debug: Print button dependencies
 task.wait(1)

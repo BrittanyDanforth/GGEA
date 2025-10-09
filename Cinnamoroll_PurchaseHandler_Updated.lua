@@ -6,6 +6,7 @@
 	- Auto-collect waits for drops to be fully collected first
 	- Fixed race condition where Cash values were destroyed too early
 	- INSTANT CASH COLLECTION - No delays, immediate UI updates!
+	- AUTO-COLLECT & 2X CASH INDICATORS NOW VISIBLE TO ALL NEARBY PLAYERS!
 --]]
 
 local Players = game:GetService("Players")
@@ -376,10 +377,10 @@ local function update2xCashIndicator(giver, has2xCash)
 		if not indicator2x then
 			local billboard2x = Instance.new("BillboardGui")
 			billboard2x.Name = "2xCashIndicator"
-			billboard2x.MaxDistance = 100
+			billboard2x.MaxDistance = 50  -- Visible within 50 studs
 			billboard2x.Size = UDim2.new(3, 0, 1, 0)
 			billboard2x.StudsOffset = Vector3.new(0, 5, 0)
-			billboard2x.AlwaysOnTop = true
+			billboard2x.AlwaysOnTop = false  -- Don't show through walls
 			billboard2x.Parent = giver
 
 			local frame = Instance.new("Frame")
@@ -524,10 +525,10 @@ local function setupAutoCollect(player)
 
 		local autoIndicator = Instance.new("BillboardGui")
 		autoIndicator.Name = "AutoCollectIndicator"
-		autoIndicator.MaxDistance = 100
+		autoIndicator.MaxDistance = 50  -- Visible within 50 studs
 		autoIndicator.Size = UDim2.new(3, 0, 0.8, 0)
 		autoIndicator.StudsOffset = Vector3.new(0, 3.5, 0)
-		autoIndicator.AlwaysOnTop = true
+		autoIndicator.AlwaysOnTop = false  -- Don't show through walls
 		autoIndicator.Parent = giver
 
 		local frame = Instance.new("Frame")
