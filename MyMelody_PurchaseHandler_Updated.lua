@@ -125,8 +125,9 @@ local function updateGamepassIndicators(giver)
 			billboard2x.Name = "2xCashIndicator"
 			billboard2x.MaxDistance = 50  -- Visible within 50 studs to ALL players
 			billboard2x.Size = UDim2.new(3, 0, 1, 0)
-			billboard2x.StudsOffset = Vector3.new(0, 5, 0)
+			billboard2x.StudsOffset = Vector3.new(0, 6, 0)  -- Moved higher for better spacing
 			billboard2x.AlwaysOnTop = false  -- Don't show through walls
+			billboard2x.LightInfluence = 0  -- Makes it always bright
 			billboard2x.Parent = giver
 
 			local frame = Instance.new("Frame")
@@ -167,8 +168,9 @@ local function updateGamepassIndicators(giver)
 			billboardAuto.Name = "AutoCollectIndicator"
 			billboardAuto.MaxDistance = 50  -- Visible within 50 studs to ALL players
 			billboardAuto.Size = UDim2.new(3, 0, 0.8, 0)
-			billboardAuto.StudsOffset = Vector3.new(0, 3.5, 0)
+			billboardAuto.StudsOffset = Vector3.new(0, 4.5, 0)  -- Moved higher to prevent clipping
 			billboardAuto.AlwaysOnTop = false  -- Don't show through walls
+			billboardAuto.LightInfluence = 0  -- Makes it always bright
 			billboardAuto.Parent = giver
 
 			local frame = Instance.new("Frame")
