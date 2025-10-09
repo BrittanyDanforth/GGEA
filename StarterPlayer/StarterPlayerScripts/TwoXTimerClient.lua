@@ -45,12 +45,16 @@ local function tickUI()
 	end
 end
 
+-- Initial check
+tickUI()
+
 RunService.RenderStepped:Connect(tickUI)
 player:GetAttributeChangedSignal("TwoXUntil"):Connect(tickUI)
 
 if SpinBroadcast then
 	SpinBroadcast.OnClientEvent:Connect(function(payload)
-		if payload and payload.boostUntil then
+		-- Only update if this broadcast is for the current player
+		if payload and payload.player == player and payload.boostUntil then
 			player:SetAttribute("TwoXUntil", payload.boostUntil)
 		end
 	end)
