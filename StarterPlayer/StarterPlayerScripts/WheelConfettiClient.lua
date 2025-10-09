@@ -52,7 +52,7 @@ local function createConfettiParticle(position: Vector3)
 	bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
 	bodyVelocity.Velocity = Vector3.new(
 		math.random(-20, 20),
-		math.random(15, 30),
+		math.random(10, 20),
 		math.random(-20, 20)
 	)
 	bodyVelocity.Parent = particle
@@ -158,10 +158,10 @@ SpinResult.OnClientEvent:Connect(function(ok, phase, label, amount, boostSeconds
 			local position = Vector3.new(0, 10, 0) -- Default position
 			
 			if wheelModel then
-				if wheelModel:IsA("Model") and wheelModel.PrimaryPart then
-					position = wheelModel.PrimaryPart.Position + Vector3.new(0, 5, 0)
-				elseif wheelModel:IsA("BasePart") then
-					position = wheelModel.Position + Vector3.new(0, 5, 0)
+			if wheelModel:IsA("Model") and wheelModel.PrimaryPart then
+				position = wheelModel.PrimaryPart.Position + Vector3.new(0, 2, 0)
+			elseif wheelModel:IsA("BasePart") then
+				position = wheelModel.Position + Vector3.new(0, 2, 0)
 				end
 			end
 			
@@ -193,9 +193,9 @@ SpinResult.OnClientEvent:Connect(function(ok, phase, label, amount, boostSeconds
 				shockwave.Parent = workspace
 				
 				TweenService:Create(shockwave,
-					TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+					TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
 					{
-						Size = Vector3.new(30, 30, 30),
+						Size = Vector3.new(20, 20, 20),
 						Transparency = 1
 					}
 				):Play()
