@@ -1,49 +1,71 @@
-wait(2)
-workspace:WaitForChild("PartStorage")
+--[[
+	Hello Kitty Dropper 6 - Custom Mesh Style
+	Uses DropperCore
+--]]
 
-meshDrop = true
---------------------
--- Mesh Settings:
-meshID = "http://www.roblox.com/asset?id=160003363"  
-textureID = "http://www.roblox.com/asset/?id=192068356"
---------------------
+local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
--- Anti-stack pattern
-local patterns = {
-	Vector3.new(0.2, 0, 0.2),
-	Vector3.new(-0.2, 0, 0.2),
-	Vector3.new(0.2, 0, -0.2),
-	Vector3.new(-0.2, 0, -0.2),
-	Vector3.new(0, 0, 0),
-}
-local patternIndex = 1
+task.wait(1)
 
-while true do
-	wait(1.5) -- How long in between drops
-	local part = Instance.new("Part",workspace.PartStorage)
-	local cash = Instance.new("IntValue",part)
-	cash.Name = "Cash"
-	cash.Value = 12 -- How much the drops are worth
-	
-	-- Anti-stack pattern position
-	local offset = patterns[patternIndex]
-	patternIndex = (patternIndex % #patterns) + 1
-	
-	part.CFrame = script.Parent.Drop.CFrame - Vector3.new(offset.X, 5, offset.Z)
-	part.FormFactor = "Custom"
-	part.Size=Vector3.new(1, 5, 4) -- Size of the drops
-	
-	if meshDrop == true then
-		local m = Instance.new("SpecialMesh",part)
-		m.MeshId = meshID
-		m.TextureId = textureID
-	end
-	
-	part.TopSurface = "Smooth"
-	part.BottomSurface = "Smooth"
-	
-	-- Add velocity for spread
-	part.AssemblyLinearVelocity = Vector3.new(offset.X * 3, -10, offset.Z * 3)
-	
-	game.Debris:AddItem(part,20) -- How long until the drops expire
+-- Create template model
+local templateModel = Instance.new("Model")
+templateModel.Name = "Dropper6Template"
+
+local mainPart = Instance.new("Part")
+mainPart.Name = "PrimaryPart"
+mainPart.Size = Vector3.new(1, 5, 4)
+mainPart.Material = Enum.Material.SmoothPlastic
+mainPart.TopSurface = Enum.SurfaceType.Smooth
+mainPart.BottomSurface = Enum.SurfaceType.Smooth
+mainPart.Transparency = 0
+mainPart.Anchored = false
+mainPart.CanCollide = true
+mainPart.Parent = templateModel
+
+-- Add mesh
+local mesh = Instance.new("SpecialMesh")
+mesh.MeshType = Enum.MeshType.FileMesh
+mesh.MeshId = "http://www.roblox.com/asset?id=160003363"
+mesh.TextureId = "http://www.roblox.com/asset/?id=192068356"
+mesh.Scale = Vector3.new(1, 1, 1)
+mesh.Parent = mainPart
+
+-- Set primary part
+templateModel.PrimaryPart = mainPart
+
+-- Store template
+local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
+if not templateStorage then
+	templateStorage = Instance.new("Folder")
+	templateStorage.Name = "DropperTemplates"
+	templateStorage.Parent = game.ReplicatedStorage
 end
+templateModel.Parent = templateStorage
+
+-- Run dropper
+Core.RunModel({
+	model = script.Parent,
+	partStorage = workspace:WaitForChild("PartStorage"),
+	templateModel = templateModel,
+
+	namePrefix = "Drop6_",
+	dropGroup = "Drops6",
+	playerGroup = "Players",
+
+	dropRate = 1.5,
+	cashValue = 12,
+	lifetime = 20,
+
+	scaleFactor = 1.0,
+	density = 0.3,
+	friction = 0.4,
+	elasticity = 0.1,
+	
+	extraLower = 5.0,
+	fadeTime = 0.4,
+	
+	cashOn = "primary",
+	
+	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
+	collectorTags = {"Collector", "SellZone"},
+})

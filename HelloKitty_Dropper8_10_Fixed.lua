@@ -1,45 +1,64 @@
-wait(2)
-workspace:WaitForChild("PartStorage")
+--[[
+	Hello Kitty Droppers 8-10 - Lime Green Fabric Style
+	Uses DropperCore for proper collision handling
+--]]
 
--- Anti-stack pattern
-local patterns = {
-	Vector3.new(0.15, 0, 0.15),
-	Vector3.new(-0.15, 0, 0.15),
-	Vector3.new(0.15, 0, -0.15),
-	Vector3.new(-0.15, 0, -0.15),
-	Vector3.new(0, 0, 0),
-}
-local patternIndex = 1
+local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
-while true do
-	wait(0.5) -- How long in between drops
-	local part = Instance.new("Part",workspace.PartStorage)
-	part.BrickColor=BrickColor.new("Lime green")
-	part.Material="Fabric"
-	local cash = Instance.new("IntValue",part)
-	cash.Name = "Cash"
-	cash.Value = 100 -- How much the drops are worth
-	
-	-- Anti-stack pattern position
-	local offset = patterns[patternIndex]
-	patternIndex = (patternIndex % #patterns) + 1
-	
-	part.CFrame = script.Parent.Drop.CFrame - Vector3.new(offset.X, 1.4, offset.Z)
-	part.FormFactor = "Custom"
-	part.Size=Vector3.new(1, 1, 1) -- Size of the drops
-	part.TopSurface = "Smooth"
-	part.BottomSurface = "Smooth"
-	
-	-- Add velocity for spread
-	part.AssemblyLinearVelocity = Vector3.new(offset.X * 2, -8, offset.Z * 2)
-	
-	-- Better physics
-	part.CustomPhysicalProperties = PhysicalProperties.new(
-		0.2,  -- Light density
-		0.4,  -- Medium friction
-		0.1,  -- Low bounce
-		1, 1
-	)
-	
-	game.Debris:AddItem(part,2000) -- How long until the drops expire
+task.wait(1)
+
+-- Create template model
+local templateModel = Instance.new("Model")
+templateModel.Name = "FabricDropTemplate"
+
+local mainPart = Instance.new("Part")
+mainPart.Name = "PrimaryPart"
+mainPart.Size = Vector3.new(1, 1, 1)
+mainPart.BrickColor = BrickColor.new("Lime green")
+mainPart.Material = Enum.Material.Fabric
+mainPart.TopSurface = Enum.SurfaceType.Smooth
+mainPart.BottomSurface = Enum.SurfaceType.Smooth
+mainPart.Transparency = 0
+mainPart.Anchored = false
+mainPart.CanCollide = true
+mainPart.Parent = templateModel
+
+-- Set primary part
+templateModel.PrimaryPart = mainPart
+
+-- Store template
+local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
+if not templateStorage then
+	templateStorage = Instance.new("Folder")
+	templateStorage.Name = "DropperTemplates"
+	templateStorage.Parent = game.ReplicatedStorage
 end
+templateModel.Parent = templateStorage
+
+-- Run dropper
+Core.RunModel({
+	model = script.Parent,
+	partStorage = workspace:WaitForChild("PartStorage"),
+	templateModel = templateModel,
+
+	namePrefix = "FabricDrop_",
+	dropGroup = "FabricDrops",
+	playerGroup = "Players",
+
+	dropRate = 0.5,
+	cashValue = 100,
+	lifetime = 2000,
+
+	scaleFactor = 1.0,
+	density = 0.2,
+	friction = 0.4,
+	elasticity = 0.1,
+	
+	extraLower = 1.4,
+	fadeTime = 0.3,
+	
+	cashOn = "primary",
+	
+	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
+	collectorTags = {"Collector", "SellZone"},
+})

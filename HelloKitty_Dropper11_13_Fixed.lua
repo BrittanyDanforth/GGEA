@@ -1,57 +1,65 @@
-wait(2)
-workspace:WaitForChild("PartStorage")
+--[[
+	Hello Kitty Droppers 11-13 - Small Part Style
+	Uses DropperCore for proper collision handling
+--]]
 
-meshDrop = false
---------------------
--- Mesh Settings: [If you want a mesh drop, set meshDrop to true up on top.]
-meshID = "rbxasset://fonts/PaintballGun.mesh"  
-textureID = "rbxasset://textures/PaintballGunTex128.png"
---------------------
+local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
--- Anti-stack pattern for small parts
-local patterns = {
-	Vector3.new(0.1, 0, 0.1),
-	Vector3.new(-0.1, 0, 0.1),
-	Vector3.new(0.1, 0, -0.1),
-	Vector3.new(-0.1, 0, -0.1),
-	Vector3.new(0, 0, 0),
-}
-local patternIndex = 1
+task.wait(1)
 
-while true do
-	wait(1.5) -- How long in between drops
-	local part = Instance.new("Part",workspace.PartStorage)
-	local cash = Instance.new("IntValue",part)
-	cash.Name = "Cash"
-	cash.Value = 100 -- How much the drops are worth
-	
-	-- Anti-stack pattern position
-	local offset = patterns[patternIndex]
-	patternIndex = (patternIndex % #patterns) + 1
-	
-	part.CFrame = script.Parent.Drop.CFrame - Vector3.new(offset.X, 5, offset.Z)
-	part.FormFactor = "Custom"
-	part.Size=Vector3.new(0.2, 0.2, 0.2) -- Size of the drops
-	
-	if meshDrop == true then
-		local m = Instance.new("SpecialMesh",part)
-		m.MeshId = meshID
-		m.TextureId = textureID
-	end
-	
-	part.TopSurface = "Smooth"
-	part.BottomSurface = "Smooth"
-	
-	-- Add velocity for spread (less for small parts)
-	part.AssemblyLinearVelocity = Vector3.new(offset.X * 1.5, -8, offset.Z * 1.5)
-	
-	-- Light physics for small parts
-	part.CustomPhysicalProperties = PhysicalProperties.new(
-		0.1,  -- Very light
-		0.3,  -- Some friction
-		0.05, -- Very low bounce
-		1, 1
-	)
-	
-	game.Debris:AddItem(part,20) -- How long until the drops expire
+-- Create template model
+local templateModel = Instance.new("Model")
+templateModel.Name = "SmallDropTemplate"
+
+local mainPart = Instance.new("Part")
+mainPart.Name = "PrimaryPart"
+mainPart.Size = Vector3.new(0.2, 0.2, 0.2)
+mainPart.Material = Enum.Material.SmoothPlastic
+mainPart.TopSurface = Enum.SurfaceType.Smooth
+mainPart.BottomSurface = Enum.SurfaceType.Smooth
+mainPart.Transparency = 0
+mainPart.Anchored = false
+mainPart.CanCollide = true
+mainPart.Parent = templateModel
+
+-- Note: meshDrop is set to false in original, so no mesh added
+
+-- Set primary part
+templateModel.PrimaryPart = mainPart
+
+-- Store template
+local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
+if not templateStorage then
+	templateStorage = Instance.new("Folder")
+	templateStorage.Name = "DropperTemplates"
+	templateStorage.Parent = game.ReplicatedStorage
 end
+templateModel.Parent = templateStorage
+
+-- Run dropper
+Core.RunModel({
+	model = script.Parent,
+	partStorage = workspace:WaitForChild("PartStorage"),
+	templateModel = templateModel,
+
+	namePrefix = "SmallDrop_",
+	dropGroup = "SmallDrops",
+	playerGroup = "Players",
+
+	dropRate = 1.5,
+	cashValue = 100,
+	lifetime = 20,
+
+	scaleFactor = 1.0,
+	density = 0.1,
+	friction = 0.3,
+	elasticity = 0.05,
+	
+	extraLower = 5.0,
+	fadeTime = 0.3,
+	
+	cashOn = "primary",
+	
+	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
+	collectorTags = {"Collector", "SellZone"},
+})
