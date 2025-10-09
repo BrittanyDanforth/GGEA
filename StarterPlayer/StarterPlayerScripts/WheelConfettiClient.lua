@@ -159,9 +159,9 @@ SpinResult.OnClientEvent:Connect(function(ok, phase, label, amount, boostSeconds
 			
 			if wheelModel then
 				if wheelModel:IsA("Model") and wheelModel.PrimaryPart then
-					position = wheelModel.PrimaryPart.Position + Vector3.new(0, 5, 0)
+					position = wheelModel.PrimaryPart.Position + Vector3.new(0, 2, 0)
 				elseif wheelModel:IsA("BasePart") then
-					position = wheelModel.Position + Vector3.new(0, 5, 0)
+					position = wheelModel.Position + Vector3.new(0, 2, 0)
 				end
 			end
 			
@@ -185,7 +185,7 @@ SpinResult.OnClientEvent:Connect(function(ok, phase, label, amount, boostSeconds
 				shockwave.Size = Vector3.new(0.1, 0.1, 0.1)
 				shockwave.Material = Enum.Material.ForceField
 				shockwave.Color = Color3.fromRGB(255, 215, 0)
-				shockwave.Transparency = 0.5
+				shockwave.Transparency = 0.3
 				shockwave.CanCollide = false
 				shockwave.Anchored = true
 				shockwave.Position = position
@@ -193,9 +193,9 @@ SpinResult.OnClientEvent:Connect(function(ok, phase, label, amount, boostSeconds
 				shockwave.Parent = workspace
 				
 				TweenService:Create(shockwave,
-					TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+					TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
 					{
-						Size = Vector3.new(30, 30, 30),
+						Size = Vector3.new(15, 15, 15),
 						Transparency = 1
 					}
 				):Play()
