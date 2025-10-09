@@ -451,7 +451,7 @@ local function update2xCashIndicator(giver, has2xCash)
 		local bb, frame, label = createBillboardIndicator({
 			parentPart = giver,
 			name = "2xCashIndicator",
-			yStuds = 3,  -- Above the giver
+			yStuds = 6,  -- Higher above the giver
 			text = "2X CASH",
 			bgColor = Color3.fromRGB(255, 215, 0),
 			textColor = Color3.new(1,1,1),
@@ -582,7 +582,7 @@ local function setupAutoCollect(player)
 		local bb, frame, label = createBillboardIndicator({
 			parentPart = giver,
 			name = "AutoCollectIndicator",
-			yStuds = 1.5,  -- Below 2X CASH
+			yStuds = 4.5,  -- Below 2X CASH but higher up
 			text = text,
 			bgColor = bg,
 			textColor = txt,
