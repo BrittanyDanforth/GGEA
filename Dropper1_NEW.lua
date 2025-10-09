@@ -1,4 +1,5 @@
--- Dropper 1 NEW - Using DropperCore (Already Optimized)
+--!strict
+-- Dropper 1 NEW - Using DropperCore (FIXED COLLISION)
 local RS = game:GetService("ReplicatedStorage")
 local Core = require(RS:WaitForChild("Modules"):WaitForChild("DropperCore"))
 
@@ -9,23 +10,22 @@ Core.RunModel({
 	partStorage   = workspace:WaitForChild("PartStorage"),
 	templateModel = RS:WaitForChild("HelloKittyPL"),
 
-	namePrefix    = "Drop_",
+	namePrefix    = "HK1Drop_",
 	dropGroup     = "HelloKittyDrops1",
 	playerGroup   = "Players",
-	dropRate      = 1.2,
+	dropRate      = 1.0,
 	cashValue     = 10,
 	lifetime      = 120,
 
 	scaleFactor   = 0.9,
-	extraLower    = 0.45,
+	extraLower    = 1.0,
 	fadeTime      = 0.35,
 	yawDegrees    = -90,
-	prewarm       = 8,
 	cashOn        = "primary",
 
-	density       = 0.7,
-	friction      = 0.3,
-	elasticity    = 0.05,
+	density       = 0.3,
+	friction      = 0.5,
+	elasticity    = 0.2,
 
 	collectorNames = { "Collector", "CollectorZone", "Receiver", "Sell", "SellPad" },
 	collectorTags  = { "Collector", "SellZone" },
