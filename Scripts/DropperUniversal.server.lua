@@ -13,7 +13,7 @@
 --   ExtraLower  (number)    → default 0.45
 --   FadeTime    (number)    → default 0.35
 --   YawDegrees  (number)    → default -90
---   CashOn      (string)    → "primary" | "all" (default "primary")
+--   CashOn      (string)    → "primary" | "all" (default "all")
 
 local RS = game:GetService("ReplicatedStorage")
 local Core = require(RS:WaitForChild("Modules"):WaitForChild("DropperCore"))
@@ -66,7 +66,7 @@ Core.RunModel({
 	extraLower = getNumber("ExtraLower", 0.45),
 	fadeTime = getNumber("FadeTime", 0.35),
 	yawDegrees = getNumber("YawDegrees", -90),
-	cashOn = getCashOn("CashOn", "primary"),
+    cashOn = getCashOn("CashOn", "all"),
 
 	density = 0.7,
 	friction = 0.3,

@@ -83,6 +83,27 @@ local function setupCollisionGroups(dropGroup: string, playerGroup: string)
 	end)
 end
 
+-- Enforce: everything under PartStorage is in dropGroup (kills inter-drop collisions
+-- even for legacy scripts that don't set CollisionGroup).
+local enforcedForStorage: {[Instance]: boolean} = setmetatable({}, { __mode = "k" })
+local function enforceCollisionGroupForStorage(storage: Instance, dropGroup: string)
+    if enforcedForStorage[storage] then return end
+    enforcedForStorage[storage] = true
+
+    local function setGroup(inst: Instance)
+        if inst:IsA("BasePart") then
+            pcall(function()
+                inst.CollisionGroup = dropGroup
+            end)
+        end
+    end
+
+    for _, d in ipairs(storage:GetDescendants()) do
+        setGroup(d)
+    end
+    storage.DescendantAdded:Connect(setGroup)
+end
+
 local function tagCharacterPartsAsPlayerGroup(playerGroup: string)
 	local function setCharacterGroup(character: Model)
 		task.wait(0.1)
@@ -200,13 +221,16 @@ function Core.RunModel(config: RunModelConfig)
 	local FRICTION = config.friction or 0.3
 	local ELASTICITY = config.elasticity or 0.05
 	local YAW = config.yawDegrees or 0
-	local CASH_ON: CashOn = config.cashOn or "primary"
+    -- Default cash on all parts so any touching part pays in legacy collectors
+    local CASH_ON: CashOn = config.cashOn or "all"
 
 	local collectorNames = config.collectorNames or { "Collector", "CollectorZone", "Receiver", "Sell", "SellPad" }
 	local collectorTags = config.collectorTags or { "Collector", "SellZone" }
 	local NAME_PREFIX = config.namePrefix or "Drop_"
 
-	setupCollisionGroups(GROUP, PLAYER_GRP)
+    setupCollisionGroups(GROUP, PLAYER_GRP)
+    -- One-time enforcement hook per storage to normalize all drops
+    enforceCollisionGroupForStorage(storage, GROUP)
 	tagCharacterPartsAsPlayerGroup(PLAYER_GRP)
 
 	local patternIndex = 1
