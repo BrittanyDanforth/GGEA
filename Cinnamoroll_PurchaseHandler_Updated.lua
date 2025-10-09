@@ -335,82 +335,6 @@ local function canPerformAction(player, actionType, cooldown)
 end
 
 -- ========================================
--- INDICATOR HELPERS (STABLE, NO DRIFT)
--- ========================================
-local function getIndicatorsAnchor(giver)
-	-- Attachment at the *top* of the giver so we anchor from a stable point
-	local att = giver:FindFirstChild("IndicatorsAnchor")
-	if not att then
-		att = Instance.new("Attachment")
-		att.Name = "IndicatorsAnchor"
-		att.Position = Vector3.new(0, giver.Size.Y/2, 0) -- top of part
-		att.Parent = giver
-	end
-	return att
-end
-
-local function createBillboardIndicator(args)
-	-- args: {parentPart, name, yStuds, text, bgColor, textColor, widthPx, heightPx}
-	local giver = args.parentPart
-	local name = args.name
-	local yStuds = args.yStuds or 4
-	local text = args.text or ""
-	local bgColor = args.bgColor or Color3.fromRGB(0, 110, 110)
-	local textColor = args.textColor or Color3.new(1,1,1)
-	local widthPx = args.widthPx or 140
-	local heightPx = args.heightPx or 44
-
-	-- Clean any old gui
-	local old = giver:FindFirstChild(name)
-	if old then old:Destroy() end
-
-	local anchor = getIndicatorsAnchor(giver)
-
-	local bb = Instance.new("BillboardGui")
-	bb.Name = name
-	bb.Adornee = anchor
-	bb.Size = UDim2.fromOffset(widthPx, heightPx)  -- pixel-stable
-	bb.StudsOffset = Vector3.zero                 -- don't use rotating offset
-	bb.StudsOffsetWorldSpace = Vector3.new(0, yStuds, 0) -- world-stable vertical lift
-	bb.AlwaysOnTop = false  -- Set to false to hide through walls
-	bb.MaxDistance = 80
-	bb.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	bb.LightInfluence = 0
-	bb.Parent = giver
-
-	local frame = Instance.new("Frame")
-	frame.Name = "Frame"
-	frame.Size = UDim2.fromScale(1,1)
-	frame.BackgroundColor3 = bgColor
-	frame.BackgroundTransparency = 0.2
-	frame.BorderSizePixel = 0
-	frame.Parent = bb
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0.2, 0)
-	corner.Parent = frame
-
-	local stroke = Instance.new("UIStroke")
-	stroke.Thickness = 1
-	stroke.Color = Color3.new(0,0,0)
-	stroke.Transparency = 0.2
-	stroke.Parent = frame
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.fromScale(1,1)
-	label.BackgroundTransparency = 1
-	label.Text = text
-	label.TextScaled = true
-	label.TextColor3 = textColor
-	label.Font = Enum.Font.SourceSansBold
-	label.TextStrokeTransparency = 0
-	label.TextStrokeColor3 = Color3.new(0,0,0)
-	label.Parent = frame
-
-	return bb, frame, label
-end
-
--- ========================================
 -- 2X CASH FUNCTIONS
 -- ========================================
 local function check2xCashOwnership(player)
@@ -447,20 +371,45 @@ local function applyMoneyMultiplier(player, amount)
 end
 
 local function update2xCashIndicator(giver, has2xCash)
+	local indicator2x = giver:FindFirstChild("2xCashIndicator")
+
 	if has2xCash then
-		local bb, frame, label = createBillboardIndicator({
-			parentPart = giver,
-			name = "2xCashIndicator",
-			yStuds = 6,  -- Higher above the giver
-			text = "2X CASH",
-			bgColor = Color3.fromRGB(255, 215, 0),
-			textColor = Color3.new(1,1,1),
-			widthPx = 160,
-			heightPx = 46,
-		})
+		if not indicator2x then
+			-- Create 2x indicator with FIXED SIZE that doesn't change with distance
+			local billboard2x = Instance.new("BillboardGui")
+			billboard2x.Name = "2xCashIndicator"
+			billboard2x.MaxDistance = 100
+			billboard2x.Size = UDim2.new(3, 0, 1, 0) -- Size in studs, not pixels
+			billboard2x.StudsOffset = Vector3.new(0, 5, 0) -- Above the collector
+			billboard2x.AlwaysOnTop = true
+			billboard2x.Parent = giver
+
+			local frame = Instance.new("Frame")
+			frame.Size = UDim2.new(1, 0, 1, 0)
+			frame.BackgroundColor3 = Color3.fromRGB(255, 215, 0) -- Gold
+			frame.BackgroundTransparency = 0.2
+			frame.BorderSizePixel = 0
+			frame.Parent = billboard2x
+
+			local corner = Instance.new("UICorner")
+			corner.CornerRadius = UDim.new(0.2, 0)
+			corner.Parent = frame
+
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, 0, 1, 0)
+			label.BackgroundTransparency = 1
+			label.Text = "2X CASH"
+			label.TextScaled = true
+			label.TextColor3 = Color3.new(1, 1, 1)
+			label.Font = Enum.Font.SourceSansBold
+			label.TextStrokeTransparency = 0
+			label.TextStrokeColor3 = Color3.new(0, 0, 0)
+			label.Parent = frame
+		end
 	else
-		local old = giver:FindFirstChild("2xCashIndicator")
-		if old then old:Destroy() end
+		if indicator2x then
+			indicator2x:Destroy()
+		end
 	end
 end
 
@@ -570,25 +519,54 @@ local function setupAutoCollect(player)
 
 	local giver = essentials:FindFirstChild("Giver")
 	if giver then
-		-- Kill old indicator
+		-- Remove old indicator if exists
 		local oldIndicator = giver:FindFirstChild("AutoCollectIndicator")
-		if oldIndicator then oldIndicator:Destroy() end
+		if oldIndicator then
+			oldIndicator:Destroy()
+		end
 
-		local enabled = (autoCollectEnabled[player] ~= false)
-		local text = enabled and "AUTO" or "AUTO X"
-		local bg = enabled and Color3.fromRGB(0, 180, 180) or Color3.fromRGB(128, 0, 0)
-		local txt = enabled and Color3.new(1,1,1) or Color3.fromRGB(255, 80, 80)
+		local autoIndicator = Instance.new("BillboardGui")
+		autoIndicator.Name = "AutoCollectIndicator"
+		autoIndicator.MaxDistance = 100
+		autoIndicator.Size = UDim2.new(3, 0, 0.8, 0) -- Fixed size in studs
+		autoIndicator.StudsOffset = Vector3.new(0, 3.5, 0) -- Below 2x indicator
+		autoIndicator.AlwaysOnTop = true
+		autoIndicator.Parent = giver
 
-		local bb, frame, label = createBillboardIndicator({
-			parentPart = giver,
-			name = "AutoCollectIndicator",
-			yStuds = 4.5,  -- Below 2X CASH but higher up
-			text = text,
-			bgColor = bg,
-			textColor = txt,
-			widthPx = 140,
-			heightPx = 40,
-		})
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(1, 0, 1, 0)
+		frame.BorderSizePixel = 0
+		frame.Parent = autoIndicator
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0.2, 0)
+		corner.Parent = frame
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.TextScaled = true
+		label.Font = Enum.Font.SourceSansBold
+		label.TextStrokeTransparency = 0
+		label.TextStrokeColor3 = Color3.new(0, 0, 0)
+		label.Parent = frame
+
+		-- FIXED: Show correct visual state based on actual enabled state
+		if autoCollectEnabled[player] ~= false then
+			-- Auto-collect is ON
+			frame.BackgroundColor3 = Color3.new(0, 0.7, 0.7) -- Cyan
+			frame.BackgroundTransparency = 0.2
+			label.Text = "AUTO"
+			label.TextColor3 = Color3.new(1, 1, 1)
+		else
+			-- Auto-collect is OFF
+			frame.BackgroundColor3 = Color3.new(0.5, 0, 0) -- Red
+			frame.BackgroundTransparency = 0.2
+			label.Text = "AUTO X"
+			label.TextColor3 = Color3.new(1, 0.3, 0.3)
+		end
+
+		-- Don't store instance as attribute - not needed
 	end
 end
 
@@ -630,19 +608,19 @@ if autoCollectToggle then
 
 		local giver = essentials:FindFirstChild("Giver")
 		if giver then
-			local ui = giver:FindFirstChild("AutoCollectIndicator")
-			if ui then
-				local frame = ui:FindFirstChild("Frame")
+			local indicator = giver:FindFirstChild("AutoCollectIndicator")
+			if indicator then
+				local frame = indicator:FindFirstChild("Frame")
 				local label = frame and frame:FindFirstChild("TextLabel")
-				if label and frame then
+				if label then
 					if enabled then
 						label.Text = "AUTO"
-						label.TextColor3 = Color3.new(1,1,1)
-						frame.BackgroundColor3 = Color3.fromRGB(0, 180, 180)
+						label.TextColor3 = Color3.new(1, 1, 1)
+						frame.BackgroundColor3 = Color3.new(0, 0.7, 0.7)
 					else
 						label.Text = "AUTO X"
-						label.TextColor3 = Color3.fromRGB(255, 80, 80)
-						frame.BackgroundColor3 = Color3.fromRGB(128, 0, 0)
+						label.TextColor3 = Color3.new(1, 0.3, 0.3)
+						frame.BackgroundColor3 = Color3.new(0.5, 0, 0)
 					end
 				end
 			end
