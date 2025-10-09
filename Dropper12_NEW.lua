@@ -1,66 +1,64 @@
 --[[
 	Dropper 12 NEW - Diamond Blue Neon
-	Optimized with anti-stack
+	Uses DropperCore
 --]]
 
-local AntiStack = require(workspace:WaitForChild("DropperAntiStack"))
+local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
--- Setup collision groups
-AntiStack.SetupCollisionGroups()
+task.wait(1)
 
--- Setup player collisions
-game.Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(AntiStack.SetupPlayerCollisions)
-end)
+-- Create template model
+local templateModel = Instance.new("Model")
+templateModel.Name = "Dropper12Template"
 
-for _, player in ipairs(game.Players:GetPlayers()) do
-	if player.Character then
-		AntiStack.SetupPlayerCollisions(player.Character)
-	end
+local mainPart = Instance.new("Part")
+mainPart.Name = "PrimaryPart"
+mainPart.Size = Vector3.new(0.4, 0.4, 0.4)
+mainPart.BrickColor = BrickColor.new("Cyan")
+mainPart.Material = Enum.Material.Neon
+mainPart.TopSurface = Enum.SurfaceType.Smooth
+mainPart.BottomSurface = Enum.SurfaceType.Smooth
+mainPart.Transparency = 0
+mainPart.Anchored = false
+mainPart.CanCollide = true
+mainPart.Parent = templateModel
+
+-- Set primary part
+templateModel.PrimaryPart = mainPart
+
+-- Store template
+local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
+if not templateStorage then
+	templateStorage = Instance.new("Folder")
+	templateStorage.Name = "DropperTemplates"
+	templateStorage.Parent = game.ReplicatedStorage
 end
+templateModel.Parent = templateStorage
 
--- Wait for dependencies
-task.wait(2)
-local PartStorage = workspace:WaitForChild("PartStorage")
-local dropPart = script.Parent:WaitForChild("Drop")
+-- Run dropper
+Core.RunModel({
+	model = script.Parent,
+	partStorage = workspace:WaitForChild("PartStorage"),
+	templateModel = templateModel,
 
-local dropCount = 0
+	namePrefix = "Diamond12_",
+	dropGroup = "HelloKittyDrops12",
+	playerGroup = "Players",
 
-while true do
-	task.wait(0.35)
+	dropRate = 0.35,
+	cashValue = 500,
+	lifetime = 30,
+
+	scaleFactor = 1.0,
+	density = 0.3,
+	friction = 0.4,
+	elasticity = 0.1,
 	
-	-- Debounce check
-	if not AntiStack.CanDrop(0.3) then
-		continue
-	end
+	extraLower = 3.25,
+	fadeTime = 0.3,
 	
-	dropCount = dropCount + 1
-
-	-- Create part
-	local part = Instance.new("Part")
-	part.Name = "DiamondDrop12_" .. dropCount
-	part.BrickColor = BrickColor.new("Cyan")
-	part.Material = Enum.Material.Neon
-	part.FormFactor = "Custom"
-	part.Size = Vector3.new(0.4, 0.4, 0.4)
-	part.TopSurface = "Smooth"
-	part.BottomSurface = "Smooth"
-
-	-- Cash value
-	local cash = Instance.new("IntValue")
-	cash.Name = "Cash"
-	cash.Value = 500
-	cash.Parent = part
-
-	-- Apply anti-stack physics (with higher drop offset for small parts)
-	local dropPartClone = Instance.new("Part")
-	dropPartClone.CFrame = dropPart.CFrame - Vector3.new(0, 3.25, 0)
-	AntiStack.ApplyAntiStackPhysics(part, dropPartClone)
-	dropPartClone:Destroy()
-
-	-- Parent to storage
-	part.Parent = PartStorage
-
-	-- Schedule cleanup
-	AntiStack.ScheduleCleanup(part, 30)
-end
+	cashOn = "primary",
+	
+	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
+	collectorTags = {"Collector", "SellZone"},
+})

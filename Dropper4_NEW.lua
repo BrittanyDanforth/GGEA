@@ -1,127 +1,80 @@
 --[[
-	Cinnamoroll Dropper 4 NEW - White Heart Style Fixed
-	Optimized with anti-stack
+	Dropper 4 NEW - White Heart Style
+	Uses DropperCore
 --]]
 
-local TweenService = game:GetService("TweenService")
-local Debris = game:GetService("Debris")
-local AntiStack = require(workspace:WaitForChild("DropperAntiStack"))
+local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
--- Setup collision groups
-AntiStack.SetupCollisionGroups()
+task.wait(1)
 
--- Setup player collisions
-game.Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(AntiStack.SetupPlayerCollisions)
-end)
+-- Create template model
+local templateModel = Instance.new("Model")
+templateModel.Name = "WhiteHeartTemplate"
 
-for _, player in ipairs(game.Players:GetPlayers()) do
-	if player.Character then
-		AntiStack.SetupPlayerCollisions(player.Character)
-	end
+local mainPart = Instance.new("Part")
+mainPart.Name = "PrimaryPart"
+mainPart.Size = Vector3.new(2, 2, 2)
+mainPart.BrickColor = BrickColor.new("Institutional white")
+mainPart.Material = Enum.Material.SmoothPlastic
+mainPart.TopSurface = Enum.SurfaceType.Smooth
+mainPart.BottomSurface = Enum.SurfaceType.Smooth
+mainPart.Reflectance = 0.2
+mainPart.Transparency = 0
+mainPart.Anchored = false
+mainPart.CanCollide = true
+mainPart.Parent = templateModel
+
+-- Add heart mesh
+local mesh = Instance.new("SpecialMesh")
+mesh.MeshType = Enum.MeshType.FileMesh
+mesh.MeshId = "rbxassetid://601198887"
+mesh.TextureId = ""
+mesh.Scale = Vector3.new(0.04, 0.04, 0.04)
+mesh.Parent = mainPart
+
+-- Add sweet glow
+local light = Instance.new("PointLight")
+light.Brightness = 0.6
+light.Range = 7
+light.Color = Color3.fromRGB(255, 204, 204)
+light.Parent = mainPart
+
+-- Set primary part
+templateModel.PrimaryPart = mainPart
+
+-- Store template
+local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
+if not templateStorage then
+	templateStorage = Instance.new("Folder")
+	templateStorage.Name = "DropperTemplates"
+	templateStorage.Parent = game.ReplicatedStorage
 end
+templateModel.Parent = templateStorage
 
--- Wait for dependencies
-task.wait(2)
-local PartStorage = workspace:WaitForChild("PartStorage")
-local dropPart = script.Parent:WaitForChild("Drop")
+-- Run dropper
+Core.RunModel({
+	model = script.Parent,
+	partStorage = workspace:WaitForChild("PartStorage"),
+	templateModel = templateModel,
 
-local cakeCount = 0
+	namePrefix = "WhiteHeart_",
+	dropGroup = "HelloKittyDrops4",
+	playerGroup = "Players",
 
-while true do
-	task.wait(0.9)
+	dropRate = 0.9,
+	cashValue = 40,
+	lifetime = 180,
+
+	scaleFactor = 1.0,
+	density = 0.4,
+	friction = 0.6,
+	elasticity = 0.1,
 	
-	-- Debounce check
-	if not AntiStack.CanDrop(0.8) then
-		continue
-	end
+	extraLower = 1.75,
+	fadeTime = 0.4,
 	
-	cakeCount = cakeCount + 1
-
-	-- Create white heart
-	local cake = Instance.new("Part")
-	cake.Name = "WhiteHeart_" .. cakeCount
-	cake.Size = Vector3.new(2, 2, 2)
-	cake.Material = Enum.Material.SmoothPlastic
-	cake.BrickColor = BrickColor.new("Institutional white")
-	cake.TopSurface = Enum.SurfaceType.Smooth
-	cake.BottomSurface = Enum.SurfaceType.Smooth
-	cake.Reflectance = 0.2
-
-	-- Add heart mesh
-	local mesh = Instance.new("SpecialMesh")
-	mesh.MeshType = Enum.MeshType.FileMesh
-	mesh.MeshId = "rbxassetid://601198887"
-	mesh.TextureId = ""
-	mesh.Scale = Vector3.new(0.001, 0.001, 0.001)
-	mesh.Parent = cake
-
-	-- Cash value
-	local cash = Instance.new("IntValue")
-	cash.Name = "Cash"
-	cash.Value = 40
-	cash.Parent = cake
-
-	-- Sweet glow
-	local glow = Instance.new("PointLight")
-	glow.Brightness = 0.6
-	glow.Range = 6
-	glow.Color = Color3.fromRGB(255, 204, 204)
-	glow.Parent = cake
-
-	-- Minimal particles
-	local berries = Instance.new("ParticleEmitter")
-	berries.Texture = "rbxasset://textures/particles/sparkles_main.dds"
-	berries.Rate = 4
-	berries.Lifetime = NumberRange.new(1, 1.5)
-	berries.Speed = NumberRange.new(0.5)
-	berries.SpreadAngle = Vector2.new(20, 20)
-	berries.Color = ColorSequence.new(Color3.fromRGB(255, 99, 71))
-	berries.Size = NumberSequence.new{
-		NumberSequenceKeypoint.new(0, 0.2),
-		NumberSequenceKeypoint.new(1, 0.05)
-	}
-	berries.LightEmission = 0.4
-	berries.Parent = cake
-
-	-- Apply anti-stack physics
-	AntiStack.ApplyAntiStackPhysics(cake, dropPart)
-
-	-- Parent to storage
-	cake.Parent = PartStorage
-
-	-- Spawn animation
-	TweenService:Create(mesh,
-		TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{Scale = Vector3.new(0.04, 0.04, 0.04)}
-	):Play()
-
-	-- Light flash
-	glow.Brightness = 1.2
-	TweenService:Create(glow,
-		TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{Brightness = 0.6}
-	):Play()
-
-	-- Simple puff effect
-	local puff = Instance.new("ParticleEmitter")
-	puff.Texture = "rbxassetid://262979222"
-	puff.Rate = 0
-	puff.Speed = NumberRange.new(0)
-	puff.Lifetime = NumberRange.new(0.3)
-	puff.Size = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.1),
-		NumberSequenceKeypoint.new(1, 1.5)
-	})
-	puff.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.3),
-		NumberSequenceKeypoint.new(1, 1)
-	})
-	puff.Color = ColorSequence.new(Color3.fromRGB(255, 182, 193))
-	puff.Parent = cake
-	puff:Emit(1)
-	Debris:AddItem(puff, 1)
-
-	-- Schedule cleanup
-	AntiStack.ScheduleCleanup(cake, 180)
-end
+	cashOn = "primary",
+	
+	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
+	collectorTags = {"Collector", "SellZone"},
+})

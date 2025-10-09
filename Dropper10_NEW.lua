@@ -1,64 +1,65 @@
 --[[
 	Dropper 10 NEW - Golden Glass
-	Optimized with anti-stack
+	Uses DropperCore
 --]]
 
-local AntiStack = require(workspace:WaitForChild("DropperAntiStack"))
+local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
--- Setup collision groups
-AntiStack.SetupCollisionGroups()
+task.wait(1)
 
--- Setup player collisions
-game.Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(AntiStack.SetupPlayerCollisions)
-end)
+-- Create template model
+local templateModel = Instance.new("Model")
+templateModel.Name = "Dropper10Template"
 
-for _, player in ipairs(game.Players:GetPlayers()) do
-	if player.Character then
-		AntiStack.SetupPlayerCollisions(player.Character)
-	end
+local mainPart = Instance.new("Part")
+mainPart.Name = "PrimaryPart"
+mainPart.Size = Vector3.new(1.5, 1.5, 1.5)
+mainPart.BrickColor = BrickColor.new("New Yeller")
+mainPart.Material = Enum.Material.Glass
+mainPart.TopSurface = Enum.SurfaceType.Smooth
+mainPart.BottomSurface = Enum.SurfaceType.Smooth
+mainPart.Reflectance = 0.4
+mainPart.Transparency = 0
+mainPart.Anchored = false
+mainPart.CanCollide = true
+mainPart.Parent = templateModel
+
+-- Set primary part
+templateModel.PrimaryPart = mainPart
+
+-- Store template
+local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
+if not templateStorage then
+	templateStorage = Instance.new("Folder")
+	templateStorage.Name = "DropperTemplates"
+	templateStorage.Parent = game.ReplicatedStorage
 end
+templateModel.Parent = templateStorage
 
--- Wait for dependencies
-task.wait(2)
-local PartStorage = workspace:WaitForChild("PartStorage")
-local dropPart = script.Parent:WaitForChild("Drop")
+-- Run dropper
+Core.RunModel({
+	model = script.Parent,
+	partStorage = workspace:WaitForChild("PartStorage"),
+	templateModel = templateModel,
 
-local dropCount = 0
+	namePrefix = "Golden10_",
+	dropGroup = "HelloKittyDrops10",
+	playerGroup = "Players",
 
-while true do
-	task.wait(0.45)
+	dropRate = 0.45,
+	cashValue = 250,
+	lifetime = 2000,
+
+	scaleFactor = 1.0,
+	density = 0.3,
+	friction = 0.4,
+	elasticity = 0.1,
 	
-	-- Debounce check to prevent spam
-	if not AntiStack.CanDrop(0.4) then
-		continue
-	end
+	extraLower = 1.5,
+	fadeTime = 0.4,
 	
-	dropCount = dropCount + 1
-
-	-- Create part
-	local part = Instance.new("Part")
-	part.Name = "GoldenDrop10_" .. dropCount
-	part.BrickColor = BrickColor.new("New Yeller")
-	part.Material = "Glass"
-	part.FormFactor = "Custom"
-	part.Size = Vector3.new(1.5, 1.5, 1.5)
-	part.TopSurface = "Smooth"
-	part.BottomSurface = "Smooth"
-	part.Reflectance = 0.4
-
-	-- Cash value
-	local cash = Instance.new("IntValue")
-	cash.Name = "Cash"
-	cash.Value = 250
-	cash.Parent = part
-
-	-- Apply anti-stack physics
-	AntiStack.ApplyAntiStackPhysics(part, dropPart)
-
-	-- Parent to storage
-	part.Parent = PartStorage
-
-	-- Long lifetime
-	AntiStack.ScheduleCleanup(part, 2000)
-end
+	cashOn = "primary",
+	
+	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
+	collectorTags = {"Collector", "SellZone"},
+})

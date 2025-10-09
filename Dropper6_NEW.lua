@@ -1,75 +1,71 @@
 --[[
-	Dropper 6 NEW - Mesh Dropper Fixed
-	Optimized with anti-stack
+	Dropper 6 NEW - Custom Mesh Style
+	Uses DropperCore
 --]]
 
-local AntiStack = require(workspace:WaitForChild("DropperAntiStack"))
+local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
--- Setup collision groups
-AntiStack.SetupCollisionGroups()
+task.wait(1)
 
--- Setup player collisions
-game.Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(AntiStack.SetupPlayerCollisions)
-end)
+-- Create template model
+local templateModel = Instance.new("Model")
+templateModel.Name = "Dropper6Template"
 
-for _, player in ipairs(game.Players:GetPlayers()) do
-	if player.Character then
-		AntiStack.SetupPlayerCollisions(player.Character)
-	end
+local mainPart = Instance.new("Part")
+mainPart.Name = "PrimaryPart"
+mainPart.Size = Vector3.new(1, 5, 4)
+mainPart.Material = Enum.Material.SmoothPlastic
+mainPart.TopSurface = Enum.SurfaceType.Smooth
+mainPart.BottomSurface = Enum.SurfaceType.Smooth
+mainPart.Transparency = 0
+mainPart.Anchored = false
+mainPart.CanCollide = true
+mainPart.Parent = templateModel
+
+-- Add mesh
+local mesh = Instance.new("SpecialMesh")
+mesh.MeshType = Enum.MeshType.FileMesh
+mesh.MeshId = "http://www.roblox.com/asset?id=160003363"
+mesh.TextureId = "http://www.roblox.com/asset/?id=192068356"
+mesh.Scale = Vector3.new(1, 1, 1)
+mesh.Parent = mainPart
+
+-- Set primary part
+templateModel.PrimaryPart = mainPart
+
+-- Store template
+local templateStorage = game.ReplicatedStorage:FindFirstChild("DropperTemplates")
+if not templateStorage then
+	templateStorage = Instance.new("Folder")
+	templateStorage.Name = "DropperTemplates"
+	templateStorage.Parent = game.ReplicatedStorage
 end
+templateModel.Parent = templateStorage
 
--- Wait for dependencies
-task.wait(2)
-local PartStorage = workspace:WaitForChild("PartStorage")
-local dropPart = script.Parent:WaitForChild("Drop")
+-- Run dropper
+Core.RunModel({
+	model = script.Parent,
+	partStorage = workspace:WaitForChild("PartStorage"),
+	templateModel = templateModel,
 
--- Mesh settings
-local meshDrop = true
-local meshID = "http://www.roblox.com/asset?id=160003363"
-local textureID = "http://www.roblox.com/asset/?id=192068356"
+	namePrefix = "Drop6_",
+	dropGroup = "HelloKittyDrops6",
+	playerGroup = "Players",
 
-local dropCount = 0
+	dropRate = 1.5,
+	cashValue = 12,
+	lifetime = 20,
 
-while true do
-	task.wait(1.5)
+	scaleFactor = 1.0,
+	density = 0.3,
+	friction = 0.4,
+	elasticity = 0.1,
 	
-	-- Debounce check
-	if not AntiStack.CanDrop(1.4) then
-		continue
-	end
+	extraLower = 5.0,
+	fadeTime = 0.4,
 	
-	dropCount = dropCount + 1
-
-	-- Create part
-	local part = Instance.new("Part")
-	part.Name = "MeshDrop_" .. dropCount
-	part.FormFactor = "Custom"
-	part.Size = Vector3.new(1, 5, 4)
-	part.TopSurface = "Smooth"
-	part.BottomSurface = "Smooth"
-	part.Material = Enum.Material.SmoothPlastic
-
-	-- Add mesh
-	if meshDrop then
-		local m = Instance.new("SpecialMesh")
-		m.MeshId = meshID
-		m.TextureId = textureID
-		m.Parent = part
-	end
-
-	-- Cash value
-	local cash = Instance.new("IntValue")
-	cash.Name = "Cash"
-	cash.Value = 12
-	cash.Parent = part
-
-	-- Apply anti-stack physics
-	AntiStack.ApplyAntiStackPhysics(part, dropPart)
-
-	-- Parent to storage
-	part.Parent = PartStorage
-
-	-- Schedule cleanup
-	AntiStack.ScheduleCleanup(part, 20)
-end
+	cashOn = "primary",
+	
+	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
+	collectorTags = {"Collector", "SellZone"},
+})
