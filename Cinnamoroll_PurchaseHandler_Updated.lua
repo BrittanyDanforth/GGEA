@@ -379,7 +379,7 @@ local function update2xCashIndicator(giver, has2xCash)
 			billboard2x.Name = "2xCashIndicator"
 			billboard2x.MaxDistance = 50  -- Visible within 50 studs
 			billboard2x.Size = UDim2.new(3, 0, 1, 0)
-			billboard2x.StudsOffset = Vector3.new(0, 6, 0)  -- Moved higher for better spacing
+			billboard2x.StudsOffset = Vector3.new(0, 6, 2)  -- Added forward offset to prevent clipping when looking down
 			billboard2x.AlwaysOnTop = false  -- Don't show through walls
 			billboard2x.LightInfluence = 0  -- Makes it always bright
 			billboard2x.Parent = giver
@@ -528,7 +528,7 @@ local function setupAutoCollect(player)
 		autoIndicator.Name = "AutoCollectIndicator"
 		autoIndicator.MaxDistance = 50  -- Visible within 50 studs
 		autoIndicator.Size = UDim2.new(3, 0, 0.8, 0)
-		autoIndicator.StudsOffset = Vector3.new(0, 4.5, 0)  -- Moved higher to prevent clipping
+		autoIndicator.StudsOffset = Vector3.new(0, 4.5, 2)  -- Added forward offset to prevent clipping when looking down
 		autoIndicator.AlwaysOnTop = false  -- Don't show through walls
 		autoIndicator.LightInfluence = 0  -- Makes it always bright
 		autoIndicator.Parent = giver
