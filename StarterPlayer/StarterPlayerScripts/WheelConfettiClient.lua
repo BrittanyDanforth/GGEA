@@ -31,7 +31,7 @@ local function createConfettiParticle(position: Vector3)
 	local particle = Instance.new("Part")
 	particle.Name = "Confetti"
 	particle.Size = Vector3.new(0.3, 0.1, 0.3)
-	particle.Material = Enum.Material.Neon
+	particle.Material = Enum.Material.SmoothPlastic
 	particle.Color = CONFETTI_COLORS[math.random(1, #CONFETTI_COLORS)]
 	particle.TopSurface = Enum.SurfaceType.Smooth
 	particle.BottomSurface = Enum.SurfaceType.Smooth
@@ -98,51 +98,7 @@ local function createConfettiBurst(position: Vector3, count: number)
 			createConfettiParticle(position)
 		end)
 	end
-	
-	-- Create some sparkle effects too
-	for i = 1, count / 3 do
-		task.spawn(function()
-			local sparkle = Instance.new("Part")
-			sparkle.Name = "Sparkle"
-			sparkle.Size = Vector3.new(0.5, 0.5, 0.5)
-			sparkle.Material = Enum.Material.ForceField
-			sparkle.Color = Color3.new(1, 1, 1)
-			sparkle.Transparency = 0.3
-			sparkle.CanCollide = false
-			sparkle.Anchored = true
-			sparkle.Position = position + Vector3.new(
-				math.random(-3, 3),
-				math.random(-1, 3),
-				math.random(-3, 3)
-			)
-			sparkle.Parent = workspace
-			
-			-- Create glow
-			local pointLight = Instance.new("PointLight")
-			pointLight.Brightness = 2
-			pointLight.Range = 10
-			pointLight.Color = CONFETTI_COLORS[math.random(1, #CONFETTI_COLORS)]
-			pointLight.Parent = sparkle
-			
-			-- Tween out
-			TweenService:Create(sparkle, 
-				TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-				{
-					Size = Vector3.new(2, 2, 2),
-					Transparency = 1
-				}
-			):Play()
-			
-			TweenService:Create(pointLight,
-				TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-				{
-					Brightness = 0
-				}
-			):Play()
-			
-			Debris:AddItem(sparkle, 0.6)
-		end)
-	end
+	-- NO SPARKLES - just pure confetti
 end
 
 -- Listen for spin results
@@ -159,9 +115,9 @@ SpinResult.OnClientEvent:Connect(function(ok, phase, label, amount, boostSeconds
 			
 			if wheelModel then
 				if wheelModel:IsA("Model") and wheelModel.PrimaryPart then
-					position = wheelModel.PrimaryPart.Position + Vector3.new(0, 5, 0)
+					position = wheelModel.PrimaryPart.Position + Vector3.new(0, 2, 0)
 				elseif wheelModel:IsA("BasePart") then
-					position = wheelModel.Position + Vector3.new(0, 5, 0)
+					position = wheelModel.Position + Vector3.new(0, 2, 0)
 				end
 			end
 			
@@ -178,29 +134,7 @@ SpinResult.OnClientEvent:Connect(function(ok, phase, label, amount, boostSeconds
 			if (amount and amount >= 50000) or (boostSeconds and boostSeconds > 0) then
 				task.wait(0.2)
 				createConfettiBurst(position + Vector3.new(0, 2, 0), 80)
-				
-				-- Create a shockwave effect
-				local shockwave = Instance.new("Part")
-				shockwave.Name = "Shockwave"
-				shockwave.Size = Vector3.new(0.1, 0.1, 0.1)
-				shockwave.Material = Enum.Material.ForceField
-				shockwave.Color = Color3.fromRGB(255, 215, 0)
-				shockwave.Transparency = 0.5
-				shockwave.CanCollide = false
-				shockwave.Anchored = true
-				shockwave.Position = position
-				shockwave.Shape = Enum.PartType.Ball
-				shockwave.Parent = workspace
-				
-				TweenService:Create(shockwave,
-					TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-					{
-						Size = Vector3.new(30, 30, 30),
-						Transparency = 1
-					}
-				):Play()
-				
-				Debris:AddItem(shockwave, 1.1)
+				-- Just extra confetti, no shockwave effect
 			end
 		end
 	end
