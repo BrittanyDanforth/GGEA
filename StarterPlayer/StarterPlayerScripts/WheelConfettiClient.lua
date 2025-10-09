@@ -166,29 +166,7 @@ SpinResult.OnClientEvent:Connect(function(ok, phase, label, amount, boostSeconds
 			if (amount and amount >= 50000) or (boostSeconds and boostSeconds > 0) then
 				task.wait(0.2)
 				createConfettiBurst(position + Vector3.new(0, 2, 0), 80)
-				
-				-- Create a shockwave effect (subtle ring)
-				local shockwave = Instance.new("Part")
-				shockwave.Name = "Shockwave"
-				shockwave.Size = Vector3.new(0.1, 0.1, 0.1)
-				shockwave.Material = Enum.Material.ForceField
-				shockwave.Color = Color3.fromRGB(255, 215, 0)
-				shockwave.Transparency = 0.3
-				shockwave.CanCollide = false
-				shockwave.Anchored = true
-				shockwave.Position = position
-				shockwave.Shape = Enum.PartType.Ball
-				shockwave.Parent = workspace
-				
-				TweenService:Create(shockwave,
-					TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-					{
-						Size = Vector3.new(15, 15, 15),
-						Transparency = 1
-					}
-				):Play()
-				
-				Debris:AddItem(shockwave, 0.9)
+				-- Just extra confetti, no shockwave effect
 			end
 		end
 	end
