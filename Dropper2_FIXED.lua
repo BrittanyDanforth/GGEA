@@ -1,0 +1,219 @@
+--[[
+	Cinnamoroll Dropper 2 - Enhanced Kawaii Style - FIXED COLLISION
+	Fixed: Drops don't collide with each other or players
+--]]
+
+local TweenService = game:GetService("TweenService")
+local Debris = game:GetService("Debris")
+local PhysicsService = game:GetService("PhysicsService")
+
+-- Wait for PartStorage
+task.wait(2)
+local PartStorage = workspace:WaitForChild("PartStorage")
+
+-- Find the Drop part
+local dropPart = script.Parent:WaitForChild("Drop")
+
+-- Pattern for anti-stacking
+local dropPattern = 1
+local patterns = {
+	Vector3.new(0.2, 0, 0.2),
+	Vector3.new(-0.2, 0, 0.2),
+	Vector3.new(0.2, 0, -0.2),
+	Vector3.new(-0.2, 0, -0.2),
+	Vector3.new(0, 0, 0),
+}
+
+-- Create collision groups
+local ORB_GROUP = "CinnamorollOrbs"
+local PLAYER_GROUP = "Players"
+
+pcall(function()
+	PhysicsService:RegisterCollisionGroup(ORB_GROUP)
+	PhysicsService:RegisterCollisionGroup(PLAYER_GROUP)
+	-- FIXED: Orbs DON'T collide with players
+	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, PLAYER_GROUP, false)
+	-- FIXED: Orbs DON'T collide with each other (prevents stacking issues)
+	PhysicsService:CollisionGroupSetCollidable(ORB_GROUP, ORB_GROUP, false)
+end)
+
+-- Setup player collision groups
+local function setupPlayer(character)
+	task.wait(0.1)
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") then
+			pcall(function()
+				part.CollisionGroup = PLAYER_GROUP
+			end)
+		end
+	end
+end
+
+game.Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(setupPlayer)
+end)
+
+for _, player in ipairs(game.Players:GetPlayers()) do
+	if player.Character then
+		setupPlayer(player.Character)
+	end
+end
+
+local orbCount = 0
+
+while true do
+	task.wait(1) -- Drop rate
+
+	orbCount = orbCount + 1
+
+	-- Create regular Part with SpecialMesh
+	local orb = Instance.new("Part")
+	orb.Name = "CinnamorollMesh_" .. orbCount
+	orb.Size = Vector3.new(2, 2, 2) -- Base size
+	orb.Material = Enum.Material.SmoothPlastic
+	orb.TopSurface = Enum.SurfaceType.Smooth
+	orb.BottomSurface = Enum.SurfaceType.Smooth
+	orb.Color = Color3.new(1, 1, 1)
+	orb.Transparency = 0
+
+	-- Add mesh
+	local mesh = Instance.new("SpecialMesh")
+	mesh.MeshType = Enum.MeshType.FileMesh
+	mesh.MeshId = "rbxassetid://114684643919279"
+	mesh.TextureId = "rbxassetid://136339015269351"
+	mesh.Scale = Vector3.new(2, 2, 2)
+	mesh.Parent = orb
+
+	-- FIXED: CanCollide = false (no collision between drops or with players)
+	orb.CanCollide = false
+	orb.CanTouch = true
+	orb.CanQuery = true
+
+	-- Set collision group
+	pcall(function()
+		orb.CollisionGroup = ORB_GROUP
+	end)
+
+	-- Fluffy physics
+	orb.CustomPhysicalProperties = PhysicalProperties.new(
+		0.2,  -- Light density
+		0.3,  -- Low friction
+		0.1,  -- Very low bounce
+		1, 1
+	)
+
+	-- Cash value
+	local cash = Instance.new("IntValue")
+	cash.Name = "Cash"
+	cash.Value = 15
+	cash.Parent = orb
+
+	-- REDUCED GLOW
+	local pointLight = Instance.new("PointLight")
+	pointLight.Brightness = 0.6
+	pointLight.Range = 4
+	pointLight.Color = Color3.new(1, 1, 1)
+	pointLight.Parent = orb
+
+	-- ENHANCED sparkles
+	local sparkle = Instance.new("ParticleEmitter")
+	sparkle.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	sparkle.Rate = 5
+	sparkle.Lifetime = NumberRange.new(0.5, 1.5)
+	sparkle.Speed = NumberRange.new(0.5, 2)
+	sparkle.SpreadAngle = Vector2.new(180, 180)
+	sparkle.LightEmission = 1
+	sparkle.LightInfluence = 0
+	sparkle.Size = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 0)
+	}
+	sparkle.Color = ColorSequence.new(Color3.new(1, 1, 1))
+	sparkle.Parent = orb
+
+	-- Secondary star particles
+	local stars = Instance.new("ParticleEmitter")
+	stars.Texture = "rbxasset://textures/particles/star.dds"
+	stars.Rate = 2
+	stars.Lifetime = NumberRange.new(1, 2)
+	stars.Speed = NumberRange.new(0.5)
+	stars.SpreadAngle = Vector2.new(360, 360)
+	stars.LightEmission = 0.8
+	stars.Size = NumberSequence.new(0.4)
+	stars.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
+	stars.Parent = orb
+
+	-- Anti-stack pattern positioning
+	local offset = patterns[dropPattern]
+	dropPattern = (dropPattern % #patterns) + 1
+
+	-- Spawn with rotation and pattern offset
+	orb.CFrame = (dropPart.CFrame - Vector3.new(0, 1.75, 0) + offset) * CFrame.Angles(math.rad(180), math.rad(270), 0)
+
+	-- Float down with slight spread
+	orb.AssemblyLinearVelocity = Vector3.new(
+		offset.X * 2,
+		-10,
+		offset.Z * 2
+	)
+
+	-- Start semi-transparent for smooth fade-in
+	orb.Transparency = 0.7
+
+	-- Set spawn time
+	orb:SetAttribute("SpawnTime", tick())
+
+	-- Parent to storage
+	orb.Parent = PartStorage
+
+	-- Smooth fade-in with bounce animation
+	mesh.Scale = Vector3.new(0.5, 0.5, 0.5)
+
+	-- Fade in
+	local fadeTween = TweenService:Create(orb,
+		TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{Transparency = 0}
+	)
+	fadeTween:Play()
+
+	-- Bounce scale
+	local spawnTween = TweenService:Create(mesh,
+		TweenInfo.new(0.6, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out),
+		{Scale = Vector3.new(2, 2, 2)}
+	)
+	spawnTween:Play()
+
+	-- Magical spawn flash
+	pointLight.Brightness = 2
+	TweenService:Create(pointLight,
+		TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		{Brightness = 0.6}
+	):Play()
+
+	-- Cloud puff spawn effect
+	local spawnPuff = Instance.new("ParticleEmitter")
+	spawnPuff.Texture = "rbxassetid://262979222"
+	spawnPuff.Rate = 0
+	spawnPuff.Speed = NumberRange.new(0)
+	spawnPuff.Lifetime = NumberRange.new(0.4)
+	spawnPuff.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.2),
+		NumberSequenceKeypoint.new(1, 2.5)
+	})
+	spawnPuff.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.2),
+		NumberSequenceKeypoint.new(0.5, 0.5),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	spawnPuff.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
+	spawnPuff.Parent = orb
+	spawnPuff:Emit(2)
+	Debris:AddItem(spawnPuff, 1)
+
+	-- Cleanup after 3 minutes
+	task.delay(180, function()
+		if orb and orb.Parent then
+			orb:Destroy()
+		end
+	end)
+end
