@@ -378,7 +378,7 @@ local function update2xCashIndicator(giver, has2xCash)
 			-- Create 2x indicator with FIXED SIZE that doesn't change with distance
 			local billboard2x = Instance.new("BillboardGui")
 			billboard2x.Name = "2xCashIndicator"
-			billboard2x.MaxDistance = 100
+			billboard2x.MaxDistance = 50
 			billboard2x.Size = UDim2.new(3, 0, 1, 0) -- Size in studs, not pixels
 			billboard2x.StudsOffset = Vector3.new(0, 5, 0) -- Above the collector
 			billboard2x.AlwaysOnTop = true
@@ -527,7 +527,7 @@ local function setupAutoCollect(player)
 
 		local autoIndicator = Instance.new("BillboardGui")
 		autoIndicator.Name = "AutoCollectIndicator"
-		autoIndicator.MaxDistance = 100
+		autoIndicator.MaxDistance = 50
 		autoIndicator.Size = UDim2.new(3, 0, 0.8, 0) -- Fixed size in studs
 		autoIndicator.StudsOffset = Vector3.new(0, 3.5, 0) -- Below 2x indicator
 		autoIndicator.AlwaysOnTop = true
