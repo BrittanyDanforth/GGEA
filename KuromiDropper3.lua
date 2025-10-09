@@ -1,59 +1,77 @@
--- Kuromi Dropper 3 - Premium Dark Style (v4.4 FIX)
--- ✅ FIXED: Added playerGroup to prevent player collisions
--- ✅ Unique dropGroup to prevent collisions with other droppers
+--[[
+	Kuromi Dropper 3 - Premium Dark Style
+	✅ Uses premium dark mesh
+	✅ Star particles
+]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
+
 task.wait(1)
 
-local template = Instance.new("Model")
-template.Name = "KuromiDrop3_Template"
-
-local p = Instance.new("Part")
-p.Name = "PrimaryPart"
-p.Size = Vector3.new(1.479, 1.158, 0.408)
-p.Color = Color3.fromRGB(17, 17, 17)
-p.Material = Enum.Material.SmoothPlastic
-p.Anchored = false
-p.CanCollide = true
-p.Parent = template
-
-local mesh = Instance.new("SpecialMesh")
-mesh.MeshType = Enum.MeshType.FileMesh
-mesh.MeshId = "rbxassetid://431221914"
-mesh.TextureId = ""
-mesh.Scale = Vector3.new(0.25, 0.25, 0.25)
-mesh.Parent = p
-
-local light = Instance.new("PointLight")
-light.Brightness = 1
-light.Range = 10
-light.Color = Color3.fromRGB(200, 150, 230)
-light.Parent = p
-
-template.PrimaryPart = p
-template.Parent = game.ReplicatedStorage
-
-Core.RunModel({
+Core.Run({
 	model = script.Parent,
 	partStorage = workspace:WaitForChild("PartStorage"),
-	templateModel = template,
 
 	namePrefix = "PremiumKuromi_",
-	dropGroup = "KuromiOrbs3", -- Unique group to prevent collisions with other droppers
-	playerGroup = "Players", -- Prevent collision with players
+	dropGroup = "KuromiOrbs3",
 
 	dropRate = 0.6,
 	cashValue = 50,
 	lifetime = 2000,
 
-	scaleFactor = 1.0,
+	size = Vector3.new(1.479, 1.158, 0.408),
+	color = Color3.fromRGB(17, 17, 17),
+	material = Enum.Material.SmoothPlastic,
+
+	mesh = {
+		meshId = "rbxassetid://431221914",
+		textureId = "",
+		scale = Vector3.new(0.25, 0.25, 0.25),
+	},
+
+	light = {
+		brightness = 1,
+		range = 10,
+		color = Color3.fromRGB(200, 150, 230),
+		spawnFlash = true,
+		spawnBrightness = 2,
+		flashDuration = 0.6,
+	},
+
+	spawn = {
+		rotation = CFrame.Angles(math.rad(90), math.rad(195), 0),
+		velocity = Vector3.new(0, -10, 0),
+		angularVelocity = Vector3.new(0, 5, 0),
+	},
+	spawnYOffset = -1.75,
+
+	animation = {
+		mesh = {
+			startScale = Vector3.new(0.06, 0.06, 0.06),
+			endScale = Vector3.new(0.25, 0.25, 0.25),
+			duration = 0.4,
+			style = Enum.EasingStyle.Back,
+		},
+	},
+
+	particles = {
+		-- Star particles
+		{
+			Texture = "rbxasset://textures/particles/star.dds",
+			Rate = 10,
+			Lifetime = NumberRange.new(2, 3),
+			Speed = NumberRange.new(1),
+			SpreadAngle = Vector2.new(180, 180),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.3),
+				NumberSequenceKeypoint.new(1, 0.1)
+			}),
+			Color = ColorSequence.new(Color3.fromRGB(255, 150, 220)),
+			LightEmission = 1,
+		},
+	},
+
 	density = 0.2,
 	friction = 0.4,
 	elasticity = 0.3,
-
-	yawDegrees = 195,
-	fadeTime = 0.5,
-	extraLower = 2,
-
-	cashOn = "primary",
 })
