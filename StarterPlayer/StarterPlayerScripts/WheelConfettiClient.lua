@@ -31,7 +31,7 @@ local function createConfettiParticle(position: Vector3)
 	local particle = Instance.new("Part")
 	particle.Name = "Confetti"
 	particle.Size = Vector3.new(0.3, 0.1, 0.3)
-	particle.Material = Enum.Material.Neon
+	particle.Material = Enum.Material.SmoothPlastic
 	particle.Color = CONFETTI_COLORS[math.random(1, #CONFETTI_COLORS)]
 	particle.TopSurface = Enum.SurfaceType.Smooth
 	particle.BottomSurface = Enum.SurfaceType.Smooth
@@ -98,39 +98,7 @@ local function createConfettiBurst(position: Vector3, count: number)
 			createConfettiParticle(position)
 		end)
 	end
-	
-	-- Create some subtle sparkle effects (no bright lights)
-	for i = 1, count / 5 do
-		task.spawn(function()
-			local sparkle = Instance.new("Part")
-			sparkle.Name = "Sparkle"
-			sparkle.Size = Vector3.new(0.3, 0.3, 0.3)
-			sparkle.Material = Enum.Material.ForceField
-			sparkle.Color = CONFETTI_COLORS[math.random(1, #CONFETTI_COLORS)]
-			sparkle.Transparency = 0.7
-			sparkle.CanCollide = false
-			sparkle.Anchored = true
-			sparkle.Position = position + Vector3.new(
-				math.random(-3, 3),
-				math.random(-1, 3),
-				math.random(-3, 3)
-			)
-			sparkle.Parent = workspace
-			
-			-- No PointLight - just subtle particle effect
-			
-			-- Tween out
-			TweenService:Create(sparkle, 
-				TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-				{
-					Size = Vector3.new(1, 1, 1),
-					Transparency = 1
-				}
-			):Play()
-			
-			Debris:AddItem(sparkle, 0.6)
-		end)
-	end
+	-- NO SPARKLES - just pure confetti
 end
 
 -- Listen for spin results
