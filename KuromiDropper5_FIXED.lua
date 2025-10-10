@@ -1,25 +1,18 @@
 --[[
 	Kuromi Dropper 5 - Witch Hat Style
 	✅ Uses witch hat mesh
-	✅ Final visual size: 2.674, 1.996, 2.37
+	✅ Part size: 2.674, 1.996, 2.37 (EXACT!)
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
 task.wait(1)
 
--- Part size
-local PART_SIZE = Vector3.new(2, 2, 2)
+-- EXACT part size you want
+local PART_SIZE = Vector3.new(2.674, 1.996, 2.37)
 
--- Desired final visual size
-local DESIRED_SIZE = Vector3.new(2.674, 1.996, 2.37)
-
--- Calculate correct mesh scale (mesh scale = desired size / part size)
-local MESH_SCALE = Vector3.new(
-	DESIRED_SIZE.X / PART_SIZE.X,  -- 2.674 / 2 = 1.337
-	DESIRED_SIZE.Y / PART_SIZE.Y,  -- 1.996 / 2 = 0.998
-	DESIRED_SIZE.Z / PART_SIZE.Z   -- 2.37 / 2 = 1.185
-)
+-- Simple 1:1 mesh scale
+local MESH_SCALE = Vector3.new(1, 1, 1)
 
 Core.Run({
 	model = script.Parent,
@@ -32,14 +25,14 @@ Core.Run({
 	cashValue = 12,
 	lifetime = 2000,
 
-	size = PART_SIZE,
+	size = PART_SIZE,  -- EXACT size you want!
 	color = Color3.new(1, 1, 1),
 	material = Enum.Material.SmoothPlastic,
 
 	mesh = {
 		meshId = "rbxassetid://12396936150",
 		textureId = "rbxassetid://12396936197",
-		scale = MESH_SCALE,  -- Now correctly calculated!
+		scale = MESH_SCALE,  -- Simple 1:1 scale
 	},
 
 	light = {
@@ -58,8 +51,8 @@ Core.Run({
 
 	animation = {
 		mesh = {
-			startScale = Vector3.new(0.2, 0.2, 0.2),
-			endScale = MESH_SCALE,  -- Use correct mesh scale for animation
+			startScale = Vector3.new(0.1, 0.1, 0.1),
+			endScale = MESH_SCALE,  -- Animates to 1:1 scale
 			duration = 0.4,
 			style = Enum.EasingStyle.Back,
 		},
