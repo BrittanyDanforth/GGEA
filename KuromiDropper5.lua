@@ -1,18 +1,18 @@
 --[[ 
-	Kuromi Dropper 5 - Witch Hat (SMALL + NO SINKING)
-	✅ Proper visual size
-	✅ Mesh offset so it doesn't sink into the conveyor
-	✅ Cross-group non-colliding drops (via DropperCore)
+  Kuromi Dropper 5 – Witch Hat (small)
+  Mesh: rbxassetid://12396936150
+  Texture: rbxassetid://12396936197
+  Visual shrink via mesh.Scale (Part.Size is hitbox only)
+  Cash: 12  |  Rate: 1.5s
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
-
 task.wait(1)
 
--- final scale using your earlier formula (but small)
+-- Author scale of this hat is huge; keep this tiny
 local BASE_SCALE = Vector3.new(1.177, 2.512, 1.164)
-local SCALE_OVERALL = 0.28
-local THICKEN = Vector3.new(1.1, 0.75, 1.1)
+local SCALE_OVERALL = 0.065            -- tweak smaller/bigger here (0.04–0.08 typical)
+local THICKEN      = Vector3.new(1.0, 0.60, 1.0)  -- a bit shorter on Y
 
 local FINAL_SCALE = Vector3.new(
 	BASE_SCALE.X * THICKEN.X * SCALE_OVERALL,
@@ -20,60 +20,90 @@ local FINAL_SCALE = Vector3.new(
 	BASE_SCALE.Z * THICKEN.Z * SCALE_OVERALL
 )
 
--- compact hitbox
-local PART_SIZE = Vector3.new(1, 1, 1)
+-- Physics hitbox (not visual size)
+local PART_SIZE = Vector3.new(0.9, 0.9, 0.9)
 
 Core.Run({
+	-- Required refs
 	model = script.Parent,
 	partStorage = workspace:WaitForChild("PartStorage"),
 
+	-- Identity
 	namePrefix = "WitchHat_",
-	dropGroup  = "Dropper5Orbs",
+	dropGroup  = "Dropper5Orbs",   -- Core prevents collisions with players & other drops
 
-	dropRate   = 1.5,
-	cashValue  = 12,
-	lifetime   = 2000,
+	-- Economy / timing
+	dropRate  = 1.5,
+	cashValue = 12,
+	lifetime  = 2000,
 
-	size       = PART_SIZE,
-	color      = Color3.new(1, 1, 1),
-	material   = Enum.Material.SmoothPlastic,
-	shape      = Enum.PartType.Block,
-	transparency = 0, -- fade works from opaque
+	-- Base part (hitbox)
+	size         = PART_SIZE,
+	color        = Color3.new(1, 1, 1),
+	material     = Enum.Material.SmoothPlastic,
+	transparency = 0,              -- use fade tween only if >0
 
-	-- ⭐ Mesh with vertical offset so it doesn't clip into the belt
+	-- Witch hat visual
 	mesh = {
-		meshType  = Enum.MeshType.FileMesh,
-		meshId    = "rbxassetid://12396936150",
-		textureId = "rbxassetid://12396936197",
-		scale     = FINAL_SCALE,
-		offset    = Vector3.new(0, 0.35, 0), -- raise visual ~0.35 studs (tweak 0.25–0.45)
+		meshId   = "rbxassetid://12396936150",
+		textureId= "rbxassetid://12396936197",
+		scale    = FINAL_SCALE,
 	},
 
+	-- Light & spawn flash
 	light = {
-		brightness = 1,
-		range = 6,
-		color = Color3.new(1, 1, 1),
-		spawnFlash = true,
-		spawnBrightness = 2,
-		flashDuration = 0.6,
+		brightness      = 0.7,
+		range           = 6,
+		color           = Color3.new(1, 1, 1),
+		spawnFlash      = true,
+		spawnBrightness = 2.2,
+		flashDuration   = 0.5,
 	},
 
+	-- Spawn motion
 	spawn = {
-		velocity = Vector3.new(0, -8, 0),
+		rotation        = CFrame.Angles(0, 0, 0),
+		velocity        = Vector3.new(0, -8, 0),
+		angularVelocity = Vector3.new(0, 0, 0),
 	},
-	spawnYOffset = -1.6, -- was lower; raised to avoid touching conveyor
+	spawnYOffset = -2.2,
 
+	-- Mesh pop-in anim
 	animation = {
 		mesh = {
 			startScale = FINAL_SCALE * 0.5,
 			endScale   = FINAL_SCALE,
-			duration   = 0.4,
+			duration   = 0.35,
 			style      = Enum.EasingStyle.Back,
 		},
 	},
 
-	fadeTime   = 0.3,
-	density    = 0.1,
-	friction   = 0.3,
-	elasticity = 0,
+	-- Optional spawn ring burst
+	spawnParticles = {
+		{
+			Texture = "rbxassetid://262979222",
+			Rate = 0, Speed = NumberRange.new(0), Lifetime = NumberRange.new(0.35),
+			Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.12),
+				NumberSequenceKeypoint.new(1, 1.8),
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.25),
+				NumberSequenceKeypoint.new(0.5, 0.6),
+				NumberSequenceKeypoint.new(1, 1),
+			}),
+			Color = ColorSequence.new(Color3.new(1, 1, 1)),
+			emit = 1, autoDestroy = true, lifetime = 1,
+		},
+	},
+
+	-- Physics
+	density     = 0.1,
+	friction    = 0.3,
+	elasticity  = 0,
+	fadeTime    = 0.3,
+
+	-- Collectors (kept default, works with your setup)
+	collectorNames = {"Collector","CollectorZone","Receiver","Sell","SellPad"},
+	collectorTags  = {"Collector","SellZone"},
 })
