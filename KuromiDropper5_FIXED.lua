@@ -1,18 +1,18 @@
 --[[
 	Kuromi Dropper 5 - Witch Hat Style
 	✅ Uses witch hat mesh
-	✅ Part size: 2.674, 1.996, 2.37 (EXACT!)
+	✅ Made WAY smaller!
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
 task.wait(1)
 
--- EXACT part size you want
-local PART_SIZE = Vector3.new(2.674, 1.996, 2.37)
+-- Much smaller size!
+local PART_SIZE = Vector3.new(1, 1, 1)
 
--- Simple 1:1 mesh scale
-local MESH_SCALE = Vector3.new(1, 1, 1)
+-- Small mesh scale
+local MESH_SCALE = Vector3.new(0.8, 0.8, 0.8)
 
 Core.Run({
 	model = script.Parent,
@@ -51,8 +51,8 @@ Core.Run({
 
 	animation = {
 		mesh = {
-			startScale = Vector3.new(0.1, 0.1, 0.1),
-			endScale = MESH_SCALE,  -- Animates to 1:1 scale
+			startScale = Vector3.new(0.05, 0.05, 0.05),
+			endScale = MESH_SCALE,  -- Animates to 0.8 scale
 			duration = 0.4,
 			style = Enum.EasingStyle.Back,
 		},
