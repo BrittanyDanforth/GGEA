@@ -1780,8 +1780,13 @@ function Shop:open()
 	Core.State.isAnimating = true
 	Core.State.isOpen = true
 
+	-- Force refresh on every open
+	ownershipCache:clear()
+	productCache:clear()
 	Core.DataManager.refreshPrices()
 	self:refreshAllProducts()
+	
+	print("🔄 [SanrioShop] Refreshed all gamepasses on shop open")
 
 	self.gui.Enabled = true
 
@@ -1850,21 +1855,33 @@ function Shop:toggle()
 end
 
 function Shop:setupRemoteHandlers()
-	if not Remotes then return end
+	if not Remotes then
+		warn("[SanrioShop] No TycoonRemotes folder found!")
+		return
+	end
 
 	local purchaseConfirm = Remotes:FindFirstChild("GamepassPurchased")
 	if purchaseConfirm and purchaseConfirm:IsA("RemoteEvent") then
 		purchaseConfirm.OnClientEvent:Connect(function(passId)
+			print("🎮 [SanrioShop] Server confirmed gamepass purchase:", passId)
+			-- Clear ALL caches
 			ownershipCache:clear()
+			productCache:clear()
+			-- Wait for server to fully register
+			task.wait(0.5)
 			self:refreshAllProducts()
 			Core.SoundSystem.play("success")
+			print("✅ [SanrioShop] Shop refreshed after gamepass purchase!")
 		end)
+	else
+		warn("[SanrioShop] GamepassPurchased remote not found!")
 	end
 
 	local productGrant = Remotes:FindFirstChild("ProductGranted") or Remotes:FindFirstChild("GrantProductCurrency")
 	if productGrant and productGrant:IsA("RemoteEvent") then
 		productGrant.OnClientEvent:Connect(function(productId, amount)
 			Core.SoundSystem.play("success")
+			print("✅ [SanrioShop] Product granted:", productId, "amount:", amount)
 		end)
 	end
 end
@@ -1901,7 +1918,11 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 	Core.State.purchasePending[passId] = nil
 
 	if purchased then
+		print("✅ [SanrioShop] Gamepass purchase completed:", passId)
+		
+		-- Clear ALL caches immediately
 		ownershipCache:clear()
+		productCache:clear()
 
 		if pending.product.purchaseButton then
 			pending.product.purchaseButton.Text = "✓ Owned"
@@ -1911,8 +1932,10 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 
 		Core.SoundSystem.play("success")
 
-		task.wait(0.5)
+		-- Wait for server to process, then refresh everything
+		task.wait(0.8)
 		shop:refreshAllProducts()
+		print("✅ [SanrioShop] UI refreshed after purchase!")
 	else
 		if pending.product.purchaseButton then
 			pending.product.purchaseButton.Text = "Purchase"
