@@ -1,18 +1,26 @@
 --[[
 	Kuromi Dropper 5 - Witch Hat Style
-	✅ Uses witch hat mesh
-	✅ Made WAY smaller!
+	✅ Uses witch hat mesh with proper scaling
+	✅ FIXED: Much smaller visual + hitbox size
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
 task.wait(1)
 
--- SUPER TINY size!
-local PART_SIZE = Vector3.new(0.6, 0.6, 0.6)
+-- Calculate final mesh scale using your formula
+local BASE_SCALE = Vector3.new(1.177, 2.512, 1.164)
+local SCALE_OVERALL = 0.28         -- was 1.8 (WAY smaller now!)
+local THICKEN = Vector3.new(1.1, 0.75, 1.1)  -- slightly thicker, shorter height
 
--- Extra small mesh scale
-local MESH_SCALE = Vector3.new(0.35, 0.35, 0.35)
+local FINAL_SCALE = Vector3.new(
+	BASE_SCALE.X * THICKEN.X * SCALE_OVERALL,
+	BASE_SCALE.Y * THICKEN.Y * SCALE_OVERALL,
+	BASE_SCALE.Z * THICKEN.Z * SCALE_OVERALL
+)
+
+-- Smaller hitbox (was 2, 2, 2)
+local PART_SIZE = Vector3.new(1, 1, 1)
 
 Core.Run({
 	model = script.Parent,
@@ -25,14 +33,14 @@ Core.Run({
 	cashValue = 12,
 	lifetime = 2000,
 
-	size = PART_SIZE,  -- EXACT size you want!
+	size = PART_SIZE,  -- Smaller hitbox for better physics
 	color = Color3.new(1, 1, 1),
 	material = Enum.Material.SmoothPlastic,
 
 	mesh = {
 		meshId = "rbxassetid://12396936150",
 		textureId = "rbxassetid://12396936197",
-		scale = MESH_SCALE,  -- Simple 1:1 scale
+		scale = FINAL_SCALE,  -- Calculated proper scale
 	},
 
 	light = {
@@ -51,8 +59,8 @@ Core.Run({
 
 	animation = {
 		mesh = {
-			startScale = Vector3.new(0.02, 0.02, 0.02),
-			endScale = MESH_SCALE,  -- Animates to 0.5 scale
+			startScale = FINAL_SCALE * 0.5,  -- Starts at 50% of final
+			endScale = FINAL_SCALE,          -- Tweens to final scale
 			duration = 0.4,
 			style = Enum.EasingStyle.Back,
 		},
