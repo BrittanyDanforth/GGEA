@@ -8,11 +8,11 @@ local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
 task.wait(1)
 
--- Much smaller size!
-local PART_SIZE = Vector3.new(1, 1, 1)
+-- SUPER TINY size!
+local PART_SIZE = Vector3.new(0.6, 0.6, 0.6)
 
--- Small mesh scale
-local MESH_SCALE = Vector3.new(0.8, 0.8, 0.8)
+-- Extra small mesh scale
+local MESH_SCALE = Vector3.new(0.35, 0.35, 0.35)
 
 Core.Run({
 	model = script.Parent,
@@ -51,8 +51,8 @@ Core.Run({
 
 	animation = {
 		mesh = {
-			startScale = Vector3.new(0.05, 0.05, 0.05),
-			endScale = MESH_SCALE,  -- Animates to 0.8 scale
+			startScale = Vector3.new(0.02, 0.02, 0.02),
+			endScale = MESH_SCALE,  -- Animates to 0.5 scale
 			duration = 0.4,
 			style = Enum.EasingStyle.Back,
 		},
