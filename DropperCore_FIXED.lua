@@ -144,6 +144,7 @@ local function setupMesh(part, meshConfig)
 	mesh.MeshId = meshConfig.meshId or ""
 	mesh.TextureId = meshConfig.textureId or ""
 	mesh.Scale = meshConfig.scale or Vector3.new(1, 1, 1)
+	mesh.Offset = meshConfig.offset or Vector3.new(0, 0, 0) -- ✅ Support vertical offset to prevent sinking
 	mesh.Parent = part
 
 	return mesh

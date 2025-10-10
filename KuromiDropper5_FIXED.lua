@@ -38,9 +38,11 @@ Core.Run({
 	material = Enum.Material.SmoothPlastic,
 
 	mesh = {
+		meshType = Enum.MeshType.FileMesh,
 		meshId = "rbxassetid://12396936150",
 		textureId = "rbxassetid://12396936197",
 		scale = FINAL_SCALE,  -- Calculated proper scale
+		offset = Vector3.new(0, 0.35, 0), -- ✅ Lift mesh so it doesn't sink into conveyor
 	},
 
 	light = {
@@ -55,7 +57,7 @@ Core.Run({
 	spawn = {
 		velocity = Vector3.new(0, -8, 0),
 	},
-	spawnYOffset = -2.5,
+	spawnYOffset = -1.6, -- ✅ Raised from -2.5 to avoid touching conveyor
 
 	animation = {
 		mesh = {
