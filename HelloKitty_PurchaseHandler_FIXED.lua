@@ -861,7 +861,8 @@ tycoonOwner.Changed:Connect(function()
 		if spawnLocation and spawnLocation:IsA("SpawnLocation") then
 			spawnLocation.Neutral = true
 		end
-		if currentOwner then
+		-- ✅ FIXED: Check if player still exists before clearing team!
+		if currentOwner and currentOwner.Parent then
 			currentOwner.RespawnLocation = nil
 			currentOwner.Team = nil
 		end
