@@ -1,10 +1,14 @@
 --[[
-	DropperCore v4.7 - Run() + RunModel() (mesh OR model drops)
-	✅ FIXED: Added ALL Cinnamoroll groups to prevent collision
+	DropperCore v4.8 - Run() + RunModel() (mesh OR model drops)
+	✅ FIXED: Added ALL Cinnamoroll + HelloKitty groups to prevent collision
+	✅ NEW: Optional keepUpright parameter prevents models from tipping on conveyors!
 	✅ Keeps your v4.6 behavior for single-part/mesh drops
 	✅ Adds solid Model-drop pipeline (clone, scale, weld, physics, fade, collect)
 	✅ Cross-group collision prevention + players don't collide with drops
 	✅ Optional prewarm (set prewarm=0 for no initial burst)
+	
+	NEW FEATURES:
+	- keepUpright: Set to true to prevent model drops from tipping over (great for plushies!)
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -432,18 +436,33 @@ function Core.RunModel(config)
 		-- parent to world
 		model.Parent = storage
 
-		-- nudge + stabilize upright briefly
+		-- ✅ KEEP UPRIGHT FEATURE - Prevents tipping on conveyor!
+		local keepUprightEnabled = config.keepUpright
+		local stabilizeAtt, stabilizeAO
+		
 		if not isPrewarm then
 			primary.AssemblyLinearVelocity = Vector3.new(0,-10,0)
-			local att = Instance.new("Attachment", primary)
-			local ao  = Instance.new("AlignOrientation")
-			ao.Mode = Enum.OrientationAlignmentMode.OneAttachment
-			ao.Attachment0 = att
-			ao.RigidityEnabled = true
-			ao.Responsiveness = 40
-			ao.CFrame = yawOnly
-			ao.Parent = primary
-			Debris:AddItem(ao, 0.35); Debris:AddItem(att, 0.35)
+			
+			-- Create attachment for stabilization
+			stabilizeAtt = Instance.new("Attachment")
+			stabilizeAtt.Name = "StabilizeAttachment"
+			stabilizeAtt.Parent = primary
+			
+			stabilizeAO = Instance.new("AlignOrientation")
+			stabilizeAO.Mode = Enum.OrientationAlignmentMode.OneAttachment
+			stabilizeAO.Attachment0 = stabilizeAtt
+			stabilizeAO.RigidityEnabled = true
+			stabilizeAO.MaxTorque = keepUprightEnabled and 100000 or math.huge  -- Stronger if keepUpright!
+			stabilizeAO.Responsiveness = keepUprightEnabled and 50 or 40  -- Faster correction if keepUpright!
+			stabilizeAO.CFrame = yawOnly
+			stabilizeAO.Parent = primary
+			
+			-- If keepUpright is disabled, remove after brief spawn stabilization
+			if not keepUprightEnabled then
+				Debris:AddItem(stabilizeAO, 0.35)
+				Debris:AddItem(stabilizeAtt, 0.35)
+			end
+			-- If keepUpright is enabled, constraint stays forever (prevents conveyor tipping!)
 		end
 
 		-- fade-in (limit tween count to avoid spikes)
