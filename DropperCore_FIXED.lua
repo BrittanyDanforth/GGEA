@@ -448,8 +448,21 @@ function Core.RunModel(config)
 
 		-- fade-in (limit tween count to avoid spikes)
 		local ti = TweenInfo.new(FADE_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		for i, p in ipairs(parts) do if i<=12 then TweenService:Create(p, ti, {Transparency=0}):Play() else p.Transparency = 0 end end
-		for i, d in ipairs(decals) do if i<=12 then TweenService:Create(d, ti, {Transparency=0}):Play() else d.Transparency = 0 end end
+		-- FIX: Fade more parts on spawn too! Limit to 50 tweens for performance
+		for i, p in ipairs(parts) do 
+			if i <= 50 then 
+				TweenService:Create(p, ti, {Transparency=0}):Play() 
+			else 
+				p.Transparency = 0 
+			end 
+		end
+		for i, d in ipairs(decals) do 
+			if i <= 50 then 
+				TweenService:Create(d, ti, {Transparency=0}):Play() 
+			else 
+				d.Transparency = 0 
+			end 
+		end
 
 		-- collection
 		local collected = false
@@ -460,8 +473,21 @@ function Core.RunModel(config)
 			primary.CanCollide = false
 			primary.CanTouch = false
 			local outTi = TweenInfo.new(math.max(FADE_TIME*0.75, 0.2), Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-			for i, p in ipairs(parts) do if i<=10 then TweenService:Create(p, outTi, {Transparency=1}):Play() else p.Transparency = 1 end end
-			for i, d in ipairs(decals) do if i<=10 then TweenService:Create(d, outTi, {Transparency=1}):Play() else d.Transparency = 1 end end
+			-- FIX: Fade ALL parts, not just first 10! Limit to 50 tweens max for performance
+			for i, p in ipairs(parts) do 
+				if i <= 50 then 
+					TweenService:Create(p, outTi, {Transparency=1}):Play() 
+				else 
+					p.Transparency = 1 
+				end 
+			end
+			for i, d in ipairs(decals) do 
+				if i <= 50 then 
+					TweenService:Create(d, outTi, {Transparency=1}):Play() 
+				else 
+					d.Transparency = 1 
+				end 
+			end
 			task.delay(math.max(FADE_TIME*0.75,0.2)+0.1, function() if model then model:Destroy() end end)
 		end
 
