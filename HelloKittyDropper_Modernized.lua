@@ -14,7 +14,8 @@ Core.Run({
 	model = script.Parent,
 	partStorage = workspace:WaitForChild("PartStorage"),
 	
-	-- Template model (for model-based drops instead of mesh)
+	-- USE MODEL TEMPLATE - This tells it to clone the HelloKittyPL model
+	useModelTemplate = true,
 	templateModel = RS:WaitForChild("HelloKittyPL"),
 	
 	-- Naming and groups
