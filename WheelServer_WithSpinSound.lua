@@ -303,17 +303,17 @@ local function doSpin(p: Player): (boolean, string, any)
 	local extra = math.random(Config.EXTRA_TURNS.min, Config.EXTRA_TURNS.max)
 	local finalDelta = delta + extra * 2 * math.pi
 	
-	-- ✨ FASTER spin time to match 2-second audio!
-	local t = 2.5 -- Fast spin (2.5 seconds to match ~2 second audio + slowdown)
+	-- ✨ 9-second spin to match the audio (starts fast, slows down!)
+	local t = 9 -- 9-second spin matches the audio perfectly
 	
 	-- 🎵 Play spinning sound DURING the spin!
 	local spinSound = Instance.new("Sound")
-	spinSound.SoundId = "rbxassetid://3847946070" -- 2-second spinning audio
+	spinSound.SoundId = "rbxassetid://5406934065" -- 9-second spinning audio (starts fast, slows!)
 	spinSound.Volume = 0.6
 	spinSound.Parent = wheelModel.PrimaryPart
 	spinSound:Play()
 	
-	-- Rotate wheel (this takes 2.5 seconds)
+	-- Rotate wheel (this takes 9 seconds with Cubic easing = starts fast, slows down!)
 	rotateWheelToAngle(finalDelta, t)
 	
 	-- Clean up spinning sound
