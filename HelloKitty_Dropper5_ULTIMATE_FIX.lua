@@ -28,7 +28,7 @@ Core.RunModel({
 	-- Scaling
 	scaleFactor = 1.0,
 	extraLower = 0.0,  -- FIXED: Don't lower at all = won't embed in ground
-	yawDegrees = 0,    -- Upright
+	yawDegrees = 180,  -- ✅ Face the other way!
 
 	-- Animation
 	fadeTime = 0.35,
