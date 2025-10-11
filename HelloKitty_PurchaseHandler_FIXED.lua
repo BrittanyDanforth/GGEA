@@ -751,6 +751,18 @@ end
 local function resetTycoonPurchases()
 	print("🔄 [HelloKitty] RESETTING PURCHASE HANDLER...")
 
+	-- ✅ STOP ALL DROPPERS!
+	for _, dropper in ipairs(script.Parent:GetChildren()) do
+		if dropper.Name:find("Dropper") then
+			local dropperScript = dropper:FindFirstChildOfClass("Script")
+			if dropperScript then
+				dropperScript.Disabled = true
+				dropper:SetAttribute("DropperRunning", false)
+				print("  ⏸️ [HelloKitty] Stopped dropper:", dropper.Name)
+			end
+		end
+	end
+
 	purchasedItems = {}
 
 	local destroyedParts = 0
@@ -853,6 +865,18 @@ tycoonOwner.Changed:Connect(function()
 	elseif newOwner ~= nil and currentOwner == nil then
 		currentOwner = newOwner
 		print("👤 [HelloKitty] New owner:", currentOwner.Name)
+
+		-- ✅ START ALL DROPPERS!
+		for _, dropper in ipairs(script.Parent:GetChildren()) do
+			if dropper.Name:find("Dropper") then
+				local dropperScript = dropper:FindFirstChildOfClass("Script")
+				if dropperScript then
+					dropper:SetAttribute("DropperRunning", false)  -- Clear flag
+					dropperScript.Disabled = false
+					print("  ▶️ [HelloKitty] Started dropper:", dropper.Name)
+				end
+			end
+		end
 
 		-- ✅ SPAWN LOCATION SETUP - Player will respawn at their tycoon (on death only!)
 		local teams = game:GetService("Teams")

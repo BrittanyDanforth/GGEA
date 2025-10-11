@@ -749,6 +749,18 @@ end
 local function resetTycoonPurchases()
 	print("🔄 [Kuromi] RESETTING PURCHASE HANDLER...")
 
+	-- ✅ STOP ALL DROPPERS!
+	for _, dropper in ipairs(script.Parent:GetChildren()) do
+		if dropper.Name:find("Dropper") then
+			local dropperScript = dropper:FindFirstChildOfClass("Script")
+			if dropperScript then
+				dropperScript.Disabled = true
+				dropper:SetAttribute("DropperRunning", false)
+				print("  ⏸️ [Kuromi] Stopped dropper:", dropper.Name)
+			end
+		end
+	end
+
 	purchasedItems = {}
 
 	local destroyedParts = 0
@@ -851,6 +863,18 @@ tycoonOwner.Changed:Connect(function()
 	elseif newOwner ~= nil and currentOwner == nil then
 		currentOwner = newOwner
 		print("👤 [Kuromi] New owner:", currentOwner.Name)
+
+		-- ✅ START ALL DROPPERS!
+		for _, dropper in ipairs(script.Parent:GetChildren()) do
+			if dropper.Name:find("Dropper") then
+				local dropperScript = dropper:FindFirstChildOfClass("Script")
+				if dropperScript then
+					dropper:SetAttribute("DropperRunning", false)  -- Clear flag
+					dropperScript.Disabled = false
+					print("  ▶️ [Kuromi] Started dropper:", dropper.Name)
+				end
+			end
+		end
 
 		-- ✅ SPAWN LOCATION SETUP - Player will respawn at their tycoon!
 		local teams = game:GetService("Teams")
