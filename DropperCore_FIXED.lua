@@ -465,6 +465,13 @@ function Core.RunModel(config)
 			-- If keepUpright is enabled, constraint stays forever (prevents conveyor tipping!)
 		end
 
+		-- ✅ CUSTOM onSpawn CALLBACK - Add custom logic after spawn!
+		if config.onSpawn and type(config.onSpawn) == "function" then
+			pcall(function()
+				config.onSpawn(model, primary, GROUP)
+			end)
+		end
+
 		-- fade-in (limit tween count to avoid spikes)
 		local ti = TweenInfo.new(FADE_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		-- FIX: Fade more parts on spawn too! Limit to 50 tweens for performance

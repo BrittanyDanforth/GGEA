@@ -18,8 +18,8 @@ local FINAL_SCALE = Vector3.new(
 	BASE_SCALE.Z * THICKEN.Z * SCALE_OVERALL
 )
 
--- Changed shape to cube, a little taller to feel balanced
-local PART_SIZE = Vector3.new(0.9, 0.8, 0.9)
+-- ✅ FIXED: Taller hitbox = sits ON TOP of conveyor (won't sink!)
+local PART_SIZE = Vector3.new(0.9, 1.2, 0.9)
 
 Core.Run({
 	model       = script.Parent,
@@ -58,7 +58,7 @@ Core.Run({
 		velocity        = Vector3.new(0, -8, 0),
 		angularVelocity = Vector3.new(0, 1.2, 0),
 	},
-	spawnYOffset = -0.5,  -- FIXED: Less negative = won't fall through map!
+	spawnYOffset = 0.2,  -- ✅ FIXED: Positive = spawns ABOVE conveyor surface!
 
 	animation = {
 		mesh = {
@@ -87,8 +87,8 @@ Core.Run({
 		},
 	},
 
-	density     = 0.3,   -- FIXED: Heavier = won't phase through!
-	friction    = 0.5,   -- More friction for stability
+	density     = 0.5,   -- ✅ FIXED: Even heavier = solid collision!
+	friction    = 0.7,   -- ✅ FIXED: More grip!
 	elasticity  = 0.05,
 	fadeTime    = 0.3,
 
