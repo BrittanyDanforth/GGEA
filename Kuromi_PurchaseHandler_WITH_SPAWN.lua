@@ -765,19 +765,54 @@ local function resetTycoonPurchases()
 
 	purchasedItems = {}
 
-	-- ✅ DESTROY ALL CASH PARTS (including models!)
-	local destroyedParts = 0
+	-- ✅ DESTROY ALL CASH DROPS (MODELS FIRST, then individual parts!)
+	local destroyedCount = 0
+	local destroyedModels = {}
 	local tycoonPosition = script.Parent:GetPivot().Position
-	for _, descendant in ipairs(workspace:GetDescendants()) do
-		if descendant:FindFirstChild("Cash") and descendant:IsA("BasePart") then
-			local distance = (descendant.Position - tycoonPosition).Magnitude
-			if distance < 100 then
-				descendant:Destroy()
-				destroyedParts = destroyedParts + 1
+	
+	-- STEP 1: Find and destroy ENTIRE models with Cash
+	for _, model in ipairs(workspace:GetChildren()) do
+		if model:IsA("Model") and not destroyedModels[model] then
+			local hasCash = false
+			local modelPos = nil
+			
+			-- Check if ANY part in the model has Cash
+			for _, part in ipairs(model:GetDescendants()) do
+				if part:IsA("BasePart") and part:FindFirstChild("Cash") then
+					hasCash = true
+					modelPos = part.Position
+					break
+				end
+			end
+			
+			if hasCash and modelPos then
+				local distance = (modelPos - tycoonPosition).Magnitude
+				if distance < 100 then
+					destroyedModels[model] = true
+					model:Destroy()
+					destroyedCount = destroyedCount + 1
+				end
 			end
 		end
 	end
-	print("  ✓ [Kuromi] Destroyed", destroyedParts, "cash parts")
+	
+	-- STEP 2: Find and destroy standalone parts with Cash
+	for _, part in ipairs(workspace:GetDescendants()) do
+		if part:IsA("BasePart") and part:FindFirstChild("Cash") then
+			-- Skip if already part of a destroyed model
+			if part.Parent and destroyedModels[part.Parent] then
+				continue
+			end
+			
+			local distance = (part.Position - tycoonPosition).Magnitude
+			if distance < 100 then
+				part:Destroy()
+				destroyedCount = destroyedCount + 1
+			end
+		end
+	end
+	
+	print("  ✓ [Kuromi] Destroyed", destroyedCount, "cash drops (models + parts)")
 
 	Money.Value = 0
 
