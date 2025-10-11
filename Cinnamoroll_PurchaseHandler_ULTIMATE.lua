@@ -852,7 +852,7 @@ tycoonOwner.Changed:Connect(function()
 		currentOwner = newOwner
 		print("👤 [Cinnamoroll] New owner:", currentOwner.Name)
 
-		-- ✅ SPAWN LOCATION SETUP - Player will respawn at their tycoon!
+		-- ✅ SPAWN LOCATION SETUP - Player will respawn at their tycoon (on death only!)
 		local teams = game:GetService("Teams")
 		local spawnPart = essentials:WaitForChild("Spawn")
 
@@ -885,14 +885,6 @@ tycoonOwner.Changed:Connect(function()
 		end
 		newOwner.TeamColor = TeamColor
 		newOwner.RespawnLocation = spawnPart
-
-		-- Move them there now (no death required)
-		task.defer(function()
-			local char = newOwner.Character
-			if char and char:FindFirstChild("HumanoidRootPart") then
-				char:PivotTo(spawnPart.CFrame + Vector3.new(0, 4, 0))
-			end
-		end)
 
 		local giver = essentials:FindFirstChild("Giver")
 		if giver then
