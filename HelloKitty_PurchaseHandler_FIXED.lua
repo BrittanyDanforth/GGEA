@@ -854,7 +854,7 @@ tycoonOwner.Changed:Connect(function()
 		currentOwner = newOwner
 		print("👤 [HelloKitty] New owner:", currentOwner.Name)
 
-		-- ✅ SPAWN LOCATION SETUP - Player will respawn at their tycoon!
+		-- ✅ SPAWN LOCATION SETUP - Player will respawn at their tycoon (on death only!)
 		local teams = game:GetService("Teams")
 		local spawnPart = essentials:WaitForChild("Spawn")
 
