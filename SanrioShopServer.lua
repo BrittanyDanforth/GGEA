@@ -1,194 +1,90 @@
 --[[
-    SANRIO SHOP SERVER HANDLER
-    Place this as a Script in ServerScriptService
-    Name it: SanrioShopHandler
-    
-    This handles:
-    1. Product purchases
-    2. Gamepass verification
-    3. Currency granting
-    4. Auto-collect toggle state
---]]
+	🎀 SANRIO SHOP SERVER — Gamepass Confirmation Handler
+	
+	✅ Fires GamepassPurchased event to client
+	✅ Provides current auto-collect state
+	✅ Source of truth for ownership
+]]
 
-local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
-local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Create remotes folder
-local Remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes") or Instance.new("Folder")
-Remotes.Name = "TycoonRemotes"
-Remotes.Parent = ReplicatedStorage
-
--- Create remote events/functions
-local function createRemote(name, className)
-	local remote = Remotes:FindFirstChild(name)
-	if not remote then
-		remote = Instance.new(className)
-		remote.Name = name
-		remote.Parent = Remotes
-	end
-	return remote
+-- Setup remotes folder
+local Remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes")
+if not Remotes then
+	Remotes = Instance.new("Folder")
+	Remotes.Name = "TycoonRemotes"
+	Remotes.Parent = ReplicatedStorage
 end
 
-local GamepassPurchased = createRemote("GamepassPurchased", "RemoteEvent")
-local ProductGranted = createRemote("ProductGranted", "RemoteEvent")
-local GrantProductCurrency = createRemote("GrantProductCurrency", "RemoteEvent")
-local AutoCollectToggle = createRemote("AutoCollectToggle", "RemoteEvent")
-local GetAutoCollectState = createRemote("GetAutoCollectState", "RemoteFunction")
-
--- Data stores
-local AutoCollectDataStore = DataStoreService:GetDataStore("AutoCollectStates")
-local playerAutoCollectStates = {}
-
--- Product IDs mapping
-local PRODUCTS = {
-	[1897730242] = {amount = 1000, name = "1,000 Cash"},
-	[1897730373] = {amount = 5000, name = "5,000 Cash"},
-	[1897730467] = {amount = 10000, name = "10,000 Cash"},
-	[1897730581] = {amount = 50000, name = "50,000 Cash"},
-}
-
--- Gamepass IDs
-local GAMEPASSES = {
-	AUTO_COLLECT = 1412171840,
-	DOUBLE_CASH = 1398974710,
-}
-
--- Helper function to grant currency
-local function grantCurrency(player, amount)
-	-- This is where you'd integrate with your tycoon system
-	-- For now, we'll use leaderstats as an example
-	local leaderstats = player:FindFirstChild("leaderstats")
-	if leaderstats then
-		local cash = leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Money")
-		if cash and cash:IsA("IntValue") or cash:IsA("NumberValue") then
-			cash.Value = cash.Value + amount
-			return true
-		end
-	end
-	
-	-- Alternative: Look for a player data module
-	local playerData = player:FindFirstChild("Data")
-	if playerData then
-		local cash = playerData:FindFirstChild("Cash")
-		if cash and cash:IsA("IntValue") or cash:IsA("NumberValue") then
-			cash.Value = cash.Value + amount
-			return true
-		end
-	end
-	
-	return false
+-- Create/get remotes
+local GamepassPurchased = Remotes:FindFirstChild("GamepassPurchased")
+if not GamepassPurchased then
+	GamepassPurchased = Instance.new("RemoteEvent")
+	GamepassPurchased.Name = "GamepassPurchased"
+	GamepassPurchased.Parent = Remotes
 end
 
--- Handle product purchases
-MarketplaceService.ProcessReceipt = function(receiptInfo)
-	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
-	if not player then
-		return Enum.ProductPurchaseDecision.NotProcessedYet
-	end
-	
-	local productInfo = PRODUCTS[receiptInfo.ProductId]
-	if productInfo then
-		-- Grant the currency
-		local success = grantCurrency(player, productInfo.amount)
-		
-		if success then
-			-- Fire client event
-			ProductGranted:FireClient(player, receiptInfo.ProductId, productInfo.amount)
-			
-			print(string.format("[SanrioShop] Granted %d cash to %s", productInfo.amount, player.Name))
-			return Enum.ProductPurchaseDecision.PurchaseGranted
-		else
-			warn(string.format("[SanrioShop] Failed to grant currency to %s", player.Name))
-			return Enum.ProductPurchaseDecision.NotProcessedYet
-		end
-	end
-	
-	-- Unknown product
-	return Enum.ProductPurchaseDecision.NotProcessedYet
+local AutoCollectToggle = Remotes:FindFirstChild("AutoCollectToggle")
+if not AutoCollectToggle then
+	AutoCollectToggle = Instance.new("RemoteEvent")
+	AutoCollectToggle.Name = "AutoCollectToggle"
+	AutoCollectToggle.Parent = Remotes
 end
 
--- Handle auto-collect toggle
-AutoCollectToggle.OnServerEvent:Connect(function(player, enabled)
-	if not MarketplaceService:UserOwnsGamePassAsync(player.UserId, GAMEPASSES.AUTO_COLLECT) then
-		return -- Player doesn't own the gamepass
-	end
-	
-	playerAutoCollectStates[player.UserId] = enabled
-	
-	-- Save to datastore
-	pcall(function()
-		AutoCollectDataStore:SetAsync(tostring(player.UserId), enabled)
-	end)
-	
-	-- Here you would enable/disable auto collection for the player
-	-- This depends on your tycoon implementation
-	
-	print(string.format("[SanrioShop] Auto-collect set to %s for %s", tostring(enabled), player.Name))
-end)
-
--- Get auto-collect state
-GetAutoCollectState.OnServerInvoke = function(player)
-	if not MarketplaceService:UserOwnsGamePassAsync(player.UserId, GAMEPASSES.AUTO_COLLECT) then
-		return false
-	end
-	
-	return playerAutoCollectStates[player.UserId] or false
+local GetAutoCollectState = Remotes:FindFirstChild("GetAutoCollectState")
+if not GetAutoCollectState then
+	GetAutoCollectState = Instance.new("RemoteFunction")
+	GetAutoCollectState.Name = "GetAutoCollectState"
+	GetAutoCollectState.Parent = Remotes
 end
 
--- Load player data
-Players.PlayerAdded:Connect(function(player)
-	-- Load auto-collect state
-	if MarketplaceService:UserOwnsGamePassAsync(player.UserId, GAMEPASSES.AUTO_COLLECT) then
-		local success, state = pcall(function()
-			return AutoCollectDataStore:GetAsync(tostring(player.UserId))
-		end)
-		
-		if success and state ~= nil then
-			playerAutoCollectStates[player.UserId] = state
-		else
-			playerAutoCollectStates[player.UserId] = true -- Default to enabled
-		end
-	end
-	
-	-- Check gamepass ownership and notify client
-	task.wait(1)
-	for name, passId in pairs(GAMEPASSES) do
-		if MarketplaceService:UserOwnsGamePassAsync(player.UserId, passId) then
-			GamepassPurchased:FireClient(player, passId)
-		end
-	end
-end)
+-- Auto-collect state (per player)
+local autoCollectState = {}
 
--- Clean up on player leave
-Players.PlayerRemoving:Connect(function(player)
-	playerAutoCollectStates[player.UserId] = nil
-end)
-
--- Handle gamepass purchases (for immediate updates)
+-- ✅ GAMEPASS PURCHASE CONFIRMATION (source of truth)
 MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
 	if purchased then
-		-- Notify the client immediately
-		GamepassPurchased:FireClient(player, passId)
+		print("🎮 [ShopServer] Player", player.Name, "purchased gamepass:", passId)
 		
-		-- Special handling for auto-collect
-		if passId == GAMEPASSES.AUTO_COLLECT then
-			playerAutoCollectStates[player.UserId] = true
-		end
+		-- Wait a moment for Roblox to process
+		task.wait(0.3)
 		
-		print(string.format("[SanrioShop] %s purchased gamepass %d", player.Name, passId))
+		-- Get current auto-collect state if this is the auto-collect pass
+		local currentState = autoCollectState[player.UserId]
+		
+		-- Fire to client (client trusts this as source of truth)
+		GamepassPurchased:FireClient(player, passId, currentState)
+		
+		print("✅ [ShopServer] Confirmed purchase to client:", player.Name)
 	end
 end)
 
--- Alternative currency grant method (if direct remote is used)
-GrantProductCurrency.OnServerEvent:Connect(function(player, productId)
-	-- This is a backup method - normally ProcessReceipt should handle it
-	-- Only use this if ProcessReceipt isn't working in your game
+-- ✅ AUTO-COLLECT STATE MANAGEMENT
+AutoCollectToggle.OnServerEvent:Connect(function(player, enabled)
+	autoCollectState[player.UserId] = enabled
+	print("🎚️ [ShopServer] Auto-collect for", player.Name, "→", enabled and "ON" or "OFF")
 	
-	warn("[SanrioShop] GrantProductCurrency called - this should be handled by ProcessReceipt")
+	-- You can add your actual auto-collect logic here
+	-- For example:
+	-- if enabled then
+	--     -- Start auto-collecting for this player
+	-- else
+	--     -- Stop auto-collecting for this player
+	-- end
 end)
 
-print("[SanrioShop] Server handler initialized")
+GetAutoCollectState.OnServerInvoke = function(player)
+	-- Return current state (defaults to false if not set)
+	return autoCollectState[player.UserId] or false
+end
 
-return true
+-- ✅ CLEANUP on player leave
+game.Players.PlayerRemoving:Connect(function(player)
+	autoCollectState[player.UserId] = nil
+end)
+
+print("✅ [ShopServer] Sanrio Shop server initialized!")
+print("  📡 GamepassPurchased: Confirms purchases to clients")
+print("  🎚️ AutoCollectToggle: Handles auto-collect state")
+print("  📊 GetAutoCollectState: Returns current state")
