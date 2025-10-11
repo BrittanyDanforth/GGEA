@@ -15,14 +15,24 @@ local CollectionService = game:GetService("CollectionService")
 
 local Core = {}
 
--- ✅ FIXED: Added ALL Cinnamoroll groups so they don't collide with each other!
+-- ✅ FIXED: Added ALL Cinnamoroll + HelloKitty groups so they don't collide!
 local ALL_DROPPER_GROUPS = {
+	-- Kuromi groups
 	"KuromiOrbs1","KuromiOrbs2","KuromiOrbs3",
 	"KuromiOrbs6","KuromiOrbs8","KuromiOrbs9","KuromiOrbs10",
 	"KuromiOrbs11","KuromiOrbs12","KuromiOrbs13",
+	
+	-- Cinnamoroll groups
 	"CinnamorollOrbs","CinnamorollOrbs1","CinnamorollOrbs2","CinnamorollOrbs3",
 	"CinnamorollOrbs4","CinnamorollOrbs5","CinnamorollOrbs6",
 	"CinnamorollOrbs8","CinnamorollOrbs9","CinnamorollOrbs10",
+	
+	-- HelloKitty groups
+	"HelloKittyDrops","HelloKittyDrops1","HelloKittyDrops2","HelloKittyDrops3",
+	"HelloKittyDrops4","HelloKittyDrops5","HelloKittyDrops6",
+	"HelloKittyDrops8","HelloKittyDrops9","HelloKittyDrops10",
+	
+	-- Other groups
 	"Dropper5Orbs",
 	"Drops"
 }
