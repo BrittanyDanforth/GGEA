@@ -45,4 +45,25 @@ Core.RunModel({
 	cashOn = "primary",
 	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
 	collectorTags = {"Collector", "SellZone"},
+	
+	-- 🎯 KEEP UPRIGHT CALLBACK - Prevents tipping on conveyor!
+	onSpawn = function(model)
+		local primary = model.PrimaryPart
+		if not primary then return end
+		
+		-- Add attachment for AlignOrientation
+		local att = Instance.new("Attachment")
+		att.Name = "StandUpright"
+		att.Parent = primary
+		
+		-- Keep it standing upright ALWAYS (even on conveyor!)
+		local alignOrientation = Instance.new("AlignOrientation")
+		alignOrientation.Mode = Enum.OrientationAlignmentMode.OneAttachment
+		alignOrientation.Attachment0 = att
+		alignOrientation.RigidityEnabled = true
+		alignOrientation.MaxTorque = 50000  -- Strong enough to resist conveyor!
+		alignOrientation.Responsiveness = 40  -- Fast correction
+		alignOrientation.CFrame = CFrame.new(0, 0, 0)  -- Keep upright (no rotation)
+		alignOrientation.Parent = primary
+	end,
 })
