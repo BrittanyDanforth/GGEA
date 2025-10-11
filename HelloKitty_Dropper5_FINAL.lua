@@ -29,17 +29,17 @@ Core.RunModel({
 
 	-- Scaling
 	scaleFactor = 1.0,
-	extraLower = 0.45,
-	yawDegrees = 180,
+	extraLower = 0.5,  -- Lower to ground for stability
+	yawDegrees = 0,  -- Upright, no rotation
 
 	-- Animation
 	fadeTime = 0.35,
 	prewarm = 0,
 
-	-- Physics
-	density = 0.3,
-	friction = 0.5,
-	elasticity = 0.1,
+	-- Physics - HEAVY AND STABLE!
+	density = 1.5,  -- Much heavier = won't tip over!
+	friction = 0.8,  -- High friction = grips ground!
+	elasticity = 0.0,  -- No bounce = stays put!
 
 	-- Collection
 	cashOn = "primary",
