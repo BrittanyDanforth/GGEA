@@ -29,16 +29,16 @@ Core.RunModel({
 
 	-- Scaling
 	scaleFactor = 1.0,
-	extraLower = 0.5,  -- Lower to ground for stability
+	extraLower = 0.1,  -- FIXED: Less lower = won't fall through map!
 	yawDegrees = 0,  -- Upright, no rotation
 
 	-- Animation
 	fadeTime = 0.35,
 	prewarm = 0,
 
-	-- Physics - HEAVY AND STABLE!
-	density = 1.5,  -- Much heavier = won't tip over!
-	friction = 0.8,  -- High friction = grips ground!
+	-- Physics - ULTRA HEAVY AND STABLE!
+	density = 3.0,  -- SUPER HEAVY = won't tip over AT ALL!
+	friction = 1.0,  -- MAX friction = locked to ground!
 	elasticity = 0.0,  -- No bounce = stays put!
 
 	-- Collection
