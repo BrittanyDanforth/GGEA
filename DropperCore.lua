@@ -4,6 +4,8 @@
 	✅ Core.RunModel() for template-based model drops (v4.4 implementation)
 	✅ Cross-group collision prevention
 	✅ Full scaling, welding, and physics support
+	✅ FIXED: Singleton guard prevents "10 drops at start" bug
+	✅ FIXED: Weak table prevents duplicate loops per model
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -13,6 +15,9 @@ local Players = game:GetService("Players")
 local CollectionService = game:GetService("CollectionService")
 
 local Core = {}
+
+-- ✅ Prevent duplicate dropper loops (singleton guard)
+Core._running = Core._running or setmetatable({}, {__mode="k"})
 
 -- ✅ ALL KNOWN DROPPER GROUPS - Add new groups here!
 local ALL_DROPPER_GROUPS = {
@@ -252,6 +257,15 @@ end
 -- PUBLIC: Core.Run() - Single Part Drops
 -- =========================
 function Core.Run(config)
+	-- ✅ Prevent duplicate loops per model (singleton guard)
+	if config.model:GetAttribute("DropperRunning") then 
+		warn("⚠️ Dropper already running on", config.model:GetFullName())
+		return 
+	end
+	config.model:SetAttribute("DropperRunning", true)
+	if Core._running[config.model] then return end
+	Core._running[config.model] = true
+
 	-- REQUIRED:
 	-- config.model: the dropper model containing a child "Drop" (BasePart) to spawn from
 	-- config.partStorage: Folder where drops go
@@ -503,6 +517,15 @@ function Core.RunModel(config: {
 	collectorNames: {string}?,
 	collectorTags: {string}?,
 })
+	-- ✅ Prevent duplicate loops per model (singleton guard)
+	if config.model:GetAttribute("DropperRunning") then 
+		warn("⚠️ Dropper already running on", config.model:GetFullName())
+		return 
+	end
+	config.model:SetAttribute("DropperRunning", true)
+	if Core._running[config.model] then return end
+	Core._running[config.model] = true
+
 	local dropModel = config.model
 	local dropPart  = dropModel:WaitForChild("Drop") :: BasePart
 	local storage   = config.partStorage
