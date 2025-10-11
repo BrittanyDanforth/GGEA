@@ -54,7 +54,7 @@ Core.Run({
 	},
 
 	spawn = {
-		rotation = CFrame.Angles(math.rad(180), math.rad(180), 0),
+		rotation = CFrame.Angles(0, 0, 0), -- Upright, no rotation
 		velocity = Vector3.new(0, -12, 0),
 		randomOffset = Vector3.new(0.2, 0, 0.2),
 	},

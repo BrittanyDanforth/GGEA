@@ -28,7 +28,7 @@ Core.RunModel({
 	extraLower = 0.35, -- How much to lower from pivot point
 
 	-- Spawn settings
-	yawDegrees = 180, -- Flip 180 degrees
+	yawDegrees = 0, -- Upright, no rotation
 	prewarm = 0, -- No initial burst
 
 	-- Animation

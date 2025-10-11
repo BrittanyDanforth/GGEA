@@ -50,7 +50,7 @@ Core.Run({
 	},
 
 	spawn = {
-		rotation = CFrame.Angles(math.rad(180), 0, 0),
+		rotation = CFrame.Angles(0, 0, 0), -- Upright, no rotation
 		velocity = Vector3.new(0, -10, 0),
 		angularVelocity = Vector3.new(0, 5, 0), -- Gentle spin
 	},

@@ -42,7 +42,7 @@ Core.Run({
 	},
 
 	spawn = {
-		rotation = CFrame.Angles(math.rad(180), math.rad(270), 0), -- Turn to face forward
+		rotation = CFrame.Angles(0, 0, 0), -- Upright, no rotation
 		velocity = Vector3.new(0, -10, 0),
 		pattern = {
 			Vector3.new(0.2, 0, 0.2),
