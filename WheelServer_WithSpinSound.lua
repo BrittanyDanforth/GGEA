@@ -217,7 +217,8 @@ local baseCFrame = wheelModel:GetPivot()
 
 local function rotateWheelToAngle(delta: number, timeSec: number)
 	local tracker = Instance.new("NumberValue"); tracker.Value = 0
-	local tween = TweenService:Create(tracker, TweenInfo.new(timeSec, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Value = delta})
+	-- ✨ Quint = FASTER start than Cubic! + Out = smooth slowdown
+	local tween = TweenService:Create(tracker, TweenInfo.new(timeSec, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Value = delta})
 	local conn = tracker.Changed:Connect(function(v)
 		local rotCF = (AXIS=="Y") and CFrame.Angles(0,v,0) or (AXIS=="Z") and CFrame.Angles(0,0,v) or CFrame.Angles(v,0,0)
 		wheelModel:PivotTo(baseCFrame * rotCF)
@@ -301,10 +302,13 @@ local function doSpin(p: Player): (boolean, string, any)
 	local prize = pickPrize()
 	local delta = angleWrap(pointerAngle() - prizeAngle(prize.part))
 	local extra = math.random(Config.EXTRA_TURNS.min, Config.EXTRA_TURNS.max)
-	local finalDelta = delta + extra * 2 * math.pi
 	
-	-- ✨ 9-second spin to match the audio (starts fast, slows down!)
-	local t = 9 -- 9-second spin matches the audio perfectly
+	-- 🎰 Add "bait" - extra tiny rotation to tease landing (loosens the wheel!)
+	local bait = math.random(-15, 25) / 100 -- Random -0.15 to +0.25 radians = subtle tease
+	local finalDelta = delta + extra * 2 * math.pi + bait
+	
+	-- ✨ 9.3-second spin (0.3s longer for dramatic ending!)
+	local t = 9.3 -- Slightly longer for that perfect dramatic finish
 	
 	-- 🎵 Play spinning sound DURING the spin!
 	local spinSound = Instance.new("Sound")
