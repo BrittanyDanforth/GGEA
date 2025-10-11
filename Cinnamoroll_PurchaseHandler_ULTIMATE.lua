@@ -749,29 +749,31 @@ end
 local function resetTycoonPurchases()
 	print("🔄 [Cinnamoroll] RESETTING PURCHASE HANDLER...")
 
-	-- ✅ STOP ALL DROPPERS!
+	-- ✅ STOP ALL DROPPERS + DISABLE THEIR SCRIPTS!
 	for _, dropper in ipairs(script.Parent:GetChildren()) do
 		if dropper.Name:find("Dropper") then
-			local dropperScript = dropper:FindFirstChildOfClass("Script")
-			if dropperScript then
-				dropperScript.Disabled = true
-				dropper:SetAttribute("DropperRunning", false)
-				print("  ⏸️ [Cinnamoroll] Stopped dropper:", dropper.Name)
+			-- Disable ALL scripts in dropper
+			for _, script in ipairs(dropper:GetDescendants()) do
+				if script:IsA("Script") or script:IsA("LocalScript") then
+					script.Disabled = true
+				end
 			end
+			dropper:SetAttribute("DropperRunning", false)
+			print("  ⏸️ [Cinnamoroll] Stopped dropper:", dropper.Name)
 		end
 	end
 
 	purchasedItems = {}
 
+	-- ✅ DESTROY ALL CASH PARTS (including models!)
 	local destroyedParts = 0
-	for _, descendant in pairs(workspace:GetDescendants()) do
-		if descendant:FindFirstChild("Cash") then
-			if descendant:IsA("BasePart") then
-				local distance = (descendant.Position - script.Parent:GetPivot().Position).Magnitude
-				if distance < 100 then
-					descendant:Destroy()
-					destroyedParts = destroyedParts + 1
-				end
+	local tycoonPosition = script.Parent:GetPivot().Position
+	for _, descendant in ipairs(workspace:GetDescendants()) do
+		if descendant:FindFirstChild("Cash") and descendant:IsA("BasePart") then
+			local distance = (descendant.Position - tycoonPosition).Magnitude
+			if distance < 100 then
+				descendant:Destroy()
+				destroyedParts = destroyedParts + 1
 			end
 		end
 	end
@@ -779,8 +781,14 @@ local function resetTycoonPurchases()
 
 	Money.Value = 0
 
+	-- ✅ DISABLE SCRIPTS IN PURCHASED OBJECTS BEFORE DESTROYING!
 	local objectCount = #purchasedObjects:GetChildren()
 	for _, obj in pairs(purchasedObjects:GetChildren()) do
+		for _, descendant in ipairs(obj:GetDescendants()) do
+			if descendant:IsA("Script") or descendant:IsA("LocalScript") then
+				descendant.Disabled = true
+			end
+		end
 		obj:Destroy()
 	end
 	print("  ✓ [Cinnamoroll] Destroyed", objectCount, "purchased objects")
