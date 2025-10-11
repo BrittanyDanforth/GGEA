@@ -1430,12 +1430,19 @@ function Shop:createProductCard(product, productType, parent)
 		parent = content,
 	}):render()
 
+	-- ✅ MOBILE TEXT QUALITY: Use dynamic but FIXED sizes (no TextScaled!)
+	local prof = getProfile()
+	local titleSize = prof.isPhone and 18 or (prof.isTablet and 19 or 20)
+	local descSize = prof.isPhone and 13 or (prof.isTablet and 14 or 14)
+	local priceSize = prof.isPhone and 16 or (prof.isTablet and 17 or 18)
+
 	local title = UI.Components.TextLabel({
 		Text = product.name,
 		Size = UDim2.new(1, 0, 0, 28),
 		Font = Enum.Font.GothamBold,
-		TextSize = 20,
+		TextSize = titleSize,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
 		parent = infoContainer,
 	}):render()
 
@@ -1444,9 +1451,10 @@ function Shop:createProductCard(product, productType, parent)
 		Size = UDim2.new(1, 0, 0, 40),
 		Position = UDim2.fromOffset(0, 32),
 		Font = Enum.Font.Gotham,
-		TextSize = 14,
+		TextSize = descSize,
 		TextColor3 = UI.Theme:get("textSecondary"),
 		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
 		TextWrapped = true,
 		parent = infoContainer,
 	}):render()
@@ -1460,7 +1468,7 @@ function Shop:createProductCard(product, productType, parent)
 		Size = UDim2.new(1, 0, 0, 24),
 		Position = UDim2.fromOffset(0, 76),
 		Font = Enum.Font.GothamBold,
-		TextSize = 18,
+		TextSize = priceSize,
 		TextColor3 = cardColor,
 		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = infoContainer,
@@ -1476,13 +1484,16 @@ function Shop:createProductCard(product, productType, parent)
 		parent = infoContainer,
 	}):render()
 
+	-- ✅ MOBILE: Dynamic button text size for clarity
+	local buttonTextSize = prof.isPhone and 15 or (prof.isTablet and 15 or 16)
+	
 	local purchaseButton = UI.Components.Button({
 		Text = isOwned and "✓ Owned" or "Purchase",
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
-		TextSize = 16,
+		TextSize = buttonTextSize,
 		cornerRadius = UDim.new(0, 8),
 		parent = buttonContainer,
 		onClick = function()
@@ -1546,23 +1557,43 @@ function Shop:addCardHoverEffect(card)
 end
 
 function Shop:addToggleSwitch(product, parent)
+	local prof = getProfile()
+	
+	-- ✅ MOBILE-OPTIMIZED: Larger, clearer, easier to tap
+	local toggleWidth = prof.isPhone and 0.36 or (prof.isTablet and 0.32 or 0.28)
+	local textSize = prof.isPhone and 13 or (prof.isTablet and 14 or 13)
+	
 	local toggleContainer = UI.Components.Frame({
 		Name = "ToggleContainer",
-		Size = UDim2.new(0.28, 0, 1, 0),
-		Position = UDim2.new(0.72, 4, 0, 0),
+		Size = UDim2.new(toggleWidth, 0, 1, 0),
+		Position = UDim2.new(1 - toggleWidth, 4, 0, 0),
 		BackgroundColor3 = UI.Theme:get("stroke"),
 		cornerRadius = UDim.new(0.5, 0),
 		parent = parent,
 	}):render()
 
+	-- ✅ FIXED: Add label for clarity
+	local label = Instance.new("TextLabel")
+	label.Name = "ToggleLabel"
+	label.BackgroundTransparency = 1
+	label.Size = UDim2.fromScale(1, 1)
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = textSize
+	label.TextXAlignment = Enum.TextXAlignment.Center
+	label.TextYAlignment = Enum.TextYAlignment.Center
+	label.TextColor3 = Color3.new(1,1,1)
+	label.ZIndex = 5
+	label.Parent = toggleContainer
+
 	local toggleButton = UI.Components.Frame({
 		Name = "ToggleButton",
-		Size = UDim2.new(0.45, 0, 0.7, 0),
-		Position = UDim2.fromScale(0.05, 0.15),
-		BackgroundColor3 = UI.Theme:get("surface"),
+		Size = UDim2.new(0.48, 0, 0.75, 0),
+		Position = UDim2.fromScale(0.05, 0.125),
+		BackgroundColor3 = Color3.new(1,1,1),
 		cornerRadius = UDim.new(0.5, 0),
 		parent = toggleContainer,
 	}):render()
+	toggleButton.ZIndex = 4
 
 	local toggleState = false
 	if Remotes then
@@ -1579,15 +1610,23 @@ function Shop:addToggleSwitch(product, parent)
 
 	local function updateToggleVisual()
 		if toggleState then
+			-- ✅ ON: Vibrant green with checkmark
 			toggleContainer.BackgroundColor3 = UI.Theme:get("success")
+			label.Text = "ON"
+			label.TextColor3 = Color3.new(1,1,1)
+			toggleButton.BackgroundColor3 = Color3.new(1,1,1)
 			Core.Animation.tween(toggleButton, {
-				Position = UDim2.fromScale(0.5, 0.15)
-			}, Core.CONSTANTS.ANIM_FAST)
+				Position = UDim2.fromScale(0.47, 0.125)
+			}, Core.CONSTANTS.ANIM_FAST, Enum.EasingStyle.Back)
 		else
-			toggleContainer.BackgroundColor3 = UI.Theme:get("stroke")
+			-- ❌ OFF: Gray with clear indication
+			toggleContainer.BackgroundColor3 = Color3.fromRGB(160,160,160)
+			label.Text = "OFF"
+			label.TextColor3 = Color3.fromRGB(80,80,80)
+			toggleButton.BackgroundColor3 = Color3.new(1,1,1)
 			Core.Animation.tween(toggleButton, {
-				Position = UDim2.fromScale(0.05, 0.15)
-			}, Core.CONSTANTS.ANIM_FAST)
+				Position = UDim2.fromScale(0.05, 0.125)
+			}, Core.CONSTANTS.ANIM_FAST, Enum.EasingStyle.Back)
 		end
 	end
 
@@ -1597,11 +1636,33 @@ function Shop:addToggleSwitch(product, parent)
 	toggleClickArea.Text = ""
 	toggleClickArea.BackgroundTransparency = 1
 	toggleClickArea.Size = UDim2.fromScale(1, 1)
+	toggleClickArea.ZIndex = 6
 	toggleClickArea.Parent = toggleContainer
 
+	-- ✅ MOBILE: Bigger tap feedback
+	local scale = Instance.new("UIScale"); scale.Scale = 1; scale.Parent = toggleContainer
+	toggleClickArea.MouseEnter:Connect(function()
+		Core.SoundSystem.play("hover")
+		Core.Animation.tween(scale, {Scale = 1.08}, Core.CONSTANTS.ANIM_FAST)
+	end)
+	toggleClickArea.MouseLeave:Connect(function()
+		Core.Animation.tween(scale, {Scale = 1.00}, Core.CONSTANTS.ANIM_FAST)
+	end)
+
+	local busy = false
 	toggleClickArea.MouseButton1Click:Connect(function()
+		if busy then return end
+		busy = true
 		toggleState = not toggleState
+		
+		-- INSTANT visual feedback
 		updateToggleVisual()
+		Core.SoundSystem.play("click")
+		
+		-- Satisfying bounce
+		Core.Animation.tween(scale, {Scale = 0.90}, 0.08)
+		task.wait(0.08)
+		Core.Animation.tween(scale, {Scale = 1.00}, 0.12, Enum.EasingStyle.Back)
 
 		if Remotes then
 			local toggleRemote = Remotes:FindFirstChild("AutoCollectToggle")
@@ -1610,8 +1671,12 @@ function Shop:addToggleSwitch(product, parent)
 			end
 		end
 
-		Core.SoundSystem.play("click")
+		
+		print("🎚️ [Shop] Auto-collect toggled:", toggleState and "ON" or "OFF")
+		task.delay(0.25, function() busy = false end)
 	end)
+	
+	return toggleContainer
 end
 
 function Shop:addPulseAnimation(instance)
@@ -1741,18 +1806,32 @@ function Shop:refreshProduct(product, productType)
 	if productType == "gamepass" then
 		local isOwned = Core.DataManager.checkOwnership(product.id)
 
-		if product.purchaseButton then
+		if product.purchaseButton and product.purchaseButton.Parent then
 			product.purchaseButton.Text = isOwned and "✓ Owned" or "Purchase"
 			product.purchaseButton.BackgroundColor3 = isOwned and 
 				UI.Theme:get("success") or UI.Theme:get("kuromi")
 			product.purchaseButton.Active = not isOwned
+			product.purchaseButton.AutoButtonColor = not isOwned
 			
 			-- Adjust button size if it has toggle
 			if isOwned and product.hasToggle then
 				product.purchaseButton.Size = UDim2.new(0.7, -4, 1, 0)
+				-- ✅ FIXED: Ensure toggle exists
+				if product.cardInstance and product.cardInstance.Parent then
+					local existingToggle = product.cardInstance:FindFirstChild("ToggleContainer", true)
+					if not existingToggle then
+						local buttonContainer = product.cardInstance:FindFirstChild("ButtonContainer", true)
+						if buttonContainer then
+							self:addToggleSwitch(product, buttonContainer)
+							print("✅ [Shop] Added missing toggle for", product.name)
+						end
+					end
+				end
 			else
 				product.purchaseButton.Size = UDim2.new(1, 0, 1, 0)
 			end
+			
+			print("✅ [Shop] Refreshed", product.name, "- Owned:", isOwned)
 		end
 
 		if product.cardInstance then
@@ -1765,13 +1844,15 @@ function Shop:refreshProduct(product, productType)
 end
 
 function Shop:refreshAllProducts()
-	ownershipCache:clear()
-
+	-- ✅ FIXED: Don't clear cache - just check ownership freshly
+	print("🔄 [Shop] Refreshing all products...")
+	
 	for _, pass in ipairs(Core.DataManager.products.gamepasses) do
 		self:refreshProduct(pass, "gamepass")
 	end
 
 	Core.Events:emit("productsRefreshed")
+	print("✅ [Shop] Refresh complete!")
 end
 
 function Shop:open()
@@ -1780,8 +1861,13 @@ function Shop:open()
 	Core.State.isAnimating = true
 	Core.State.isOpen = true
 
-	Core.DataManager.refreshPrices()
-	self:refreshAllProducts()
+	-- ✅ FIXED: Clear cache on open, then refresh
+	ownershipCache:clear()
+	task.spawn(function()
+		Core.DataManager.refreshPrices()
+		task.wait(0.2)
+		self:refreshAllProducts()
+	end)
 
 	self.gui.Enabled = true
 
@@ -1850,15 +1936,29 @@ function Shop:toggle()
 end
 
 function Shop:setupRemoteHandlers()
-	if not Remotes then return end
+	if not Remotes then 
+		warn("[SanrioShop] TycoonRemotes folder not found!")
+		return 
+	end
 
 	local purchaseConfirm = Remotes:FindFirstChild("GamepassPurchased")
 	if purchaseConfirm and purchaseConfirm:IsA("RemoteEvent") then
 		purchaseConfirm.OnClientEvent:Connect(function(passId)
-			ownershipCache:clear()
+			print("🎮 [Shop] Server confirmed gamepass purchase:", passId)
+			
+			-- ✅ FIXED: Force ownership in cache
+			local cacheKey = Player.UserId .. "_" .. passId
+			ownershipCache:set(cacheKey, true)
+			
+			-- Refresh UI after short delay
+			task.wait(0.3)
 			self:refreshAllProducts()
 			Core.SoundSystem.play("success")
+			print("✅ [Shop] UI updated for gamepass:", passId)
 		end)
+		print("[SanrioShop] ✅ Listening for GamepassPurchased events")
+	else
+		warn("[SanrioShop] GamepassPurchased remote not found!")
 	end
 
 	local productGrant = Remotes:FindFirstChild("ProductGranted") or Remotes:FindFirstChild("GrantProductCurrency")
@@ -1901,17 +2001,23 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 	Core.State.purchasePending[passId] = nil
 
 	if purchased then
-		ownershipCache:clear()
+		print("✅ [Shop] Gamepass purchased:", passId)
+		
+		-- ✅ FIXED: Force ownership update in cache
+		local cacheKey = Player.UserId .. "_" .. passId
+		ownershipCache:set(cacheKey, true)
 
-		if pending.product.purchaseButton then
+		if pending.product.purchaseButton and pending.product.purchaseButton.Parent then
 			pending.product.purchaseButton.Text = "✓ Owned"
 			pending.product.purchaseButton.BackgroundColor3 = UI.Theme:get("success")
 			pending.product.purchaseButton.Active = false
+			pending.product.purchaseButton.AutoButtonColor = false
 		end
 
 		Core.SoundSystem.play("success")
 
-		task.wait(0.5)
+		-- ✅ FIXED: Wait longer for server, then refresh to add toggle
+		task.wait(1.0)
 		shop:refreshAllProducts()
 	else
 		if pending.product.purchaseButton then

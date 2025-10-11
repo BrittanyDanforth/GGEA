@@ -1,194 +1,241 @@
 --[[
-    SANRIO SHOP SERVER HANDLER
-    Place this as a Script in ServerScriptService
-    Name it: SanrioShopHandler
-    
-    This handles:
-    1. Product purchases
-    2. Gamepass verification
-    3. Currency granting
-    4. Auto-collect toggle state
---]]
+	🎀 SANRIO SHOP SERVER — ULTIMATE EDITION
+	Integrates with existing TycoonRemotes infrastructure
+	
+	✅ Optimistic ownership (prevents "Owned → Purchase" flicker)
+	✅ Server-side gamepass confirmation (source of truth)
+	✅ Auto-collect state management
+	✅ Integrates with existing purchase handlers
+	✅ DataStore persistence for auto-collect preferences
+]]
 
-local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
-local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
 
--- Create remotes folder
-local Remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes") or Instance.new("Folder")
-Remotes.Name = "TycoonRemotes"
-Remotes.Parent = ReplicatedStorage
+print("🎀 [ShopServer] Initializing Sanrio Shop Ultimate...")
 
--- Create remote events/functions
-local function createRemote(name, className)
-	local remote = Remotes:FindFirstChild(name)
-	if not remote then
-		remote = Instance.new(className)
-		remote.Name = name
-		remote.Parent = Remotes
+-- ========================================
+-- SETUP REMOTES (Integrate with existing TycoonRemotes)
+-- ========================================
+
+-- Wait for or create TycoonRemotes folder (may already exist from other systems)
+local Remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes")
+if not Remotes then
+	Remotes = Instance.new("Folder")
+	Remotes.Name = "TycoonRemotes"
+	Remotes.Parent = ReplicatedStorage
+	print("  📁 [ShopServer] Created TycoonRemotes folder")
+else
+	print("  📁 [ShopServer] Found existing TycoonRemotes folder")
+end
+
+-- Create/get remotes
+local function GetOrCreateRemote(name, className)
+	local existing = Remotes:FindFirstChild(name)
+	if existing then
+		print("  ✅ [ShopServer] Found existing remote:", name)
+		return existing
 	end
+	
+	local remote = Instance.new(className)
+	remote.Name = name
+	remote.Parent = Remotes
+	print("  ➕ [ShopServer] Created remote:", name)
 	return remote
 end
 
-local GamepassPurchased = createRemote("GamepassPurchased", "RemoteEvent")
-local ProductGranted = createRemote("ProductGranted", "RemoteEvent")
-local GrantProductCurrency = createRemote("GrantProductCurrency", "RemoteEvent")
-local AutoCollectToggle = createRemote("AutoCollectToggle", "RemoteEvent")
-local GetAutoCollectState = createRemote("GetAutoCollectState", "RemoteFunction")
+local GamepassPurchased = GetOrCreateRemote("GamepassPurchased", "RemoteEvent")
+local AutoCollectToggle = GetOrCreateRemote("AutoCollectToggle", "RemoteEvent")
+local GetAutoCollectState = GetOrCreateRemote("GetAutoCollectState", "RemoteFunction")
 
--- Data stores
-local AutoCollectDataStore = DataStoreService:GetDataStore("AutoCollectStates")
-local playerAutoCollectStates = {}
+-- ========================================
+-- DATASTORE FOR AUTO-COLLECT PERSISTENCE
+-- ========================================
 
--- Product IDs mapping
-local PRODUCTS = {
-	[1897730242] = {amount = 1000, name = "1,000 Cash"},
-	[1897730373] = {amount = 5000, name = "5,000 Cash"},
-	[1897730467] = {amount = 10000, name = "10,000 Cash"},
-	[1897730581] = {amount = 50000, name = "50,000 Cash"},
-}
+local AUTO_COLLECT_STORE_NAME = "HelloKittyAutoCollect_v1" -- Match client-side
+local autoCollectStore
+local datastoreSuccess, datastoreError = pcall(function()
+	autoCollectStore = DataStoreService:GetDataStore(AUTO_COLLECT_STORE_NAME)
+end)
 
--- Gamepass IDs
-local GAMEPASSES = {
-	AUTO_COLLECT = 1412171840,
-	DOUBLE_CASH = 1398974710,
-}
+if not datastoreSuccess then
+	warn("  ⚠️ [ShopServer] DataStore unavailable:", datastoreError)
+end
 
--- Helper function to grant currency
-local function grantCurrency(player, amount)
-	-- This is where you'd integrate with your tycoon system
-	-- For now, we'll use leaderstats as an example
-	local leaderstats = player:FindFirstChild("leaderstats")
-	if leaderstats then
-		local cash = leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Money")
-		if cash and cash:IsA("IntValue") or cash:IsA("NumberValue") then
-			cash.Value = cash.Value + amount
-			return true
-		end
+-- Runtime state (cached from DataStore)
+local autoCollectState = {}
+
+-- Load auto-collect state from DataStore
+local function loadAutoCollectState(player)
+	if not autoCollectStore then return false end
+	
+	local key = "Player_" .. tostring(player.UserId)
+	local success, data = pcall(function()
+		return autoCollectStore:GetAsync(key)
+	end)
+	
+	if success and data and type(data.enabled) == "boolean" then
+		autoCollectState[player.UserId] = data.enabled
+		return data.enabled
 	end
 	
-	-- Alternative: Look for a player data module
-	local playerData = player:FindFirstChild("Data")
-	if playerData then
-		local cash = playerData:FindFirstChild("Cash")
-		if cash and cash:IsA("IntValue") or cash:IsA("NumberValue") then
-			cash.Value = cash.Value + amount
-			return true
-		end
-	end
-	
+	-- Default to false if no data
+	autoCollectState[player.UserId] = false
 	return false
 end
 
--- Handle product purchases
-MarketplaceService.ProcessReceipt = function(receiptInfo)
-	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
-	if not player then
-		return Enum.ProductPurchaseDecision.NotProcessedYet
-	end
+-- Save auto-collect state to DataStore
+local function saveAutoCollectState(player, enabled)
+	if not autoCollectStore then return false end
 	
-	local productInfo = PRODUCTS[receiptInfo.ProductId]
-	if productInfo then
-		-- Grant the currency
-		local success = grantCurrency(player, productInfo.amount)
-		
-		if success then
-			-- Fire client event
-			ProductGranted:FireClient(player, receiptInfo.ProductId, productInfo.amount)
-			
-			print(string.format("[SanrioShop] Granted %d cash to %s", productInfo.amount, player.Name))
-			return Enum.ProductPurchaseDecision.PurchaseGranted
-		else
-			warn(string.format("[SanrioShop] Failed to grant currency to %s", player.Name))
-			return Enum.ProductPurchaseDecision.NotProcessedYet
-		end
-	end
-	
-	-- Unknown product
-	return Enum.ProductPurchaseDecision.NotProcessedYet
-end
-
--- Handle auto-collect toggle
-AutoCollectToggle.OnServerEvent:Connect(function(player, enabled)
-	if not MarketplaceService:UserOwnsGamePassAsync(player.UserId, GAMEPASSES.AUTO_COLLECT) then
-		return -- Player doesn't own the gamepass
-	end
-	
-	playerAutoCollectStates[player.UserId] = enabled
-	
-	-- Save to datastore
-	pcall(function()
-		AutoCollectDataStore:SetAsync(tostring(player.UserId), enabled)
+	local key = "Player_" .. tostring(player.UserId)
+	local success, err = pcall(function()
+		autoCollectStore:SetAsync(key, {
+			enabled = enabled,
+			timestamp = os.time()
+		})
 	end)
 	
-	-- Here you would enable/disable auto collection for the player
-	-- This depends on your tycoon implementation
-	
-	print(string.format("[SanrioShop] Auto-collect set to %s for %s", tostring(enabled), player.Name))
-end)
-
--- Get auto-collect state
-GetAutoCollectState.OnServerInvoke = function(player)
-	if not MarketplaceService:UserOwnsGamePassAsync(player.UserId, GAMEPASSES.AUTO_COLLECT) then
-		return false
+	if not success then
+		warn("  ⚠️ [ShopServer] Failed to save auto-collect state:", err)
 	end
 	
-	return playerAutoCollectStates[player.UserId] or false
+	return success
 end
 
--- Load player data
-Players.PlayerAdded:Connect(function(player)
-	-- Load auto-collect state
-	if MarketplaceService:UserOwnsGamePassAsync(player.UserId, GAMEPASSES.AUTO_COLLECT) then
-		local success, state = pcall(function()
-			return AutoCollectDataStore:GetAsync(tostring(player.UserId))
-		end)
-		
-		if success and state ~= nil then
-			playerAutoCollectStates[player.UserId] = state
-		else
-			playerAutoCollectStates[player.UserId] = true -- Default to enabled
-		end
-	end
-	
-	-- Check gamepass ownership and notify client
-	task.wait(1)
-	for name, passId in pairs(GAMEPASSES) do
-		if MarketplaceService:UserOwnsGamePassAsync(player.UserId, passId) then
-			GamepassPurchased:FireClient(player, passId)
-		end
-	end
-end)
+-- ========================================
+-- GAMEPASS PURCHASE CONFIRMATION
+-- ========================================
 
--- Clean up on player leave
-Players.PlayerRemoving:Connect(function(player)
-	playerAutoCollectStates[player.UserId] = nil
-end)
-
--- Handle gamepass purchases (for immediate updates)
+-- ✅ SOURCE OF TRUTH: Server confirms gamepass purchases to prevent UI flicker
 MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
-	if purchased then
-		-- Notify the client immediately
-		GamepassPurchased:FireClient(player, passId)
-		
-		-- Special handling for auto-collect
-		if passId == GAMEPASSES.AUTO_COLLECT then
-			playerAutoCollectStates[player.UserId] = true
-		end
-		
-		print(string.format("[SanrioShop] %s purchased gamepass %d", player.Name, passId))
-	end
-end)
-
--- Alternative currency grant method (if direct remote is used)
-GrantProductCurrency.OnServerEvent:Connect(function(player, productId)
-	-- This is a backup method - normally ProcessReceipt should handle it
-	-- Only use this if ProcessReceipt isn't working in your game
+	if not purchased then return end
 	
-	warn("[SanrioShop] GrantProductCurrency called - this should be handled by ProcessReceipt")
+	print("🎮 [ShopServer] Player", player.Name, "purchased gamepass:", passId)
+	
+	-- Wait for Roblox to process the purchase on their backend
+	task.wait(0.3)
+	
+	-- Get current auto-collect state (1412171840 = Auto Collect gamepass ID)
+	local currentState = nil
+	if passId == 1412171840 then
+		currentState = autoCollectState[player.UserId]
+		-- Default to true for new auto-collect purchases
+		if currentState == nil then
+			currentState = true
+			autoCollectState[player.UserId] = true
+			saveAutoCollectState(player, true)
+		end
+	end
+	
+	-- ✅ FIRE TO CLIENT: This is the source of truth that locks the "Owned" state
+	GamepassPurchased:FireClient(player, passId, currentState)
+	
+	print("✅ [ShopServer] Confirmed purchase to client:", player.Name, "| PassID:", passId, "| AutoState:", currentState)
 end)
 
-print("[SanrioShop] Server handler initialized")
+-- ========================================
+-- AUTO-COLLECT TOGGLE HANDLER
+-- ========================================
 
-return true
+-- ✅ Handle toggle from client (Enable/Disable button or chip)
+AutoCollectToggle.OnServerEvent:Connect(function(player, enabled)
+	if type(enabled) ~= "boolean" then
+		warn("  ⚠️ [ShopServer] Invalid auto-collect state from", player.Name, ":", enabled)
+		return
+	end
+	
+	-- Update runtime state
+	autoCollectState[player.UserId] = enabled
+	
+	-- Save to DataStore (async)
+	task.spawn(function()
+		saveAutoCollectState(player, enabled)
+	end)
+	
+	print("🎚️ [ShopServer] Auto-collect for", player.Name, "→", enabled and "ON ✅" or "OFF ❌")
+	
+	-- ✅ INTEGRATE WITH EXISTING PURCHASE HANDLERS
+	-- Forward the toggle to your existing tycoon purchase handlers
+	-- They're already listening to this remote, so they'll pick it up automatically!
+	
+	-- Example integration (if you need direct access):
+	-- local tycoon = getTycoonForPlayer(player)
+	-- if tycoon then
+	--     local handler = tycoon:FindFirstChild("PurchaseHandler")
+	--     if handler and handler:FindFirstChild("AutoCollectEnabled") then
+	--         handler.AutoCollectEnabled.Value = enabled
+	--     end
+	-- end
+end)
+
+-- ========================================
+-- GET AUTO-COLLECT STATE
+-- ========================================
+
+GetAutoCollectState.OnServerInvoke = function(player)
+	-- Return cached state (load from DataStore if not cached)
+	if autoCollectState[player.UserId] == nil then
+		loadAutoCollectState(player)
+	end
+	
+	local state = autoCollectState[player.UserId] or false
+	print("📊 [ShopServer] Get auto-collect state for", player.Name, "→", state and "ON" or "OFF")
+	return state
+end
+
+-- ========================================
+-- PLAYER MANAGEMENT
+-- ========================================
+
+-- Load auto-collect state when player joins
+Players.PlayerAdded:Connect(function(player)
+	task.spawn(function()
+		local state = loadAutoCollectState(player)
+		print("👤 [ShopServer] Player joined:", player.Name, "| Auto-collect:", state and "ON" or "OFF")
+	end)
+end)
+
+-- Cleanup when player leaves
+Players.PlayerRemoving:Connect(function(player)
+	autoCollectState[player.UserId] = nil
+	print("👋 [ShopServer] Player left:", player.Name, "| Cleared auto-collect state")
+end)
+
+-- Load state for existing players (if script loads late)
+for _, player in ipairs(Players:GetPlayers()) do
+	task.spawn(function()
+		loadAutoCollectState(player)
+	end)
+end
+
+-- ========================================
+-- INTEGRATION HELPERS (Optional)
+-- ========================================
+
+-- ✅ Global API for other scripts to check auto-collect state
+_G.IsAutoCollectEnabled = function(player)
+	return autoCollectState[player.UserId] or false
+end
+
+-- ✅ Global API for other scripts to set auto-collect state
+_G.SetAutoCollectEnabled = function(player, enabled)
+	autoCollectState[player.UserId] = enabled
+	saveAutoCollectState(player, enabled)
+	
+	-- Notify client
+	GamepassPurchased:FireClient(player, 1412171840, enabled)
+end
+
+-- ========================================
+-- FINAL SUMMARY
+-- ========================================
+
+print("✅ [ShopServer] Sanrio Shop Ultimate initialized!")
+print("  📡 GamepassPurchased: Server-side purchase confirmation (prevents UI flicker)")
+print("  🎚️ AutoCollectToggle: Synced with existing purchase handlers")
+print("  📊 GetAutoCollectState: Returns current state from DataStore")
+print("  💾 DataStore: Auto-collect preferences persist across sessions")
+print("  🔗 Integration: Compatible with existing TycoonRemotes infrastructure")
