@@ -836,6 +836,16 @@ tycoonOwner.Changed:Connect(function()
 	local newOwner = tycoonOwner.Value
 
 	if newOwner == nil and currentOwner ~= nil then
+		-- Owner left: relax spawn and clear respawn
+		local spawnLocation = essentials:FindFirstChild("Spawn")
+		if spawnLocation and spawnLocation:IsA("SpawnLocation") then
+			spawnLocation.Neutral = true
+		end
+		if currentOwner then
+			currentOwner.RespawnLocation = nil
+			currentOwner.Team = nil
+		end
+
 		cleanupAutoCollect(currentOwner)
 		print("👋 [HelloKitty] Owner left, resetting purchases...")
 		resetTycoonPurchases()
@@ -843,6 +853,48 @@ tycoonOwner.Changed:Connect(function()
 	elseif newOwner ~= nil and currentOwner == nil then
 		currentOwner = newOwner
 		print("👤 [HelloKitty] New owner:", currentOwner.Name)
+
+		-- ✅ SPAWN LOCATION SETUP - Player will respawn at their tycoon!
+		local teams = game:GetService("Teams")
+		local spawnPart = essentials:WaitForChild("Spawn")
+
+		-- Convert to SpawnLocation if needed
+		if not spawnPart:IsA("SpawnLocation") then
+			local s = Instance.new("SpawnLocation")
+			s.Name = "Spawn"
+			s.Size = spawnPart.Size
+			s.CFrame = spawnPart.CFrame
+			s.Anchored = true
+			s.CanCollide = spawnPart.CanCollide
+			s.BrickColor = spawnPart.BrickColor
+			s.TeamColor = TeamColor
+			s.Parent = essentials
+			spawnPart:Destroy()
+			spawnPart = s
+		end
+
+		-- Configure spawn for this tycoon
+		spawnPart.Neutral = false
+		spawnPart.TeamColor = TeamColor
+		spawnPart.Enabled = true
+		spawnPart.Duration = 0
+
+		-- Put player on the tycoon team and set their respawn point
+		local team = teams:FindFirstChild(script.Parent.Name)
+		if team then
+			team.TeamColor = TeamColor
+			newOwner.Team = team
+		end
+		newOwner.TeamColor = TeamColor
+		newOwner.RespawnLocation = spawnPart
+
+		-- Move them there now (no death required)
+		task.defer(function()
+			local char = newOwner.Character
+			if char and char:FindFirstChild("HumanoidRootPart") then
+				char:PivotTo(spawnPart.CFrame + Vector3.new(0, 4, 0))
+			end
+		end)
 
 		local giver = essentials:FindFirstChild("Giver")
 		if giver then

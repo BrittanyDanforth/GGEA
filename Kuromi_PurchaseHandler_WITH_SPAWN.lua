@@ -1,5 +1,5 @@
 --[[
-	✨ Cinnamoroll Purchase Handler - ULTIMATE FIXED Version with AUTO-COLLECT + 2X CASH
+	✨ Kuromi Purchase Handler - ULTIMATE FIXED with SPAWN LOCATION
 	
 	NEW FEATURES:
 	✅ Auto-Collect Gamepass with visual indicators
@@ -7,7 +7,7 @@
 	✅ INSTANT MODEL DROP COLLECTION for DropperCore compatibility
 	✅ Clean UI indicators for both gamepasses
 	✅ DataStore saving for auto-collect preferences
-	✅ Proper handling of "Drop_" model drops from Cinnamoroll droppers
+	✅ SPAWN LOCATION - Players respawn at their tycoon!
 --]]
 
 local Players = game:GetService("Players")
@@ -31,7 +31,7 @@ local CONFIG = {
 	-- Colors
 	CANNOT_AFFORD_COLOR = BrickColor.new("Really red"),
 	CAN_AFFORD_COLOR = BrickColor.new("Lime green"),
-	COLLECTOR_IDLE_COLOR = BrickColor.new("Cyan"),
+	COLLECTOR_IDLE_COLOR = BrickColor.new("Sea green"),
 	COLLECTOR_ACTIVE_COLOR = BrickColor.new("Bright red"),
 
 	-- Timing - INSTANT!
@@ -75,7 +75,7 @@ local ownershipCache = {}
 local OWNERSHIP_CACHE_TTL = 45
 
 -- DataStore for auto-collect preferences
-local AUTO_COLLECT_STORE_NAME = "CinnamorollAutoCollect_v1"
+local AUTO_COLLECT_STORE_NAME = "KuromiAutoCollect_v1"
 local autoCollectStore
 
 local datastoreSuccess, datastoreError = pcall(function()
@@ -218,7 +218,7 @@ local function createMinimalParticles(position)
 	emitter.EmissionDirection = Enum.NormalId.Top
 	emitter.Speed = NumberRange.new(3, 5)
 	emitter.SpreadAngle = Vector2.new(15, 15)
-	emitter.Color = ColorSequence.new(Color3.fromRGB(180, 210, 235)) -- Light blue for Cinnamoroll
+	emitter.Color = ColorSequence.new(Color3.new(1, 1, 0.8))
 	emitter.Size = NumberSequence.new(0.3)
 	emitter.Parent = attachment
 
@@ -370,7 +370,7 @@ local function setupAutoCollect(player)
 		return
 	end
 
-	print("☁️ [Cinnamoroll] Auto-Collect activated for", player.Name)
+	print("🤖 [Kuromi] Auto-Collect activated for", player.Name)
 
 	if autoCollectEnabled[player] == nil then
 		local savedPref = loadAutoCollectPreference(player)
@@ -439,7 +439,7 @@ local function setupAutoCollect(player)
 		label.Parent = frame
 
 		if autoCollectEnabled[player] ~= false then
-			frame.BackgroundColor3 = Color3.new(0, 0.7, 0.7) -- Cyan
+			frame.BackgroundColor3 = Color3.new(0, 0.7, 0.7)
 			frame.BackgroundTransparency = 0.2
 			label.Text = "AUTO"
 			label.TextColor3 = Color3.new(1, 1, 1)
@@ -472,7 +472,7 @@ local function cleanupAutoCollect(player)
 		end
 	end
 
-	print("☁️ [Cinnamoroll] Auto-Collect deactivated for", player and player.Name or "unknown")
+	print("🤖 [Kuromi] Auto-Collect deactivated for", player and player.Name or "unknown")
 end
 
 -- Auto-collect toggle handler
@@ -507,7 +507,7 @@ autoCollectToggle.OnServerEvent:Connect(function(player, enabled)
 		end
 	end
 
-	print("🎚️ [Cinnamoroll] Auto-Collect", enabled and "enabled" or "disabled", "for", player.Name)
+	print("🎚️ [Kuromi] Auto-Collect", enabled and "enabled" or "disabled", "for", player.Name)
 end)
 
 -- ========================================
@@ -525,7 +525,7 @@ local function storeOriginalButtonStates()
 			}
 		end
 	end
-	print("📸 [Cinnamoroll] Stored original states for", #buttons:GetChildren(), "buttons")
+	print("📸 [Kuromi] Stored original states for", #buttons:GetChildren(), "buttons")
 end
 
 local function fixButtonPositions()
@@ -543,7 +543,7 @@ local function fixButtonPositions()
 	end
 
 	if fixedCount > 0 then
-		print("✅ [Cinnamoroll] Restored", fixedCount, "buttons to original positions")
+		print("✅ [Kuromi] Restored", fixedCount, "buttons to original positions")
 	end
 end
 
@@ -642,11 +642,11 @@ local function loadAllObjects()
 				Objects[objectName] = purchaseObject:Clone()
 				purchaseObject:Destroy()
 			else
-				warn("[Cinnamoroll] Object missing for button:", button.Name, "- Object:", objectName)
+				warn("[Kuromi] Object missing for button:", button.Name, "- Object:", objectName)
 			end
 		end
 	end
-	print("📦 [Cinnamoroll] Loaded", #Objects, "objects")
+	print("📦 [Kuromi] Loaded", #Objects, "objects")
 end
 
 -- Setup button dependency system
@@ -700,7 +700,7 @@ local function setupButtonDependency(button)
 
 		local connection = purchasedObjects.ChildAdded:Connect(function(child)
 			if child.Name == dependency.Value then
-				print("✅ [Cinnamoroll] Dependency met for", button.Name, "- Required object spawned:", dependency.Value)
+				print("✅ [Kuromi] Dependency met for", button.Name, "- Required object spawned:", dependency.Value)
 
 				if originalButtonStates[button.Name] and originalButtonStates[button.Name].CFrame then
 					head.CFrame = originalButtonStates[button.Name].CFrame
@@ -737,7 +737,7 @@ local function setupButtonDependency(button)
 		end
 		table.insert(dependencyConnections[button], connection)
 
-		print("📎 [Cinnamoroll] Set up dependency for", button.Name, "waiting for", dependency.Value)
+		print("📎 [Kuromi] Set up dependency for", button.Name, "waiting for", dependency.Value)
 	else
 		addSimpleHoverEffect(button)
 	end
@@ -747,7 +747,7 @@ end
 -- COMPLETE RESET FUNCTION
 -- ========================================
 local function resetTycoonPurchases()
-	print("🔄 [Cinnamoroll] RESETTING PURCHASE HANDLER...")
+	print("🔄 [Kuromi] RESETTING PURCHASE HANDLER...")
 
 	purchasedItems = {}
 
@@ -763,7 +763,7 @@ local function resetTycoonPurchases()
 			end
 		end
 	end
-	print("  ✓ [Cinnamoroll] Destroyed", destroyedParts, "cash parts")
+	print("  ✓ [Kuromi] Destroyed", destroyedParts, "cash parts")
 
 	Money.Value = 0
 
@@ -771,7 +771,7 @@ local function resetTycoonPurchases()
 	for _, obj in pairs(purchasedObjects:GetChildren()) do
 		obj:Destroy()
 	end
-	print("  ✓ [Cinnamoroll] Destroyed", objectCount, "purchased objects")
+	print("  ✓ [Kuromi] Destroyed", objectCount, "purchased objects")
 
 	collectedParts = {}
 
@@ -826,7 +826,7 @@ local function resetTycoonPurchases()
 	task.wait(0.1)
 	fixButtonPositions()
 
-	print("✅ [Cinnamoroll] Purchase handler fully reset!")
+	print("✅ [Kuromi] Purchase handler fully reset!")
 end
 
 -- Monitor owner changes
@@ -845,12 +845,12 @@ tycoonOwner.Changed:Connect(function()
 		end
 
 		cleanupAutoCollect(currentOwner)
-		print("👋 [Cinnamoroll] Owner left, resetting purchases...")
+		print("👋 [Kuromi] Owner left, resetting purchases...")
 		resetTycoonPurchases()
 		currentOwner = nil
 	elseif newOwner ~= nil and currentOwner == nil then
 		currentOwner = newOwner
-		print("👤 [Cinnamoroll] New owner:", currentOwner.Name)
+		print("👤 [Kuromi] New owner:", currentOwner.Name)
 
 		-- ✅ SPAWN LOCATION SETUP - Player will respawn at their tycoon!
 		local teams = game:GetService("Teams")
@@ -909,7 +909,7 @@ tycoonOwner.Changed:Connect(function()
 		end
 
 		-- Check for auto-collect gamepass
-		print("🔍 [Cinnamoroll] Checking if", newOwner.Name, "owns auto-collect gamepass...")
+		print("🔍 [Kuromi] Checking if", newOwner.Name, "owns auto-collect gamepass...")
 		local ownsAutoCollect = checkAutoCollectOwnership(newOwner)
 		print("  Result:", ownsAutoCollect)
 
@@ -932,17 +932,9 @@ for _, collector in ipairs(essentials:GetChildren()) do
 			local isModelDrop = false
 			local modelCashValue = 0
 
-			-- Check for Cinnamoroll drop patterns AND generic Drop_ pattern
-			if model and model:IsA("Model") and (
-				model.Name:match("^Drop_") or 
-				model.Name:match("^Cinnamoroll") or 
-				model.Name:match("^IceCream") or
-				model.Name:match("^CinnamonRoll") or
-				model.Name:match("^WhiteHeart")
-			) then
+			if model and model:IsA("Model") and (model.Name:match("^Drop_") or model.Name:match("^KuromiDrop") or model.Name:match("^WhiteHeart") or model.Name:match("^PremiumKuromi")) then
 				isModelDrop = true
 
-				-- Find Cash value in ANY part of the model
 				for _, descendant in ipairs(model:GetDescendants()) do
 					if descendant:IsA("BasePart") and descendant:FindFirstChild("Cash") then
 						local cash = descendant:FindFirstChild("Cash")
@@ -1217,7 +1209,7 @@ end
 -- ========================================
 function processPurchase(button, playerStats)
 	if not button or not playerStats then
-		warn("[Cinnamoroll] processPurchase called with nil arguments")
+		warn("[Kuromi] processPurchase called with nil arguments")
 		return
 	end
 
@@ -1238,7 +1230,7 @@ function processPurchase(button, playerStats)
 		local newObject = Objects[objectName]:Clone()
 		newObject.Parent = purchasedObjects
 
-		print("🎁 [Cinnamoroll] Spawned: " .. objectName .. " (from button: " .. button.Name .. ")")
+		print("🎁 [Kuromi] Spawned: " .. objectName .. " (from button: " .. button.Name .. ")")
 
 		if objectName:find("Door") or objectName:find("door") then
 			for _, part in ipairs(newObject:GetDescendants()) do
@@ -1397,16 +1389,17 @@ if initialOwner then
 	end
 end
 
-print("✅ [Cinnamoroll] Purchase Handler ULTIMATE FIXED loaded with AUTO-COLLECT + 2X CASH!")
-print("🔄 [Cinnamoroll] Dependencies now check for spawned objects, not button names")
-print("📋 [Cinnamoroll] Properly resets and re-initializes everything")
-print("⚡ [Cinnamoroll] INSTANT MODEL DROP COLLECTION for DropperCore compatibility")
-print("☁️ [Cinnamoroll] Auto-Collect Gamepass ID:", CONFIG.AUTO_COLLECT_GAMEPASS_ID)
-print("💵 [Cinnamoroll] 2x Cash Gamepass ID:", CONFIG.DOUBLE_CASH_GAMEPASS_ID)
+print("✅ [Kuromi] Purchase Handler ULTIMATE FIXED loaded with AUTO-COLLECT + 2X CASH + SPAWN!")
+print("🔄 [Kuromi] Dependencies now check for spawned objects, not button names")
+print("📋 [Kuromi] Properly resets and re-initializes everything")
+print("⚡ [Kuromi] INSTANT MODEL DROP COLLECTION for DropperCore compatibility")
+print("🤖 [Kuromi] Auto-Collect Gamepass ID:", CONFIG.AUTO_COLLECT_GAMEPASS_ID)
+print("💵 [Kuromi] 2x Cash Gamepass ID:", CONFIG.DOUBLE_CASH_GAMEPASS_ID)
+print("🏠 [Kuromi] Spawn Location System: ENABLED")
 
 -- Debug: Print button dependencies
 task.wait(1)
-print("\n📋 [Cinnamoroll] Button Dependencies:")
+print("\n📋 [Kuromi] Button Dependencies:")
 for _, button in ipairs(buttons:GetChildren()) do
 	local dep = button:FindFirstChild("Dependency")
 	local obj = button:FindFirstChild("Object")
