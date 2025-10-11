@@ -39,12 +39,12 @@ Core.RunModel({
 	friction = 1.0,    -- MAX friction
 	elasticity = 0.0,  -- No bounce
 
-	-- 🎯 ULTIMATE ANTI-TIP SYSTEM
+	-- 🎯 ULTIMATE ANTI-TIP SYSTEM (STRONGER!)
 	onSpawn = function(model, primary, group)
-		-- 1. Invisible WIDE stabilizer base (like a tripod)
+		-- 1. MASSIVE invisible stabilizer base (won't tip!)
 		local base = Instance.new("Part")
 		base.Name = "StabilizerBase"
-		base.Size = Vector3.new(4, 0.3, 4)  -- WIDE square base
+		base.Size = Vector3.new(5, 0.4, 5)  -- ✅ HUGE 5x5 base!
 		base.Transparency = 1
 		base.Anchored = false
 		base.CanCollide = true
@@ -54,10 +54,10 @@ Core.RunModel({
 		
 		-- Position below the model
 		local extents = model:GetExtentsSize()
-		base.CFrame = primary.CFrame * CFrame.new(0, -(extents.Y/2) - 0.2, 0)
+		base.CFrame = primary.CFrame * CFrame.new(0, -(extents.Y/2) - 0.15, 0)
 		
 		pcall(function() base.CollisionGroup = group end)
-		base.CustomPhysicalProperties = PhysicalProperties.new(10, 1, 0, 1, 1)  -- HEAVY base
+		base.CustomPhysicalProperties = PhysicalProperties.new(20, 1.0, 0, 1, 1)  -- ✅ SUPER HEAVY!
 		base.Parent = model
 
 		-- Weld base to primary
@@ -66,7 +66,7 @@ Core.RunModel({
 		weld.Part1 = base
 		weld.Parent = primary
 
-		-- 2. AlignOrientation - LOCKS rotation (better than BodyGyro!)
+		-- 2. DUAL LOCK SYSTEM - AlignOrientation + BodyGyro!
 		local att = Instance.new("Attachment")
 		att.Name = "UprightAttachment"
 		att.Parent = primary
@@ -75,10 +75,18 @@ Core.RunModel({
 		align.Mode = Enum.OrientationAlignmentMode.OneAttachment
 		align.Attachment0 = att
 		align.RigidityEnabled = true
-		align.MaxTorque = 500000  -- EXTREMELY strong!
-		align.Responsiveness = 100  -- INSTANT correction!
+		align.MaxTorque = 1000000  -- ✅ DOUBLED strength!
+		align.Responsiveness = 200  -- ✅ INSTANT snap back!
 		align.CFrame = CFrame.new(0, 0, 0)  -- Locked upright
 		align.Parent = primary
+		
+		-- 3. BodyGyro backup (extra insurance!)
+		local gyro = Instance.new("BodyGyro")
+		gyro.MaxTorque = Vector3.new(500000, 0, 500000)  -- Lock X and Z rotation
+		gyro.P = 10000  -- Very strong
+		gyro.D = 1000   -- Strong damping
+		gyro.CFrame = CFrame.new()  -- Upright
+		gyro.Parent = primary
 	end,
 
 	-- Collection
