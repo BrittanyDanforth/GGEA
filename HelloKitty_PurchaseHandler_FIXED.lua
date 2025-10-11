@@ -888,14 +888,6 @@ tycoonOwner.Changed:Connect(function()
 		newOwner.TeamColor = TeamColor
 		newOwner.RespawnLocation = spawnPart
 
-		-- Move them there now (no death required)
-		task.defer(function()
-			local char = newOwner.Character
-			if char and char:FindFirstChild("HumanoidRootPart") then
-				char:PivotTo(spawnPart.CFrame + Vector3.new(0, 4, 0))
-			end
-		end)
-
 		local giver = essentials:FindFirstChild("Giver")
 		if giver then
 			update2xCashIndicator(giver, check2xCashOwnership(newOwner))
