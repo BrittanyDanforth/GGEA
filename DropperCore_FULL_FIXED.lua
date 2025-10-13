@@ -51,9 +51,36 @@ local ALL_DROPPER_GROUPS = {
 }
 
 --============================
--- 🛡️ MULTI-TYCOON HELPER - IMPROVED!
+-- 🛡️ MULTI-TYCOON HELPER - WITH EXTENSIVE DEBUG LOGGING!
 --============================
 local function getTycoonId(dropperModel)
+	print("🔍 [DropperCore.getTycoonId] ========== SEARCHING FOR TYCOON ==========")
+	print("🔍 [DropperCore] Dropper model:", dropperModel.Name)
+	print("🔍 [DropperCore] Full path:", dropperModel:GetFullName())
+	
+	-- Print entire ancestry chain
+	print("🔍 [DropperCore] FULL ANCESTRY CHAIN:")
+	local current = dropperModel
+	local depth = 0
+	while current and current ~= game do
+		local indent = string.rep("  ", depth)
+		print("🔍" .. indent .. "↳", current.Name, "(" .. current.ClassName .. ")")
+		
+		-- Check if THIS ancestor has TycoonId attribute
+		local attr = current:GetAttribute("TycoonId")
+		if attr then
+			print("🔍" .. indent .. "   ✅ HAS TycoonId ATTRIBUTE:", attr)
+		end
+		
+		current = current.Parent
+		depth = depth + 1
+		
+		if depth > 20 then
+			print("🔍 [DropperCore] Stopped at depth 20 (safety)")
+			break
+		end
+	end
+	
 	-- Try to find tycoon ancestor with multiple name patterns
 	local possibleAncestors = {
 		"Tycoon",
@@ -65,23 +92,32 @@ local function getTycoonId(dropperModel)
 		"Tycoons"
 	}
 	
+	print("🔍 [DropperCore] Searching for ancestors with exact names:", table.concat(possibleAncestors, ", "))
+	
 	local tycoon = nil
 	
 	-- Try each possible ancestor name
 	for _, ancestorName in ipairs(possibleAncestors) do
 		tycoon = dropperModel:FindFirstAncestor(ancestorName)
 		if tycoon then
+			print("🔍 [DropperCore] ✅ FOUND ancestor by name:", ancestorName, "→", tycoon:GetFullName())
 			break
 		end
 	end
 	
 	-- If still not found, try finding ANY ancestor with "Tycoon" in the name
 	if not tycoon then
-		local current = dropperModel.Parent
+		print("🔍 [DropperCore] No exact match found. Trying keyword search...")
+		
+		current = dropperModel.Parent
+		local searchDepth = 0
 		while current and current ~= game and current ~= workspace do
 			local name = current.Name
-			-- Check if name contains tycoon-related keywords (case insensitive)
 			local lowerName = string.lower(name)
+			
+			print("🔍 [DropperCore]   Checking:", name, "→", lowerName)
+			
+			-- Check if name contains tycoon-related keywords (case insensitive)
 			if lowerName:find("tycoon") or 
 			   lowerName:find("kuromi") or 
 			   lowerName:find("cinnamoroll") or 
@@ -89,28 +125,48 @@ local function getTycoonId(dropperModel)
 			   lowerName:find("kitty") or 
 			   lowerName:find("melody") then
 				tycoon = current
+				print("🔍 [DropperCore] ✅ FOUND by keyword in name:", name, "→", tycoon:GetFullName())
 				break
 			end
+			
 			current = current.Parent
+			searchDepth = searchDepth + 1
+			
+			if searchDepth > 15 then
+				print("🔍 [DropperCore] Stopped keyword search at depth 15")
+				break
+			end
 		end
 	end
 	
+	-- Check what we found
 	if tycoon then
+		print("🔍 [DropperCore] ✅ FINAL TYCOON FOUND:", tycoon.Name)
+		print("🔍 [DropperCore] Full tycoon path:", tycoon:GetFullName())
+		
 		-- Try to get TycoonId attribute first
 		local id = tycoon:GetAttribute("TycoonId")
 		if id then
+			print("🔍 [DropperCore] ✅ Using TycoonId attribute:", id)
+			print("🔍 [DropperCore] ========== SEARCH COMPLETE ==========")
 			return id
 		else
 			-- Fallback to tycoon name if no attribute set
-			warn("[DropperCore] ⚠️ TycoonId attribute not found on", tycoon:GetFullName(), "- using Name as fallback")
+			warn("[DropperCore] ⚠️ TycoonId attribute not found on", tycoon:GetFullName())
 			warn("[DropperCore] 💡 TIP: Set attribute with: tycoon:SetAttribute('TycoonId', '" .. tycoon.Name .. "')")
+			print("🔍 [DropperCore] Using tycoon name as fallback:", tycoon.Name)
+			print("🔍 [DropperCore] ========== SEARCH COMPLETE ==========")
 			return tycoon.Name
 		end
 	end
 	
 	-- Last resort: warn and return Unknown
+	print("🔍 [DropperCore] ========== SEARCH FAILED ==========")
 	warn("[DropperCore] ❌ Could not find parent tycoon for dropper:", dropperModel:GetFullName())
 	warn("[DropperCore] 💡 Dropper is parented under:", dropperModel.Parent and dropperModel.Parent:GetFullName() or "nil")
+	warn("[DropperCore] 💡 Tried searching for:", table.concat(possibleAncestors, ", "))
+	warn("[DropperCore] 💡 Also tried keyword search in ancestor names")
+	warn("[DropperCore] 💡 SOLUTION: Set TycoonId attribute on the tycoon model that contains this dropper")
 	return "Unknown"
 end
 

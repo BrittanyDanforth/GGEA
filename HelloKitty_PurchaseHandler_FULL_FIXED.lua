@@ -79,7 +79,32 @@ local Stealing = Settings.StealSettings
 local CanSteal = true
 
 -- 🛡️ MULTI-TYCOON: Get this tycoon's ID (handles case variations!)
+print("🔍 [HelloKitty] ========== FINDING TYCOON ID ==========")
+print("🔍 [HelloKitty] Script location:", script:GetFullName())
+print("🔍 [HelloKitty] script.Parent:", script.Parent.Name, "(" .. script.Parent.ClassName .. ")")
+print("🔍 [HelloKitty] script.Parent path:", script.Parent:GetFullName())
+
+-- Print ancestry to understand nesting
+print("🔍 [HelloKitty] ANCESTRY CHAIN:")
+local current = script.Parent
+local depth = 0
+while current and current ~= game do
+	local indent = string.rep("  ", depth)
+	print("🔍" .. indent .. "↳", current.Name, "(" .. current.ClassName .. ")")
+	
+	local attr = current:GetAttribute("TycoonId")
+	if attr then
+		print("🔍" .. indent .. "   ✅ HAS TycoonId:", attr)
+	end
+	
+	current = current.Parent
+	depth = depth + 1
+	if depth > 10 then break end
+end
+
 local TYCOON_ID = script.Parent:GetAttribute("TycoonId") or script.Parent.Name
+print("🔍 [HelloKitty] Selected TYCOON_ID:", TYCOON_ID)
+print("🔍 [HelloKitty] ========== TYCOON ID FOUND ==========")
 print("🏠 [HelloKitty] Tycoon ID:", TYCOON_ID)
 
 -- Track purchased items PER PLAYER
