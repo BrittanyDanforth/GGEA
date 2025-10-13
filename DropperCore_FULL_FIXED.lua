@@ -149,25 +149,26 @@ local function getTycoonId(dropperModel)
 		if id then
 			print("🔍 [DropperCore] ✅ Using TycoonId attribute:", id)
 			print("🔍 [DropperCore] ========== SEARCH COMPLETE ==========")
-			return id
+			return id, tycoon  -- ✅ Return both ID and instance
 		else
 			-- Fallback to tycoon name if no attribute set
 			warn("[DropperCore] ⚠️ TycoonId attribute not found on", tycoon:GetFullName())
 			warn("[DropperCore] 💡 TIP: Set attribute with: tycoon:SetAttribute('TycoonId', '" .. tycoon.Name .. "')")
 			print("🔍 [DropperCore] Using tycoon name as fallback:", tycoon.Name)
 			print("🔍 [DropperCore] ========== SEARCH COMPLETE ==========")
-			return tycoon.Name
+			return tycoon.Name, tycoon  -- ✅ Return both ID and instance
 		end
 	end
 	
-	-- Last resort: warn and return Unknown
+	-- 🛑 FAIL FAST: Return nil instead of "Unknown"
 	print("🔍 [DropperCore] ========== SEARCH FAILED ==========")
 	warn("[DropperCore] ❌ Could not find parent tycoon for dropper:", dropperModel:GetFullName())
 	warn("[DropperCore] 💡 Dropper is parented under:", dropperModel.Parent and dropperModel.Parent:GetFullName() or "nil")
 	warn("[DropperCore] 💡 Tried searching for:", table.concat(possibleAncestors, ", "))
 	warn("[DropperCore] 💡 Also tried keyword search in ancestor names")
 	warn("[DropperCore] 💡 SOLUTION: Set TycoonId attribute on the tycoon model that contains this dropper")
-	return "Unknown"
+	warn("[DropperCore] 🛑 REFUSING TO SPAWN - NO TYCOON FOUND!")
+	return nil, nil  -- ✅ Fail fast, no "Unknown" drops!
 end
 
 --============================
@@ -360,8 +361,27 @@ function Core.Run(config)
 	local storage = config.partStorage
 
 	-- 🛡️ MULTI-TYCOON: Get this dropper's tycoon ID
-	local TYCOON_ID = getTycoonId(config.model)
+	local TYCOON_ID, TYCOON_INST = getTycoonId(config.model)
+	if not TYCOON_ID or not TYCOON_INST then
+		warn(("[DropperCore.Run] ❌ No tycoon found for %s. Refusing to spawn drops."):format(config.model:GetFullName()))
+		return  -- 🛑 Fail fast!
+	end
 	print("🏠 [DropperCore.Run] Dropper", config.model.Name, "belongs to tycoon:", TYCOON_ID)
+	
+	-- 🛡️ Verify partStorage is under the tycoon
+	if not config.partStorage or not config.partStorage:IsDescendantOf(TYCOON_INST) then
+		warn(("[DropperCore] ⚠️ partStorage is not under this tycoon (%s). This can cause leftovers after reset."):format(TYCOON_ID))
+		-- Try to auto-route to Tycoon.Essentials.PartStorage
+		local essentials = TYCOON_INST:FindFirstChild("Essentials")
+		local fallback = essentials and essentials:FindFirstChild("PartStorage")
+		if fallback then
+			config.partStorage = fallback
+			storage = fallback
+			warn("[DropperCore] ➜ Auto-routed partStorage to Tycoon.Essentials.PartStorage")
+		else
+			warn("[DropperCore] ❌ No fallback PartStorage found. Drops may not clean up correctly.")
+		end
+	end
 
 	-- Defaults
 	local DROP_RATE = config.dropRate or 0.5
@@ -449,6 +469,9 @@ function Core.Run(config)
 		
 		-- 🔧 GUID: Tag with unique DropId to prevent double-collection
 		part:SetAttribute("DropId", HttpService:GenerateGUID(false))
+		
+		-- 🏷️ TAG: For easy cleanup sweeps
+		CollectionService:AddTag(part, "TycoonDrop")
 
 		-- Position with random offset
 		local ox = math.random(-2, 2) * 0.1
@@ -589,8 +612,26 @@ function Core.RunModel(config)
 	assert(dropModel and storage and template and template:IsA("Model"), "RunModel: templateModel must be a Model")
 
 	-- 🛡️ MULTI-TYCOON: Get this dropper's tycoon ID
-	local TYCOON_ID = getTycoonId(dropModel)
+	local TYCOON_ID, TYCOON_INST = getTycoonId(dropModel)
+	if not TYCOON_ID or not TYCOON_INST then
+		warn(("[DropperCore.RunModel] ❌ No tycoon found for %s. Refusing to spawn model drops."):format(dropModel:GetFullName()))
+		return  -- 🛑 Fail fast!
+	end
 	print("🏠 [DropperCore.RunModel] Model dropper", dropModel.Name, "belongs to tycoon:", TYCOON_ID)
+	
+	-- 🛡️ Verify partStorage is under the tycoon
+	if not config.partStorage or not config.partStorage:IsDescendantOf(TYCOON_INST) then
+		warn(("[DropperCore] ⚠️ partStorage is not under this tycoon (%s). This can cause leftovers after reset."):format(TYCOON_ID))
+		local essentials = TYCOON_INST:FindFirstChild("Essentials")
+		local fallback = essentials and essentials:FindFirstChild("PartStorage")
+		if fallback then
+			config.partStorage = fallback
+			storage = fallback
+			warn("[DropperCore] ➜ Auto-routed partStorage to Tycoon.Essentials.PartStorage")
+		else
+			warn("[DropperCore] ❌ No fallback PartStorage found. Drops may not clean up correctly.")
+		end
+	end
 
 	-- Tunables
 	local DROP_RATE = config.dropRate or 1.2
@@ -656,6 +697,7 @@ function Core.RunModel(config)
 				
 				-- 🛡️ MULTI-TYCOON: Tag ALL parts with TycoonId
 				p:SetAttribute("TycoonId", TYCOON_ID)
+				CollectionService:AddTag(p, "TycoonDrop")  -- 🏷️ Tag each part
 			end
 		end
 
@@ -690,6 +732,9 @@ function Core.RunModel(config)
 		
 		-- 🔧 GUID: Tag with unique DropId to prevent double-collection
 		model:SetAttribute("DropId", HttpService:GenerateGUID(false))
+		
+		-- 🏷️ TAG: For easy cleanup sweeps
+		CollectionService:AddTag(model, "TycoonDrop")
 
 		local primary = model.PrimaryPart :: BasePart
 
