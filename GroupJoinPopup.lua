@@ -23,6 +23,7 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
+local ContentProvider = game:GetService("ContentProvider")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
@@ -537,201 +538,188 @@ local function createRightSide(parent, prof)
 	return rightSide, howToTitle, decalImage, decalContainer, tapHint
 end
 
+-- 🔍 ZOOM OVERLAY (scroll + pinch-zoom, mobile-friendly)
 local function createZoomOverlay(parentGui)
-	log("🔍 Creating zoom overlay for decal...")
+	log("🔍 Creating scrollable + pinch-zoom overlay for decal...")
 	
 	local overlay = Instance.new("Frame")
 	overlay.Name = "ZoomOverlay"
 	overlay.Size = UDim2.fromScale(1, 1)
 	overlay.BackgroundColor3 = Color3.fromRGB(10, 5, 15)
-	overlay.BackgroundTransparency = 0.2
+	overlay.BackgroundTransparency = 0.15
 	overlay.ZIndex = 200
 	overlay.Visible = false
 	overlay.Active = true
 	overlay.Parent = parentGui
-	
+
+	-- Blocks taps from leaking to the dim behind
 	local blocker = Instance.new("TextButton")
-	blocker.Name = "Blocker"
-	blocker.Size = UDim2.fromScale(1, 1)
 	blocker.BackgroundTransparency = 1
 	blocker.Text = ""
-	blocker.AutoButtonColor = false
+	blocker.Size = UDim2.fromScale(1,1)
 	blocker.ZIndex = 201
 	blocker.Parent = overlay
-	
-	-- FULLSCREEN zoom card (MAXIMUM SIZE!)
+
+	-- Card
 	local zoomCard = Instance.new("Frame")
 	zoomCard.Name = "ZoomCard"
 	zoomCard.AnchorPoint = Vector2.new(0.5, 0.5)
 	zoomCard.Position = UDim2.fromScale(0.5, 0.5)
-	zoomCard.Size = UDim2.new(1, -10, 1, -10) -- ALMOST FULLSCREEN!
+	zoomCard.Size = UDim2.new(1, -10, 1, -10)
 	zoomCard.BackgroundColor3 = CONFIG.COLORS.CARD_BG
-	zoomCard.BackgroundTransparency = 0
-	zoomCard.BorderSizePixel = 0
 	zoomCard.ZIndex = 202
-	zoomCard.ClipsDescendants = true
 	zoomCard.Parent = overlay
-	
-	local zoomCorner = Instance.new("UICorner")
-	zoomCorner.CornerRadius = UDim.new(0, 20)
-	zoomCorner.Parent = zoomCard
-	
-	local zoomStroke = Instance.new("UIStroke")
-	zoomStroke.Color = CONFIG.COLORS.STROKE
-	zoomStroke.Thickness = 3
-	zoomStroke.Transparency = 0
-	zoomStroke.Parent = zoomCard
-	
-	-- MINIMAL padding (more space for image!)
-	local zoomPadding = Instance.new("UIPadding")
-	zoomPadding.PaddingTop = UDim.new(0, 60) -- Space for X button
-	zoomPadding.PaddingBottom = UDim.new(0, 10)
-	zoomPadding.PaddingLeft = UDim.new(0, 10)
-	zoomPadding.PaddingRight = UDim.new(0, 10)
-	zoomPadding.Parent = zoomCard
-	
-	-- Vertical layout (image on top, button on bottom!)
-	local zoomLayout = Instance.new("UIListLayout")
-	zoomLayout.FillDirection = Enum.FillDirection.Vertical
-	zoomLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	zoomLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	zoomLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	zoomLayout.Padding = UDim.new(0, 10)
-	zoomLayout.Parent = zoomCard
-	
-	-- Container for the HUGE ZOOMED image
-	local imageContainer = Instance.new("Frame")
-	imageContainer.Name = "ImageContainer"
-	imageContainer.Size = UDim2.new(1, 0, 1, -60) -- Take up ALMOST EVERYTHING!
-	imageContainer.BackgroundTransparency = 1
-	imageContainer.LayoutOrder = 1
-	imageContainer.ZIndex = 203
-	imageContainer.Parent = zoomCard
-	
-	-- PERFECT ZOOM image (just right amount of zoom!)
-	local zoomImage = Instance.new("ImageLabel")
-	zoomImage.Name = "ZoomedImage"
-	zoomImage.Size = UDim2.new(1, 8, 1, 8) -- SLIGHTLY bigger (small overflow for perfect zoom!)
-	zoomImage.Position = UDim2.fromOffset(-4, -4) -- Center the small overflow
-	zoomImage.BackgroundTransparency = 1
-	zoomImage.Image = CONFIG.HOW_TO_JOIN_DECAL
-	zoomImage.ScaleType = Enum.ScaleType.Crop -- CROP with small overflow = PERFECT zoom!
-	zoomImage.ZIndex = 203
-	zoomImage.Parent = imageContainer
-	
-	-- X button container (ABSOLUTE positioned at top-right, NOT affected by layout!)
-	local xBtnContainer = Instance.new("Frame")
-	xBtnContainer.Name = "XButtonContainer"
-	xBtnContainer.AnchorPoint = Vector2.new(1, 0)
-	xBtnContainer.Position = UDim2.new(1, -15, 0, 15)
-	xBtnContainer.Size = UDim2.fromOffset(56, 56)
-	xBtnContainer.BackgroundTransparency = 1
-	xBtnContainer.ZIndex = 205
-	xBtnContainer.Parent = overlay -- PARENT TO OVERLAY, NOT ZOOMCARD!
-	
-	-- BIG X button (fills container!)
+	local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0,20); c.Parent = zoomCard
+	local s = Instance.new("UIStroke"); s.Color = CONFIG.COLORS.STROKE; s.Thickness = 3; s.Parent = zoomCard
+
+	-- Scrollable viewport
+	local scroll = Instance.new("ScrollingFrame")
+	scroll.Name = "Scroll"
+	scroll.BackgroundTransparency = 1
+	scroll.Size = UDim2.fromScale(1,1)
+	scroll.CanvasSize = UDim2.fromScale(1,1)      -- will be updated by zoom
+	scroll.ScrollBarThickness = 6                  -- small, unobtrusive; set 0 to hide
+	scroll.ScrollingDirection = Enum.ScrollingDirection.Y -- vertical only (change to XY if you want both)
+	scroll.ElasticBehavior = Enum.ElasticBehavior.Always
+	scroll.ZIndex = 203
+	scroll.Parent = zoomCard
+	scroll.ClipsDescendants = true
+
+	-- Big image inside the scroller
+	local img = Instance.new("ImageLabel")
+	img.Name = "ZoomedImage"
+	img.BackgroundTransparency = 1
+	img.Image = CONFIG.HOW_TO_JOIN_DECAL
+	img.ScaleType = Enum.ScaleType.Crop      -- fills frame, keeps aspect, crops overflow (so scrolling reveals more)
+	img.Size = UDim2.fromScale(1, 1)         -- will be grown by zoom
+	img.ZIndex = 204
+	img.Parent = scroll
+
+	-- Close X (safe-area aware)
+	local insetY = GuiService:GetGuiInset().Y
+	local xWrap = Instance.new("Frame")
+	xWrap.AnchorPoint = Vector2.new(1, 0)
+	xWrap.Position = UDim2.new(1, -15, 0, 15 + insetY)
+	xWrap.Size = UDim2.fromOffset(56, 56)
+	xWrap.BackgroundTransparency = 1
+	xWrap.ZIndex = 205
+	xWrap.Parent = overlay
+
 	local xBtn = Instance.new("TextButton")
-	xBtn.Name = "CloseX"
-	xBtn.Size = UDim2.fromScale(1, 1) -- Fill container
-	xBtn.Position = UDim2.fromScale(0, 0)
+	xBtn.Size = UDim2.fromScale(1,1)
 	xBtn.Text = "✕"
 	xBtn.Font = Enum.Font.GothamBold
-	xBtn.TextSize = 28 -- HUGE TEXT!
+	xBtn.TextSize = 28
 	xBtn.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
 	xBtn.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
 	xBtn.AutoButtonColor = true
 	xBtn.ZIndex = 206
-	xBtn.Parent = xBtnContainer
-	
-	local xCorner = Instance.new("UICorner")
-	xCorner.CornerRadius = UDim.new(0, 12)
-	xCorner.Parent = xBtn
-	
-	-- HUGE "Got it!" button (BELOW image in layout!)
+	xBtn.Parent = xWrap
+	local xCorner = Instance.new("UICorner"); xCorner.CornerRadius = UDim.new(0,12); xCorner.Parent = xBtn
+
+	-- Big "Got it!" button
 	local closeButton = Instance.new("TextButton")
-	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, 240, 0, 52) -- HUGE!
-	closeButton.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
-	closeButton.BackgroundTransparency = 0
-	closeButton.BorderSizePixel = 0
+	closeButton.AnchorPoint = Vector2.new(0.5,1)
+	closeButton.Position = UDim2.new(0.5, 0, 1, -15)
+	closeButton.Size = UDim2.new(0, 240, 0, 52)
 	closeButton.Text = "Got it!"
 	closeButton.Font = Enum.Font.GothamBold
-	closeButton.TextSize = 20 -- HUGE TEXT!
+	closeButton.TextSize = 20
 	closeButton.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
-	closeButton.AutoButtonColor = false
-	closeButton.LayoutOrder = 2 -- BELOW the image!
-	closeButton.ZIndex = 204
+	closeButton.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
+	closeButton.ZIndex = 205
 	closeButton.Parent = zoomCard
-	
-	local closeCorner = Instance.new("UICorner")
-	closeCorner.CornerRadius = UDim.new(0, 12)
-	closeCorner.Parent = closeButton
-	
-	local function hover(btn, on)
-		local target = on and CONFIG.COLORS.BUTTON_PRIMARY_HOVER or CONFIG.COLORS.BUTTON_PRIMARY
-		TweenService:Create(btn, TweenInfo.new(0.18), {BackgroundColor3 = target}):Play()
+	local closeCorner = Instance.new("UICorner"); closeCorner.CornerRadius = UDim.new(0,12); closeCorner.Parent = closeButton
+
+	-- ===== Zoom & Scroll logic =====
+	local MIN_ZOOM, MAX_ZOOM = 1.0, 3.0
+	local zoom = 1.6    -- default: nicely zoomed for phones
+
+	local function applyZoom(focusYRatio) -- focusYRatio keeps the same point in view when zooming
+		local viewH = scroll.AbsoluteSize.Y
+		local canvasH = math.max(viewH * zoom, viewH + 1)
+		-- Make the image panel taller to allow vertical panning; width stays 100% for stability
+		img.Size = UDim2.new(1, 0, canvasH / viewH, 0)
+		scroll.CanvasSize = UDim2.new(1, 0, canvasH / viewH, 0)
+
+		-- keep focus in place (defaults to middle)
+		focusYRatio = math.clamp(focusYRatio or 0.5, 0, 1)
+		local newPosY = (canvasH - viewH) * focusYRatio
+		scroll.CanvasPosition = Vector2.new(0, math.clamp(newPosY, 0, canvasH - viewH))
 	end
-	xBtn.MouseEnter:Connect(function() hover(xBtn, true) end)
-	xBtn.MouseLeave:Connect(function() hover(xBtn, false) end)
-	closeButton.MouseEnter:Connect(function() hover(closeButton, true) end)
-	closeButton.MouseLeave:Connect(function() hover(closeButton, false) end)
-	
+
+	-- Handle viewport changes
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+		applyZoom(scroll.CanvasSize.Y.Scale > 1 and (scroll.CanvasPosition.Y / (scroll.CanvasSize.Y.Scale * scroll.AbsoluteSize.Y - scroll.AbsoluteSize.Y)) or 0.5)
+	end)
+
+	-- Pinch zoom (two fingers)
+	local UIS = UserInputService
+	local touching = {}
+	local startDist, startZoom
+
+	local function dist(a, b) return (a - b).Magnitude end
+
+	UIS.TouchStarted:Connect(function(input, gp)
+		if not overlay.Visible then return end
+		touching[input] = input.Position
+		if table.getn(touching) == 2 then
+			local pts = {}
+			for k,p in pairs(touching) do table.insert(pts, k) end
+			startDist = dist(pts[1].Position, pts[2].Position)
+			startZoom = zoom
+		end
+	end)
+
+	UIS.TouchMoved:Connect(function(input, gp)
+		if not overlay.Visible then return end
+		if touching[input] then touching[input] = input.Position end
+		local pts = {}
+		for k,p in pairs(touching) do table.insert(pts, k) end
+		if #pts == 2 and startDist and startDist > 0 then
+			local newDist = dist(pts[1].Position, pts[2].Position)
+			local factor = newDist / startDist
+			zoom = math.clamp(startZoom * factor, MIN_ZOOM, MAX_ZOOM)
+
+			-- keep the midpoint stable
+			local midY = (pts[1].Position.Y + pts[2].Position.Y) / 2
+			local focusYRatio = (midY - scroll.AbsolutePosition.Y) / math.max(scroll.AbsoluteSize.Y, 1)
+			applyZoom(focusYRatio)
+		end
+	end)
+
+	UIS.TouchEnded:Connect(function(input, gp)
+		touching[input] = nil
+		startDist, startZoom = nil, nil
+	end)
+
 	local function openZoom()
-		log("🔍 Opening SUPER ZOOMED overlay (HUGE image!)...")
+		log("🔍 Opening scrollable zoom (swipe + pinch!)...")
 		overlay.Visible = true
-		xBtnContainer.Visible = true
-		
-		-- Start invisible
-		overlay.BackgroundTransparency = 1
-		zoomCard.BackgroundTransparency = 1
-		zoomStroke.Transparency = 1
-		imageContainer.BackgroundTransparency = 1
-		zoomImage.ImageTransparency = 1
-		xBtn.BackgroundTransparency = 1
-		xBtn.TextTransparency = 1
-		closeButton.BackgroundTransparency = 1
-		closeButton.TextTransparency = 1
-		
-		-- Fade in animation
-		local ti = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		TweenService:Create(overlay, ti, {BackgroundTransparency = 0.15}):Play() -- Darker bg
-		TweenService:Create(zoomCard, ti, {BackgroundTransparency = 0}):Play()
-		TweenService:Create(zoomStroke, ti, {Transparency = 0}):Play()
-		TweenService:Create(zoomImage, ti, {ImageTransparency = 0}):Play()
-		TweenService:Create(xBtn, ti, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
-		TweenService:Create(closeButton, ti, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+		-- preload to avoid blur/pop
+		pcall(function() ContentProvider:PreloadAsync({img}) end)
+		applyZoom(0.0) -- start focused near top (shows Step 1 area); try 0.5 to start centered
 	end
-	
+
 	local function closeZoom()
 		log("❌ Closing zoom overlay...")
-		
-		-- Fade out animation
-		local ti = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-		local tween = TweenService:Create(overlay, ti, {BackgroundTransparency = 1})
-		TweenService:Create(zoomCard, ti, {BackgroundTransparency = 1}):Play()
-		TweenService:Create(zoomStroke, ti, {Transparency = 1}):Play()
-		TweenService:Create(zoomImage, ti, {ImageTransparency = 1}):Play()
-		TweenService:Create(xBtn, ti, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
-		TweenService:Create(closeButton, ti, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
-		tween:Play()
-		tween.Completed:Wait()
 		overlay.Visible = false
-		xBtnContainer.Visible = false
 	end
-	
-	-- Hide X button container initially
-	xBtnContainer.Visible = false
-	
+
 	xBtn.Activated:Connect(closeZoom)
 	closeButton.Activated:Connect(closeZoom)
-	
+
+	-- Optional: ESC/B key support
 	UserInputService.InputBegan:Connect(function(input, gp)
 		if not overlay.Visible or gp then return end
 		if input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.ButtonB then
 			closeZoom()
 		end
 	end)
-	
+
+	-- optional: allow tap-outside to close
+	-- blocker.Activated:Connect(closeZoom)
+
 	return overlay, openZoom, closeZoom
 end
 
