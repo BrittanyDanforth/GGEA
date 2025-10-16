@@ -97,13 +97,11 @@ local function isTablet()
 end
 
 local function phonePanelScale(short)
-	-- Global zoom-out for phones (matches shop logic!)
-	if short <= 320 then return 0.83 end
-	if short <= 360 then return 0.86 end
-	if short <= 375 then return 0.88 end
-	if short <= 393 then return 0.90 end
-	if short <= 414 then return 0.92 end
-	return 0.94
+	-- BIGGER text for phones (easier to read!)
+	if short <= 320 then return 0.95 end
+	if short <= 360 then return 0.97 end
+	if short <= 375 then return 0.98 end
+	return 1.0 -- NO zoom-out for readable text!
 end
 
 -- Dynamic profile that adjusts ALL sizing based on device
