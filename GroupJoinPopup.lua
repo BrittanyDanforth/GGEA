@@ -559,16 +559,17 @@ local function createZoomOverlay(parentGui)
 	blocker.ZIndex = 201
 	blocker.Parent = overlay
 	
-	-- FULLSCREEN zoom card (99% of screen!)
+	-- FULLSCREEN zoom card (MAXIMUM SIZE!)
 	local zoomCard = Instance.new("Frame")
 	zoomCard.Name = "ZoomCard"
 	zoomCard.AnchorPoint = Vector2.new(0.5, 0.5)
 	zoomCard.Position = UDim2.fromScale(0.5, 0.5)
-	zoomCard.Size = UDim2.new(0.98, 0, 0.98, 0) -- MAXIMUM SIZE!
+	zoomCard.Size = UDim2.new(1, -10, 1, -10) -- ALMOST FULLSCREEN!
 	zoomCard.BackgroundColor3 = CONFIG.COLORS.CARD_BG
 	zoomCard.BackgroundTransparency = 0
 	zoomCard.BorderSizePixel = 0
 	zoomCard.ZIndex = 202
+	zoomCard.ClipsDescendants = true
 	zoomCard.Parent = overlay
 	
 	local zoomCorner = Instance.new("UICorner")
@@ -581,12 +582,12 @@ local function createZoomOverlay(parentGui)
 	zoomStroke.Transparency = 0
 	zoomStroke.Parent = zoomCard
 	
-	-- Padding for the card edges
+	-- MINIMAL padding (more space for image!)
 	local zoomPadding = Instance.new("UIPadding")
 	zoomPadding.PaddingTop = UDim.new(0, 60) -- Space for X button
-	zoomPadding.PaddingBottom = UDim.new(0, 15)
-	zoomPadding.PaddingLeft = UDim.new(0, 15)
-	zoomPadding.PaddingRight = UDim.new(0, 15)
+	zoomPadding.PaddingBottom = UDim.new(0, 10)
+	zoomPadding.PaddingLeft = UDim.new(0, 10)
+	zoomPadding.PaddingRight = UDim.new(0, 10)
 	zoomPadding.Parent = zoomCard
 	
 	-- Vertical layout (image on top, button on bottom!)
@@ -595,57 +596,67 @@ local function createZoomOverlay(parentGui)
 	zoomLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	zoomLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	zoomLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	zoomLayout.Padding = UDim.new(0, 12)
+	zoomLayout.Padding = UDim.new(0, 10)
 	zoomLayout.Parent = zoomCard
 	
-	-- Container for the ZOOMED image
+	-- Container for the HUGE ZOOMED image
 	local imageContainer = Instance.new("Frame")
 	imageContainer.Name = "ImageContainer"
-	imageContainer.Size = UDim2.new(1, 0, 1, -65) -- Leave space for button!
+	imageContainer.Size = UDim2.new(1, 0, 1, -60) -- Take up ALMOST EVERYTHING!
 	imageContainer.BackgroundTransparency = 1
 	imageContainer.LayoutOrder = 1
 	imageContainer.ZIndex = 203
 	imageContainer.Parent = zoomCard
 	
-	-- HUGE ZOOMED image (ACTUALLY BIGGER!)
+	-- HUGE ZOOMED image (CROP to fill screen!)
 	local zoomImage = Instance.new("ImageLabel")
 	zoomImage.Name = "ZoomedImage"
-	zoomImage.Size = UDim2.fromScale(1, 1)
+	zoomImage.Size = UDim2.new(1, 20, 1, 20) -- BIGGER than container! (overflow for zoom effect!)
+	zoomImage.Position = UDim2.fromOffset(-10, -10) -- Center the overflow
 	zoomImage.BackgroundTransparency = 1
 	zoomImage.Image = CONFIG.HOW_TO_JOIN_DECAL
-	zoomImage.ScaleType = Enum.ScaleType.Fit -- Image fills ALL available space!
+	zoomImage.ScaleType = Enum.ScaleType.Crop -- CROP = appears ZOOMED IN!
 	zoomImage.ZIndex = 203
 	zoomImage.Parent = imageContainer
 	
-	-- BIG X button (top-right, OUTSIDE the layout!)
+	-- X button container (ABSOLUTE positioned at top-right, NOT affected by layout!)
+	local xBtnContainer = Instance.new("Frame")
+	xBtnContainer.Name = "XButtonContainer"
+	xBtnContainer.AnchorPoint = Vector2.new(1, 0)
+	xBtnContainer.Position = UDim2.new(1, -15, 0, 15)
+	xBtnContainer.Size = UDim2.fromOffset(56, 56)
+	xBtnContainer.BackgroundTransparency = 1
+	xBtnContainer.ZIndex = 205
+	xBtnContainer.Parent = overlay -- PARENT TO OVERLAY, NOT ZOOMCARD!
+	
+	-- BIG X button (fills container!)
 	local xBtn = Instance.new("TextButton")
 	xBtn.Name = "CloseX"
-	xBtn.AnchorPoint = Vector2.new(1, 0)
-	xBtn.Position = UDim2.new(1, -10, 0, 10)
-	xBtn.Size = UDim2.new(0, 50, 0, 50) -- BIGGER!
+	xBtn.Size = UDim2.fromScale(1, 1) -- Fill container
+	xBtn.Position = UDim2.fromScale(0, 0)
 	xBtn.Text = "✕"
 	xBtn.Font = Enum.Font.GothamBold
-	xBtn.TextSize = 24 -- BIGGER!
+	xBtn.TextSize = 28 -- HUGE TEXT!
 	xBtn.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
 	xBtn.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
 	xBtn.AutoButtonColor = true
-	xBtn.ZIndex = 205 -- Above everything!
-	xBtn.Parent = zoomCard
+	xBtn.ZIndex = 206
+	xBtn.Parent = xBtnContainer
 	
 	local xCorner = Instance.new("UICorner")
-	xCorner.CornerRadius = UDim.new(0, 10)
+	xCorner.CornerRadius = UDim.new(0, 12)
 	xCorner.Parent = xBtn
 	
-	-- BIG "Got it!" button (BELOW image in layout!)
+	-- HUGE "Got it!" button (BELOW image in layout!)
 	local closeButton = Instance.new("TextButton")
 	closeButton.Name = "CloseButton"
-	closeButton.Size = UDim2.new(0, 220, 0, 50) -- BIGGER!
+	closeButton.Size = UDim2.new(0, 240, 0, 52) -- HUGE!
 	closeButton.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
 	closeButton.BackgroundTransparency = 0
 	closeButton.BorderSizePixel = 0
 	closeButton.Text = "Got it!"
 	closeButton.Font = Enum.Font.GothamBold
-	closeButton.TextSize = 18 -- BIGGER!
+	closeButton.TextSize = 20 -- HUGE TEXT!
 	closeButton.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
 	closeButton.AutoButtonColor = false
 	closeButton.LayoutOrder = 2 -- BELOW the image!
@@ -666,8 +677,9 @@ local function createZoomOverlay(parentGui)
 	closeButton.MouseLeave:Connect(function() hover(closeButton, false) end)
 	
 	local function openZoom()
-		log("🔍 Opening ZOOMED overlay (BIGGER image!)...")
+		log("🔍 Opening SUPER ZOOMED overlay (HUGE image!)...")
 		overlay.Visible = true
+		xBtnContainer.Visible = true
 		
 		-- Start invisible
 		overlay.BackgroundTransparency = 1
@@ -682,7 +694,7 @@ local function createZoomOverlay(parentGui)
 		
 		-- Fade in animation
 		local ti = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		TweenService:Create(overlay, ti, {BackgroundTransparency = 0.2}):Play()
+		TweenService:Create(overlay, ti, {BackgroundTransparency = 0.15}):Play() -- Darker bg
 		TweenService:Create(zoomCard, ti, {BackgroundTransparency = 0}):Play()
 		TweenService:Create(zoomStroke, ti, {Transparency = 0}):Play()
 		TweenService:Create(zoomImage, ti, {ImageTransparency = 0}):Play()
@@ -704,7 +716,11 @@ local function createZoomOverlay(parentGui)
 		tween:Play()
 		tween.Completed:Wait()
 		overlay.Visible = false
+		xBtnContainer.Visible = false
 	end
+	
+	-- Hide X button container initially
+	xBtnContainer.Visible = false
 	
 	xBtn.Activated:Connect(closeZoom)
 	closeButton.Activated:Connect(closeZoom)
