@@ -586,8 +586,8 @@ local function createZoomOverlay(parentGui)
 	scroll.ClipsDescendants = true
 
 	-- Safe padding (so Step 1 isn't hidden under X button!)
-	local SAFE_TOP_PAD   = GuiService:GetGuiInset().Y + 60  -- room for the X button + notch
-	local EXTRA_BOTTOM   = 40                               -- extra travel at bottom
+	local SAFE_TOP_PAD   = GuiService:GetGuiInset().Y + 120  -- MORE room for the X button + notch + top of image!
+	local EXTRA_BOTTOM   = 50                                -- extra travel at bottom
 
 	-- Big image inside the scroller
 	local img = Instance.new("ImageLabel")
