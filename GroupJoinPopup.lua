@@ -1,24 +1,31 @@
 --[[
 	🎀 Sanrio Tycoon Group Popup 🎀
-	A cute, pastel-themed group join popup for Roblox
-	Place in StarterPlayerScripts or StarterGui
+	MOBILE-FIRST REWORK (phones all sizes & sideways)
 	
 	Features:
-	- Adorable Sanrio-inspired pastel design
-	- Side-by-side layout: Text left, "How to Join" decal right
-	- TAP-TO-ZOOM: Tap the decal to view fullscreen (mobile-friendly!)
-	- Uses .Activated events (works on BOTH desktop AND mobile!)
-	- Zoom has ✕ (top-right) and "Got it!" (bottom) close buttons
-	- Background clicks blocked (no accidental closes!)
-	- ESC/B key support for keyboard/console players
-	- Shows your custom Step 1/Step 2 guide (rbxassetid://73482754980631)
-	- Group ID: 986814499 (pre-configured!)
-	- Smooth animations with cute effects
-	- Full UI hierarchy (no missing elements)
-	- Group membership detection
-	- Works perfectly in Studio AND published games!
-	- NO forbidden APIs (no OpenBrowserWindow, no broken methods!)
+	- ✅ Phone detection with global zoom-out
+	- ✅ Landscape & portrait support
+	- ✅ Dynamic sizing (adapts to ANY screen)
+	- ✅ Safe viewport calculations (respects notches)
+	- ✅ Side-by-side layout: Text left, "How to Join" decal right
+	- ✅ TAP-TO-ZOOM: Tap the decal to view fullscreen
+	- ✅ Uses .Activated events (mobile-friendly!)
+	- ✅ Waits 9 minutes before showing (5s in Studio)
+	- ✅ NO forbidden APIs
 ]]
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🎮 SERVICES 🎮
+-- ═══════════════════════════════════════════════════════════════════════════
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 🌸 CONFIGURATION 🌸
@@ -38,43 +45,154 @@ local CONFIG = {
 	
 	-- 🎨 Cute Pastel Colors (Sanrio theme)
 	COLORS = {
-		-- Card background - soft white with slight pink tint (MORE OPAQUE!)
 		CARD_BG = Color3.fromRGB(255, 248, 252),
-		-- Gradient overlay - soft pink to lavender (STRONGER COLORS!)
 		GRADIENT_TOP = Color3.fromRGB(255, 220, 245),
 		GRADIENT_BOTTOM = Color3.fromRGB(235, 225, 255),
-		-- Primary button - cute pink
 		BUTTON_PRIMARY = Color3.fromRGB(255, 182, 213),
 		BUTTON_PRIMARY_HOVER = Color3.fromRGB(255, 158, 200),
-		-- Secondary button - soft lavender
 		BUTTON_SECONDARY = Color3.fromRGB(230, 220, 255),
 		BUTTON_SECONDARY_HOVER = Color3.fromRGB(215, 200, 255),
-		-- Text colors
-		TITLE = Color3.fromRGB(255, 105, 180), -- Hot pink but softer
-		BODY = Color3.fromRGB(150, 120, 160), -- Soft purple-grey
+		TITLE = Color3.fromRGB(255, 105, 180),
+		BODY = Color3.fromRGB(150, 120, 160),
 		BUTTON_TEXT = Color3.fromRGB(255, 255, 255),
 		BUTTON_TEXT_SECONDARY = Color3.fromRGB(150, 120, 160),
-		-- Border/stroke - very soft pink
 		STROKE = Color3.fromRGB(255, 220, 235),
 	},
 	
-	-- UI Configuration
-	CARD_SIZE = UDim2.new(0, 700, 0, 400), -- Wider for side-by-side layout!
-	DIM_TRANSPARENCY = 0.5, -- Darker background
+	-- UI Configuration (desktop base)
+	DIM_TRANSPARENCY = 0.5,
 	ANIMATION_SPEED_OPEN = 0.3,
 	ANIMATION_SPEED_CLOSE = 0.2,
 }
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- 🎮 SERVICES 🎮
+-- 📱 MOBILE DETECTION & SIZING (shop-style!)
 -- ═══════════════════════════════════════════════════════════════════════════
 
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+local function viewport()
+	local cam = workspace.CurrentCamera
+	return cam and cam.ViewportSize or Vector2.new(1920, 1080)
+end
 
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local function safeViewport()
+	local cam = workspace.CurrentCamera
+	if not cam then return Vector2.new(800, 600), 0 end
+	local inset = GuiService:GetGuiInset()
+	local v = cam.ViewportSize
+	return Vector2.new(v.X, math.max(0, v.Y - inset.Y)), inset.Y
+end
+
+local function isMobileLike()
+	return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface()
+end
+
+local function isPhone()
+	if not isMobileLike() then return false end
+	local v = viewport()
+	return math.min(v.X, v.Y) < 700
+end
+
+local function isTablet()
+	return isMobileLike() and not isPhone()
+end
+
+local function phonePanelScale(short)
+	-- Global zoom-out for phones (matches shop logic!)
+	if short <= 320 then return 0.83 end
+	if short <= 360 then return 0.86 end
+	if short <= 375 then return 0.88 end
+	if short <= 393 then return 0.90 end
+	if short <= 414 then return 0.92 end
+	return 0.94
+end
+
+-- Dynamic profile that adjusts ALL sizing based on device
+local function getDynamicProfile()
+	local v = viewport()
+	local safeV, insetY = safeViewport()
+	local short = math.min(safeV.X, safeV.Y)
+	local landscape = v.X > v.Y
+	
+	local phone = isPhone()
+	local tablet = isTablet()
+	
+	if phone then
+		-- PHONE sizing (super compact!)
+		local s = math.clamp(short / 414, 0.78, 1.0) * 0.92
+		return {
+			isPhone = true,
+			isTablet = false,
+			landscape = landscape,
+			shortSide = short,
+			
+			-- Card size (smaller on phones!)
+			cardW = landscape and 640 or 340,
+			cardH = landscape and 380 or 520,
+			
+			-- Text sizes (scaled down!)
+			titleSize = math.floor(22 * s),
+			bodySize = math.floor(13 * s),
+			buttonTextSize = math.floor(14 * s),
+			howToTitleSize = math.floor(16 * s),
+			
+			-- Spacing
+			padding = 16,
+			buttonSpacing = 8,
+			
+			-- Layout
+			sideBySide = landscape, -- Only side-by-side in landscape!
+			
+			-- Scale factor
+			globalScale = phonePanelScale(short),
+		}
+	elseif tablet then
+		-- TABLET sizing
+		return {
+			isPhone = false,
+			isTablet = true,
+			landscape = landscape,
+			shortSide = short,
+			
+			cardW = 600,
+			cardH = 440,
+			
+			titleSize = 24,
+			bodySize = 14,
+			buttonTextSize = 15,
+			howToTitleSize = 17,
+			
+			padding = 24,
+			buttonSpacing = 10,
+			
+			sideBySide = true, -- Always side-by-side on tablet
+			
+			globalScale = 1,
+		}
+	else
+		-- DESKTOP sizing (full featured!)
+		return {
+			isPhone = false,
+			isTablet = false,
+			landscape = true,
+			shortSide = short,
+			
+			cardW = 700,
+			cardH = 400,
+			
+			titleSize = 26,
+			bodySize = 15,
+			buttonTextSize = 15,
+			howToTitleSize = 18,
+			
+			padding = 30,
+			buttonSpacing = 10,
+			
+			sideBySide = true, -- Always side-by-side on desktop
+			
+			globalScale = 1,
+		}
+	end
+end
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- LOGGING
@@ -95,10 +213,11 @@ end
 local screenGui
 local dimFrame
 local cardFrame
+local cardScale -- Global UIScale for phone zoom-out!
 local isAnimating = false
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- UI CREATION (Build entire hierarchy first, no early returns)
+-- UI CREATION (Mobile-first, responsive!)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function createScreenGui()
@@ -110,7 +229,7 @@ local function createScreenGui()
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.ResetOnSpawn = false
 	gui.IgnoreGuiInset = true
-	gui.Enabled = false -- Start hidden, will show after membership check
+	gui.Enabled = false
 	
 	return gui
 end
@@ -122,13 +241,12 @@ local function createDim(parent)
 	dim.Name = "Dim"
 	dim.Size = UDim2.new(1, 0, 1, 0)
 	dim.Position = UDim2.new(0, 0, 0, 0)
-	dim.BackgroundColor3 = Color3.fromRGB(20, 10, 30) -- Slightly purple-tinted
-	dim.BackgroundTransparency = 1 -- Start invisible
+	dim.BackgroundColor3 = Color3.fromRGB(20, 10, 30)
+	dim.BackgroundTransparency = 1
 	dim.BorderSizePixel = 0
 	dim.ZIndex = 10
 	dim.Parent = parent
 	
-	-- Make clickable to close
 	local button = Instance.new("TextButton")
 	button.Name = "ClickDetector"
 	button.Size = UDim2.new(1, 0, 1, 0)
@@ -141,81 +259,105 @@ local function createDim(parent)
 end
 
 local function createCard(parent)
-	log("💝 Creating Card...")
+	log("💝 Creating responsive Card...")
+	
+	local prof = getDynamicProfile()
 	
 	local card = Instance.new("Frame")
 	card.Name = "Card"
-	card.Size = CONFIG.CARD_SIZE
+	card.Size = UDim2.fromOffset(prof.cardW, prof.cardH)
 	card.Position = UDim2.new(0.5, 0, 0.5, 0)
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
 	card.BackgroundColor3 = CONFIG.COLORS.CARD_BG
-	card.BackgroundTransparency = 1 -- Start invisible
+	card.BackgroundTransparency = 1
 	card.BorderSizePixel = 0
 	card.ZIndex = 20
 	card.Parent = parent
 	
-	-- Cute rounded corners
+	-- GLOBAL PHONE ZOOM-OUT (shop-style!)
+	cardScale = Instance.new("UIScale")
+	cardScale.Scale = prof.globalScale
+	cardScale.Parent = card
+	
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 20) -- More rounded = cuter!
+	corner.CornerRadius = UDim.new(0, 20)
 	corner.Parent = card
 	
-	-- Soft pastel gradient overlay (MORE VISIBLE!)
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, CONFIG.COLORS.GRADIENT_TOP),
 		ColorSequenceKeypoint.new(1, CONFIG.COLORS.GRADIENT_BOTTOM)
 	})
-	gradient.Rotation = 135 -- Diagonal gradient
-	gradient.Transparency = NumberSequence.new(0.3) -- More opaque!
+	gradient.Rotation = 135
+	gradient.Transparency = NumberSequence.new(0.3)
 	gradient.Parent = card
 	
-	-- Cute pastel stroke
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = CONFIG.COLORS.STROKE
 	stroke.Thickness = 3
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	stroke.Transparency = 1 -- Start invisible
+	stroke.Transparency = 1
 	stroke.Parent = card
 	
-	-- Cozy padding
 	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 30)
-	padding.PaddingBottom = UDim.new(0, 30)
-	padding.PaddingLeft = UDim.new(0, 30)
-	padding.PaddingRight = UDim.new(0, 30)
+	padding.PaddingTop = UDim.new(0, prof.padding)
+	padding.PaddingBottom = UDim.new(0, prof.padding)
+	padding.PaddingLeft = UDim.new(0, prof.padding)
+	padding.PaddingRight = UDim.new(0, prof.padding)
 	padding.Parent = card
 	
-	-- HORIZONTAL layout for side-by-side!
+	-- DYNAMIC layout (vertical on phone portrait, horizontal on tablet/desktop/landscape!)
 	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.FillDirection = prof.sideBySide and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	layout.Padding = UDim.new(0, 20)
+	layout.Padding = UDim.new(0, prof.sideBySide and 20 or 12)
 	layout.Parent = card
 	
-	return card, stroke
+	return card, stroke, layout
 end
 
-local function createTitle(parent)
+local function createLeftSide(parent, prof)
+	log("⬅️ Creating left side container...")
+	
+	local leftSide = Instance.new("Frame")
+	leftSide.Name = "LeftSide"
+	leftSide.Size = prof.sideBySide and UDim2.new(0.5, -10, 1, 0) or UDim2.new(1, 0, 0.55, 0)
+	leftSide.BackgroundTransparency = 1
+	leftSide.ZIndex = 21
+	leftSide.LayoutOrder = 1
+	leftSide.Parent = parent
+	
+	local layout = Instance.new("UIListLayout")
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.VerticalAlignment = Enum.VerticalAlignment.Top
+	layout.Padding = UDim.new(0, prof.isPhone and 10 or 15)
+	layout.Parent = leftSide
+	
+	return leftSide
+end
+
+local function createTitle(parent, prof)
 	log("✨ Creating Title...")
 	
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(1, 0, 0, 50)
+	title.Size = UDim2.new(1, 0, 0, prof.isPhone and 40 or 50)
 	title.BackgroundTransparency = 1
 	title.Text = "Thanks for Playing!"
-	title.Font = Enum.Font.FredokaOne -- Cute rounded font!
-	title.TextSize = 26
+	title.Font = Enum.Font.FredokaOne
+	title.TextSize = prof.titleSize
 	title.TextColor3 = CONFIG.COLORS.TITLE
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.TextYAlignment = Enum.TextYAlignment.Center
-	title.TextTransparency = 1 -- Start invisible
+	title.TextTransparency = 1
+	title.TextScaled = prof.isPhone -- Scale on tiny phones
 	title.ZIndex = 21
 	title.LayoutOrder = 1
 	title.Parent = parent
 	
-	-- Cute text stroke for depth
 	local textStroke = Instance.new("UIStroke")
 	textStroke.Color = Color3.fromRGB(255, 255, 255)
 	textStroke.Thickness = 2
@@ -225,21 +367,21 @@ local function createTitle(parent)
 	return title
 end
 
-local function createBody(parent)
+local function createBody(parent, prof)
 	log("📝 Creating Body text...")
 	
 	local body = Instance.new("TextLabel")
 	body.Name = "Body"
-	body.Size = UDim2.new(1, 0, 0, 110)
+	body.Size = UDim2.new(1, 0, 0, prof.isPhone and 100 or 110)
 	body.BackgroundTransparency = 1
-	body.Text = "We noticed you've been playing for a bit! If you'd like to join our group, you'll get:\n\n• Daily Spins 🎡\n• Early Access to Future Features 🌟\n• Special Rewards (when game is fully finished!) 🎁"
+	body.Text = "We noticed you've been playing for a bit! If you'd like to join our group, you'll get:\n\n• Daily Spins 🎡\n• Early Access 🌟\n• Special Rewards 🎁"
 	body.Font = Enum.Font.Gotham
-	body.TextSize = 15
+	body.TextSize = prof.bodySize
 	body.TextColor3 = CONFIG.COLORS.BODY
 	body.TextXAlignment = Enum.TextXAlignment.Left
 	body.TextYAlignment = Enum.TextYAlignment.Top
 	body.TextWrapped = true
-	body.TextTransparency = 1 -- Start invisible
+	body.TextTransparency = 1
 	body.ZIndex = 21
 	body.LayoutOrder = 2
 	body.Parent = parent
@@ -247,50 +389,104 @@ local function createBody(parent)
 	return body
 end
 
--- Left side container (text + buttons)
-local function createLeftSide(parent)
-	log("⬅️ Creating left side container...")
+local function createButtonContainer(parent, prof)
+	log("🎯 Creating button container...")
 	
-	local leftSide = Instance.new("Frame")
-	leftSide.Name = "LeftSide"
-	leftSide.Size = UDim2.new(0.5, -10, 1, 0)
-	leftSide.BackgroundTransparency = 1
-	leftSide.ZIndex = 21
-	leftSide.LayoutOrder = 1
-	leftSide.Parent = parent
+	local container = Instance.new("Frame")
+	container.Name = "ButtonContainer"
+	container.Size = UDim2.new(1, 0, 0, prof.isPhone and 40 or 50)
+	container.BackgroundTransparency = 1
+	container.ZIndex = 21
+	container.LayoutOrder = 3
+	container.Parent = parent
 	
-	-- Vertical layout for left side content
 	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	layout.VerticalAlignment = Enum.VerticalAlignment.Top
-	layout.Padding = UDim.new(0, 15)
-	layout.Parent = leftSide
+	layout.Padding = UDim.new(0, prof.buttonSpacing)
+	layout.Parent = container
 	
-	return leftSide
+	return container
 end
 
--- Right side container (decal guide with TAP TO ZOOM!)
-local function createRightSide(parent)
+local function createButton(parent, name, text, isPrimary, layoutOrder, prof)
+	log("🔘 Creating button: " .. name)
+	
+	local btnW = prof.isPhone and 120 or 140
+	local btnH = prof.isPhone and 38 or 45
+	
+	local button = Instance.new("TextButton")
+	button.Name = name
+	button.Size = UDim2.new(0, btnW, 0, btnH)
+	button.BackgroundColor3 = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY or CONFIG.COLORS.BUTTON_SECONDARY
+	button.BackgroundTransparency = 1
+	button.BorderSizePixel = 0
+	button.Text = text
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = prof.buttonTextSize
+	button.TextColor3 = isPrimary and CONFIG.COLORS.BUTTON_TEXT or CONFIG.COLORS.BUTTON_TEXT_SECONDARY
+	button.TextTransparency = 1
+	button.AutoButtonColor = false
+	button.ZIndex = 21
+	button.LayoutOrder = layoutOrder
+	button.Parent = parent
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = button
+	
+	local shadow = Instance.new("UIStroke")
+	shadow.Color = isPrimary and Color3.fromRGB(255, 150, 190) or Color3.fromRGB(200, 190, 230)
+	shadow.Thickness = 0
+	shadow.Transparency = 0
+	shadow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	shadow.Parent = button
+	
+	-- Hover (desktop only)
+	if not isPhone() then
+		button.MouseEnter:Connect(function()
+			local hoverColor = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY_HOVER or CONFIG.COLORS.BUTTON_SECONDARY_HOVER
+			TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = hoverColor,
+				Size = UDim2.new(0, btnW + 5, 0, btnH + 2)
+			}):Play()
+			TweenService:Create(shadow, TweenInfo.new(0.2), {Thickness = 2}):Play()
+		end)
+		
+		button.MouseLeave:Connect(function()
+			local normalColor = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY or CONFIG.COLORS.BUTTON_SECONDARY
+			TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = normalColor,
+				Size = UDim2.new(0, btnW, 0, btnH)
+			}):Play()
+			TweenService:Create(shadow, TweenInfo.new(0.2), {Thickness = 0}):Play()
+		end)
+	end
+	
+	return button
+end
+
+local function createRightSide(parent, prof)
 	log("➡️ Creating right side with How To Join decal...")
 	
 	local rightSide = Instance.new("Frame")
 	rightSide.Name = "RightSide"
-	rightSide.Size = UDim2.new(0.5, -10, 1, 0)
+	rightSide.Size = prof.sideBySide and UDim2.new(0.5, -10, 1, 0) or UDim2.new(1, 0, 0.45, 0)
 	rightSide.BackgroundTransparency = 1
 	rightSide.ZIndex = 21
 	rightSide.LayoutOrder = 2
 	rightSide.Parent = parent
 	
-	-- Title above decal
 	local howToTitle = Instance.new("TextLabel")
 	howToTitle.Name = "HowToTitle"
-	howToTitle.Size = UDim2.new(1, 0, 0, 35)
+	howToTitle.Size = UDim2.new(1, 0, 0, prof.isPhone and 28 or 35)
 	howToTitle.Position = UDim2.new(0, 0, 0, 0)
 	howToTitle.BackgroundTransparency = 1
 	howToTitle.Text = "How to Join!"
 	howToTitle.Font = Enum.Font.GothamBold
-	howToTitle.TextSize = 18
+	howToTitle.TextSize = prof.howToTitleSize
 	howToTitle.TextColor3 = CONFIG.COLORS.TITLE
 	howToTitle.TextXAlignment = Enum.TextXAlignment.Center
 	howToTitle.TextYAlignment = Enum.TextYAlignment.Top
@@ -298,11 +494,10 @@ local function createRightSide(parent)
 	howToTitle.ZIndex = 22
 	howToTitle.Parent = rightSide
 	
-	-- Decal image container
 	local decalContainer = Instance.new("Frame")
 	decalContainer.Name = "DecalContainer"
-	decalContainer.Size = UDim2.new(1, -20, 1, -90)
-	decalContainer.Position = UDim2.new(0, 10, 0, 40)
+	decalContainer.Size = UDim2.new(1, -20, 1, prof.isPhone and -50 or -90)
+	decalContainer.Position = UDim2.new(0, 10, 0, prof.isPhone and 30 or 40)
 	decalContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	decalContainer.BackgroundTransparency = 1
 	decalContainer.BorderSizePixel = 0
@@ -313,7 +508,6 @@ local function createRightSide(parent)
 	decalCorner.CornerRadius = UDim.new(0, 12)
 	decalCorner.Parent = decalContainer
 	
-	-- Use ImageButton so taps work on mobile!
 	local decalImage = Instance.new("ImageButton")
 	decalImage.Name = "HowToJoinImage"
 	decalImage.Size = UDim2.new(1, 0, 1, 0)
@@ -325,17 +519,16 @@ local function createRightSide(parent)
 	decalImage.ZIndex = 22
 	decalImage.Parent = decalContainer
 	
-	-- Tap hint overlay (cute!)
 	local tapHint = Instance.new("TextLabel")
 	tapHint.Name = "TapHint"
 	tapHint.AnchorPoint = Vector2.new(0.5, 1)
 	tapHint.Position = UDim2.new(0.5, 0, 1, -8)
-	tapHint.Size = UDim2.new(0, 140, 0, 24)
+	tapHint.Size = UDim2.new(0, prof.isPhone and 100 or 140, 0, prof.isPhone and 20 or 24)
 	tapHint.BackgroundTransparency = 0.15
 	tapHint.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	tapHint.Text = "Tap to zoom"
 	tapHint.Font = Enum.Font.GothamBold
-	tapHint.TextSize = 12
+	tapHint.TextSize = prof.isPhone and 10 or 12
 	tapHint.TextColor3 = Color3.fromRGB(255, 255, 255)
 	tapHint.TextXAlignment = Enum.TextXAlignment.Center
 	tapHint.TextYAlignment = Enum.TextYAlignment.Center
@@ -350,221 +543,9 @@ local function createRightSide(parent)
 	return rightSide, howToTitle, decalImage, decalContainer, tapHint
 end
 
-local function createButton(parent, name, text, isPrimary, layoutOrder)
-	log("🔘 Creating button: " .. name)
-	
-	local button = Instance.new("TextButton")
-	button.Name = name
-	button.Size = UDim2.new(0, 140, 0, 45)
-	button.BackgroundColor3 = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY or CONFIG.COLORS.BUTTON_SECONDARY
-	button.BackgroundTransparency = 1 -- Start invisible
-	button.BorderSizePixel = 0
-	button.Text = text
-	button.Font = Enum.Font.GothamBold
-	button.TextSize = 15
-	button.TextColor3 = isPrimary and CONFIG.COLORS.BUTTON_TEXT or CONFIG.COLORS.BUTTON_TEXT_SECONDARY
-	button.TextTransparency = 1 -- Start invisible
-	button.AutoButtonColor = false
-	button.ZIndex = 21
-	button.LayoutOrder = layoutOrder
-	button.Parent = parent
-	
-	-- Cute rounded corners
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 12) -- More rounded
-	corner.Parent = button
-	
-	-- Soft shadow effect
-	local shadow = Instance.new("UIStroke")
-	shadow.Color = isPrimary and Color3.fromRGB(255, 150, 190) or Color3.fromRGB(200, 190, 230)
-	shadow.Thickness = 0
-	shadow.Transparency = 0
-	shadow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	shadow.Parent = button
-	
-	-- Cute bounce hover effect
-	button.MouseEnter:Connect(function()
-		local hoverColor = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY_HOVER or CONFIG.COLORS.BUTTON_SECONDARY_HOVER
-		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			BackgroundColor3 = hoverColor,
-			Size = UDim2.new(0, 145, 0, 47) -- Slight grow
-		}):Play()
-		TweenService:Create(shadow, TweenInfo.new(0.2), {Thickness = 2}):Play()
-	end)
-	
-	button.MouseLeave:Connect(function()
-		local normalColor = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY or CONFIG.COLORS.BUTTON_SECONDARY
-		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			BackgroundColor3 = normalColor,
-			Size = UDim2.new(0, 140, 0, 45) -- Back to normal
-		}):Play()
-		TweenService:Create(shadow, TweenInfo.new(0.2), {Thickness = 0}):Play()
-	end)
-	
-	return button
-end
-
-local function createButtonContainer(parent)
-	log("🎯 Creating button container...")
-	
-	local container = Instance.new("Frame")
-	container.Name = "ButtonContainer"
-	container.Size = UDim2.new(1, 0, 0, 50)
-	container.BackgroundTransparency = 1
-	container.ZIndex = 21
-	container.LayoutOrder = 3
-	container.Parent = parent
-	
-	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = Enum.FillDirection.Horizontal
-	layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-	layout.VerticalAlignment = Enum.VerticalAlignment.Center
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 10) -- Cute spacing between buttons
-	layout.Parent = container
-	
-	return container
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- ANIMATION FUNCTIONS
--- ═══════════════════════════════════════════════════════════════════════════
-
-local function showPopup()
-	if isAnimating then return end
-	isAnimating = true
-	
-	log("🎀 showPopup() - Opening cute modal...")
-	
-	screenGui.Enabled = true
-	
-	-- Animation info
-	local tweenInfoOpen = TweenInfo.new(
-		CONFIG.ANIMATION_SPEED_OPEN,
-		Enum.EasingStyle.Quad,
-		Enum.EasingDirection.Out
-	)
-	
-	-- Fade in dim
-	local dimTween = TweenService:Create(dimFrame, tweenInfoOpen, {
-		BackgroundTransparency = 1 - CONFIG.DIM_TRANSPARENCY
-	})
-	
-	-- Fade in card
-	local cardTween = TweenService:Create(cardFrame, tweenInfoOpen, {
-		BackgroundTransparency = 0
-	})
-	
-	-- Fade in stroke
-	local strokeTween = TweenService:Create(cardFrame.UIStroke, tweenInfoOpen, {
-		Transparency = 0
-	})
-	
-	-- Fade in all children
-	local childTweens = {}
-	for _, child in ipairs(cardFrame:GetDescendants()) do
-		if child:IsA("TextLabel") or child:IsA("TextButton") then
-			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
-				TextTransparency = 0,
-				BackgroundTransparency = child:IsA("TextButton") and 0 or 1
-			}))
-		elseif child:IsA("ImageButton") or child:IsA("ImageLabel") then
-			-- Fade in the decal image
-			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
-				ImageTransparency = 0
-			}))
-		elseif child:IsA("Frame") and child.Name == "DecalContainer" then
-			-- Fade in the decal container background
-			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
-				BackgroundTransparency = 0.05
-			}))
-		end
-	end
-	
-	-- Play all tweens
-	dimTween:Play()
-	cardTween:Play()
-	strokeTween:Play()
-	for _, tween in ipairs(childTweens) do
-		tween:Play()
-	end
-	
-	-- Wait for completion
-	cardTween.Completed:Wait()
-	isAnimating = false
-	log("✨ showPopup() - Modal opened successfully!")
-end
-
-local function hidePopup()
-	if isAnimating then return end
-	isAnimating = true
-	
-	log("👋 hidePopup() - Closing modal...")
-	
-	-- Animation info
-	local tweenInfoClose = TweenInfo.new(
-		CONFIG.ANIMATION_SPEED_CLOSE,
-		Enum.EasingStyle.Quad,
-		Enum.EasingDirection.In
-	)
-	
-	-- Fade out dim
-	local dimTween = TweenService:Create(dimFrame, tweenInfoClose, {
-		BackgroundTransparency = 1
-	})
-	
-	-- Fade out card
-	local cardTween = TweenService:Create(cardFrame, tweenInfoClose, {
-		BackgroundTransparency = 1
-	})
-	
-	-- Fade out stroke
-	local strokeTween = TweenService:Create(cardFrame.UIStroke, tweenInfoClose, {
-		Transparency = 1
-	})
-	
-	-- Fade out all children
-	local childTweens = {}
-	for _, child in ipairs(cardFrame:GetDescendants()) do
-		if child:IsA("TextLabel") or child:IsA("TextButton") then
-			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
-				TextTransparency = 1,
-				BackgroundTransparency = 1
-			}))
-		elseif child:IsA("ImageButton") or child:IsA("ImageLabel") then
-			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
-				ImageTransparency = 1
-			}))
-		elseif child:IsA("Frame") and child.Name == "DecalContainer" then
-			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
-				BackgroundTransparency = 1
-			}))
-		end
-	end
-	
-	-- Play all tweens
-	dimTween:Play()
-	cardTween:Play()
-	strokeTween:Play()
-	for _, tween in ipairs(childTweens) do
-		tween:Play()
-	end
-	
-	-- Wait for completion then disable
-	cardTween.Completed:Wait()
-	screenGui.Enabled = false
-	isAnimating = false
-	log("✅ hidePopup() - Modal closed")
-end
-
--- ═══════════════════════════════════════════════════════════════════════════
--- 🔍 ZOOM OVERLAY (fullscreen, blocks background, has ✕ and "Got it!")
--- ═══════════════════════════════════════════════════════════════════════════
-
 local function createZoomOverlay(parentGui)
 	log("🔍 Creating zoom overlay for decal...")
 	
-	-- Full screen overlay
 	local overlay = Instance.new("Frame")
 	overlay.Name = "ZoomOverlay"
 	overlay.Size = UDim2.fromScale(1, 1)
@@ -572,10 +553,9 @@ local function createZoomOverlay(parentGui)
 	overlay.BackgroundTransparency = 0.2
 	overlay.ZIndex = 200
 	overlay.Visible = false
-	overlay.Active = true -- 👈 blocks clicks from falling through
+	overlay.Active = true
 	overlay.Parent = parentGui
 	
-	-- Full-screen invisible blocker so taps do NOTHING unless they hit our buttons
 	local blocker = Instance.new("TextButton")
 	blocker.Name = "Blocker"
 	blocker.Size = UDim2.fromScale(1, 1)
@@ -584,14 +564,12 @@ local function createZoomOverlay(parentGui)
 	blocker.AutoButtonColor = false
 	blocker.ZIndex = 201
 	blocker.Parent = overlay
-	-- (no connections on purpose - blocks clicks)
 	
-	-- Centered zoom card
 	local zoomCard = Instance.new("Frame")
 	zoomCard.Name = "ZoomCard"
 	zoomCard.AnchorPoint = Vector2.new(0.5, 0.5)
 	zoomCard.Position = UDim2.fromScale(0.5, 0.5)
-	zoomCard.Size = UDim2.new(0.9, 0, 0.85, 0) -- Big on phones!
+	zoomCard.Size = UDim2.new(0.9, 0, 0.85, 0)
 	zoomCard.BackgroundColor3 = CONFIG.COLORS.CARD_BG
 	zoomCard.BackgroundTransparency = 0
 	zoomCard.BorderSizePixel = 0
@@ -615,7 +593,6 @@ local function createZoomOverlay(parentGui)
 	zoomPadding.PaddingRight = UDim.new(0, 20)
 	zoomPadding.Parent = zoomCard
 	
-	-- Big zoomed image
 	local zoomImage = Instance.new("ImageLabel")
 	zoomImage.Name = "ZoomedImage"
 	zoomImage.Size = UDim2.fromScale(1, 1)
@@ -625,7 +602,6 @@ local function createZoomOverlay(parentGui)
 	zoomImage.ZIndex = 203
 	zoomImage.Parent = zoomCard
 	
-	-- ✕ close button (top-right)
 	local xBtn = Instance.new("TextButton")
 	xBtn.Name = "CloseX"
 	xBtn.AnchorPoint = Vector2.new(1, 0)
@@ -644,7 +620,6 @@ local function createZoomOverlay(parentGui)
 	xCorner.CornerRadius = UDim.new(0, 10)
 	xCorner.Parent = xBtn
 	
-	-- "Got it!" close button (bottom-center)
 	local closeButton = Instance.new("TextButton")
 	closeButton.Name = "CloseButton"
 	closeButton.AnchorPoint = Vector2.new(0.5, 1)
@@ -665,7 +640,6 @@ local function createZoomOverlay(parentGui)
 	closeCorner.CornerRadius = UDim.new(0, 12)
 	closeCorner.Parent = closeButton
 	
-	-- Small hover polish (desktop only)
 	local function hover(btn, on)
 		local target = on and CONFIG.COLORS.BUTTON_PRIMARY_HOVER or CONFIG.COLORS.BUTTON_PRIMARY
 		TweenService:Create(btn, TweenInfo.new(0.18), {BackgroundColor3 = target}):Play()
@@ -675,12 +649,10 @@ local function createZoomOverlay(parentGui)
 	closeButton.MouseEnter:Connect(function() hover(closeButton, true) end)
 	closeButton.MouseLeave:Connect(function() hover(closeButton, false) end)
 	
-	-- Open/Close functions
 	local function openZoom()
 		log("🔍 Opening zoom overlay...")
 		overlay.Visible = true
 		
-		-- Fade in animation
 		overlay.BackgroundTransparency = 1
 		zoomCard.BackgroundTransparency = 1
 		zoomStroke.Transparency = 1
@@ -702,7 +674,6 @@ local function createZoomOverlay(parentGui)
 	local function closeZoom()
 		log("❌ Closing zoom overlay...")
 		
-		-- Fade out animation
 		local ti = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 		local tween = TweenService:Create(overlay, ti, {BackgroundTransparency = 1})
 		TweenService:Create(zoomCard, ti, {BackgroundTransparency = 1}):Play()
@@ -715,12 +686,10 @@ local function createZoomOverlay(parentGui)
 		overlay.Visible = false
 	end
 	
-	-- Wire up closers (both ✕ and "Got it!" work!)
 	xBtn.Activated:Connect(closeZoom)
 	closeButton.Activated:Connect(closeZoom)
 	
-	-- Optional: ESC / B closes zoom (console/keyboard support)
-	game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
+	UserInputService.InputBegan:Connect(function(input, gp)
 		if not overlay.Visible or gp then return end
 		if input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.ButtonB then
 			closeZoom()
@@ -736,16 +705,15 @@ end
 
 local function joinGroup()
 	if CONFIG.GROUP_ID == 0 then
-		logError("GROUP_ID not set! Please configure your group ID.")
+		logError("GROUP_ID not set!")
 		return
 	end
 	
 	log("joinGroup() - Showing group info for: " .. CONFIG.GROUP_ID)
 	
-	-- Show a cute notification with the group ID (see the image for steps!)
 	local success = pcall(function()
 		game:GetService("StarterGui"):SetCore("SendNotification", {
-			Title = "Join Sanrio Tycoon Group!",
+			Title = "💖 Join Sanrio Tycoon Group!",
 			Text = "Follow the steps on the popup! Group ID: " .. CONFIG.GROUP_ID,
 			Duration = 12,
 			Button1 = "Got it!"
@@ -760,46 +728,152 @@ local function joinGroup()
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- MAIN BUILD FUNCTION (No early returns - builds everything first)
+-- ANIMATION FUNCTIONS
+-- ═══════════════════════════════════════════════════════════════════════════
+
+local function showPopup()
+	if isAnimating then return end
+	isAnimating = true
+	
+	log("🎀 showPopup() - Opening cute modal...")
+	
+	screenGui.Enabled = true
+	
+	local tweenInfoOpen = TweenInfo.new(
+		CONFIG.ANIMATION_SPEED_OPEN,
+		Enum.EasingStyle.Quad,
+		Enum.EasingDirection.Out
+	)
+	
+	local dimTween = TweenService:Create(dimFrame, tweenInfoOpen, {
+		BackgroundTransparency = 1 - CONFIG.DIM_TRANSPARENCY
+	})
+	
+	local cardTween = TweenService:Create(cardFrame, tweenInfoOpen, {
+		BackgroundTransparency = 0
+	})
+	
+	local strokeTween = TweenService:Create(cardFrame.UIStroke, tweenInfoOpen, {
+		Transparency = 0
+	})
+	
+	local childTweens = {}
+	for _, child in ipairs(cardFrame:GetDescendants()) do
+		if child:IsA("TextLabel") or child:IsA("TextButton") then
+			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
+				TextTransparency = 0,
+				BackgroundTransparency = child:IsA("TextButton") and 0 or 1
+			}))
+		elseif child:IsA("ImageButton") or child:IsA("ImageLabel") then
+			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
+				ImageTransparency = 0
+			}))
+		elseif child:IsA("Frame") and child.Name == "DecalContainer" then
+			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
+				BackgroundTransparency = 0.05
+			}))
+		end
+	end
+	
+	dimTween:Play()
+	cardTween:Play()
+	strokeTween:Play()
+	for _, tween in ipairs(childTweens) do
+		tween:Play()
+	end
+	
+	cardTween.Completed:Wait()
+	isAnimating = false
+	log("✨ showPopup() - Modal opened successfully!")
+end
+
+local function hidePopup()
+	if isAnimating then return end
+	isAnimating = true
+	
+	log("👋 hidePopup() - Closing modal...")
+	
+	local tweenInfoClose = TweenInfo.new(
+		CONFIG.ANIMATION_SPEED_CLOSE,
+		Enum.EasingStyle.Quad,
+		Enum.EasingDirection.In
+	)
+	
+	local dimTween = TweenService:Create(dimFrame, tweenInfoClose, {
+		BackgroundTransparency = 1
+	})
+	
+	local cardTween = TweenService:Create(cardFrame, tweenInfoClose, {
+		BackgroundTransparency = 1
+	})
+	
+	local strokeTween = TweenService:Create(cardFrame.UIStroke, tweenInfoClose, {
+		Transparency = 1
+	})
+	
+	local childTweens = {}
+	for _, child in ipairs(cardFrame:GetDescendants()) do
+		if child:IsA("TextLabel") or child:IsA("TextButton") then
+			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
+				TextTransparency = 1,
+				BackgroundTransparency = 1
+			}))
+		elseif child:IsA("ImageButton") or child:IsA("ImageLabel") then
+			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
+				ImageTransparency = 1
+			}))
+		elseif child:IsA("Frame") and child.Name == "DecalContainer" then
+			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
+				BackgroundTransparency = 1
+			}))
+		end
+	end
+	
+	dimTween:Play()
+	cardTween:Play()
+	strokeTween:Play()
+	for _, tween in ipairs(childTweens) do
+		tween:Play()
+	end
+	
+	cardTween.Completed:Wait()
+	screenGui.Enabled = false
+	isAnimating = false
+	log("✅ hidePopup() - Modal closed")
+end
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- MAIN BUILD FUNCTION (Mobile-first!)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function buildUI()
-	log("🏗️ buildUI() - Starting UI construction...")
+	log("🏗️ buildUI() - Starting MOBILE-FIRST UI construction...")
 	
-	-- Step 1: Create ScreenGui
+	local prof = getDynamicProfile()
+	log("📱 Device profile: isPhone=" .. tostring(prof.isPhone) .. ", isTablet=" .. tostring(prof.isTablet) .. ", landscape=" .. tostring(prof.landscape) .. ", globalScale=" .. prof.globalScale)
+	
 	screenGui = createScreenGui()
 	
-	-- Step 2: Create Dim overlay (ZIndex 10)
 	local dimButton
 	dimFrame, dimButton = createDim(screenGui)
 	
-	-- Step 3: Create Card (ZIndex 20)
-	local cardStroke
-	cardFrame, cardStroke = createCard(screenGui)
+	local cardStroke, cardLayout
+	cardFrame, cardStroke, cardLayout = createCard(screenGui)
 	
-	-- Step 4: Create LEFT SIDE (text content)
-	local leftSide = createLeftSide(cardFrame)
+	local leftSide = createLeftSide(cardFrame, prof)
 	
-	-- Step 5: Create Title in left side
-	local titleLabel = createTitle(leftSide)
+	local titleLabel = createTitle(leftSide, prof)
+	local bodyLabel = createBody(leftSide, prof)
 	
-	-- Step 6: Create Body in left side
-	local bodyLabel = createBody(leftSide)
+	local buttonContainer = createButtonContainer(leftSide, prof)
 	
-	-- Step 7: Create Button Container in left side
-	local buttonContainer = createButtonContainer(leftSide)
+	local joinButton = createButton(buttonContainer, "JoinButton", "Join Group!", true, 1, prof)
+	local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2, prof)
 	
-	-- Step 8: Create Buttons
-	local joinButton = createButton(buttonContainer, "JoinButton", "Join Group!", true, 1)
-	local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2)
+	local rightSide, howToTitle, decalImage, decalContainer, tapHint = createRightSide(cardFrame, prof)
 	
-	-- Step 9: Create RIGHT SIDE (how to join decal with tap hint!)
-	local rightSide, howToTitle, decalImage, decalContainer, tapHint = createRightSide(cardFrame)
-	
-	-- Step 10: Create ZOOM OVERLAY (for mobile-friendly viewing!)
 	local zoomOverlay, openZoom, closeZoom = createZoomOverlay(screenGui)
 	
-	-- Step 11: Wire up button handlers (use .Activated for mobile support!)
 	joinButton.Activated:Connect(function()
 		log("[Join] Join Group button clicked!")
 		joinGroup()
@@ -816,16 +890,41 @@ local function buildUI()
 		hidePopup()
 	end)
 	
-	-- Wire up ZOOM functionality (tap the decal to zoom!)
 	decalImage.Activated:Connect(function()
 		log("[Zoom] Decal tapped - opening zoom view!")
 		openZoom()
 	end)
 	
-	-- Step 12: Parent to PlayerGui (last step to avoid rendering issues)
 	screenGui.Parent = PlayerGui
 	
-	log("✅ buildUI() - UI construction complete!")
+	-- 🔥 DYNAMIC RESIZE (shop-style!)
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+		local newProf = getDynamicProfile()
+		log("🔄 Viewport changed - updating layout...")
+		
+		-- Update card size
+		cardFrame.Size = UDim2.fromOffset(newProf.cardW, newProf.cardH)
+		
+		-- Update global scale (phone zoom-out!)
+		cardScale.Scale = newProf.globalScale
+		
+		-- Update layout direction
+		cardLayout.FillDirection = newProf.sideBySide and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical
+		cardLayout.Padding = UDim.new(0, newProf.sideBySide and 20 or 12)
+		
+		-- Update left/right sizes
+		leftSide.Size = newProf.sideBySide and UDim2.new(0.5, -10, 1, 0) or UDim2.new(1, 0, 0.55, 0)
+		rightSide.Size = newProf.sideBySide and UDim2.new(0.5, -10, 1, 0) or UDim2.new(1, 0, 0.45, 0)
+		
+		-- Update text sizes
+		titleLabel.TextSize = newProf.titleSize
+		bodyLabel.TextSize = newProf.bodySize
+		howToTitle.TextSize = newProf.howToTitleSize
+		
+		log("✅ Layout updated for new viewport!")
+	end)
+	
+	log("✅ buildUI() - MOBILE-FIRST UI construction complete!")
 	return screenGui
 end
 
@@ -837,19 +936,16 @@ local function shouldShowPopup()
 	local inStudio = RunService:IsStudio()
 	log("📍 Environment check - inStudio: " .. tostring(inStudio))
 	
-	-- Force show if enabled
 	if CONFIG.FORCE_SHOW then
 		log("⭐ FORCE_SHOW enabled - showing popup")
 		return true
 	end
 	
-	-- Always show in Studio if flag is set
 	if inStudio and CONFIG.ALWAYS_SHOW_IN_STUDIO then
 		log("🎮 ALWAYS_SHOW_IN_STUDIO enabled - showing popup")
 		return true
 	end
 	
-	-- Check group membership
 	if CONFIG.GROUP_ID == 0 then
 		logError("GROUP_ID is not set! Defaulting to show popup.")
 		return true
@@ -862,7 +958,7 @@ local function shouldShowPopup()
 	
 	if not success then
 		logError("Failed to check group membership: " .. tostring(err))
-		return true -- Show on error to be safe
+		return true
 	end
 	
 	log("👥 Group membership check - isMember: " .. tostring(isMember) .. " (GroupID: " .. CONFIG.GROUP_ID .. ")")
@@ -875,17 +971,15 @@ end
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function initialize()
-	log("✨ === Sanrio Tycoon Group Popup Initializing === ✨")
+	log("✨ === Sanrio Tycoon Group Popup (MOBILE-FIRST) === ✨")
 	log("Script location: " .. script:GetFullName())
 	log("📝 Configuration:")
 	log("  GROUP_ID: " .. CONFIG.GROUP_ID)
 	log("  FORCE_SHOW: " .. tostring(CONFIG.FORCE_SHOW))
 	log("  ALWAYS_SHOW_IN_STUDIO: " .. tostring(CONFIG.ALWAYS_SHOW_IN_STUDIO))
 	
-	-- CRITICAL: Build UI first, ALWAYS (no early returns)
 	buildUI()
 	
-	-- THEN check if we should show it
 	if shouldShowPopup() then
 		local inStudio = RunService:IsStudio()
 		local delayTime = inStudio and CONFIG.STUDIO_DELAY or CONFIG.DELAY_BEFORE_SHOW
@@ -893,7 +987,6 @@ local function initialize()
 		log("⏰ Waiting " .. delayTime .. " seconds before showing popup...")
 		wait(delayTime)
 		
-		-- Check again after delay (player might have joined group during wait)
 		if shouldShowPopup() then
 			log("✨ Delay complete - showing popup now!")
 			showPopup()

@@ -1,4 +1,5 @@
 # 🎀 Sanrio Tycoon Group Popup - Roblox LocalScript 🎀
+**📱 MOBILE-FIRST REWORK** — Works perfectly on phones (all sizes & sideways)!
 
 A complete, self-contained LocalScript that creates an **adorable pastel-themed "Join Group" modal** for your Sanrio Tycoon game!
 
@@ -11,13 +12,22 @@ A complete, self-contained LocalScript that creates an **adorable pastel-themed 
 - ✅ **No "Dim Only" Bug**: Entire modal renders correctly every time
 - ✅ **ResetOnSpawn = false**: Persists through character respawns
 
+### 📱 Mobile-First Design (NEW!)
+- ✅ **Phone Detection**: Detects phones, tablets, and desktops automatically
+- ✅ **Global Zoom-Out**: Phones get 0.83-0.94x scale (fits perfectly!)
+- ✅ **Landscape Support**: Switches to side-by-side in landscape mode
+- ✅ **Portrait Optimized**: Vertical stack on phone portrait (easier to read!)
+- ✅ **Dynamic Sizing**: All text/buttons scale down on phones
+- ✅ **Safe Viewport**: Respects notches and top insets
+- ✅ **Responsive**: Updates layout automatically on rotation!
+
 ### Visual Design (Cutesy Pastel Sanrio Theme!)
 - ✅ **Adorable Kawaii UI**: Soft pastel pinks, purples, and lavenders
 - ✅ **Cute Rounded Corners**: 20px radius for that soft, friendly look
 - ✅ **Soft Gradient Overlay**: Pink-to-purple diagonal gradient (MORE OPAQUE!)
 - ✅ **Pastel Border**: 3px soft pink stroke
-- ✅ **Button Hover Effects**: Cute bounce & grow on hover
-- ✅ **Side-by-Side Layout**: 700×400px card with text on left, guide image on right!
+- ✅ **Button Hover Effects**: Cute bounce & grow on hover (desktop only)
+- ✅ **Adaptive Layout**: Side-by-side on desktop/tablet/landscape, stacked on phone portrait!
 - ✅ **"How to Join" Decal**: Shows your custom step-by-step instructions
 - ✅ **Smooth Animations**: TweenService-powered with bounce effects (0.3s open, 0.2s close)
 
@@ -188,6 +198,43 @@ DELAY_BEFORE_SHOW = 600, -- 10 minutes
 DELAY_BEFORE_SHOW = 900, -- 15 minutes
 STUDIO_DELAY = 10, -- Longer Studio test delay
 ```
+
+## 📱 Mobile Responsiveness
+
+The popup automatically adapts to ANY screen size!
+
+### Desktop (1920×1080+)
+- **Card Size**: 700×400px
+- **Layout**: Side-by-side (text left, decal right)
+- **Text Sizes**: Title 26, Body 15, Buttons 15
+- **Hover Effects**: Enabled
+
+### Tablet (iPad, etc.)
+- **Card Size**: 600×440px
+- **Layout**: Side-by-side
+- **Text Sizes**: Title 24, Body 14, Buttons 15
+- **Global Scale**: 1.0 (no zoom)
+
+### Phone Portrait (iPhone, Android)
+- **Card Size**: 340×520px (taller!)
+- **Layout**: Vertical stack (text top, decal bottom)
+- **Text Sizes**: Scaled down dynamically
+- **Global Scale**: 0.83-0.94x (zoom-out for better fit!)
+- **Hover Effects**: Disabled (tap-only)
+
+### Phone Landscape
+- **Card Size**: 640×380px (wider!)
+- **Layout**: Side-by-side (like desktop!)
+- **Text Sizes**: Scaled down
+- **Global Scale**: 0.83-0.94x
+- **Perfect for**: Viewing the "How to Join" decal!
+
+### Device Detection
+The script automatically detects:
+- **Touch devices** (phones/tablets) via `UserInputService.TouchEnabled`
+- **Screen size** (phones < 700px shortest side)
+- **Orientation** (landscape vs portrait)
+- **Safe area** (respects notches/insets)
 
 ## 🎨 Customization
 
