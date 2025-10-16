@@ -594,7 +594,7 @@ local function createZoomOverlay(parentGui)
 	img.Name = "ZoomedImage"
 	img.BackgroundTransparency = 1
 	img.Image = CONFIG.HOW_TO_JOIN_DECAL
-	img.ScaleType = Enum.ScaleType.Crop      -- fills frame, keeps aspect, crops overflow (so scrolling reveals more)
+	img.ScaleType = Enum.ScaleType.Fit      -- FIT shows ENTIRE image without cropping!
 	img.Size = UDim2.fromScale(1, 1)         -- will be grown by zoom
 	img.Position = UDim2.new(0, 0, 0, SAFE_TOP_PAD) -- START LOWER so Step 1 is visible!
 	img.ZIndex = 204
