@@ -27,7 +27,9 @@ A complete, self-contained LocalScript that creates an **adorable pastel-themed 
 - ✅ **Studio Testing Flag**: `ALWAYS_SHOW_IN_STUDIO` for development
 - ✅ **Mobile-Friendly Taps**: All buttons use `.Activated` (works on phones!)
 - ✅ **Tap-to-Zoom Decal**: Tap the "How to Join" image to view it fullscreen
-- ✅ **Zoom Overlay**: Only closes with "Got it!" button (not background clicks)
+- ✅ **Zoom Overlay**: Has ✕ (top-right) and "Got it!" (bottom) close buttons
+- ✅ **Click Blocking**: Background clicks blocked with `overlay.Active = true` + blocker
+- ✅ **ESC/B Support**: Keyboard/console players can press ESC or B to close zoom
 - ✅ **Join Group Button**: Shows notification with your group ID
 - ✅ **No Broken APIs**: No OpenBrowserWindow, no forbidden methods
 - ✅ **Fallback Notification**: Shows group ID for easy copying
@@ -280,7 +282,9 @@ Free to use, modify, and distribute. No attribution required.
 ## 🎀 What Makes This Special?
 
 1. **📱 MOBILE-FIRST TAP-TO-ZOOM** - Tap the decal to see it FULLSCREEN (perfect for reading Step 1/Step 2 on phones!)
-2. **Side-by-Side Layout** - Text on left, "How to Join" guide image on right
+2. **✕ & "Got it!" Buttons** - Two ways to close zoom (top-right ✕ + bottom "Got it!" button)
+3. **Click Blocking** - Background clicks blocked (only buttons close the zoom!)
+4. **Side-by-Side Layout** - Text on left, "How to Join" guide image on right
 3. **Custom Decal Support** - Shows YOUR step-by-step instructions (rbxassetid://73482754980631)
 4. **Personalized Message** - "Thanks for playing!" + rewards list (daily spins, early access, etc.)
 5. **Cutesy Pastel Design** - Sanrio-themed colors (not boring corporate)

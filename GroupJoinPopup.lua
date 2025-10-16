@@ -8,7 +8,9 @@
 	- Side-by-side layout: Text left, "How to Join" decal right
 	- TAP-TO-ZOOM: Tap the decal to view fullscreen (mobile-friendly!)
 	- Uses .Activated events (works on BOTH desktop AND mobile!)
-	- Zoom closes ONLY with "Got it!" button (not background)
+	- Zoom has ✕ (top-right) and "Got it!" (bottom) close buttons
+	- Background clicks blocked (no accidental closes!)
+	- ESC/B key support for keyboard/console players
 	- Shows your custom Step 1/Step 2 guide (rbxassetid://73482754980631)
 	- Group ID: 986814499 (pre-configured!)
 	- Smooth animations with cute effects
@@ -552,7 +554,7 @@ local function hidePopup()
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- 🔍 ZOOM OVERLAY (for mobile-friendly decal viewing!)
+-- 🔍 ZOOM OVERLAY (fullscreen, blocks background, has ✕ and "Got it!")
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function createZoomOverlay(parentGui)
@@ -566,7 +568,19 @@ local function createZoomOverlay(parentGui)
 	overlay.BackgroundTransparency = 0.2
 	overlay.ZIndex = 200
 	overlay.Visible = false
+	overlay.Active = true -- 👈 blocks clicks from falling through
 	overlay.Parent = parentGui
+	
+	-- Full-screen invisible blocker so taps do NOTHING unless they hit our buttons
+	local blocker = Instance.new("TextButton")
+	blocker.Name = "Blocker"
+	blocker.Size = UDim2.fromScale(1, 1)
+	blocker.BackgroundTransparency = 1
+	blocker.Text = ""
+	blocker.AutoButtonColor = false
+	blocker.ZIndex = 201
+	blocker.Parent = overlay
+	-- (no connections on purpose - blocks clicks)
 	
 	-- Centered zoom card
 	local zoomCard = Instance.new("Frame")
@@ -577,7 +591,7 @@ local function createZoomOverlay(parentGui)
 	zoomCard.BackgroundColor3 = CONFIG.COLORS.CARD_BG
 	zoomCard.BackgroundTransparency = 0
 	zoomCard.BorderSizePixel = 0
-	zoomCard.ZIndex = 201
+	zoomCard.ZIndex = 202
 	zoomCard.Parent = overlay
 	
 	local zoomCorner = Instance.new("UICorner")
@@ -604,10 +618,29 @@ local function createZoomOverlay(parentGui)
 	zoomImage.BackgroundTransparency = 1
 	zoomImage.Image = CONFIG.HOW_TO_JOIN_DECAL
 	zoomImage.ScaleType = Enum.ScaleType.Fit
-	zoomImage.ZIndex = 202
+	zoomImage.ZIndex = 203
 	zoomImage.Parent = zoomCard
 	
-	-- Close button at bottom center (mobile friendly!)
+	-- ✕ close button (top-right)
+	local xBtn = Instance.new("TextButton")
+	xBtn.Name = "CloseX"
+	xBtn.AnchorPoint = Vector2.new(1, 0)
+	xBtn.Position = UDim2.new(1, -10, 0, 10)
+	xBtn.Size = UDim2.new(0, 40, 0, 40)
+	xBtn.Text = "✕"
+	xBtn.Font = Enum.Font.GothamBold
+	xBtn.TextSize = 18
+	xBtn.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
+	xBtn.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
+	xBtn.AutoButtonColor = true
+	xBtn.ZIndex = 204
+	xBtn.Parent = zoomCard
+	
+	local xCorner = Instance.new("UICorner")
+	xCorner.CornerRadius = UDim.new(0, 10)
+	xCorner.Parent = xBtn
+	
+	-- "Got it!" close button (bottom-center)
 	local closeButton = Instance.new("TextButton")
 	closeButton.Name = "CloseButton"
 	closeButton.AnchorPoint = Vector2.new(0.5, 1)
@@ -621,65 +654,76 @@ local function createZoomOverlay(parentGui)
 	closeButton.TextSize = 16
 	closeButton.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
 	closeButton.AutoButtonColor = false
-	closeButton.ZIndex = 203
+	closeButton.ZIndex = 204
 	closeButton.Parent = zoomCard
 	
 	local closeCorner = Instance.new("UICorner")
 	closeCorner.CornerRadius = UDim.new(0, 12)
 	closeCorner.Parent = closeButton
 	
-	-- Hover effect for close button
-	closeButton.MouseEnter:Connect(function()
-		TweenService:Create(closeButton, TweenInfo.new(0.2), {
-			BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY_HOVER
-		}):Play()
-	end)
-	
-	closeButton.MouseLeave:Connect(function()
-		TweenService:Create(closeButton, TweenInfo.new(0.2), {
-			BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
-		}):Play()
-	end)
+	-- Small hover polish (desktop only)
+	local function hover(btn, on)
+		local target = on and CONFIG.COLORS.BUTTON_PRIMARY_HOVER or CONFIG.COLORS.BUTTON_PRIMARY
+		TweenService:Create(btn, TweenInfo.new(0.18), {BackgroundColor3 = target}):Play()
+	end
+	xBtn.MouseEnter:Connect(function() hover(xBtn, true) end)
+	xBtn.MouseLeave:Connect(function() hover(xBtn, false) end)
+	closeButton.MouseEnter:Connect(function() hover(closeButton, true) end)
+	closeButton.MouseLeave:Connect(function() hover(closeButton, false) end)
 	
 	-- Open/Close functions
 	local function openZoom()
 		log("🔍 Opening zoom overlay...")
 		overlay.Visible = true
+		parentGui.Modal = true -- 👈 trap input to this GUI only
 		
 		-- Fade in animation
 		overlay.BackgroundTransparency = 1
 		zoomCard.BackgroundTransparency = 1
 		zoomStroke.Transparency = 1
 		zoomImage.ImageTransparency = 1
+		xBtn.BackgroundTransparency = 1
+		xBtn.TextTransparency = 1
 		closeButton.BackgroundTransparency = 1
 		closeButton.TextTransparency = 1
 		
-		local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		TweenService:Create(overlay, tweenInfo, {BackgroundTransparency = 0.2}):Play()
-		TweenService:Create(zoomCard, tweenInfo, {BackgroundTransparency = 0}):Play()
-		TweenService:Create(zoomStroke, tweenInfo, {Transparency = 0}):Play()
-		TweenService:Create(zoomImage, tweenInfo, {ImageTransparency = 0}):Play()
-		TweenService:Create(closeButton, tweenInfo, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+		local ti = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		TweenService:Create(overlay, ti, {BackgroundTransparency = 0.2}):Play()
+		TweenService:Create(zoomCard, ti, {BackgroundTransparency = 0}):Play()
+		TweenService:Create(zoomStroke, ti, {Transparency = 0}):Play()
+		TweenService:Create(zoomImage, ti, {ImageTransparency = 0}):Play()
+		TweenService:Create(xBtn, ti, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+		TweenService:Create(closeButton, ti, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
 	end
 	
 	local function closeZoom()
 		log("❌ Closing zoom overlay...")
 		
 		-- Fade out animation
-		local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-		local tween = TweenService:Create(overlay, tweenInfo, {BackgroundTransparency = 1})
-		TweenService:Create(zoomCard, tweenInfo, {BackgroundTransparency = 1}):Play()
-		TweenService:Create(zoomStroke, tweenInfo, {Transparency = 1}):Play()
-		TweenService:Create(zoomImage, tweenInfo, {ImageTransparency = 1}):Play()
-		TweenService:Create(closeButton, tweenInfo, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+		local ti = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		local tween = TweenService:Create(overlay, ti, {BackgroundTransparency = 1})
+		TweenService:Create(zoomCard, ti, {BackgroundTransparency = 1}):Play()
+		TweenService:Create(zoomStroke, ti, {Transparency = 1}):Play()
+		TweenService:Create(zoomImage, ti, {ImageTransparency = 1}):Play()
+		TweenService:Create(xBtn, ti, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+		TweenService:Create(closeButton, ti, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
 		tween:Play()
-		
 		tween.Completed:Wait()
+		parentGui.Modal = false
 		overlay.Visible = false
 	end
 	
-	-- Wire up close button (ONLY closes with button, not background!)
+	-- Wire up closers (both ✕ and "Got it!" work!)
+	xBtn.Activated:Connect(closeZoom)
 	closeButton.Activated:Connect(closeZoom)
+	
+	-- Optional: ESC / B closes zoom (console/keyboard support)
+	game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
+		if not overlay.Visible or gp then return end
+		if input.KeyCode == Enum.KeyCode.Escape or input.KeyCode == Enum.KeyCode.ButtonB then
+			closeZoom()
+		end
+	end)
 	
 	return overlay, openZoom, closeZoom
 end
