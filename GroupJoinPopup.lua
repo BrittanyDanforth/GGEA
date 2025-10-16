@@ -585,6 +585,10 @@ local function createZoomOverlay(parentGui)
 	scroll.Parent = zoomCard
 	scroll.ClipsDescendants = true
 
+	-- Safe padding (so Step 1 isn't hidden under X button!)
+	local SAFE_TOP_PAD   = GuiService:GetGuiInset().Y + 60  -- room for the X button + notch
+	local EXTRA_BOTTOM   = 40                               -- extra travel at bottom
+
 	-- Big image inside the scroller
 	local img = Instance.new("ImageLabel")
 	img.Name = "ZoomedImage"
@@ -592,6 +596,7 @@ local function createZoomOverlay(parentGui)
 	img.Image = CONFIG.HOW_TO_JOIN_DECAL
 	img.ScaleType = Enum.ScaleType.Crop      -- fills frame, keeps aspect, crops overflow (so scrolling reveals more)
 	img.Size = UDim2.fromScale(1, 1)         -- will be grown by zoom
+	img.Position = UDim2.new(0, 0, 0, SAFE_TOP_PAD) -- START LOWER so Step 1 is visible!
 	img.ZIndex = 204
 	img.Parent = scroll
 
@@ -631,9 +636,9 @@ local function createZoomOverlay(parentGui)
 	closeButton.Parent = zoomCard
 	local closeCorner = Instance.new("UICorner"); closeCorner.CornerRadius = UDim.new(0,12); closeCorner.Parent = closeButton
 
-	-- ===== Zoom & Scroll logic (FIXED for scroll-to-bottom!) =====
+	-- ===== Zoom & Scroll logic (FIXED - Step 1 visible, full scroll range!) =====
 	local MIN_ZOOM, MAX_ZOOM = 1.0, 3.0
-	local zoom = 1.6    -- default: nicely zoomed for phones
+	local zoom = 1.5    -- default: slightly less zoom so nothing crops!
 
 	local function applyZoom(focusYRatio)
 		-- make sure we have a real height
@@ -641,35 +646,40 @@ local function createZoomOverlay(parentGui)
 
 		zoom = math.clamp(zoom, MIN_ZOOM, MAX_ZOOM)
 
-		-- compute canvas height in **pixels** (not scale!)
-		local canvasPx = math.ceil(viewH * zoom)
+		-- compute image height in **pixels** (not scale!)
+		local imgPx = math.ceil(viewH * zoom)
 
-		-- grow the image by pixels; width = full frame, height = canvasPx
-		img.Size = UDim2.new(1, 0, 0, canvasPx)
+		-- Position image with top padding (so Step 1 isn't under X button!)
+		img.Position = UDim2.new(0, 0, 0, SAFE_TOP_PAD)
+		img.Size = UDim2.new(1, 0, 0, imgPx)
 
-		-- canvas size in **offsets**, not scale (fixes scroll-to-bottom!)
-		local extra = 24 -- little extra travel past bottom
-		scroll.CanvasSize = UDim2.new(0, 0, 0, canvasPx + extra)
+		-- Total canvas = top padding + image + bottom padding
+		local totalCanvas = SAFE_TOP_PAD + imgPx + EXTRA_BOTTOM
+		scroll.CanvasSize = UDim2.new(0, 0, 0, totalCanvas)
 
 		-- keep the same focus point in view
-		focusYRatio = math.clamp(focusYRatio or 0.5, 0, 1)
-		local maxScroll = math.max(0, canvasPx - viewH)
+		focusYRatio = math.clamp(focusYRatio or 0, 0, 1) -- 0 = top
+		local maxScroll = math.max(0, totalCanvas - viewH)
 		scroll.CanvasPosition = Vector2.new(0, math.floor(maxScroll * focusYRatio))
 	end
 
-	-- Re-apply when scroll frame resizes
+	-- Re-apply when scroll frame resizes (maintains scroll position!)
 	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 		if overlay.Visible then 
-			local maxScroll = math.max(1, scroll.CanvasSize.Y.Offset - scroll.AbsoluteSize.Y)
-			applyZoom((scroll.CanvasPosition.Y) / maxScroll)
+			local totalCanvas = scroll.CanvasSize.Y.Offset
+			local maxScroll = math.max(1, totalCanvas - scroll.AbsoluteSize.Y)
+			local currentRatio = scroll.CanvasPosition.Y / maxScroll
+			applyZoom(currentRatio)
 		end
 	end)
 
 	-- Handle viewport changes
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 		if overlay.Visible then
-			local maxScroll = math.max(1, scroll.CanvasSize.Y.Offset - scroll.AbsoluteSize.Y)
-			applyZoom((scroll.CanvasPosition.Y) / maxScroll)
+			local totalCanvas = scroll.CanvasSize.Y.Offset
+			local maxScroll = math.max(1, totalCanvas - scroll.AbsoluteSize.Y)
+			local currentRatio = scroll.CanvasPosition.Y / maxScroll
+			applyZoom(currentRatio)
 		end
 	end)
 
