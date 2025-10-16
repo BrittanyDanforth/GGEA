@@ -608,14 +608,14 @@ local function createZoomOverlay(parentGui)
 	imageContainer.ZIndex = 203
 	imageContainer.Parent = zoomCard
 	
-	-- HUGE ZOOMED image (CROP to fill screen!)
+	-- BIG ZOOMED image (BIGGER but not TOO zoomed!)
 	local zoomImage = Instance.new("ImageLabel")
 	zoomImage.Name = "ZoomedImage"
-	zoomImage.Size = UDim2.new(1, 20, 1, 20) -- BIGGER than container! (overflow for zoom effect!)
-	zoomImage.Position = UDim2.fromOffset(-10, -10) -- Center the overflow
+	zoomImage.Size = UDim2.fromScale(1, 1) -- Fill container perfectly!
+	zoomImage.Position = UDim2.fromScale(0, 0)
 	zoomImage.BackgroundTransparency = 1
 	zoomImage.Image = CONFIG.HOW_TO_JOIN_DECAL
-	zoomImage.ScaleType = Enum.ScaleType.Crop -- CROP = appears ZOOMED IN!
+	zoomImage.ScaleType = Enum.ScaleType.Fit -- FIT = shows ENTIRE image but BIGGER!
 	zoomImage.ZIndex = 203
 	zoomImage.Parent = imageContainer
 	
