@@ -631,26 +631,46 @@ local function createZoomOverlay(parentGui)
 	closeButton.Parent = zoomCard
 	local closeCorner = Instance.new("UICorner"); closeCorner.CornerRadius = UDim.new(0,12); closeCorner.Parent = closeButton
 
-	-- ===== Zoom & Scroll logic =====
+	-- ===== Zoom & Scroll logic (FIXED for scroll-to-bottom!) =====
 	local MIN_ZOOM, MAX_ZOOM = 1.0, 3.0
 	local zoom = 1.6    -- default: nicely zoomed for phones
 
-	local function applyZoom(focusYRatio) -- focusYRatio keeps the same point in view when zooming
-		local viewH = scroll.AbsoluteSize.Y
-		local canvasH = math.max(viewH * zoom, viewH + 1)
-		-- Make the image panel taller to allow vertical panning; width stays 100% for stability
-		img.Size = UDim2.new(1, 0, canvasH / viewH, 0)
-		scroll.CanvasSize = UDim2.new(1, 0, canvasH / viewH, 0)
+	local function applyZoom(focusYRatio)
+		-- make sure we have a real height
+		local viewH = math.max(1, scroll.AbsoluteSize.Y)
 
-		-- keep focus in place (defaults to middle)
+		zoom = math.clamp(zoom, MIN_ZOOM, MAX_ZOOM)
+
+		-- compute canvas height in **pixels** (not scale!)
+		local canvasPx = math.ceil(viewH * zoom)
+
+		-- grow the image by pixels; width = full frame, height = canvasPx
+		img.Size = UDim2.new(1, 0, 0, canvasPx)
+
+		-- canvas size in **offsets**, not scale (fixes scroll-to-bottom!)
+		local extra = 24 -- little extra travel past bottom
+		scroll.CanvasSize = UDim2.new(0, 0, 0, canvasPx + extra)
+
+		-- keep the same focus point in view
 		focusYRatio = math.clamp(focusYRatio or 0.5, 0, 1)
-		local newPosY = (canvasH - viewH) * focusYRatio
-		scroll.CanvasPosition = Vector2.new(0, math.clamp(newPosY, 0, canvasH - viewH))
+		local maxScroll = math.max(0, canvasPx - viewH)
+		scroll.CanvasPosition = Vector2.new(0, math.floor(maxScroll * focusYRatio))
 	end
+
+	-- Re-apply when scroll frame resizes
+	scroll:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		if overlay.Visible then 
+			local maxScroll = math.max(1, scroll.CanvasSize.Y.Offset - scroll.AbsoluteSize.Y)
+			applyZoom((scroll.CanvasPosition.Y) / maxScroll)
+		end
+	end)
 
 	-- Handle viewport changes
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
-		applyZoom(scroll.CanvasSize.Y.Scale > 1 and (scroll.CanvasPosition.Y / (scroll.CanvasSize.Y.Scale * scroll.AbsoluteSize.Y - scroll.AbsoluteSize.Y)) or 0.5)
+		if overlay.Visible then
+			local maxScroll = math.max(1, scroll.CanvasSize.Y.Offset - scroll.AbsoluteSize.Y)
+			applyZoom((scroll.CanvasPosition.Y) / maxScroll)
+		end
 	end)
 
 	-- Pinch zoom (two fingers)
@@ -698,6 +718,8 @@ local function createZoomOverlay(parentGui)
 		overlay.Visible = true
 		-- preload to avoid blur/pop
 		pcall(function() ContentProvider:PreloadAsync({img}) end)
+		-- ensure AbsoluteSize is settled before sizing (fixes scroll-to-bottom!)
+		RunService.Heartbeat:Wait()
 		applyZoom(0.0) -- start focused near top (shows Step 1 area); try 0.5 to start centered
 	end
 
