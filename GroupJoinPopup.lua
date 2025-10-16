@@ -97,11 +97,8 @@ local function isTablet()
 end
 
 local function phonePanelScale(short)
-	-- BIGGER text for phones (easier to read!)
-	if short <= 320 then return 0.95 end
-	if short <= 360 then return 0.97 end
-	if short <= 375 then return 0.98 end
-	return 1.0 -- NO zoom-out for readable text!
+	-- NO zoom-out! Keep text readable!
+	return 1.0
 end
 
 -- Dynamic profile that adjusts ALL sizing based on device
@@ -115,36 +112,35 @@ local function getDynamicProfile()
 	local tablet = isTablet()
 	
 	if phone then
-		-- PHONE sizing (super compact!)
-		local s = math.clamp(short / 414, 0.78, 1.0) * 0.92
+		-- PHONE sizing (BIG READABLE TEXT!)
 		return {
 			isPhone = true,
 			isTablet = false,
 			landscape = landscape,
 			shortSide = short,
 			
-			-- Card size (smaller on phones!)
-			cardW = landscape and 640 or 340,
-			cardH = landscape and 380 or 520,
+			-- Card size (fit screen!)
+			cardW = landscape and math.min(safeV.X * 0.95, 640) or math.min(safeV.X * 0.95, 360),
+			cardH = landscape and math.min(safeV.Y * 0.85, 400) or math.min(safeV.Y * 0.85, 520),
 			
-			-- Text sizes (scaled down!)
-			titleSize = math.floor(22 * s),
-			bodySize = math.floor(13 * s),
-			buttonTextSize = math.floor(14 * s),
-			howToTitleSize = math.floor(16 * s),
+			-- Text sizes (BIG AND READABLE!)
+			titleSize = 28, -- BIGGER!
+			bodySize = 16, -- BIGGER!
+			buttonTextSize = 16, -- BIGGER!
+			howToTitleSize = 20, -- BIGGER!
 			
 			-- Spacing
-			padding = 16,
-			buttonSpacing = 8,
+			padding = 20,
+			buttonSpacing = 10,
 			
 			-- Layout
-			sideBySide = landscape, -- Only side-by-side in landscape!
+			sideBySide = landscape,
 			
-			-- Scale factor
-			globalScale = phonePanelScale(short),
+			-- NO zoom-out!
+			globalScale = 1.0,
 		}
 	elseif tablet then
-		-- TABLET sizing
+		-- TABLET sizing (BIG TEXT!)
 		return {
 			isPhone = false,
 			isTablet = true,
@@ -154,20 +150,20 @@ local function getDynamicProfile()
 			cardW = 600,
 			cardH = 440,
 			
-			titleSize = 24,
-			bodySize = 14,
-			buttonTextSize = 15,
-			howToTitleSize = 17,
+			titleSize = 28, -- BIGGER!
+			bodySize = 17, -- BIGGER!
+			buttonTextSize = 17, -- BIGGER!
+			howToTitleSize = 20, -- BIGGER!
 			
 			padding = 24,
 			buttonSpacing = 10,
 			
-			sideBySide = true, -- Always side-by-side on tablet
+			sideBySide = true,
 			
 			globalScale = 1,
 		}
 	else
-		-- DESKTOP sizing (full featured!)
+		-- DESKTOP sizing (BIG TEXT!)
 		return {
 			isPhone = false,
 			isTablet = false,
@@ -177,15 +173,15 @@ local function getDynamicProfile()
 			cardW = 700,
 			cardH = 400,
 			
-			titleSize = 26,
-			bodySize = 15,
-			buttonTextSize = 15,
-			howToTitleSize = 18,
+			titleSize = 30, -- BIGGER!
+			bodySize = 18, -- BIGGER!
+			buttonTextSize = 17, -- BIGGER!
+			howToTitleSize = 22, -- BIGGER!
 			
 			padding = 30,
 			buttonSpacing = 10,
 			
-			sideBySide = true, -- Always side-by-side on desktop
+			sideBySide = true,
 			
 			globalScale = 1,
 		}
@@ -563,11 +559,12 @@ local function createZoomOverlay(parentGui)
 	blocker.ZIndex = 201
 	blocker.Parent = overlay
 	
+	-- FULLSCREEN zoom card (98% of screen!)
 	local zoomCard = Instance.new("Frame")
 	zoomCard.Name = "ZoomCard"
 	zoomCard.AnchorPoint = Vector2.new(0.5, 0.5)
 	zoomCard.Position = UDim2.fromScale(0.5, 0.5)
-	zoomCard.Size = UDim2.new(0.9, 0, 0.85, 0)
+	zoomCard.Size = UDim2.new(0.98, 0, 0.96, 0) -- BIGGER!
 	zoomCard.BackgroundColor3 = CONFIG.COLORS.CARD_BG
 	zoomCard.BackgroundTransparency = 0
 	zoomCard.BorderSizePixel = 0
@@ -585,29 +582,31 @@ local function createZoomOverlay(parentGui)
 	zoomStroke.Parent = zoomCard
 	
 	local zoomPadding = Instance.new("UIPadding")
-	zoomPadding.PaddingTop = UDim.new(0, 20)
-	zoomPadding.PaddingBottom = UDim.new(0, 60)
-	zoomPadding.PaddingLeft = UDim.new(0, 20)
-	zoomPadding.PaddingRight = UDim.new(0, 20)
+	zoomPadding.PaddingTop = UDim.new(0, 55) -- Space for X button
+	zoomPadding.PaddingBottom = UDim.new(0, 65) -- Space for Got it button
+	zoomPadding.PaddingLeft = UDim.new(0, 10)
+	zoomPadding.PaddingRight = UDim.new(0, 10)
 	zoomPadding.Parent = zoomCard
 	
+	-- ZOOMED image (fills the card!)
 	local zoomImage = Instance.new("ImageLabel")
 	zoomImage.Name = "ZoomedImage"
 	zoomImage.Size = UDim2.fromScale(1, 1)
 	zoomImage.BackgroundTransparency = 1
 	zoomImage.Image = CONFIG.HOW_TO_JOIN_DECAL
-	zoomImage.ScaleType = Enum.ScaleType.Fit
+	zoomImage.ScaleType = Enum.ScaleType.Fit -- Image fills space!
 	zoomImage.ZIndex = 203
 	zoomImage.Parent = zoomCard
 	
+	-- BIG X button (easier to tap!)
 	local xBtn = Instance.new("TextButton")
 	xBtn.Name = "CloseX"
 	xBtn.AnchorPoint = Vector2.new(1, 0)
 	xBtn.Position = UDim2.new(1, -10, 0, 10)
-	xBtn.Size = UDim2.new(0, 40, 0, 40)
+	xBtn.Size = UDim2.new(0, 50, 0, 50) -- BIGGER!
 	xBtn.Text = "✕"
 	xBtn.Font = Enum.Font.GothamBold
-	xBtn.TextSize = 18
+	xBtn.TextSize = 24 -- BIGGER!
 	xBtn.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
 	xBtn.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
 	xBtn.AutoButtonColor = true
@@ -618,17 +617,18 @@ local function createZoomOverlay(parentGui)
 	xCorner.CornerRadius = UDim.new(0, 10)
 	xCorner.Parent = xBtn
 	
+	-- BIG "Got it!" button (easier to tap!)
 	local closeButton = Instance.new("TextButton")
 	closeButton.Name = "CloseButton"
 	closeButton.AnchorPoint = Vector2.new(0.5, 1)
-	closeButton.Position = UDim2.new(0.5, 0, 1, -15)
-	closeButton.Size = UDim2.new(0, 180, 0, 45)
+	closeButton.Position = UDim2.new(0.5, 0, 1, -10)
+	closeButton.Size = UDim2.new(0, 200, 0, 50) -- BIGGER!
 	closeButton.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
 	closeButton.BackgroundTransparency = 0
 	closeButton.BorderSizePixel = 0
 	closeButton.Text = "Got it!"
 	closeButton.Font = Enum.Font.GothamBold
-	closeButton.TextSize = 16
+	closeButton.TextSize = 18 -- BIGGER!
 	closeButton.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
 	closeButton.AutoButtonColor = false
 	closeButton.ZIndex = 204
