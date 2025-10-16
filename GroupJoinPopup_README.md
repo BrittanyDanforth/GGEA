@@ -22,6 +22,9 @@ A complete, self-contained LocalScript that creates an **adorable pastel-themed 
 - ✅ **Smooth Animations**: TweenService-powered with bounce effects (0.3s open, 0.2s close)
 
 ### Behavior
+- ✅ **Smart Timing**: Waits 9 minutes before showing (not immediately!)
+- ✅ **Studio Fast Test**: Only 5 second wait in Studio for testing
+- ✅ **Double Check**: Checks membership again after delay (player might have joined!)
 - ✅ **Group Membership Check**: Uses `LocalPlayer:IsInGroup(GROUP_ID)`
 - ✅ **FORCE_SHOW Flag**: Override membership check for testing
 - ✅ **Studio Testing Flag**: `ALWAYS_SHOW_IN_STUDIO` for development
@@ -71,6 +74,10 @@ local CONFIG = {
     FORCE_SHOW = true, -- Set to false in production
     ALWAYS_SHOW_IN_STUDIO = true, -- Show in Studio even if member
     
+    -- Timing ⏰
+    DELAY_BEFORE_SHOW = 540, -- Wait 9 minutes (540 seconds) before showing
+    STUDIO_DELAY = 5, -- In Studio, only wait 5 seconds for testing
+    
     -- 🎨 Cute Pastel Colors (fully customizable!)
     COLORS = {
         CARD_BG = Color3.fromRGB(255, 250, 252), -- Soft white-pink
@@ -99,32 +106,41 @@ local CONFIG = {
 
 ## 🧪 Testing
 
-### Test 1: Force Show (Studio)
+### Test 1: Force Show (Studio - Fast)
 ```lua
 FORCE_SHOW = true
+STUDIO_DELAY = 5
 ```
 - Run the game in Studio
-- Modal should appear immediately with all elements visible
-- Click "Join Group" → should attempt to open URL
-- Click "Not now" or dim → modal closes with animation
+- Wait 5 seconds (Studio fast test)
+- Modal should appear with all elements visible
+- Tap the "How to Join" decal → fullscreen zoom
+- Click "Got it!" → back to popup
+- Click "Join Group!" → notification appears
+- Click "Maybe Later" or dim → modal closes with animation
 
 ### Test 2: Membership Check (Studio)
 ```lua
 FORCE_SHOW = false
 ALWAYS_SHOW_IN_STUDIO = true
-GROUP_ID = 12345678 -- Your real group ID
+GROUP_ID = 986814499
+STUDIO_DELAY = 5
 ```
+- Wait 5 seconds
 - Modal shows if you're NOT a member
 - Modal doesn't show if you ARE a member
 
-### Test 3: Production
+### Test 3: Production (Real Game)
 ```lua
 FORCE_SHOW = false
 ALWAYS_SHOW_IN_STUDIO = false
-GROUP_ID = 12345678 -- Your real group ID
+GROUP_ID = 986814499
+DELAY_BEFORE_SHOW = 540 -- 9 minutes
 ```
 - Publish and test in-game
-- Only non-members see the popup
+- Players play for **9 minutes** first
+- Then popup appears for non-members
+- Members never see it
 
 ### Test 4: Respawn Persistence
 - While modal is open, reset your character
@@ -160,6 +176,17 @@ GROUP_ID = 12345678 -- Your real group ID
 🎀 [SanrioGroupPopup] 👋 hidePopup() - Closing modal...
 🎀 [SanrioGroupPopup] ✅ hidePopup() - Modal closed
 🎀 [SanrioGroupPopup] ✨ === Sanrio Group Popup Ready! === ✨
+```
+
+## ⏰ Timing Customization
+
+Want it to show sooner or later?
+
+```lua
+DELAY_BEFORE_SHOW = 300, -- 5 minutes
+DELAY_BEFORE_SHOW = 600, -- 10 minutes
+DELAY_BEFORE_SHOW = 900, -- 15 minutes
+STUDIO_DELAY = 10, -- Longer Studio test delay
 ```
 
 ## 🎨 Customization

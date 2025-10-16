@@ -32,6 +32,10 @@ local CONFIG = {
 	FORCE_SHOW = true, -- Always show popup (ignores membership check)
 	ALWAYS_SHOW_IN_STUDIO = true, -- Show in Studio even if member
 	
+	-- Timing
+	DELAY_BEFORE_SHOW = 540, -- Wait 9 minutes (540 seconds) before showing
+	STUDIO_DELAY = 5, -- In Studio, only wait 5 seconds for testing
+	
 	-- 🎨 Cute Pastel Colors (Sanrio theme)
 	COLORS = {
 		-- Card background - soft white with slight pink tint (MORE OPAQUE!)
@@ -883,10 +887,21 @@ local function initialize()
 	
 	-- THEN check if we should show it
 	if shouldShowPopup() then
-		wait(0.5) -- Small delay for better UX
-		showPopup()
+		local inStudio = RunService:IsStudio()
+		local delayTime = inStudio and CONFIG.STUDIO_DELAY or CONFIG.DELAY_BEFORE_SHOW
+		
+		log("⏰ Waiting " .. delayTime .. " seconds before showing popup...")
+		wait(delayTime)
+		
+		-- Check again after delay (player might have joined group during wait)
+		if shouldShowPopup() then
+			log("✨ Delay complete - showing popup now!")
+			showPopup()
+		else
+			log("✅ Player joined group during wait - canceling popup")
+		end
 	else
-		log("Popup not shown - player is already a member")
+		log("ℹ️ Popup not shown - player is already a member")
 	end
 	
 	log("✨ === Sanrio Group Popup Ready! === ✨")
