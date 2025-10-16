@@ -14,10 +14,11 @@ A complete, self-contained LocalScript that creates an **adorable pastel-themed 
 ### Visual Design (Cutesy Pastel Sanrio Theme!)
 - ✅ **Adorable Kawaii UI**: Soft pastel pinks, purples, and lavenders
 - ✅ **Cute Rounded Corners**: 20px radius for that soft, friendly look
-- ✅ **Soft Gradient Overlay**: Pink-to-purple diagonal gradient
+- ✅ **Soft Gradient Overlay**: Pink-to-purple diagonal gradient (MORE OPAQUE!)
 - ✅ **Pastel Border**: 3px soft pink stroke
 - ✅ **Button Hover Effects**: Cute bounce & grow on hover
-- ✅ **Responsive Layout**: 480×360px card, centered, works on all devices
+- ✅ **Side-by-Side Layout**: 700×400px card with text on left, guide image on right!
+- ✅ **"How to Join" Decal**: Shows your custom step-by-step instructions
 - ✅ **Smooth Animations**: TweenService-powered with bounce effects (0.3s open, 0.2s close)
 
 ### Behavior
@@ -59,8 +60,9 @@ Edit the `CONFIG` table at the top of the script:
 
 ```lua
 local CONFIG = {
-    -- ⭐ SET YOUR GROUP ID HERE! (find it in the group URL)
-    GROUP_ID = 0, -- Change to your group ID (e.g., 12345678)
+    -- ⭐ Your Sanrio Tycoon Group ID
+    GROUP_ID = 986814499, -- Already set!
+    HOW_TO_JOIN_DECAL = "rbxassetid://73482754980631", -- Your step-by-step guide image
     
     -- Testing flags
     FORCE_SHOW = true, -- Set to false in production
@@ -187,13 +189,17 @@ Search for these lines and customize:
 
 **Title**:
 ```lua
-title.Text = "Join My Sanrio Tycoon Group!"
--- Change to whatever you want!
+title.Text = "Thanks for Playing! 💕"
 ```
 
 **Body**:
 ```lua
-body.Text = "Join our adorable Sanrio-themed community! Get exclusive perks, chat with fellow Hello Kitty & Kuromi fans, and unlock special rewards in the tycoon!"
+body.Text = "We noticed you've been playing for a bit! If you'd like to join our group, you'll get:\n\n• Daily Spins 🎡\n• Early Access to Future Features 🌟\n• Special Rewards (when game is fully finished!) 🎁"
+```
+
+**How to Join Decal**:
+```lua
+HOW_TO_JOIN_DECAL = "rbxassetid://73482754980631" -- Your custom guide image
 ```
 
 **Button Text**:
@@ -269,14 +275,15 @@ CARD_SIZE = UDim2.new(0, 600, 0, 400), -- Wider & taller
 
 Free to use, modify, and distribute. No attribution required.
 
-## 🎀 What's Different from Generic Popups?
+## 🎀 What Makes This Special?
 
-1. **NO MORE BROKEN OpenUrl** - Uses modern `SocialService:PromptGroupJoin()` that ACTUALLY WORKS
-2. **Cutesy Pastel Design** - Sanrio-themed colors (not boring corporate)
-3. **Custom Text** - "Join My Sanrio Tycoon Group!" (not generic)
-4. **Cute Icons** - Pretty emoji logging throughout
-5. **Better Animations** - Bounce effects and smooth transitions
-6. **Made for YOUR Tycoon** - Perfect for Hello Kitty, Kuromi, Cinnamoroll, My Melody themes!
+1. **Side-by-Side Layout** - Text on left, "How to Join" guide image on right
+2. **Custom Decal Support** - Shows YOUR step-by-step instructions (rbxassetid://73482754980631)
+3. **Personalized Message** - "Thanks for playing!" + rewards list (daily spins, early access, etc.)
+4. **Cutesy Pastel Design** - Sanrio-themed colors (not boring corporate)
+5. **Group ID: 986814499** - Pre-configured for your Sanrio Tycoon
+6. **Better Animations** - Bounce effects and smooth transitions
+7. **Made for YOUR Tycoon** - Perfect for Hello Kitty, Kuromi, Cinnamoroll, My Melody themes!
 
 ---
 

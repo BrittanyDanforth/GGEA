@@ -17,7 +17,8 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local CONFIG = {
-	GROUP_ID = 0, -- ⭐ SET YOUR GROUP ID HERE! (e.g., 12345678)
+	GROUP_ID = 986814499, -- ⭐ Sanrio Tycoon Group!
+	HOW_TO_JOIN_DECAL = "rbxassetid://73482754980631", -- Step-by-step guide image
 	
 	-- Testing flags
 	FORCE_SHOW = true, -- Always show popup (ignores membership check)
@@ -46,7 +47,7 @@ local CONFIG = {
 	},
 	
 	-- UI Configuration
-	CARD_SIZE = UDim2.new(0, 480, 0, 360),
+	CARD_SIZE = UDim2.new(0, 700, 0, 400), -- Wider for side-by-side layout!
 	DIM_TRANSPARENCY = 0.5, -- Darker background
 	ANIMATION_SPEED_OPEN = 0.3,
 	ANIMATION_SPEED_CLOSE = 0.2,
@@ -166,18 +167,19 @@ local function createCard(parent)
 	
 	-- Cozy padding
 	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 35)
-	padding.PaddingBottom = UDim.new(0, 35)
-	padding.PaddingLeft = UDim.new(0, 35)
-	padding.PaddingRight = UDim.new(0, 35)
+	padding.PaddingTop = UDim.new(0, 30)
+	padding.PaddingBottom = UDim.new(0, 30)
+	padding.PaddingLeft = UDim.new(0, 30)
+	padding.PaddingRight = UDim.new(0, 30)
 	padding.Parent = card
 	
-	-- Layout with cute spacing
+	-- HORIZONTAL layout for side-by-side!
 	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	layout.VerticalAlignment = Enum.VerticalAlignment.Top
-	layout.Padding = UDim.new(0, 15)
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+	layout.Padding = UDim.new(0, 20)
 	layout.Parent = card
 	
 	return card, stroke
@@ -188,11 +190,11 @@ local function createTitle(parent)
 	
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(1, 0, 0, 60)
+	title.Size = UDim2.new(1, 0, 0, 50)
 	title.BackgroundTransparency = 1
-	title.Text = "Join My Sanrio Tycoon Group!"
+	title.Text = "Thanks for Playing! 💕"
 	title.Font = Enum.Font.FredokaOne -- Cute rounded font!
-	title.TextSize = 28
+	title.TextSize = 26
 	title.TextColor3 = CONFIG.COLORS.TITLE
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.TextYAlignment = Enum.TextYAlignment.Center
@@ -216,13 +218,13 @@ local function createBody(parent)
 	
 	local body = Instance.new("TextLabel")
 	body.Name = "Body"
-	body.Size = UDim2.new(1, 0, 0, 90)
+	body.Size = UDim2.new(1, 0, 0, 110)
 	body.BackgroundTransparency = 1
-	body.Text = "Join our adorable Sanrio-themed community! Get exclusive perks, chat with fellow Hello Kitty & Kuromi fans, and unlock special rewards in the tycoon!"
-	body.Font = Enum.Font.GothamMedium
-	body.TextSize = 16
+	body.Text = "We noticed you've been playing for a bit! If you'd like to join our group, you'll get:\n\n• Daily Spins 🎡\n• Early Access to Future Features 🌟\n• Special Rewards (when game is fully finished!) 🎁"
+	body.Font = Enum.Font.Gotham
+	body.TextSize = 15
 	body.TextColor3 = CONFIG.COLORS.BODY
-	body.TextXAlignment = Enum.TextXAlignment.Center
+	body.TextXAlignment = Enum.TextXAlignment.Left
 	body.TextYAlignment = Enum.TextYAlignment.Top
 	body.TextWrapped = true
 	body.TextTransparency = 1 -- Start invisible
@@ -233,38 +235,84 @@ local function createBody(parent)
 	return body
 end
 
-local function createGroupIDLabel(parent)
-	log("🆔 Creating Group ID label...")
+-- Left side container (text + buttons)
+local function createLeftSide(parent)
+	log("⬅️ Creating left side container...")
 	
-	local container = Instance.new("Frame")
-	container.Name = "GroupIDContainer"
-	container.Size = UDim2.new(0, 240, 0, 50)
-	container.BackgroundColor3 = Color3.fromRGB(255, 240, 250)
-	container.BackgroundTransparency = 1
-	container.BorderSizePixel = 0
-	container.ZIndex = 21
-	container.LayoutOrder = 2.5
-	container.Parent = parent
+	local leftSide = Instance.new("Frame")
+	leftSide.Name = "LeftSide"
+	leftSide.Size = UDim2.new(0.5, -10, 1, 0)
+	leftSide.BackgroundTransparency = 1
+	leftSide.ZIndex = 21
+	leftSide.LayoutOrder = 1
+	leftSide.Parent = parent
 	
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 10)
-	corner.Parent = container
+	-- Vertical layout for left side content
+	local layout = Instance.new("UIListLayout")
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.VerticalAlignment = Enum.VerticalAlignment.Top
+	layout.Padding = UDim.new(0, 15)
+	layout.Parent = leftSide
 	
-	local label = Instance.new("TextLabel")
-	label.Name = "GroupIDLabel"
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.Text = "Group ID: " .. (CONFIG.GROUP_ID ~= 0 and tostring(CONFIG.GROUP_ID) or "Not Set")
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 18
-	label.TextColor3 = CONFIG.COLORS.TITLE
-	label.TextXAlignment = Enum.TextXAlignment.Center
-	label.TextYAlignment = Enum.TextYAlignment.Center
-	label.TextTransparency = 1
-	label.ZIndex = 22
-	label.Parent = container
+	return leftSide
+end
+
+-- Right side container (decal guide)
+local function createRightSide(parent)
+	log("➡️ Creating right side with How To Join decal...")
 	
-	return container, label
+	local rightSide = Instance.new("Frame")
+	rightSide.Name = "RightSide"
+	rightSide.Size = UDim2.new(0.5, -10, 1, 0)
+	rightSide.BackgroundTransparency = 1
+	rightSide.ZIndex = 21
+	rightSide.LayoutOrder = 2
+	rightSide.Parent = parent
+	
+	-- Title above decal
+	local howToTitle = Instance.new("TextLabel")
+	howToTitle.Name = "HowToTitle"
+	howToTitle.Size = UDim2.new(1, 0, 0, 35)
+	howToTitle.Position = UDim2.new(0, 0, 0, 0)
+	howToTitle.BackgroundTransparency = 1
+	howToTitle.Text = "How to Join \ud83d\udc47"
+	howToTitle.Font = Enum.Font.GothamBold
+	howToTitle.TextSize = 18
+	howToTitle.TextColor3 = CONFIG.COLORS.TITLE
+	howToTitle.TextXAlignment = Enum.TextXAlignment.Center
+	howToTitle.TextYAlignment = Enum.TextYAlignment.Top
+	howToTitle.TextTransparency = 1
+	howToTitle.ZIndex = 22
+	howToTitle.Parent = rightSide
+	
+	-- Decal image container
+	local decalContainer = Instance.new("Frame")
+	decalContainer.Name = "DecalContainer"
+	decalContainer.Size = UDim2.new(1, -20, 1, -45)
+	decalContainer.Position = UDim2.new(0, 10, 0, 40)
+	decalContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	decalContainer.BackgroundTransparency = 1
+	decalContainer.BorderSizePixel = 0
+	decalContainer.ZIndex = 21
+	decalContainer.Parent = rightSide
+	
+	local decalCorner = Instance.new("UICorner")
+	decalCorner.CornerRadius = UDim.new(0, 12)
+	decalCorner.Parent = decalContainer
+	
+	-- The actual decal image
+	local decalImage = Instance.new("ImageLabel")
+	decalImage.Name = "HowToJoinImage"
+	decalImage.Size = UDim2.new(1, 0, 1, 0)
+	decalImage.BackgroundTransparency = 1
+	decalImage.Image = CONFIG.HOW_TO_JOIN_DECAL
+	decalImage.ScaleType = Enum.ScaleType.Fit
+	decalImage.ImageTransparency = 1
+	decalImage.ZIndex = 22
+	decalImage.Parent = decalContainer
+	
+	return rightSide, howToTitle, decalImage, decalContainer
 end
 
 local function createButton(parent, name, text, isPrimary, layoutOrder)
@@ -272,7 +320,7 @@ local function createButton(parent, name, text, isPrimary, layoutOrder)
 	
 	local button = Instance.new("TextButton")
 	button.Name = name
-	button.Size = UDim2.new(0, 180, 0, 48)
+	button.Size = UDim2.new(0, 140, 0, 45)
 	button.BackgroundColor3 = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY or CONFIG.COLORS.BUTTON_SECONDARY
 	button.BackgroundTransparency = 1 -- Start invisible
 	button.BorderSizePixel = 0
@@ -304,7 +352,7 @@ local function createButton(parent, name, text, isPrimary, layoutOrder)
 		local hoverColor = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY_HOVER or CONFIG.COLORS.BUTTON_SECONDARY_HOVER
 		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 			BackgroundColor3 = hoverColor,
-			Size = UDim2.new(0, 185, 0, 50) -- Slight grow
+			Size = UDim2.new(0, 145, 0, 47) -- Slight grow
 		}):Play()
 		TweenService:Create(shadow, TweenInfo.new(0.2), {Thickness = 2}):Play()
 	end)
@@ -313,7 +361,7 @@ local function createButton(parent, name, text, isPrimary, layoutOrder)
 		local normalColor = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY or CONFIG.COLORS.BUTTON_SECONDARY
 		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 			BackgroundColor3 = normalColor,
-			Size = UDim2.new(0, 180, 0, 48) -- Back to normal
+			Size = UDim2.new(0, 140, 0, 45) -- Back to normal
 		}):Play()
 		TweenService:Create(shadow, TweenInfo.new(0.2), {Thickness = 0}):Play()
 	end)
@@ -334,10 +382,10 @@ local function createButtonContainer(parent)
 	
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Horizontal
-	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 	layout.VerticalAlignment = Enum.VerticalAlignment.Center
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 12) -- Cute spacing between buttons
+	layout.Padding = UDim.new(0, 10) -- Cute spacing between buttons
 	layout.Parent = container
 	
 	return container
@@ -385,8 +433,13 @@ local function showPopup()
 				TextTransparency = 0,
 				BackgroundTransparency = child:IsA("TextButton") and 0 or 1
 			}))
-		elseif child:IsA("Frame") and child.Name == "GroupIDContainer" then
-			-- Fade in the group ID container background
+		elseif child:IsA("ImageLabel") then
+			-- Fade in the decal image
+			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
+				ImageTransparency = 0
+			}))
+		elseif child:IsA("Frame") and child.Name == "DecalContainer" then
+			-- Fade in the decal container background
 			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
 				BackgroundTransparency = 0.05
 			}))
@@ -443,7 +496,11 @@ local function hidePopup()
 				TextTransparency = 1,
 				BackgroundTransparency = 1
 			}))
-		elseif child:IsA("Frame") and child.Name == "GroupIDContainer" then
+		elseif child:IsA("ImageLabel") then
+			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
+				ImageTransparency = 1
+			}))
+		elseif child:IsA("Frame") and child.Name == "DecalContainer" then
 			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
 				BackgroundTransparency = 1
 			}))
@@ -477,13 +534,12 @@ local function joinGroup()
 	
 	log("joinGroup() - Showing group info for: " .. CONFIG.GROUP_ID)
 	
-	-- Show a cute notification with the group ID
-	-- (Roblox doesn't have a direct group join API, so we show instructions)
+	-- Show a cute notification with the group ID (see the image for steps!)
 	local success = pcall(function()
 		game:GetService("StarterGui"):SetCore("SendNotification", {
 			Title = "💖 Join Sanrio Tycoon Group!",
-			Text = "Press ESC > Groups > Search ID: " .. CONFIG.GROUP_ID,
-			Duration = 10,
+			Text = "Follow the steps on the popup! Group ID: " .. CONFIG.GROUP_ID,
+			Duration = 12,
 			Button1 = "Got it!"
 		})
 	end)
@@ -513,23 +569,26 @@ local function buildUI()
 	local cardStroke
 	cardFrame, cardStroke = createCard(screenGui)
 	
-	-- Step 4: Create Title (ZIndex 21)
-	local titleLabel = createTitle(cardFrame)
+	-- Step 4: Create LEFT SIDE (text content)
+	local leftSide = createLeftSide(cardFrame)
 	
-	-- Step 5: Create Body (ZIndex 21)
-	local bodyLabel = createBody(cardFrame)
+	-- Step 5: Create Title in left side
+	local titleLabel = createTitle(leftSide)
 	
-	-- Step 5.5: Create Group ID Label (cute little box!)
-	local groupIDContainer, groupIDLabel = createGroupIDLabel(cardFrame)
+	-- Step 6: Create Body in left side
+	local bodyLabel = createBody(leftSide)
 	
-	-- Step 6: Create Button Container (ZIndex 21)
-	local buttonContainer = createButtonContainer(cardFrame)
+	-- Step 7: Create Button Container in left side
+	local buttonContainer = createButtonContainer(leftSide)
 	
-	-- Step 7: Create Buttons (ZIndex 21)
+	-- Step 8: Create Buttons
 	local joinButton = createButton(buttonContainer, "JoinButton", "✨ Join Group!", true, 1)
 	local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2)
 	
-	-- Step 8: Wire up button handlers (after everything is built)
+	-- Step 9: Create RIGHT SIDE (how to join decal)
+	local rightSide, howToTitle, decalImage, decalContainer = createRightSide(cardFrame)
+	
+	-- Step 10: Wire up button handlers (after everything is built)
 	joinButton.MouseButton1Click:Connect(function()
 		log("🎀 Join Group button clicked!")
 		joinGroup()
@@ -546,7 +605,7 @@ local function buildUI()
 		hidePopup()
 	end)
 	
-	-- Step 9: Parent to PlayerGui (last step to avoid rendering issues)
+	-- Step 11: Parent to PlayerGui (last step to avoid rendering issues)
 	screenGui.Parent = PlayerGui
 	
 	log("✅ buildUI() - UI construction complete!")
