@@ -1,41 +1,63 @@
 --[[
-	GroupJoinPopup - A self-contained LocalScript for Roblox
+	🎀 Sanrio Tycoon Group Popup 🎀
+	A cute, pastel-themed group join popup for Roblox
 	Place in StarterPlayerScripts or StarterGui
 	
-	Creates a professional "Join Group" modal with:
-	- Full UI hierarchy (no missing elements)
-	- Proper ZIndex layering
+	Features:
+	- Adorable Sanrio-inspired pastel design
+	- Modern SocialService group join (NO OpenUrl!)
 	- Smooth animations
+	- Full UI hierarchy (no missing elements)
 	- Group membership detection
-	- No external dependencies
 ]]
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- CONFIGURATION
+-- 🌸 CONFIGURATION 🌸
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local CONFIG = {
-	GROUP_ID = 0, -- Set your Roblox group ID here (e.g., 12345678)
-	GROUP_URL = "https://www.roblox.com/groups/0/your-group", -- Your group URL
+	GROUP_ID = 0, -- ⭐ SET YOUR GROUP ID HERE! (e.g., 12345678)
 	
 	-- Testing flags
 	FORCE_SHOW = true, -- Always show popup (ignores membership check)
 	ALWAYS_SHOW_IN_STUDIO = true, -- Show in Studio even if member
 	
+	-- 🎨 Cute Pastel Colors (Sanrio theme)
+	COLORS = {
+		-- Card background - soft white with slight pink tint
+		CARD_BG = Color3.fromRGB(255, 250, 252),
+		-- Gradient overlay - soft pink to lavender
+		GRADIENT_TOP = Color3.fromRGB(255, 228, 240),
+		GRADIENT_BOTTOM = Color3.fromRGB(240, 230, 255),
+		-- Primary button - cute pink
+		BUTTON_PRIMARY = Color3.fromRGB(255, 182, 213),
+		BUTTON_PRIMARY_HOVER = Color3.fromRGB(255, 158, 200),
+		-- Secondary button - soft lavender
+		BUTTON_SECONDARY = Color3.fromRGB(230, 220, 255),
+		BUTTON_SECONDARY_HOVER = Color3.fromRGB(215, 200, 255),
+		-- Text colors
+		TITLE = Color3.fromRGB(255, 105, 180), -- Hot pink but softer
+		BODY = Color3.fromRGB(150, 120, 160), -- Soft purple-grey
+		BUTTON_TEXT = Color3.fromRGB(255, 255, 255),
+		BUTTON_TEXT_SECONDARY = Color3.fromRGB(150, 120, 160),
+		-- Border/stroke - very soft pink
+		STROKE = Color3.fromRGB(255, 220, 235),
+	},
+	
 	-- UI Configuration
-	CARD_SIZE = UDim2.new(0, 520, 0, 340),
-	DIM_TRANSPARENCY = 0.35,
-	ANIMATION_SPEED_OPEN = 0.25,
+	CARD_SIZE = UDim2.new(0, 480, 0, 360),
+	DIM_TRANSPARENCY = 0.4,
+	ANIMATION_SPEED_OPEN = 0.3,
 	ANIMATION_SPEED_CLOSE = 0.2,
 }
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- SERVICES
+-- 🎮 SERVICES 🎮
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local StarterGui = game:GetService("StarterGui")
+local SocialService = game:GetService("SocialService") -- MODERN group join!
 local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
@@ -46,11 +68,11 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function log(message)
-	print("[GroupPopup]", message)
+	print("🎀 [SanrioGroupPopup]", message)
 end
 
 local function logError(message)
-	warn("[GroupPopup] ERROR:", message)
+	warn("⚠️ [SanrioGroupPopup] ERROR:", message)
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -67,10 +89,10 @@ local isAnimating = false
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function createScreenGui()
-	log("Creating ScreenGui...")
+	log("🎨 Creating ScreenGui...")
 	
 	local gui = Instance.new("ScreenGui")
-	gui.Name = "GroupJoinPopup"
+	gui.Name = "SanrioGroupJoinPopup"
 	gui.DisplayOrder = 10000
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.ResetOnSpawn = false
@@ -81,13 +103,13 @@ local function createScreenGui()
 end
 
 local function createDim(parent)
-	log("Creating Dim overlay...")
+	log("🌈 Creating Dim overlay...")
 	
 	local dim = Instance.new("Frame")
 	dim.Name = "Dim"
 	dim.Size = UDim2.new(1, 0, 1, 0)
 	dim.Position = UDim2.new(0, 0, 0, 0)
-	dim.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	dim.BackgroundColor3 = Color3.fromRGB(20, 10, 30) -- Slightly purple-tinted
 	dim.BackgroundTransparency = 1 -- Start invisible
 	dim.BorderSizePixel = 0
 	dim.ZIndex = 10
@@ -106,62 +128,72 @@ local function createDim(parent)
 end
 
 local function createCard(parent)
-	log("Creating Card...")
+	log("💝 Creating Card...")
 	
 	local card = Instance.new("Frame")
 	card.Name = "Card"
 	card.Size = CONFIG.CARD_SIZE
 	card.Position = UDim2.new(0.5, 0, 0.5, 0)
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
-	card.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	card.BackgroundColor3 = CONFIG.COLORS.CARD_BG
 	card.BackgroundTransparency = 1 -- Start invisible
 	card.BorderSizePixel = 0
 	card.ZIndex = 20
 	card.Parent = parent
 	
-	-- Rounded corners
+	-- Cute rounded corners
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 16)
+	corner.CornerRadius = UDim.new(0, 20) -- More rounded = cuter!
 	corner.Parent = card
 	
-	-- Stroke for depth
+	-- Soft pastel gradient overlay
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, CONFIG.COLORS.GRADIENT_TOP),
+		ColorSequenceKeypoint.new(1, CONFIG.COLORS.GRADIENT_BOTTOM)
+	})
+	gradient.Rotation = 135 -- Diagonal gradient
+	gradient.Transparency = NumberSequence.new(0.7) -- Subtle
+	gradient.Parent = card
+	
+	-- Cute pastel stroke
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(220, 220, 220)
-	stroke.Thickness = 2
+	stroke.Color = CONFIG.COLORS.STROKE
+	stroke.Thickness = 3
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 	stroke.Transparency = 1 -- Start invisible
 	stroke.Parent = card
 	
-	-- Padding
+	-- Cozy padding
 	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 40)
-	padding.PaddingBottom = UDim.new(0, 40)
-	padding.PaddingLeft = UDim.new(0, 40)
-	padding.PaddingRight = UDim.new(0, 40)
+	padding.PaddingTop = UDim.new(0, 35)
+	padding.PaddingBottom = UDim.new(0, 35)
+	padding.PaddingLeft = UDim.new(0, 35)
+	padding.PaddingRight = UDim.new(0, 35)
 	padding.Parent = card
 	
-	-- Layout
+	-- Layout with cute spacing
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.VerticalAlignment = Enum.VerticalAlignment.Top
-	layout.Padding = UDim.new(0, 20)
+	layout.Padding = UDim.new(0, 15)
 	layout.Parent = card
 	
 	return card, stroke
 end
 
 local function createTitle(parent)
-	log("Creating Title...")
+	log("✨ Creating Title...")
 	
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(1, 0, 0, 50)
+	title.Size = UDim2.new(1, 0, 0, 60)
 	title.BackgroundTransparency = 1
-	title.Text = "Join Our Group"
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 32
-	title.TextColor3 = Color3.fromRGB(30, 30, 30)
+	title.Text = "Join My Sanrio Tycoon Group!"
+	title.Font = Enum.Font.FredokaOne -- Cute rounded font!
+	title.TextSize = 28
+	title.TextColor3 = CONFIG.COLORS.TITLE
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.TextYAlignment = Enum.TextYAlignment.Center
 	title.TextTransparency = 1 -- Start invisible
@@ -169,20 +201,27 @@ local function createTitle(parent)
 	title.LayoutOrder = 1
 	title.Parent = parent
 	
+	-- Cute text stroke for depth
+	local textStroke = Instance.new("UIStroke")
+	textStroke.Color = Color3.fromRGB(255, 255, 255)
+	textStroke.Thickness = 2
+	textStroke.Transparency = 0.5
+	textStroke.Parent = title
+	
 	return title
 end
 
 local function createBody(parent)
-	log("Creating Body text...")
+	log("📝 Creating Body text...")
 	
 	local body = Instance.new("TextLabel")
 	body.Name = "Body"
-	body.Size = UDim2.new(1, 0, 0, 80)
+	body.Size = UDim2.new(1, 0, 0, 90)
 	body.BackgroundTransparency = 1
-	body.Text = "Join our community to unlock exclusive benefits, participate in events, and connect with other members!"
-	body.Font = Enum.Font.Gotham
-	body.TextSize = 18
-	body.TextColor3 = Color3.fromRGB(80, 80, 80)
+	body.Text = "Join our adorable Sanrio-themed community! Get exclusive perks, chat with fellow Hello Kitty & Kuromi fans, and unlock special rewards in the tycoon!"
+	body.Font = Enum.Font.GothamMedium
+	body.TextSize = 16
+	body.TextColor3 = CONFIG.COLORS.BODY
 	body.TextXAlignment = Enum.TextXAlignment.Center
 	body.TextYAlignment = Enum.TextYAlignment.Top
 	body.TextWrapped = true
@@ -195,51 +234,61 @@ local function createBody(parent)
 end
 
 local function createButton(parent, name, text, isPrimary, layoutOrder)
-	log("Creating button: " .. name)
+	log("🔘 Creating button: " .. name)
 	
 	local button = Instance.new("TextButton")
 	button.Name = name
-	button.Size = UDim2.new(0, 200, 0, 50)
-	button.BackgroundColor3 = isPrimary and Color3.fromRGB(0, 162, 255) or Color3.fromRGB(240, 240, 240)
+	button.Size = UDim2.new(0, 180, 0, 48)
+	button.BackgroundColor3 = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY or CONFIG.COLORS.BUTTON_SECONDARY
 	button.BackgroundTransparency = 1 -- Start invisible
 	button.BorderSizePixel = 0
 	button.Text = text
 	button.Font = Enum.Font.GothamBold
-	button.TextSize = 16
-	button.TextColor3 = isPrimary and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(80, 80, 80)
+	button.TextSize = 15
+	button.TextColor3 = isPrimary and CONFIG.COLORS.BUTTON_TEXT or CONFIG.COLORS.BUTTON_TEXT_SECONDARY
 	button.TextTransparency = 1 -- Start invisible
 	button.AutoButtonColor = false
 	button.ZIndex = 21
 	button.LayoutOrder = layoutOrder
 	button.Parent = parent
 	
-	-- Rounded corners
+	-- Cute rounded corners
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
+	corner.CornerRadius = UDim.new(0, 12) -- More rounded
 	corner.Parent = button
 	
-	-- Hover effect
+	-- Soft shadow effect
+	local shadow = Instance.new("UIStroke")
+	shadow.Color = isPrimary and Color3.fromRGB(255, 150, 190) or Color3.fromRGB(200, 190, 230)
+	shadow.Thickness = 0
+	shadow.Transparency = 0
+	shadow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	shadow.Parent = button
+	
+	-- Cute bounce hover effect
 	button.MouseEnter:Connect(function()
-		if isPrimary then
-			TweenService:Create(button, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 142, 235)}):Play()
-		else
-			TweenService:Create(button, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(220, 220, 220)}):Play()
-		end
+		local hoverColor = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY_HOVER or CONFIG.COLORS.BUTTON_SECONDARY_HOVER
+		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundColor3 = hoverColor,
+			Size = UDim2.new(0, 185, 0, 50) -- Slight grow
+		}):Play()
+		TweenService:Create(shadow, TweenInfo.new(0.2), {Thickness = 2}):Play()
 	end)
 	
 	button.MouseLeave:Connect(function()
-		if isPrimary then
-			TweenService:Create(button, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 162, 255)}):Play()
-		else
-			TweenService:Create(button, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(240, 240, 240)}):Play()
-		end
+		local normalColor = isPrimary and CONFIG.COLORS.BUTTON_PRIMARY or CONFIG.COLORS.BUTTON_SECONDARY
+		TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundColor3 = normalColor,
+			Size = UDim2.new(0, 180, 0, 48) -- Back to normal
+		}):Play()
+		TweenService:Create(shadow, TweenInfo.new(0.2), {Thickness = 0}):Play()
 	end)
 	
 	return button
 end
 
 local function createButtonContainer(parent)
-	log("Creating button container...")
+	log("🎯 Creating button container...")
 	
 	local container = Instance.new("Frame")
 	container.Name = "ButtonContainer"
@@ -254,7 +303,7 @@ local function createButtonContainer(parent)
 	layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	layout.VerticalAlignment = Enum.VerticalAlignment.Center
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 16)
+	layout.Padding = UDim.new(0, 12) -- Cute spacing between buttons
 	layout.Parent = container
 	
 	return container
@@ -268,7 +317,7 @@ local function showPopup()
 	if isAnimating then return end
 	isAnimating = true
 	
-	log("showPopup() - Opening modal...")
+	log("🎀 showPopup() - Opening cute modal...")
 	
 	screenGui.Enabled = true
 	
@@ -316,14 +365,14 @@ local function showPopup()
 	-- Wait for completion
 	cardTween.Completed:Wait()
 	isAnimating = false
-	log("showPopup() - Modal opened")
+	log("✨ showPopup() - Modal opened successfully!")
 end
 
 local function hidePopup()
 	if isAnimating then return end
 	isAnimating = true
 	
-	log("hidePopup() - Closing modal...")
+	log("👋 hidePopup() - Closing modal...")
 	
 	-- Animation info
 	local tweenInfoClose = TweenInfo.new(
@@ -370,31 +419,37 @@ local function hidePopup()
 	cardTween.Completed:Wait()
 	screenGui.Enabled = false
 	isAnimating = false
-	log("hidePopup() - Modal closed")
+	log("✅ hidePopup() - Modal closed")
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- BUTTON HANDLERS
+-- 💖 BUTTON HANDLERS 💖
 -- ═══════════════════════════════════════════════════════════════════════════
 
-local function openGroupUrl()
-	log("openGroupUrl() - Attempting to open: " .. CONFIG.GROUP_URL)
+local function joinGroup()
+	if CONFIG.GROUP_ID == 0 then
+		logError("GROUP_ID not set! Please configure your group ID.")
+		return
+	end
 	
+	log("joinGroup() - Opening group join prompt for group: " .. CONFIG.GROUP_ID)
+	
+	-- Use MODERN SocialService (works in real Roblox!)
 	local success, err = pcall(function()
-		StarterGui:SetCore("OpenUrl", CONFIG.GROUP_URL)
+		SocialService:PromptGroupJoin(CONFIG.GROUP_ID)
 	end)
 	
 	if success then
-		log("openGroupUrl() - Successfully opened URL")
+		log("joinGroup() - Successfully opened group join prompt!")
 	else
-		logError("openGroupUrl() - Failed to open URL: " .. tostring(err))
+		logError("joinGroup() - Failed to open prompt: " .. tostring(err))
 		
-		-- Fallback: Show notification with URL
+		-- Fallback notification
 		pcall(function()
-			StarterGui:SetCore("SendNotification", {
-				Title = "Join Our Group",
-				Text = "Visit: " .. CONFIG.GROUP_URL,
-				Duration = 10
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = "Join Sanrio Tycoon Group",
+				Text = "Search for group ID: " .. CONFIG.GROUP_ID,
+				Duration = 8
 			})
 		end)
 	end
@@ -405,7 +460,7 @@ end
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function buildUI()
-	log("buildUI() - Starting UI construction...")
+	log("🏗️ buildUI() - Starting UI construction...")
 	
 	-- Step 1: Create ScreenGui
 	screenGui = createScreenGui()
@@ -428,30 +483,30 @@ local function buildUI()
 	local buttonContainer = createButtonContainer(cardFrame)
 	
 	-- Step 7: Create Buttons (ZIndex 21)
-	local joinButton = createButton(buttonContainer, "JoinButton", "Join Group", true, 1)
-	local notNowButton = createButton(buttonContainer, "NotNowButton", "Not now", false, 2)
+	local joinButton = createButton(buttonContainer, "JoinButton", "✨ Join Group!", true, 1)
+	local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2)
 	
 	-- Step 8: Wire up button handlers (after everything is built)
 	joinButton.MouseButton1Click:Connect(function()
-		log("Join Group button clicked")
-		openGroupUrl()
+		log("🎀 Join Group button clicked!")
+		joinGroup()
 		hidePopup()
 	end)
 	
 	notNowButton.MouseButton1Click:Connect(function()
-		log("Not now button clicked")
+		log("🚫 Maybe later button clicked")
 		hidePopup()
 	end)
 	
 	dimButton.MouseButton1Click:Connect(function()
-		log("Dim overlay clicked")
+		log("✨ Dim overlay clicked - closing popup")
 		hidePopup()
 	end)
 	
 	-- Step 9: Parent to PlayerGui (last step to avoid rendering issues)
 	screenGui.Parent = PlayerGui
 	
-	log("buildUI() - UI construction complete!")
+	log("✅ buildUI() - UI construction complete!")
 	return screenGui
 end
 
@@ -461,17 +516,17 @@ end
 
 local function shouldShowPopup()
 	local inStudio = RunService:IsStudio()
-	log("Environment check - inStudio: " .. tostring(inStudio))
+	log("📍 Environment check - inStudio: " .. tostring(inStudio))
 	
 	-- Force show if enabled
 	if CONFIG.FORCE_SHOW then
-		log("FORCE_SHOW enabled - showing popup")
+		log("⭐ FORCE_SHOW enabled - showing popup")
 		return true
 	end
 	
 	-- Always show in Studio if flag is set
 	if inStudio and CONFIG.ALWAYS_SHOW_IN_STUDIO then
-		log("ALWAYS_SHOW_IN_STUDIO enabled - showing popup")
+		log("🎮 ALWAYS_SHOW_IN_STUDIO enabled - showing popup")
 		return true
 	end
 	
@@ -491,7 +546,7 @@ local function shouldShowPopup()
 		return true -- Show on error to be safe
 	end
 	
-	log("Group membership check - isMember: " .. tostring(isMember) .. " (GroupID: " .. CONFIG.GROUP_ID .. ")")
+	log("👥 Group membership check - isMember: " .. tostring(isMember) .. " (GroupID: " .. CONFIG.GROUP_ID .. ")")
 	
 	return not isMember
 end
@@ -501,11 +556,10 @@ end
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function initialize()
-	log("=== GroupJoinPopup Initializing ===")
+	log("✨ === Sanrio Tycoon Group Popup Initializing === ✨")
 	log("Script location: " .. script:GetFullName())
-	log("Configuration:")
+	log("📝 Configuration:")
 	log("  GROUP_ID: " .. CONFIG.GROUP_ID)
-	log("  GROUP_URL: " .. CONFIG.GROUP_URL)
 	log("  FORCE_SHOW: " .. tostring(CONFIG.FORCE_SHOW))
 	log("  ALWAYS_SHOW_IN_STUDIO: " .. tostring(CONFIG.ALWAYS_SHOW_IN_STUDIO))
 	
@@ -520,7 +574,7 @@ local function initialize()
 		log("Popup not shown - player is already a member")
 	end
 	
-	log("=== GroupJoinPopup Initialization Complete ===")
+	log("✨ === Sanrio Group Popup Ready! === ✨")
 end
 
 -- Start the script

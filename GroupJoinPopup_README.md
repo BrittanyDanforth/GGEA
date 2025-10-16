@@ -1,6 +1,6 @@
-# GroupJoinPopup - Roblox LocalScript
+# 🎀 Sanrio Tycoon Group Popup - Roblox LocalScript 🎀
 
-A complete, self-contained LocalScript that creates a professional "Join Group" modal UI for Roblox games.
+A complete, self-contained LocalScript that creates an **adorable pastel-themed "Join Group" modal** for your Sanrio Tycoon game!
 
 ## ✅ Features Implemented
 
@@ -11,20 +11,23 @@ A complete, self-contained LocalScript that creates a professional "Join Group" 
 - ✅ **No "Dim Only" Bug**: Entire modal renders correctly every time
 - ✅ **ResetOnSpawn = false**: Persists through character respawns
 
-### Visual Design
-- ✅ **Professional AAA UI**: Clean, modern design with no emojis
-- ✅ **Rounded Corners**: 16px corner radius on card
-- ✅ **Subtle Border**: 2px stroke for depth
-- ✅ **Responsive Layout**: 520×340px card, centered, works on all devices
-- ✅ **Smooth Animations**: TweenService-powered fade in/out (0.25s open, 0.2s close)
+### Visual Design (Cutesy Pastel Sanrio Theme!)
+- ✅ **Adorable Kawaii UI**: Soft pastel pinks, purples, and lavenders
+- ✅ **Cute Rounded Corners**: 20px radius for that soft, friendly look
+- ✅ **Soft Gradient Overlay**: Pink-to-purple diagonal gradient
+- ✅ **Pastel Border**: 3px soft pink stroke
+- ✅ **Button Hover Effects**: Cute bounce & grow on hover
+- ✅ **Responsive Layout**: 480×360px card, centered, works on all devices
+- ✅ **Smooth Animations**: TweenService-powered with bounce effects (0.3s open, 0.2s close)
 
 ### Behavior
 - ✅ **Group Membership Check**: Uses `LocalPlayer:IsInGroup(GROUP_ID)`
 - ✅ **FORCE_SHOW Flag**: Override membership check for testing
 - ✅ **Studio Testing Flag**: `ALWAYS_SHOW_IN_STUDIO` for development
-- ✅ **Click to Close**: Dim overlay and "Not now" button both close popup
-- ✅ **Join Group Button**: Opens group URL via `SetCore("OpenUrl")`
-- ✅ **Fallback Notification**: Shows URL in notification if browser open fails
+- ✅ **Click to Close**: Dim overlay and "Maybe Later" button both close popup
+- ✅ **Join Group Button**: Uses **MODERN `SocialService:PromptGroupJoin()`** (WORKS IN REAL ROBLOX!)
+- ✅ **No Outdated OpenUrl**: Uses proper Roblox API that actually works
+- ✅ **Fallback Notification**: Shows group ID if prompt fails
 - ✅ **No Auto-Hide**: Manual close only (no timers)
 
 ### Technical Excellence
@@ -55,20 +58,29 @@ Edit the `CONFIG` table at the top of the script:
 
 ```lua
 local CONFIG = {
-    -- Your Roblox group ID (find it in the group URL)
+    -- ⭐ SET YOUR GROUP ID HERE! (find it in the group URL)
     GROUP_ID = 0, -- Change to your group ID (e.g., 12345678)
-    
-    -- Your group URL
-    GROUP_URL = "https://www.roblox.com/groups/0/your-group",
     
     -- Testing flags
     FORCE_SHOW = true, -- Set to false in production
     ALWAYS_SHOW_IN_STUDIO = true, -- Show in Studio even if member
     
+    -- 🎨 Cute Pastel Colors (fully customizable!)
+    COLORS = {
+        CARD_BG = Color3.fromRGB(255, 250, 252), -- Soft white-pink
+        GRADIENT_TOP = Color3.fromRGB(255, 228, 240), -- Soft pink
+        GRADIENT_BOTTOM = Color3.fromRGB(240, 230, 255), -- Soft lavender
+        BUTTON_PRIMARY = Color3.fromRGB(255, 182, 213), -- Cute pink button
+        BUTTON_SECONDARY = Color3.fromRGB(230, 220, 255), -- Soft lavender button
+        TITLE = Color3.fromRGB(255, 105, 180), -- Hot pink title
+        BODY = Color3.fromRGB(150, 120, 160), -- Soft purple-grey text
+        -- ... more colors inside!
+    },
+    
     -- UI Settings (optional to modify)
-    CARD_SIZE = UDim2.new(0, 520, 0, 340),
-    DIM_TRANSPARENCY = 0.35,
-    ANIMATION_SPEED_OPEN = 0.25,
+    CARD_SIZE = UDim2.new(0, 480, 0, 360),
+    DIM_TRANSPARENCY = 0.4,
+    ANIMATION_SPEED_OPEN = 0.3,
     ANIMATION_SPEED_CLOSE = 0.2,
 }
 ```
@@ -115,70 +127,78 @@ GROUP_ID = 12345678 -- Your real group ID
 ## 📊 Output Log Example
 
 ```
-[GroupPopup] === GroupJoinPopup Initializing ===
-[GroupPopup] Script location: Players.LocalPlayer.PlayerScripts.GroupJoinPopup
-[GroupPopup] Configuration:
-[GroupPopup]   GROUP_ID: 12345678
-[GroupPopup]   GROUP_URL: https://www.roblox.com/groups/12345678/MyGroup
-[GroupPopup]   FORCE_SHOW: true
-[GroupPopup]   ALWAYS_SHOW_IN_STUDIO: true
-[GroupPopup] buildUI() - Starting UI construction...
-[GroupPopup] Creating ScreenGui...
-[GroupPopup] Creating Dim overlay...
-[GroupPopup] Creating Card...
-[GroupPopup] Creating Title...
-[GroupPopup] Creating Body text...
-[GroupPopup] Creating button container...
-[GroupPopup] Creating button: JoinButton
-[GroupPopup] Creating button: NotNowButton
-[GroupPopup] buildUI() - UI construction complete!
-[GroupPopup] Environment check - inStudio: true
-[GroupPopup] FORCE_SHOW enabled - showing popup
-[GroupPopup] showPopup() - Opening modal...
-[GroupPopup] showPopup() - Modal opened
-[GroupPopup] Join Group button clicked
-[GroupPopup] openGroupUrl() - Attempting to open: https://www.roblox.com/groups/12345678/MyGroup
-[GroupPopup] openGroupUrl() - Successfully opened URL
-[GroupPopup] hidePopup() - Closing modal...
-[GroupPopup] hidePopup() - Modal closed
-[GroupPopup] === GroupJoinPopup Initialization Complete ===
+🎀 [SanrioGroupPopup] ✨ === Sanrio Tycoon Group Popup Initializing === ✨
+🎀 [SanrioGroupPopup] Script location: Players.LocalPlayer.PlayerScripts.LocalScript
+🎀 [SanrioGroupPopup] 📝 Configuration:
+🎀 [SanrioGroupPopup]   GROUP_ID: 12345678
+🎀 [SanrioGroupPopup]   FORCE_SHOW: true
+🎀 [SanrioGroupPopup]   ALWAYS_SHOW_IN_STUDIO: true
+🎀 [SanrioGroupPopup] 🏗️ buildUI() - Starting UI construction...
+🎀 [SanrioGroupPopup] 🎨 Creating ScreenGui...
+🎀 [SanrioGroupPopup] 🌈 Creating Dim overlay...
+🎀 [SanrioGroupPopup] 💝 Creating Card...
+🎀 [SanrioGroupPopup] ✨ Creating Title...
+🎀 [SanrioGroupPopup] 📝 Creating Body text...
+🎀 [SanrioGroupPopup] 🎯 Creating button container...
+🎀 [SanrioGroupPopup] 🔘 Creating button: JoinButton
+🎀 [SanrioGroupPopup] 🔘 Creating button: NotNowButton
+🎀 [SanrioGroupPopup] ✅ buildUI() - UI construction complete!
+🎀 [SanrioGroupPopup] 📍 Environment check - inStudio: true
+🎀 [SanrioGroupPopup] ⭐ FORCE_SHOW enabled - showing popup
+🎀 [SanrioGroupPopup] 🎀 showPopup() - Opening cute modal...
+🎀 [SanrioGroupPopup] ✨ showPopup() - Modal opened successfully!
+🎀 [SanrioGroupPopup] 🎀 Join Group button clicked!
+🎀 [SanrioGroupPopup] joinGroup() - Opening group join prompt for group: 12345678
+🎀 [SanrioGroupPopup] joinGroup() - Successfully opened group join prompt!
+🎀 [SanrioGroupPopup] 👋 hidePopup() - Closing modal...
+🎀 [SanrioGroupPopup] ✅ hidePopup() - Modal closed
+🎀 [SanrioGroupPopup] ✨ === Sanrio Group Popup Ready! === ✨
 ```
 
 ## 🎨 Customization
 
 ### Change Colors
 
-**Primary Button** (Join Group):
+All colors are in the `CONFIG.COLORS` table at the top! Easy to customize:
+
 ```lua
-BackgroundColor3 = Color3.fromRGB(0, 162, 255) -- Line ~212
+COLORS = {
+    -- Make it more pink?
+    BUTTON_PRIMARY = Color3.fromRGB(255, 150, 200),
+    
+    -- Want blue instead of purple?
+    GRADIENT_BOTTOM = Color3.fromRGB(200, 230, 255),
+    
+    -- Different title color?
+    TITLE = Color3.fromRGB(255, 120, 200),
+}
 ```
 
-**Secondary Button** (Not now):
-```lua
-BackgroundColor3 = Color3.fromRGB(240, 240, 240) -- Line ~212
-```
-
-**Card Background**:
-```lua
-BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Line ~119
-```
+**Sanrio Character Themes:**
+- **Hello Kitty**: Reds & pinks `Color3.fromRGB(255, 100, 150)`
+- **Kuromi**: Purples & blacks `Color3.fromRGB(150, 100, 200)`
+- **Cinnamoroll**: Blues & whites `Color3.fromRGB(150, 200, 255)`
+- **My Melody**: Pinks & whites `Color3.fromRGB(255, 180, 210)`
 
 ### Change Text
 
-**Title** (line ~168):
+Search for these lines and customize:
+
+**Title**:
 ```lua
-title.Text = "Join Our Group"
+title.Text = "Join My Sanrio Tycoon Group!"
+-- Change to whatever you want!
 ```
 
-**Body** (line ~185):
+**Body**:
 ```lua
-body.Text = "Join our community to unlock exclusive benefits, participate in events, and connect with other members!"
+body.Text = "Join our adorable Sanrio-themed community! Get exclusive perks, chat with fellow Hello Kitty & Kuromi fans, and unlock special rewards in the tycoon!"
 ```
 
-**Button Text** (lines ~437-438):
+**Button Text**:
 ```lua
-local joinButton = createButton(buttonContainer, "JoinButton", "Join Group", true, 1)
-local notNowButton = createButton(buttonContainer, "NotNowButton", "Not now", false, 2)
+local joinButton = createButton(buttonContainer, "JoinButton", "✨ Join Group!", true, 1)
+local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2)
 ```
 
 ### Change Card Size
@@ -208,11 +228,13 @@ CARD_SIZE = UDim2.new(0, 600, 0, 400), -- Wider & taller
 3. Check Output window for `[GroupPopup]` logs
 4. Are you already a member of the group?
 
-### Issue: URL doesn't open
+### Issue: Group join prompt doesn't open
+**Solution**: The script now uses `SocialService:PromptGroupJoin()` which works in published games!
 **Check**:
-1. Is the GROUP_URL correct?
-2. Look for fallback notification with the URL
-3. Check Output for error messages
+1. Is GROUP_ID set correctly (must be a number, not 0)?
+2. Look for fallback notification with the group ID
+3. Check Output for `🎀 [SanrioGroupPopup]` messages
+4. Make sure the game is published (doesn't work in Studio testing)
 
 ## 🔒 Security & Performance
 
@@ -226,26 +248,38 @@ CARD_SIZE = UDim2.new(0, 600, 0, 400), -- Wider & taller
 ## 📝 Acceptance Criteria Checklist
 
 - ✅ One script, no dependencies
-- ✅ Builds entire modal (dim + card + text + buttons)
+- ✅ Builds entire modal (dim + card + text + buttons) - **NO MORE "DIM ONLY" BUG!**
 - ✅ DisplayOrder=10000, ResetOnSpawn=false, IgnoreGuiInset=true
 - ✅ Proper ZIndex hierarchy (Dim=10, Card/children=20+)
-- ✅ Config flags: GROUP_ID, GROUP_URL, FORCE_SHOW, ALWAYS_SHOW_IN_STUDIO
+- ✅ Config flags: GROUP_ID, FORCE_SHOW, ALWAYS_SHOW_IN_STUDIO
 - ✅ Show/hide logic with membership check
 - ✅ No early returns that skip UI building
-- ✅ Animations with TweenService (open/close)
-- ✅ Responsive design (520×340 centered card)
-- ✅ SetCore("OpenUrl") with pcall and fallback notification
+- ✅ Smooth animations with TweenService (cute bounce effects!)
+- ✅ Responsive design (480×360 centered card)
+- ✅ **MODERN `SocialService:PromptGroupJoin()` - NO OUTDATED OpenUrl!**
+- ✅ Works in real Roblox (not just Studio)
 - ✅ No auto-hide timer (manual close only)
-- ✅ Comprehensive logging with [GroupPopup] prefix
+- ✅ Comprehensive cute logging with 🎀 [SanrioGroupPopup] prefix
 - ✅ No infinite yield warnings
-- ✅ Unique naming (GroupJoinPopup)
+- ✅ Unique naming (SanrioGroupJoinPopup)
+- ✅ **ADORABLE PASTEL SANRIO THEME!** 🎀✨
 
 ## 📄 License
 
 Free to use, modify, and distribute. No attribution required.
 
+## 🎀 What's Different from Generic Popups?
+
+1. **NO MORE BROKEN OpenUrl** - Uses modern `SocialService:PromptGroupJoin()` that ACTUALLY WORKS
+2. **Cutesy Pastel Design** - Sanrio-themed colors (not boring corporate)
+3. **Custom Text** - "Join My Sanrio Tycoon Group!" (not generic)
+4. **Cute Icons** - Pretty emoji logging throughout
+5. **Better Animations** - Bounce effects and smooth transitions
+6. **Made for YOUR Tycoon** - Perfect for Hello Kitty, Kuromi, Cinnamoroll, My Melody themes!
+
 ---
 
 **Created**: 2025-10-16  
-**Version**: 1.0  
-**Roblox API**: Compatible with current Roblox Luau
+**Version**: 2.0 (CUTE EDITION! 🎀)  
+**Roblox API**: Uses MODERN SocialService (not outdated methods)
+**Theme**: Sanrio Kawaii Pastel ✨
