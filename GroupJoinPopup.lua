@@ -675,7 +675,6 @@ local function createZoomOverlay(parentGui)
 	local function openZoom()
 		log("🔍 Opening zoom overlay...")
 		overlay.Visible = true
-		parentGui.Modal = true -- 👈 trap input to this GUI only
 		
 		-- Fade in animation
 		overlay.BackgroundTransparency = 1
@@ -709,7 +708,6 @@ local function createZoomOverlay(parentGui)
 		TweenService:Create(closeButton, ti, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
 		tween:Play()
 		tween.Completed:Wait()
-		parentGui.Modal = false
 		overlay.Visible = false
 	end
 	
