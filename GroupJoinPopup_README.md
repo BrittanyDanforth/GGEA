@@ -25,11 +25,12 @@ A complete, self-contained LocalScript that creates an **adorable pastel-themed 
 - ✅ **Group Membership Check**: Uses `LocalPlayer:IsInGroup(GROUP_ID)`
 - ✅ **FORCE_SHOW Flag**: Override membership check for testing
 - ✅ **Studio Testing Flag**: `ALWAYS_SHOW_IN_STUDIO` for development
-- ✅ **Click to Close**: Dim overlay and "Maybe Later" button both close popup
-- ✅ **Join Group Button**: Shows notification with clear instructions (ESC > Groups > Search ID)
-- ✅ **Group ID Display**: Shows the group ID prominently in a cute box
-- ✅ **No Broken APIs**: Uses methods that ACTUALLY work in Roblox
-- ✅ **Fallback Notification**: Shows group ID if prompt fails
+- ✅ **Mobile-Friendly Taps**: All buttons use `.Activated` (works on phones!)
+- ✅ **Tap-to-Zoom Decal**: Tap the "How to Join" image to view it fullscreen
+- ✅ **Zoom Overlay**: Only closes with "Got it!" button (not background clicks)
+- ✅ **Join Group Button**: Shows notification with your group ID
+- ✅ **No Broken APIs**: No OpenBrowserWindow, no forbidden methods
+- ✅ **Fallback Notification**: Shows group ID for easy copying
 - ✅ **No Auto-Hide**: Manual close only (no timers)
 
 ### Technical Excellence
@@ -133,26 +134,27 @@ GROUP_ID = 12345678 -- Your real group ID
 🎀 [SanrioGroupPopup] ✨ === Sanrio Tycoon Group Popup Initializing === ✨
 🎀 [SanrioGroupPopup] Script location: Players.LocalPlayer.PlayerScripts.LocalScript
 🎀 [SanrioGroupPopup] 📝 Configuration:
-🎀 [SanrioGroupPopup]   GROUP_ID: 12345678
+🎀 [SanrioGroupPopup]   GROUP_ID: 986814499
 🎀 [SanrioGroupPopup]   FORCE_SHOW: true
 🎀 [SanrioGroupPopup]   ALWAYS_SHOW_IN_STUDIO: true
 🎀 [SanrioGroupPopup] 🏗️ buildUI() - Starting UI construction...
 🎀 [SanrioGroupPopup] 🎨 Creating ScreenGui...
 🎀 [SanrioGroupPopup] 🌈 Creating Dim overlay...
 🎀 [SanrioGroupPopup] 💝 Creating Card...
-🎀 [SanrioGroupPopup] ✨ Creating Title...
-🎀 [SanrioGroupPopup] 📝 Creating Body text...
-🎀 [SanrioGroupPopup] 🎯 Creating button container...
-🎀 [SanrioGroupPopup] 🔘 Creating button: JoinButton
-🎀 [SanrioGroupPopup] 🔘 Creating button: NotNowButton
+🎀 [SanrioGroupPopup] ⬅️ Creating left side container...
+🎀 [SanrioGroupPopup] ➡️ Creating right side with How To Join decal...
+🎀 [SanrioGroupPopup] 🔍 Creating zoom overlay for decal...
 🎀 [SanrioGroupPopup] ✅ buildUI() - UI construction complete!
 🎀 [SanrioGroupPopup] 📍 Environment check - inStudio: true
 🎀 [SanrioGroupPopup] ⭐ FORCE_SHOW enabled - showing popup
 🎀 [SanrioGroupPopup] 🎀 showPopup() - Opening cute modal...
 🎀 [SanrioGroupPopup] ✨ showPopup() - Modal opened successfully!
-🎀 [SanrioGroupPopup] 🎀 Join Group button clicked!
-🎀 [SanrioGroupPopup] joinGroup() - Opening group join prompt for group: 12345678
-🎀 [SanrioGroupPopup] joinGroup() - Successfully opened group join prompt!
+🎀 [SanrioGroupPopup] [Zoom] Decal tapped - opening zoom view!
+🎀 [SanrioGroupPopup] 🔍 Opening zoom overlay...
+🎀 [SanrioGroupPopup] ❌ Closing zoom overlay...
+🎀 [SanrioGroupPopup] [Join] Join Group button clicked!
+🎀 [SanrioGroupPopup] joinGroup() - Showing group info for: 986814499
+🎀 [SanrioGroupPopup] joinGroup() - Notification shown successfully!
 🎀 [SanrioGroupPopup] 👋 hidePopup() - Closing modal...
 🎀 [SanrioGroupPopup] ✅ hidePopup() - Modal closed
 🎀 [SanrioGroupPopup] ✨ === Sanrio Group Popup Ready! === ✨
@@ -277,13 +279,16 @@ Free to use, modify, and distribute. No attribution required.
 
 ## 🎀 What Makes This Special?
 
-1. **Side-by-Side Layout** - Text on left, "How to Join" guide image on right
-2. **Custom Decal Support** - Shows YOUR step-by-step instructions (rbxassetid://73482754980631)
-3. **Personalized Message** - "Thanks for playing!" + rewards list (daily spins, early access, etc.)
-4. **Cutesy Pastel Design** - Sanrio-themed colors (not boring corporate)
-5. **Group ID: 986814499** - Pre-configured for your Sanrio Tycoon
-6. **Better Animations** - Bounce effects and smooth transitions
-7. **Made for YOUR Tycoon** - Perfect for Hello Kitty, Kuromi, Cinnamoroll, My Melody themes!
+1. **📱 MOBILE-FIRST TAP-TO-ZOOM** - Tap the decal to see it FULLSCREEN (perfect for reading Step 1/Step 2 on phones!)
+2. **Side-by-Side Layout** - Text on left, "How to Join" guide image on right
+3. **Custom Decal Support** - Shows YOUR step-by-step instructions (rbxassetid://73482754980631)
+4. **Personalized Message** - "Thanks for playing!" + rewards list (daily spins, early access, etc.)
+5. **Cutesy Pastel Design** - Sanrio-themed colors (not boring corporate)
+6. **Group ID: 986814499** - Pre-configured for your Sanrio Tycoon
+7. **✅ .Activated Events** - Works on BOTH desktop AND mobile (no more missed taps!)
+8. **"Got it!" Close Button** - Zoom only closes with button (not background clicks)
+9. **Better Animations** - Bounce effects and smooth transitions
+10. **Made for YOUR Tycoon** - Perfect for Hello Kitty, Kuromi, Cinnamoroll, My Melody themes!
 
 ---
 

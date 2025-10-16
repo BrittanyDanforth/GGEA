@@ -5,11 +5,17 @@
 	
 	Features:
 	- Adorable Sanrio-inspired pastel design
-	- Shows Group ID prominently + helpful instructions
+	- Side-by-side layout: Text left, "How to Join" decal right
+	- TAP-TO-ZOOM: Tap the decal to view fullscreen (mobile-friendly!)
+	- Uses .Activated events (works on BOTH desktop AND mobile!)
+	- Zoom closes ONLY with "Got it!" button (not background)
+	- Shows your custom Step 1/Step 2 guide (rbxassetid://73482754980631)
+	- Group ID: 986814499 (pre-configured!)
 	- Smooth animations with cute effects
 	- Full UI hierarchy (no missing elements)
 	- Group membership detection
 	- Works perfectly in Studio AND published games!
+	- NO forbidden APIs (no OpenBrowserWindow, no broken methods!)
 ]]
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -258,7 +264,7 @@ local function createLeftSide(parent)
 	return leftSide
 end
 
--- Right side container (decal guide)
+-- Right side container (decal guide with TAP TO ZOOM!)
 local function createRightSide(parent)
 	log("➡️ Creating right side with How To Join decal...")
 	
@@ -289,7 +295,7 @@ local function createRightSide(parent)
 	-- Decal image container
 	local decalContainer = Instance.new("Frame")
 	decalContainer.Name = "DecalContainer"
-	decalContainer.Size = UDim2.new(1, -20, 1, -45)
+	decalContainer.Size = UDim2.new(1, -20, 1, -90)
 	decalContainer.Position = UDim2.new(0, 10, 0, 40)
 	decalContainer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	decalContainer.BackgroundTransparency = 1
@@ -301,18 +307,41 @@ local function createRightSide(parent)
 	decalCorner.CornerRadius = UDim.new(0, 12)
 	decalCorner.Parent = decalContainer
 	
-	-- The actual decal image
-	local decalImage = Instance.new("ImageLabel")
+	-- Use ImageButton so taps work on mobile!
+	local decalImage = Instance.new("ImageButton")
 	decalImage.Name = "HowToJoinImage"
 	decalImage.Size = UDim2.new(1, 0, 1, 0)
 	decalImage.BackgroundTransparency = 1
+	decalImage.AutoButtonColor = false
 	decalImage.Image = CONFIG.HOW_TO_JOIN_DECAL
 	decalImage.ScaleType = Enum.ScaleType.Fit
 	decalImage.ImageTransparency = 1
 	decalImage.ZIndex = 22
 	decalImage.Parent = decalContainer
 	
-	return rightSide, howToTitle, decalImage, decalContainer
+	-- Tap hint overlay (cute!)
+	local tapHint = Instance.new("TextLabel")
+	tapHint.Name = "TapHint"
+	tapHint.AnchorPoint = Vector2.new(0.5, 1)
+	tapHint.Position = UDim2.new(0.5, 0, 1, -8)
+	tapHint.Size = UDim2.new(0, 140, 0, 24)
+	tapHint.BackgroundTransparency = 0.15
+	tapHint.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	tapHint.Text = "Tap to zoom"
+	tapHint.Font = Enum.Font.GothamBold
+	tapHint.TextSize = 12
+	tapHint.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tapHint.TextXAlignment = Enum.TextXAlignment.Center
+	tapHint.TextYAlignment = Enum.TextYAlignment.Center
+	tapHint.TextTransparency = 1
+	tapHint.ZIndex = 23
+	tapHint.Parent = decalContainer
+	
+	local hintCorner = Instance.new("UICorner")
+	hintCorner.CornerRadius = UDim.new(0, 8)
+	hintCorner.Parent = tapHint
+	
+	return rightSide, howToTitle, decalImage, decalContainer, tapHint
 end
 
 local function createButton(parent, name, text, isPrimary, layoutOrder)
@@ -433,7 +462,7 @@ local function showPopup()
 				TextTransparency = 0,
 				BackgroundTransparency = child:IsA("TextButton") and 0 or 1
 			}))
-		elseif child:IsA("ImageLabel") then
+		elseif child:IsA("ImageButton") or child:IsA("ImageLabel") then
 			-- Fade in the decal image
 			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
 				ImageTransparency = 0
@@ -496,7 +525,7 @@ local function hidePopup()
 				TextTransparency = 1,
 				BackgroundTransparency = 1
 			}))
-		elseif child:IsA("ImageLabel") then
+		elseif child:IsA("ImageButton") or child:IsA("ImageLabel") then
 			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
 				ImageTransparency = 1
 			}))
@@ -520,6 +549,139 @@ local function hidePopup()
 	screenGui.Enabled = false
 	isAnimating = false
 	log("✅ hidePopup() - Modal closed")
+end
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 🔍 ZOOM OVERLAY (for mobile-friendly decal viewing!)
+-- ═══════════════════════════════════════════════════════════════════════════
+
+local function createZoomOverlay(parentGui)
+	log("🔍 Creating zoom overlay for decal...")
+	
+	-- Full screen overlay
+	local overlay = Instance.new("Frame")
+	overlay.Name = "ZoomOverlay"
+	overlay.Size = UDim2.fromScale(1, 1)
+	overlay.BackgroundColor3 = Color3.fromRGB(10, 5, 15)
+	overlay.BackgroundTransparency = 0.2
+	overlay.ZIndex = 200
+	overlay.Visible = false
+	overlay.Parent = parentGui
+	
+	-- Centered zoom card
+	local zoomCard = Instance.new("Frame")
+	zoomCard.Name = "ZoomCard"
+	zoomCard.AnchorPoint = Vector2.new(0.5, 0.5)
+	zoomCard.Position = UDim2.fromScale(0.5, 0.5)
+	zoomCard.Size = UDim2.new(0.9, 0, 0.85, 0) -- Big on phones!
+	zoomCard.BackgroundColor3 = CONFIG.COLORS.CARD_BG
+	zoomCard.BackgroundTransparency = 0
+	zoomCard.BorderSizePixel = 0
+	zoomCard.ZIndex = 201
+	zoomCard.Parent = overlay
+	
+	local zoomCorner = Instance.new("UICorner")
+	zoomCorner.CornerRadius = UDim.new(0, 20)
+	zoomCorner.Parent = zoomCard
+	
+	local zoomStroke = Instance.new("UIStroke")
+	zoomStroke.Color = CONFIG.COLORS.STROKE
+	zoomStroke.Thickness = 3
+	zoomStroke.Transparency = 0
+	zoomStroke.Parent = zoomCard
+	
+	local zoomPadding = Instance.new("UIPadding")
+	zoomPadding.PaddingTop = UDim.new(0, 20)
+	zoomPadding.PaddingBottom = UDim.new(0, 60)
+	zoomPadding.PaddingLeft = UDim.new(0, 20)
+	zoomPadding.PaddingRight = UDim.new(0, 20)
+	zoomPadding.Parent = zoomCard
+	
+	-- Big zoomed image
+	local zoomImage = Instance.new("ImageLabel")
+	zoomImage.Name = "ZoomedImage"
+	zoomImage.Size = UDim2.fromScale(1, 1)
+	zoomImage.BackgroundTransparency = 1
+	zoomImage.Image = CONFIG.HOW_TO_JOIN_DECAL
+	zoomImage.ScaleType = Enum.ScaleType.Fit
+	zoomImage.ZIndex = 202
+	zoomImage.Parent = zoomCard
+	
+	-- Close button at bottom center (mobile friendly!)
+	local closeButton = Instance.new("TextButton")
+	closeButton.Name = "CloseButton"
+	closeButton.AnchorPoint = Vector2.new(0.5, 1)
+	closeButton.Position = UDim2.new(0.5, 0, 1, -15)
+	closeButton.Size = UDim2.new(0, 180, 0, 45)
+	closeButton.BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
+	closeButton.BackgroundTransparency = 0
+	closeButton.BorderSizePixel = 0
+	closeButton.Text = "Got it!"
+	closeButton.Font = Enum.Font.GothamBold
+	closeButton.TextSize = 16
+	closeButton.TextColor3 = CONFIG.COLORS.BUTTON_TEXT
+	closeButton.AutoButtonColor = false
+	closeButton.ZIndex = 203
+	closeButton.Parent = zoomCard
+	
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(0, 12)
+	closeCorner.Parent = closeButton
+	
+	-- Hover effect for close button
+	closeButton.MouseEnter:Connect(function()
+		TweenService:Create(closeButton, TweenInfo.new(0.2), {
+			BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY_HOVER
+		}):Play()
+	end)
+	
+	closeButton.MouseLeave:Connect(function()
+		TweenService:Create(closeButton, TweenInfo.new(0.2), {
+			BackgroundColor3 = CONFIG.COLORS.BUTTON_PRIMARY
+		}):Play()
+	end)
+	
+	-- Open/Close functions
+	local function openZoom()
+		log("🔍 Opening zoom overlay...")
+		overlay.Visible = true
+		
+		-- Fade in animation
+		overlay.BackgroundTransparency = 1
+		zoomCard.BackgroundTransparency = 1
+		zoomStroke.Transparency = 1
+		zoomImage.ImageTransparency = 1
+		closeButton.BackgroundTransparency = 1
+		closeButton.TextTransparency = 1
+		
+		local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		TweenService:Create(overlay, tweenInfo, {BackgroundTransparency = 0.2}):Play()
+		TweenService:Create(zoomCard, tweenInfo, {BackgroundTransparency = 0}):Play()
+		TweenService:Create(zoomStroke, tweenInfo, {Transparency = 0}):Play()
+		TweenService:Create(zoomImage, tweenInfo, {ImageTransparency = 0}):Play()
+		TweenService:Create(closeButton, tweenInfo, {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+	end
+	
+	local function closeZoom()
+		log("❌ Closing zoom overlay...")
+		
+		-- Fade out animation
+		local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		local tween = TweenService:Create(overlay, tweenInfo, {BackgroundTransparency = 1})
+		TweenService:Create(zoomCard, tweenInfo, {BackgroundTransparency = 1}):Play()
+		TweenService:Create(zoomStroke, tweenInfo, {Transparency = 1}):Play()
+		TweenService:Create(zoomImage, tweenInfo, {ImageTransparency = 1}):Play()
+		TweenService:Create(closeButton, tweenInfo, {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+		tween:Play()
+		
+		tween.Completed:Wait()
+		overlay.Visible = false
+	end
+	
+	-- Wire up close button (ONLY closes with button, not background!)
+	closeButton.Activated:Connect(closeZoom)
+	
+	return overlay, openZoom, closeZoom
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -585,27 +747,36 @@ local function buildUI()
 	local joinButton = createButton(buttonContainer, "JoinButton", "Join Group!", true, 1)
 	local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2)
 	
-	-- Step 9: Create RIGHT SIDE (how to join decal)
-	local rightSide, howToTitle, decalImage, decalContainer = createRightSide(cardFrame)
+	-- Step 9: Create RIGHT SIDE (how to join decal with tap hint!)
+	local rightSide, howToTitle, decalImage, decalContainer, tapHint = createRightSide(cardFrame)
 	
-	-- Step 10: Wire up button handlers (after everything is built)
-	joinButton.MouseButton1Click:Connect(function()
+	-- Step 10: Create ZOOM OVERLAY (for mobile-friendly viewing!)
+	local zoomOverlay, openZoom, closeZoom = createZoomOverlay(screenGui)
+	
+	-- Step 11: Wire up button handlers (use .Activated for mobile support!)
+	joinButton.Activated:Connect(function()
 		log("[Join] Join Group button clicked!")
 		joinGroup()
 		hidePopup()
 	end)
 	
-	notNowButton.MouseButton1Click:Connect(function()
+	notNowButton.Activated:Connect(function()
 		log("[Close] Maybe later button clicked")
 		hidePopup()
 	end)
 	
-	dimButton.MouseButton1Click:Connect(function()
+	dimButton.Activated:Connect(function()
 		log("[Close] Dim overlay clicked - closing popup")
 		hidePopup()
 	end)
 	
-	-- Step 11: Parent to PlayerGui (last step to avoid rendering issues)
+	-- Wire up ZOOM functionality (tap the decal to zoom!)
+	decalImage.Activated:Connect(function()
+		log("[Zoom] Decal tapped - opening zoom view!")
+		openZoom()
+	end)
+	
+	-- Step 12: Parent to PlayerGui (last step to avoid rendering issues)
 	screenGui.Parent = PlayerGui
 	
 	log("✅ buildUI() - UI construction complete!")
