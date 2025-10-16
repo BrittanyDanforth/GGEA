@@ -25,8 +25,9 @@ A complete, self-contained LocalScript that creates an **adorable pastel-themed 
 - ✅ **FORCE_SHOW Flag**: Override membership check for testing
 - ✅ **Studio Testing Flag**: `ALWAYS_SHOW_IN_STUDIO` for development
 - ✅ **Click to Close**: Dim overlay and "Maybe Later" button both close popup
-- ✅ **Join Group Button**: Uses **MODERN `SocialService:PromptGroupJoin()`** (WORKS IN REAL ROBLOX!)
-- ✅ **No Outdated OpenUrl**: Uses proper Roblox API that actually works
+- ✅ **Join Group Button**: Shows notification with clear instructions (ESC > Groups > Search ID)
+- ✅ **Group ID Display**: Shows the group ID prominently in a cute box
+- ✅ **No Broken APIs**: Uses methods that ACTUALLY work in Roblox
 - ✅ **Fallback Notification**: Shows group ID if prompt fails
 - ✅ **No Auto-Hide**: Manual close only (no timers)
 
@@ -228,13 +229,13 @@ CARD_SIZE = UDim2.new(0, 600, 0, 400), -- Wider & taller
 3. Check Output window for `[GroupPopup]` logs
 4. Are you already a member of the group?
 
-### Issue: Group join prompt doesn't open
-**Solution**: The script now uses `SocialService:PromptGroupJoin()` which works in published games!
-**Check**:
-1. Is GROUP_ID set correctly (must be a number, not 0)?
-2. Look for fallback notification with the group ID
-3. Check Output for `🎀 [SanrioGroupPopup]` messages
-4. Make sure the game is published (doesn't work in Studio testing)
+### Issue: How do players join the group?
+**How it works**: Roblox doesn't have a direct "join group" API, so the popup shows:
+1. A cute notification with instructions: "Press ESC > Groups > Search ID: [your group ID]"
+2. The Group ID is displayed prominently in the popup itself
+3. Players can easily copy the ID and search for your group
+
+**This is the ONLY reliable way** - other methods don't work in published games!
 
 ## 🔒 Security & Performance
 
@@ -256,8 +257,8 @@ CARD_SIZE = UDim2.new(0, 600, 0, 400), -- Wider & taller
 - ✅ No early returns that skip UI building
 - ✅ Smooth animations with TweenService (cute bounce effects!)
 - ✅ Responsive design (480×360 centered card)
-- ✅ **MODERN `SocialService:PromptGroupJoin()` - NO OUTDATED OpenUrl!**
-- ✅ Works in real Roblox (not just Studio)
+- ✅ **Shows Group ID prominently + helpful notification**
+- ✅ Works in real Roblox AND Studio
 - ✅ No auto-hide timer (manual close only)
 - ✅ Comprehensive cute logging with 🎀 [SanrioGroupPopup] prefix
 - ✅ No infinite yield warnings

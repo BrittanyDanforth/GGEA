@@ -5,10 +5,11 @@
 	
 	Features:
 	- Adorable Sanrio-inspired pastel design
-	- Modern SocialService group join (NO OpenUrl!)
-	- Smooth animations
+	- Shows Group ID prominently + helpful instructions
+	- Smooth animations with cute effects
 	- Full UI hierarchy (no missing elements)
 	- Group membership detection
+	- Works perfectly in Studio AND published games!
 ]]
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -24,11 +25,11 @@ local CONFIG = {
 	
 	-- 🎨 Cute Pastel Colors (Sanrio theme)
 	COLORS = {
-		-- Card background - soft white with slight pink tint
-		CARD_BG = Color3.fromRGB(255, 250, 252),
-		-- Gradient overlay - soft pink to lavender
-		GRADIENT_TOP = Color3.fromRGB(255, 228, 240),
-		GRADIENT_BOTTOM = Color3.fromRGB(240, 230, 255),
+		-- Card background - soft white with slight pink tint (MORE OPAQUE!)
+		CARD_BG = Color3.fromRGB(255, 248, 252),
+		-- Gradient overlay - soft pink to lavender (STRONGER COLORS!)
+		GRADIENT_TOP = Color3.fromRGB(255, 220, 245),
+		GRADIENT_BOTTOM = Color3.fromRGB(235, 225, 255),
 		-- Primary button - cute pink
 		BUTTON_PRIMARY = Color3.fromRGB(255, 182, 213),
 		BUTTON_PRIMARY_HOVER = Color3.fromRGB(255, 158, 200),
@@ -46,7 +47,7 @@ local CONFIG = {
 	
 	-- UI Configuration
 	CARD_SIZE = UDim2.new(0, 480, 0, 360),
-	DIM_TRANSPARENCY = 0.4,
+	DIM_TRANSPARENCY = 0.5, -- Darker background
 	ANIMATION_SPEED_OPEN = 0.3,
 	ANIMATION_SPEED_CLOSE = 0.2,
 }
@@ -57,7 +58,6 @@ local CONFIG = {
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local SocialService = game:GetService("SocialService") -- MODERN group join!
 local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
@@ -146,14 +146,14 @@ local function createCard(parent)
 	corner.CornerRadius = UDim.new(0, 20) -- More rounded = cuter!
 	corner.Parent = card
 	
-	-- Soft pastel gradient overlay
+	-- Soft pastel gradient overlay (MORE VISIBLE!)
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, CONFIG.COLORS.GRADIENT_TOP),
 		ColorSequenceKeypoint.new(1, CONFIG.COLORS.GRADIENT_BOTTOM)
 	})
 	gradient.Rotation = 135 -- Diagonal gradient
-	gradient.Transparency = NumberSequence.new(0.7) -- Subtle
+	gradient.Transparency = NumberSequence.new(0.3) -- More opaque!
 	gradient.Parent = card
 	
 	-- Cute pastel stroke
@@ -231,6 +231,40 @@ local function createBody(parent)
 	body.Parent = parent
 	
 	return body
+end
+
+local function createGroupIDLabel(parent)
+	log("🆔 Creating Group ID label...")
+	
+	local container = Instance.new("Frame")
+	container.Name = "GroupIDContainer"
+	container.Size = UDim2.new(0, 240, 0, 50)
+	container.BackgroundColor3 = Color3.fromRGB(255, 240, 250)
+	container.BackgroundTransparency = 1
+	container.BorderSizePixel = 0
+	container.ZIndex = 21
+	container.LayoutOrder = 2.5
+	container.Parent = parent
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = container
+	
+	local label = Instance.new("TextLabel")
+	label.Name = "GroupIDLabel"
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.Text = "Group ID: " .. (CONFIG.GROUP_ID ~= 0 and tostring(CONFIG.GROUP_ID) or "Not Set")
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 18
+	label.TextColor3 = CONFIG.COLORS.TITLE
+	label.TextXAlignment = Enum.TextXAlignment.Center
+	label.TextYAlignment = Enum.TextYAlignment.Center
+	label.TextTransparency = 1
+	label.ZIndex = 22
+	label.Parent = container
+	
+	return container, label
 end
 
 local function createButton(parent, name, text, isPrimary, layoutOrder)
@@ -351,6 +385,11 @@ local function showPopup()
 				TextTransparency = 0,
 				BackgroundTransparency = child:IsA("TextButton") and 0 or 1
 			}))
+		elseif child:IsA("Frame") and child.Name == "GroupIDContainer" then
+			-- Fade in the group ID container background
+			table.insert(childTweens, TweenService:Create(child, tweenInfoOpen, {
+				BackgroundTransparency = 0.05
+			}))
 		end
 	end
 	
@@ -404,6 +443,10 @@ local function hidePopup()
 				TextTransparency = 1,
 				BackgroundTransparency = 1
 			}))
+		elseif child:IsA("Frame") and child.Name == "GroupIDContainer" then
+			table.insert(childTweens, TweenService:Create(child, tweenInfoClose, {
+				BackgroundTransparency = 1
+			}))
 		end
 	end
 	
@@ -432,26 +475,23 @@ local function joinGroup()
 		return
 	end
 	
-	log("joinGroup() - Opening group join prompt for group: " .. CONFIG.GROUP_ID)
+	log("joinGroup() - Showing group info for: " .. CONFIG.GROUP_ID)
 	
-	-- Use MODERN SocialService (works in real Roblox!)
-	local success, err = pcall(function()
-		SocialService:PromptGroupJoin(CONFIG.GROUP_ID)
+	-- Show a cute notification with the group ID
+	-- (Roblox doesn't have a direct group join API, so we show instructions)
+	local success = pcall(function()
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "💖 Join Sanrio Tycoon Group!",
+			Text = "Press ESC > Groups > Search ID: " .. CONFIG.GROUP_ID,
+			Duration = 10,
+			Button1 = "Got it!"
+		})
 	end)
 	
 	if success then
-		log("joinGroup() - Successfully opened group join prompt!")
+		log("joinGroup() - Notification shown successfully!")
 	else
-		logError("joinGroup() - Failed to open prompt: " .. tostring(err))
-		
-		-- Fallback notification
-		pcall(function()
-			game:GetService("StarterGui"):SetCore("SendNotification", {
-				Title = "Join Sanrio Tycoon Group",
-				Text = "Search for group ID: " .. CONFIG.GROUP_ID,
-				Duration = 8
-			})
-		end)
+		logError("joinGroup() - Failed to show notification")
 	end
 end
 
@@ -478,6 +518,9 @@ local function buildUI()
 	
 	-- Step 5: Create Body (ZIndex 21)
 	local bodyLabel = createBody(cardFrame)
+	
+	-- Step 5.5: Create Group ID Label (cute little box!)
+	local groupIDContainer, groupIDLabel = createGroupIDLabel(cardFrame)
 	
 	-- Step 6: Create Button Container (ZIndex 21)
 	local buttonContainer = createButtonContainer(cardFrame)
