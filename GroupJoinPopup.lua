@@ -192,7 +192,7 @@ local function createTitle(parent)
 	title.Name = "Title"
 	title.Size = UDim2.new(1, 0, 0, 50)
 	title.BackgroundTransparency = 1
-	title.Text = "Thanks for Playing! 💕"
+	title.Text = "Thanks for Playing!"
 	title.Font = Enum.Font.FredokaOne -- Cute rounded font!
 	title.TextSize = 26
 	title.TextColor3 = CONFIG.COLORS.TITLE
@@ -276,7 +276,7 @@ local function createRightSide(parent)
 	howToTitle.Size = UDim2.new(1, 0, 0, 35)
 	howToTitle.Position = UDim2.new(0, 0, 0, 0)
 	howToTitle.BackgroundTransparency = 1
-	howToTitle.Text = "How to Join \ud83d\udc47"
+	howToTitle.Text = "How to Join!"
 	howToTitle.Font = Enum.Font.GothamBold
 	howToTitle.TextSize = 18
 	howToTitle.TextColor3 = CONFIG.COLORS.TITLE
@@ -537,7 +537,7 @@ local function joinGroup()
 	-- Show a cute notification with the group ID (see the image for steps!)
 	local success = pcall(function()
 		game:GetService("StarterGui"):SetCore("SendNotification", {
-			Title = "💖 Join Sanrio Tycoon Group!",
+			Title = "Join Sanrio Tycoon Group!",
 			Text = "Follow the steps on the popup! Group ID: " .. CONFIG.GROUP_ID,
 			Duration = 12,
 			Button1 = "Got it!"
@@ -582,7 +582,7 @@ local function buildUI()
 	local buttonContainer = createButtonContainer(leftSide)
 	
 	-- Step 8: Create Buttons
-	local joinButton = createButton(buttonContainer, "JoinButton", "✨ Join Group!", true, 1)
+	local joinButton = createButton(buttonContainer, "JoinButton", "Join Group!", true, 1)
 	local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2)
 	
 	-- Step 9: Create RIGHT SIDE (how to join decal)
@@ -590,18 +590,18 @@ local function buildUI()
 	
 	-- Step 10: Wire up button handlers (after everything is built)
 	joinButton.MouseButton1Click:Connect(function()
-		log("🎀 Join Group button clicked!")
+		log("[Join] Join Group button clicked!")
 		joinGroup()
 		hidePopup()
 	end)
 	
 	notNowButton.MouseButton1Click:Connect(function()
-		log("🚫 Maybe later button clicked")
+		log("[Close] Maybe later button clicked")
 		hidePopup()
 	end)
 	
 	dimButton.MouseButton1Click:Connect(function()
-		log("✨ Dim overlay clicked - closing popup")
+		log("[Close] Dim overlay clicked - closing popup")
 		hidePopup()
 	end)
 	
