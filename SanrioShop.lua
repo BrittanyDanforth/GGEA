@@ -869,29 +869,56 @@ function Shop:createMainInterface()
 	self.blur.Size = 0
 	self.blur.Parent = Lighting
 
-	local dimBackground = UI.Components.Frame({
+    local dimBackground = UI.Components.Frame({
 		Name = "DimBackground",
 		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = Color3.new(0, 0, 0),
-		BackgroundTransparency = 0.3,
+        BackgroundColor3 = Color3.fromRGB(10, 5, 15),
+        BackgroundTransparency = 0.15,
 		parent = self.gui,
 	}):render()
+    -- Close when clicking outside the panel
+    dimBackground.Active = true
+    dimBackground.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if not self.mainPanel then return end
+            local pos = input.Position
+            local inset = GuiService:GetGuiInset()
+            local adjusted = Vector2.new(pos.X, pos.Y - inset.Y)
+            local p = self.mainPanel.AbsolutePosition
+            local s = self.mainPanel.AbsoluteSize
+            local inside = adjusted.X >= p.X and adjusted.X <= p.X + s.X and adjusted.Y >= p.Y and adjusted.Y <= p.Y + s.Y
+            if not inside then self:close() end
+        end
+    end)
 
 	local panelSize = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
 
-	self.mainPanel = UI.Components.Frame({
+    self.mainPanel = UI.Components.Frame({
 		Name = "MainPanel",
 		Size = UDim2.fromOffset(panelSize.X, panelSize.Y),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = UI.Theme:get("background"),
-		cornerRadius = UDim.new(0, 24),
+        BackgroundColor3 = Color3.fromRGB(255, 248, 252),
+        cornerRadius = UDim.new(0, 20),
 		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 1,
+            color = Color3.fromRGB(255, 220, 235),
+            thickness = 3,
+            transparency = 0,
 		},
 		parent = self.gui,
 	}):render()
+
+    -- Subtle pastel gradient like the group popup
+    do
+        local gradient = Instance.new("UIGradient")
+        gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 245)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(235, 225, 255))
+        })
+        gradient.Rotation = 135
+        gradient.Transparency = NumberSequence.new(0.3)
+        gradient.Parent = self.mainPanel
+    end
 
 	UI.Responsive.scale(self.mainPanel)
 
@@ -915,12 +942,12 @@ function Shop:createMainInterface()
 end
 
 function Shop:createHeader()
-	local header = UI.Components.Frame({
+    local header = UI.Components.Frame({
 		Name = "Header",
-		Size = UDim2.new(1, -48, 0, 80),
+        Size = UDim2.new(1, -48, 0, 72),
 		Position = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 16),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        cornerRadius = UDim.new(0, 16),
 		parent = self.mainPanel,
 	}):render()
 
@@ -932,24 +959,24 @@ function Shop:createHeader()
 		parent = header,
 	}):render()
 
-	local title = UI.Components.TextLabel({
+    local title = UI.Components.TextLabel({
 		Name = "Title",
-		Text = "Sanrio Shop",
+        Text = "Sanrio Shop",
 		Size = UDim2.new(1, -200, 1, 0),
 		Position = UDim2.fromOffset(92, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Enum.Font.GothamBold,
-		TextSize = 32,
+        TextSize = 28,
 		parent = header,
 	}):render()
 
-	local closeButton = UI.Components.Button({
+    local closeButton = UI.Components.Button({
 		Name = "CloseButton",
-		Text = "X",
+        Text = "✕",
 		Size = UDim2.fromOffset(48, 48),
 		Position = UDim2.new(1, -64, 0.5, 0),
 		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundColor3 = UI.Theme:get("error"),
+        BackgroundColor3 = Color3.fromRGB(255, 182, 213),
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
 		TextSize = 24,
@@ -1072,8 +1099,8 @@ function Shop:createHomePage()
 
 	local hero = self:createHeroSection(scrollFrame)
 
-	local featuredTitle = UI.Components.TextLabel({
-		Text = "✨ Featured Items",
+    local featuredTitle = UI.Components.TextLabel({
+        Text = "Featured Items",
 		Size = UDim2.new(1, 0, 0, 40),
 		Font = Enum.Font.GothamBold,
 		TextSize = 28,
@@ -1112,8 +1139,8 @@ function Shop:createHomePage()
 	end
 
 	-- Add quick stats section
-	local statsTitle = UI.Components.TextLabel({
-		Text = "📊 Shop Stats",
+    local statsTitle = UI.Components.TextLabel({
+        Text = "Shop Stats",
 		Size = UDim2.new(1, 0, 0, 40),
 		Font = Enum.Font.GothamBold,
 		TextSize = 28,
@@ -1301,8 +1328,8 @@ function Shop:createHeroSection(parent)
 		parent = content,
 	}):render()
 
-	local heroTitle = UI.Components.TextLabel({
-		Text = "🎀 Welcome to Sanrio Shop!",
+    local heroTitle = UI.Components.TextLabel({
+        Text = "Welcome to Sanrio Shop",
 		Size = UDim2.new(1, 0, 0, 48),
 		Font = Enum.Font.GothamBold,
 		TextSize = 36,
@@ -1323,8 +1350,8 @@ function Shop:createHeroSection(parent)
 		parent = textContainer,
 	}):render()
 
-	local ctaButton = UI.Components.Button({
-		Text = "🛍️ Browse Items",
+    local ctaButton = UI.Components.Button({
+        Text = "Browse Items",
 		Size = UDim2.fromOffset(200, 52),
 		Position = UDim2.fromOffset(0, 140),
 		BackgroundColor3 = Color3.new(1, 1, 1),
@@ -1455,8 +1482,8 @@ function Shop:createProductCard(product, productType, parent)
 		("R$" .. tostring(product.price or 0)) or 
 		("R$" .. tostring(product.price or 0) .. " • " .. Core.Utils.formatNumber(product.amount) .. " Cash")
 
-	local priceLabel = UI.Components.TextLabel({
-		Text = priceText,
+    local priceLabel = UI.Components.TextLabel({
+        Text = priceText,
 		Size = UDim2.new(1, 0, 0, 24),
 		Position = UDim2.fromOffset(0, 76),
 		Font = Enum.Font.GothamBold,
@@ -1476,8 +1503,8 @@ function Shop:createProductCard(product, productType, parent)
 		parent = infoContainer,
 	}):render()
 
-	local purchaseButton = UI.Components.Button({
-		Text = isOwned and "✓ Owned" or "Purchase",
+    local purchaseButton = UI.Components.Button({
+        Text = isOwned and "Owned" or "Purchase",
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
 		TextColor3 = Color3.new(1, 1, 1),
@@ -1742,7 +1769,7 @@ function Shop:refreshProduct(product, productType)
 		local isOwned = Core.DataManager.checkOwnership(product.id)
 
 		if product.purchaseButton then
-			product.purchaseButton.Text = isOwned and "✓ Owned" or "Purchase"
+            product.purchaseButton.Text = isOwned and "Owned" or "Purchase"
 			product.purchaseButton.BackgroundColor3 = isOwned and 
 				UI.Theme:get("success") or UI.Theme:get("kuromi")
 			product.purchaseButton.Active = not isOwned
@@ -1903,8 +1930,8 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 	if purchased then
 		ownershipCache:clear()
 
-		if pending.product.purchaseButton then
-			pending.product.purchaseButton.Text = "✓ Owned"
+        if pending.product.purchaseButton then
+            pending.product.purchaseButton.Text = "Owned"
 			pending.product.purchaseButton.BackgroundColor3 = UI.Theme:get("success")
 			pending.product.purchaseButton.Active = false
 		end
