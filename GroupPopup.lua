@@ -366,7 +366,7 @@ local function createBody(parent, prof)
 	body.Name = "Body"
 	body.Size = UDim2.new(1, 0, 0, prof.isPhone and 110 or 120)
 	body.BackgroundTransparency = 1
-	body.Text = "We noticed you've been playing for a bit! Join our group to unlock exclusive in-game perks:\n\n✨ Daily Spins in-game!\n🌟 Early Access to Updates\n🎁 Special Rewards & Bonuses"
+	body.Text = "Join our group for awesome in-game perks:\n\n✨ Daily Spins!\n🌟 Early Access to Updates\n🎁 Special Rewards & Bonuses\n\n👉 Follow the guide to join!"
 	body.Font = Enum.Font.Gotham
 	body.TextSize = prof.bodySize
 	body.TextColor3 = CONFIG.COLORS.BODY
@@ -758,35 +758,18 @@ end
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function joinGroup()
-	if CONFIG.GROUP_ID == 0 then
-		logError("GROUP_ID not set!")
-		return
-	end
+	log("🎉 Player wants to join group!")
 
-	log("🎉 Opening group page for: " .. CONFIG.GROUP_ID)
-
-	-- Try the proper API first (works on most platforms)
-	local SocialService = game:GetService("SocialService")
-	local success = pcall(function()
-		SocialService:PromptGroupJoin(CONFIG.GROUP_ID)
+	-- Show simple helpful notification
+	pcall(function()
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = "💖 Thanks!",
+			Text = "Follow the steps in the guide above to join!",
+			Duration = 5
+		})
 	end)
 
-	if success then
-		log("✅ Group join prompt opened!")
-	else
-		-- Fallback: Open group page in browser (works on mobile!)
-		warn("⚠️ PromptGroupJoin failed, trying browser method...")
-		local url = "https://www.roblox.com/groups/" .. CONFIG.GROUP_ID
-		
-		pcall(function()
-			game:GetService("StarterGui"):SetCore("PromptBrowserRequest", {
-				Title = "Join Our Group!",
-				Url = url
-			})
-		end)
-		
-		log("✅ Group page opened in browser!")
-	end
+	log("✅ Notification shown!")
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -929,7 +912,7 @@ local function buildUI()
 
 	local buttonContainer = createButtonContainer(leftSide, prof)
 
-	local joinButton = createButton(buttonContainer, "JoinButton", "Join Group!", true, 1, prof)
+	local joinButton = createButton(buttonContainer, "JoinButton", "Show Me How!", true, 1, prof)
 	local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2, prof)
 
 	local rightSide, howToTitle, decalImage, decalContainer, tapHint = createRightSide(cardFrame, prof)
@@ -937,9 +920,9 @@ local function buildUI()
 	local zoomOverlay, openZoom, closeZoom = createZoomOverlay(screenGui)
 
 	joinButton.Activated:Connect(function()
-		log("🎉 Join button clicked!")
+		log("🎉 Show Me How clicked - opening guide!")
 		joinGroup()
-		hidePopup()
+		openZoom() -- Open the full guide in zoom view!
 	end)
 
 	notNowButton.Activated:Connect(function()
