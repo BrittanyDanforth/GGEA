@@ -763,21 +763,29 @@ local function joinGroup()
 		return
 	end
 
-	log("joinGroup() - Showing notification for group: " .. CONFIG.GROUP_ID)
+	log("🎉 Opening group page for: " .. CONFIG.GROUP_ID)
 
+	-- Try the proper API first (works on most platforms)
+	local SocialService = game:GetService("SocialService")
 	local success = pcall(function()
-		game:GetService("StarterGui"):SetCore("SendNotification", {
-			Title = "💖 Join Sanrio Tycoon!",
-			Text = "Follow the steps shown! Group ID: " .. CONFIG.GROUP_ID,
-			Duration = 12,
-			Button1 = "Got it!"
-		})
+		SocialService:PromptGroupJoin(CONFIG.GROUP_ID)
 	end)
 
 	if success then
-		log("✅ Notification shown successfully!")
+		log("✅ Group join prompt opened!")
 	else
-		logError("❌ Failed to show notification")
+		-- Fallback: Open group page in browser (works on mobile!)
+		warn("⚠️ PromptGroupJoin failed, trying browser method...")
+		local url = "https://www.roblox.com/groups/" .. CONFIG.GROUP_ID
+		
+		pcall(function()
+			game:GetService("StarterGui"):SetCore("PromptBrowserRequest", {
+				Title = "Join Our Group!",
+				Url = url
+			})
+		end)
+		
+		log("✅ Group page opened in browser!")
 	end
 end
 
