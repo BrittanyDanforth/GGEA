@@ -93,7 +93,7 @@ local Config = {
 			title = "Earning Cash! 💰",
 			description = "Your dropper is working! Cash is being collected automatically.\n\nYou'll need $70 for the next upgrade.",
 			target = "collector",
-			waitForCash = true, -- Wait for any cash increase
+			waitForCash = 70, -- Wait for $70
 		},
 		{
 			name = "buy_dropper2",
@@ -105,9 +105,9 @@ local Config = {
 		{
 			name = "tutorial_complete",
 			title = "You're All Set! 🎉",
-			description = "Amazing! Keep buying upgrades to grow your tycoon.\n\nTap anywhere to close.",
+			description = "Amazing! Keep buying upgrades to grow your tycoon.\n\nThis will close automatically.",
 			target = nil,
-			autoClose = 5,
+			autoClose = 3,
 		},
 	},
 }
@@ -427,10 +427,11 @@ local function updateTutorialStep()
 		TutorialState.highlightPart = nil
 	end
 
-	-- Auto-close timer
+	-- Auto-close timer for final step
 	if step.autoClose then
 		task.delay(step.autoClose, function()
-			if TutorialState.enabled and not TutorialState.completed then
+			if TutorialState.enabled and not TutorialState.completed and TutorialState.currentStep == #Config.TUTORIAL_STEPS then
+				print("⏰ [Tutorial] Auto-closing...")
 				skipTutorial()
 			end
 		end)
@@ -491,25 +492,23 @@ local function nextTutorialStep()
 	TutorialState.currentStep = TutorialState.currentStep + 1
 	print("➡️ [Tutorial] Step " .. oldStep .. " → " .. TutorialState.currentStep)
 
-	-- Card pulse animation
+	-- Card pulse animation (SMALL pulse only!)
 	if TutorialState.tutorialGui then
 		local card = TutorialState.tutorialGui.Card
-		local pulseInfo = TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		local originalSize = card.Size
+		local pulseInfo = TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 		
-		TweenService:Create(card, pulseInfo, {
-			Size = UDim2.new(1, 20, 1, 10),
-			Position = UDim2.new(0.5, 0, card.Position.Y.Scale, card.Position.Y.Offset - 5)
-		}):Play()
+		-- Very small pulse (3% bigger, not huge!)
+		local scaleUp = UDim2.fromOffset(originalSize.X.Offset * 1.03, originalSize.Y.Offset * 1.03)
+		local scaleDown = originalSize
 		
-		task.wait(0.15)
-		
-		TweenService:Create(card, pulseInfo, {
-			Size = UDim2.new(1, 0, 1, 0),
-			Position = UDim2.new(0.5, 0, card.Position.Y.Scale, card.Position.Y.Offset + 5)
-		}):Play()
+		TweenService:Create(card, pulseInfo, {Size = scaleUp}):Play()
+		task.wait(0.12)
+		TweenService:Create(card, pulseInfo, {Size = scaleDown}):Play()
 	end
 
-	task.wait(Config.TUTORIAL_STEP_DELAY)
+	-- Update step AFTER pulse
+	task.wait(0.3)
 	updateTutorialStep()
 end
 
@@ -891,11 +890,17 @@ local function setupTutorialListeners()
 			local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
 			if not step then return end
 
-			-- For collect_money step, any cash increase works
-			if step.waitForCash and newValue > TutorialState.initialCash then
-				print("💰 [Tutorial] Cash collected! Advancing...")
-				task.wait(0.5)
-				nextTutorialStep()
+			-- For collect_money step, wait for specific amount
+			if step.waitForCash then
+				if typeof(step.waitForCash) == "number" and newValue >= step.waitForCash then
+					print("💰 [Tutorial] Required cash reached: $" .. step.waitForCash)
+					task.wait(0.8) -- Small delay
+					nextTutorialStep()
+				elseif step.waitForCash == true and newValue > TutorialState.initialCash then
+					print("💰 [Tutorial] Cash collected! Advancing...")
+					task.wait(0.5)
+					nextTutorialStep()
+				end
 			end
 		end)
 		
