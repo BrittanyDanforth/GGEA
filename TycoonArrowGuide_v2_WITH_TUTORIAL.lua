@@ -373,33 +373,31 @@ local function updateTutorialStep()
 		end
 	end
 
-	-- Find and highlight target
+	-- Find and highlight target (ONLY in player's tycoon!)
+	local myTycoon = getMyTycoon()
+	if not myTycoon then return end
+	
 	if step.targetButton then
-		-- Find button in all tycoons
-		for _, tycoon in pairs(workspace:GetChildren()) do
-			if tycoon:FindFirstChild("Buttons") then
-				for _, button in pairs(tycoon.Buttons:GetChildren()) do
-					if button.Name == step.targetButton then
-						local head = button:FindFirstChild("Head")
-						if head and head.CanCollide and head.Transparency < 0.5 then
-							createHighlight(head)
-							print("✨ [Tutorial] Highlighting button:", step.targetButton)
-							break
-						end
-					end
+		-- Find button in MY tycoon only
+		local buttons = myTycoon:FindFirstChild("Buttons")
+		if buttons then
+			local button = buttons:FindFirstChild(step.targetButton)
+			if button then
+				local head = button:FindFirstChild("Head")
+				if head and head.CanCollide and head.Transparency < 0.5 then
+					createHighlight(head)
+					print("✨ [Tutorial] Highlighting button:", step.targetButton)
 				end
 			end
 		end
 	elseif step.target == "collector" then
-		-- Find Giver part
-		for _, tycoon in pairs(workspace:GetChildren()) do
-			if tycoon:FindFirstChild("Essentials") then
-				local giver = tycoon.Essentials:FindFirstChild("Giver")
-				if giver then
-					createHighlight(giver)
-					print("✨ [Tutorial] Highlighting collector")
-					break
-				end
+		-- Find Giver in MY tycoon only
+		local essentials = myTycoon:FindFirstChild("Essentials")
+		if essentials then
+			local giver = essentials:FindFirstChild("Giver")
+			if giver then
+				createHighlight(giver)
+				print("✨ [Tutorial] Highlighting collector")
 			end
 		end
 	end
@@ -1087,6 +1085,13 @@ if Config.TUTORIAL_ENABLED then
 		setupTutorialListeners()
 		updateTutorialStep() -- Sets card Title/Body immediately
 		print("🎓 [Tutorial] Started instantly - 4 steps!")
+		
+		-- If player already owns tycoon (returning player), hook purchases now
+		local myTycoon = getMyTycoon()
+		if myTycoon then
+			print("🎓 [Tutorial] Player already owns tycoon - hooking purchases")
+			task.spawn(hookMyTycoonPurchases)
+		end
 	else
 		TutorialState.enabled = false
 		TutorialState.completed = true
