@@ -1444,12 +1444,28 @@ function Shop:createProductCard(product, productType, parent)
 		parent = card,
 	}):render()
 
-	local imageContainer = UI.Components.Frame({
+    local imageContainer = UI.Components.Frame({
 		Size = UDim2.new(1, 0, 0, 140),
 		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
 		cornerRadius = UDim.new(0, 12),
 		parent = content,
 	}):render()
+
+    -- BEST VALUE ribbon (cash only)
+    if (not isGamepass) and product.best then
+        local tag = Instance.new("TextLabel")
+        tag.Name = "BestRibbon"
+        tag.BackgroundColor3 = UI.Theme:get("accent")
+        tag.TextColor3 = Color3.new(1,1,1)
+        tag.Font = Enum.Font.GothamBold
+        tag.TextSize = 14
+        tag.Text = "BEST VALUE"
+        tag.AnchorPoint = Vector2.new(0,0)
+        tag.Position = UDim2.fromOffset(8, 8)
+        tag.Size = UDim2.fromOffset(112, 22)
+        tag.Parent = imageContainer
+        local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 10); c.Parent = tag
+    end
 
 	-- Add gradient to image container
 	local imageGradient = Instance.new("UIGradient")
@@ -1497,7 +1513,7 @@ function Shop:createProductCard(product, productType, parent)
 		parent = infoContainer,
 	}):render()
 
-	local priceText = isGamepass and 
+    local priceText = isGamepass and 
 		("R$" .. tostring(product.price or 0)) or 
 		("R$" .. tostring(product.price or 0) .. " • " .. Core.Utils.formatNumber(product.amount) .. " Cash")
 
@@ -1511,6 +1527,20 @@ function Shop:createProductCard(product, productType, parent)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = infoContainer,
 	}):render()
+
+    -- Optional bonus line (cash only)
+    if not isGamepass and product.bonus and product.bonus > 0 then
+        local bonus = Instance.new("TextLabel")
+        bonus.BackgroundTransparency = 1
+        bonus.Text = string.format("+%d%% Bonus", math.floor(product.bonus * 100))
+        bonus.TextColor3 = UI.Theme:get("accent")
+        bonus.Font = Enum.Font.Gotham
+        bonus.TextSize = 14
+        bonus.TextXAlignment = Enum.TextXAlignment.Left
+        bonus.Size = UDim2.new(1, 0, 0, 18)
+        bonus.Position = UDim2.fromOffset(0, 52)
+        bonus.Parent = infoContainer
+    end
 
 	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
 
