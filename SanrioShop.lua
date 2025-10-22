@@ -444,12 +444,11 @@ function Shop:createToggleButton()
 		stroke={color=UI.Theme:get("accent"),thickness=2}, parent=sg, onClick=function() self:toggle() end
 	}):render()
 
-	-- ✨ NEW: Soft glow
+	-- ✨ NEW: Soft glow (outer stroke for depth)
 	local glow = Instance.new("UIStroke")
 	glow.Color = UI.Theme:get("accent")
-	glow.Thickness = 2
-	glow.Transparency = 0.35
-	glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Outline
+	glow.Thickness = 3
+	glow.Transparency = 0.5
 	glow.Parent = self.toggleButton
 
 	-- ✨ NEW: Gift box icon
