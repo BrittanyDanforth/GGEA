@@ -979,6 +979,10 @@ end
 
 function Shop:open()
 	if Core.State.isOpen or Core.State.isAnimating then return end
+	if not self.gui or not self.mainPanel then 
+		warn("[SanrioShop] Shop UI not initialized!")
+		return 
+	end
 	Core.State.isAnimating = true; Core.State.isOpen = true
 
 	-- ✨ UPGRADED: Smart cache (ownership always fresh, prices throttled)
@@ -1005,6 +1009,7 @@ end
 
 function Shop:close()
 	if not Core.State.isOpen or Core.State.isAnimating then return end
+	if not self.gui or not self.mainPanel then return end
 	Core.State.isAnimating = true; Core.State.isOpen = false
 	Core.Animation.tween(self.blur, {Size=0}, Core.CONSTANTS.ANIM_FAST)
 	local currentW,currentH = self.mainPanel.AbsoluteSize.X,self.mainPanel.AbsoluteSize.Y
@@ -1015,7 +1020,13 @@ function Shop:close()
 	Core.State.isAnimating = false
 end
 
-function Shop:toggle() if Core.State.isOpen then self:close() else self:open() end end
+function Shop:toggle() 
+	if not self.gui then 
+		warn("[SanrioShop] Cannot toggle - UI not initialized")
+		return 
+	end
+	if Core.State.isOpen then self:close() else self:open() end 
+end
 
 function Shop:setupRemoteHandlers()
 	if not Remotes then
