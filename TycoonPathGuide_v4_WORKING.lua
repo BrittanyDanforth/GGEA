@@ -1,7 +1,8 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.3-WORKING]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.3-AUTO-COLLECT-FIX]
 	🎓 Built-in tutorial for first 2 droppers!
 	🔧 Uses workspace.DescendantAdded (PROVEN TO WORK!)
+	🔧 AUTO-SKIPS collect step if auto-collect gamepass active!
 	- Fast polling: 0.25s for instant gate claim detection
 	- Mobile-optimized: Touch-friendly, readable text
 	- Place in StarterPlayer > StarterPlayerScripts as a LocalScript
@@ -786,10 +787,28 @@ local function setupTutorialListeners()
 				print("✅ [Tutorial] Dropper1 bought!")
 				task.wait(0.5)
 				nextTutorialStep() -- Move to "collect_money"
+				
+				-- 🔧 AUTO-SKIP collect step after 2 seconds (for auto-collect gamepass users!)
+				task.spawn(function()
+					task.wait(2)
+					if TutorialState.currentStep == 3 and Config.TUTORIAL_STEPS[3].name == "collect_money" then
+						print("💰 [Tutorial] Auto-skipping collect step (auto-collect detected!)")
+						nextTutorialStep() -- Skip to "buy_dropper2"
+					end
+				end)
+				
 			elseif step.name == "buy_dropper2" and descendant.Name == "Dropper2" then
 				print("🎉 [Tutorial] Dropper2 bought!")
 				task.wait(0.5)
 				nextTutorialStep() -- Move to "tutorial_complete"
+				
+			-- 🔧 SAFETY: If player buys Dropper2 while stuck on collect_money, advance!
+			elseif step.name == "collect_money" and descendant.Name == "Dropper2" then
+				print("🎉 [Tutorial] Dropper2 bought (while on collect step - skipping ahead!)")
+				TutorialState.currentStep = 3 -- Force to step 3
+				task.wait(0.5)
+				nextTutorialStep() -- Advance to step 4
+				nextTutorialStep() -- Advance to step 5 (complete)
 			end
 		end
 	end)
@@ -938,7 +957,8 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v4.3-WORKING")
+print("✅ Tycoon Path Guide v4.3-AUTO-COLLECT-FIX")
 print("⚡ Fast & Responsive + Tutorial!")
 print("🎯 Uses workspace.DescendantAdded (PROVEN!)")
+print("🔧 AUTO-SKIPS collect step if auto-collect active!")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
