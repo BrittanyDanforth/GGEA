@@ -1,6 +1,7 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v6.2 - PRODUCTION READY]
-	✅ Instant path destruction (no lingering ghosts)
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v6.3 - BUTTERY SMOOTH]
+	✅ Smooth fade-out when gate claimed (no instant pop!)
+	✅ Path stays grounded (no floating in air)
 	✅ Robust ownership detection (works with all tycoon kits)
 	✅ Path ends exactly at gate face (aligned to gate)
 	✅ Tail stays visible (no premature fade)
@@ -40,7 +41,7 @@ local Config = {
 	MAX_SEGMENTS = 40,
 	GROUND_OFFSET = 0.05,
 	SCALE_REDUCTION = 0.2,
-	PATH_ARC_HEIGHT = 0.08,
+	PATH_ARC_HEIGHT = 0.01, -- Much lower arc to stay on ground
 
 	-- Distance Settings
 	MIN_DISTANCE = 5,
@@ -794,15 +795,15 @@ local function setupOwnershipListener(gateData)
 	
 	local conn = gateData.owner.Changed:Connect(function()
 		if tycoonOwnedByPlayer(gateData.tycoon, player) then
-			print("🔔 [Path] Ownership change detected instantly!")
+				print("🔔 [Path] Ownership change detected instantly!")
 			PathState.ownedTycoon = true
 			PathState.playerTycoon = gateData.tycoon
 			PathState.currentTargetGate = nil
 			
-			-- Use forward-declared function
+			-- Use forward-declared function with smooth fade
 			local hidePath = _G.hidePathFunction
 			if hidePath then
-				hidePath(true) -- INSTANT kill
+				hidePath(false) -- Smooth fade out
 			end
 			
 			-- Advance tutorial if waiting for gate claim
@@ -917,23 +918,23 @@ local function hidePath(immediate: boolean?)
 		return
 	end
 
-	-- Fallback: fast fade + immediate cleanup
+	-- Smooth fade out over time
 	for _, s in ipairs(PathState.segments) do
 		if s and s.part then
-			s.currentTransparency = 1
 			s.targetTransparency = 1
-			s.part.Transparency = 1
-			if s.light then s.light.Brightness = 0 end
-			if s.selection then s.selection.Transparency = 1 end
+			s.part:SetAttribute("TargetTransparency", 1)
 		end
 	end
 	
-	if PathState.pathModel then
-		Debris:AddItem(PathState.pathModel, 0)
-	end
-	PathState.pathModel = nil
-	PathState.segments = {}
-	PathState.fadingOut = false
+	-- Destroy after fade completes
+	task.delay(0.5, function()
+		if PathState.pathModel then
+			pcall(function() PathState.pathModel:Destroy() end)
+		end
+		PathState.pathModel = nil
+		PathState.segments = {}
+		PathState.fadingOut = false
+	end)
 end
 
 -- Store as global for event listeners
@@ -978,7 +979,7 @@ local function updatePath()
 	end
 
 	local midPoint = (smoothStart + smoothEnd) / 2
-	local arcHeight = math.min(smoothDistance * Config.PATH_ARC_HEIGHT, 5)
+	local arcHeight = math.min(smoothDistance * Config.PATH_ARC_HEIGHT, 0.5) -- Max 0.5 studs up
 	local controlPoint = midPoint + Vector3.new(0, arcHeight, 0)
 	local segmentCount = math.min(math.floor(smoothDistance / Config.SEGMENT_SPACING), Config.MAX_SEGMENTS)
 	local ignoreList = {character, PathState.pathModel}
@@ -1173,12 +1174,19 @@ end
 --                            MAIN LOOPS
 --============================================================================--
 
--- 🎯 GUARDED RenderStepped - no rebuilds during fade/after claim
+	-- 🎯 GUARDED RenderStepped - no rebuilds during fade/after claim
 RunService.RenderStepped:Connect(function(deltaTime)
-	if PathState.fadingOut or PathState.ownedTycoon then
-		-- Do NOT attempt updates that might recreate the path
+	if PathState.ownedTycoon then
+		-- Don't rebuild if we own a tycoon
 		return
 	end
+	
+	if PathState.fadingOut then
+		-- Still animate the fade out, but don't update path
+		animateSegments(deltaTime)
+		return
+	end
+	
 	updatePath()
 	animateSegments(deltaTime)
 end)
@@ -1200,8 +1208,8 @@ task.spawn(function()
 				-- Clear target BEFORE hiding to prevent race condition
 				PathState.currentTargetGate = nil
 				
-				-- INSTANT nuke (no lingering)
-				hidePath(true)
+				-- Smooth fade out (not instant)
+				hidePath(false)
 
 				if TutorialState.enabled and not TutorialState.completed then
 					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
@@ -1305,10 +1313,10 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v6.2 - PRODUCTION READY")
-print("💥 Instant path destruction (no ghosts!)")
+print("✅ Tycoon Path Guide v6.3 - BUTTERY SMOOTH")
+print("✨ Smooth fade-out when gate claimed")
+print("🌍 Path stays on ground (no floating!)")
 print("🎯 Path ends exactly at gate face")
 print("⚡ Event-driven claim detection (zero latency)")
 print("🔧 Robust ownership (works with all tycoon kits)")
-print("🎀 Tail stays visible + buttery-smooth transitions")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
