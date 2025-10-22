@@ -1021,11 +1021,18 @@ end)
 -- Gate scanning loop (separate) - RUNS EVERY 0.25 SECONDS!
 task.spawn(function()
 	print("🚪 [Tutorial] Gate scanning loop started! (interval:", Config.GATE_UPDATE_INTERVAL, "sec)")
+	local loopCount = 0
 	
 	while true do
 		task.wait(Config.GATE_UPDATE_INTERVAL)
+		loopCount = loopCount + 1
 
 		local targetGate, ownsTycoon = findNearestUnclaimedGate()
+		
+		-- Debug every 4 seconds (16 loops at 0.25s)
+		if loopCount % 16 == 0 then
+			print("🔄 [Tutorial] Loop check #" .. loopCount .. " - ownsTycoon:", ownsTycoon, "| PathState.ownedTycoon:", PathState.ownedTycoon)
+		end
 
 		if ownsTycoon or not targetGate then
 			PathState.currentTargetGate = nil
