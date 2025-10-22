@@ -1,7 +1,8 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.0 - ULTIMATE EDITION]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.1 - DYNAMIC HIGHLIGHTS]
 	✅ Path stays FLAT on ground (no floating!)
-	✅ Highlights CLOSEST gate (same one path points to)
+	✅ Highlights CLOSEST gate (updates as you move!)
+	✅ Dynamic highlight switching (follows the path)
 	✅ Smooth fade-out when gate claimed
 	✅ Robust ownership detection (all tycoon kits)
 	✅ Event-driven instant claim detection
@@ -122,6 +123,7 @@ local TutorialState = {
 	completed = false,
 	isTransitioning = false,
 	highlightPart = nil,
+	lastHighlightedPart = nil, -- Track which part is currently highlighted
 	tutorialGui = nil,
 	skipButton = nil,
 	connections = {},
@@ -349,12 +351,20 @@ local function createTutorialUI()
 end
 
 local function createHighlight(target)
+	-- Don't recreate if already highlighting this exact part
+	if TutorialState.lastHighlightedPart == target and TutorialState.highlightPart and TutorialState.highlightPart.Parent then
+		return
+	end
+	
 	if TutorialState.highlightPart then
 		TutorialState.highlightPart:Destroy()
 		TutorialState.highlightPart = nil
 	end
 	
-	if not target or not target:IsA("BasePart") then return end
+	if not target or not target:IsA("BasePart") then 
+		TutorialState.lastHighlightedPart = nil
+		return 
+	end
 
 	local highlight = Instance.new("Highlight")
 	highlight.Name = "TutorialHighlight"
@@ -380,6 +390,7 @@ local function createHighlight(target)
 	
 	table.insert(TutorialState.connections, pulseConnection)
 	TutorialState.highlightPart = highlight
+	TutorialState.lastHighlightedPart = target
 end
 
 local function skipTutorial()
@@ -398,6 +409,7 @@ local function skipTutorial()
 	if TutorialState.highlightPart then 
 		TutorialState.highlightPart:Destroy() 
 		TutorialState.highlightPart = nil
+		TutorialState.lastHighlightedPart = nil
 	end
 
 	if TutorialState.tutorialGui then
@@ -503,6 +515,7 @@ local function updateTutorialStep()
 	if TutorialState.highlightPart then 
 		TutorialState.highlightPart:Destroy() 
 		TutorialState.highlightPart = nil
+		TutorialState.lastHighlightedPart = nil
 	end
 
 	if step.autoClose then
@@ -594,6 +607,7 @@ local function nextTutorialStep()
 	if TutorialState.highlightPart then 
 		TutorialState.highlightPart:Destroy() 
 		TutorialState.highlightPart = nil
+		TutorialState.lastHighlightedPart = nil
 	end
 	
 	local targetPart = nil
@@ -1118,7 +1132,19 @@ task.spawn(function()
 				PathState.fadingOut = false
 			end
 			PathState.active = true
+			
+			-- 🎯 Update highlight if target changes during tutorial
+			local targetChanged = (PathState.currentTargetGate ~= targetGate)
 			PathState.currentTargetGate = targetGate
+			
+			if targetChanged and TutorialState.enabled and not TutorialState.completed then
+				local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+				if step and step.target == "closest_gate" and targetGate then
+					-- Update highlight to new closest gate!
+					createHighlight(targetGate.part)
+					print("🔄 [Tutorial] Updated highlight to new closest gate")
+				end
+			end
 		end
 		
 		task.wait(Config.GATE_UPDATE_INTERVAL)
@@ -1148,6 +1174,7 @@ player.CharacterRemoving:Connect(function()
 	if TutorialState.highlightPart then
 		TutorialState.highlightPart:Destroy()
 		TutorialState.highlightPart = nil
+		TutorialState.lastHighlightedPart = nil
 	end
 
 	if PathState.pathModel then 
@@ -1177,6 +1204,7 @@ player.CharacterAdded:Connect(function(character)
 	TutorialState.currentStep = 1
 	TutorialState.completed = false
 	TutorialState.isTransitioning = false
+	TutorialState.lastHighlightedPart = nil
 	PathState.ownedTycoon = false
 	PathState.playerTycoon = nil
 	PathState.fadingOut = false
@@ -1195,9 +1223,10 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.0 - ULTIMATE EDITION")
+print("✅ Tycoon Path Guide v7.1 - DYNAMIC HIGHLIGHTS")
 print("🌍 Path stays FLAT on ground (no floating!)")
-print("🎯 Highlights CLOSEST gate (same as path target)")
+print("🎯 Highlights CLOSEST gate (updates as you move!)")
+print("🔄 Dynamic highlight switching (follows the path)")
 print("✨ Smooth fade-out when gate claimed")
 print("⚡ Event-driven instant claim detection")
 print("🔧 Robust ownership (all tycoon kits)")
