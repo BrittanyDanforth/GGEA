@@ -834,9 +834,9 @@ function Shop:createToggleButton()
 		end,
 	}):render()
 
-	local icon = UI.Components.Image({
+    local icon = UI.Components.Image({
 		Name = "Icon",
-		Image = "rbxassetid://17398522865",
+        Image = "rbxassetid://121850087687043",
 		Size = UDim2.fromOffset(32, 32),
 		Position = UDim2.fromOffset(16, 14),
 		parent = self.toggleButton,
@@ -924,9 +924,9 @@ function Shop:createHeader()
 		parent = self.mainPanel,
 	}):render()
 
-	local logo = UI.Components.Image({
+    local logo = UI.Components.Image({
 		Name = "Logo",
-		Image = "rbxassetid://17398522865",
+        Image = "rbxassetid://121850087687043",
 		Size = UDim2.fromOffset(60, 60),
 		Position = UDim2.fromOffset(16, 10),
 		parent = header,
@@ -972,8 +972,8 @@ function Shop:createTabBar()
 
 	UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 12)
 
-	local tabData = {
-		{id = "Home", name = "Home", icon = "rbxassetid://17398522865", color = UI.Theme:get("kitty")},
+    local tabData = {
+        {id = "Home", name = "Home", icon = "rbxassetid://121850087687043", color = UI.Theme:get("kitty")},
 		{id = "Cash", name = "Cash", icon = "rbxassetid://10709728059", color = UI.Theme:get("cinna")},
 		{id = "Gamepasses", name = "Passes", icon = "rbxassetid://10709727148", color = UI.Theme:get("kuromi")},
 	}
@@ -1272,8 +1272,8 @@ function Shop:createHeroSection(parent)
 	gradient.Parent = hero
 
 	-- Add decorative pattern
-	local pattern = UI.Components.Image({
-		Image = "rbxassetid://17398522865",
+    local pattern = UI.Components.Image({
+        Image = "rbxassetid://121850087687043",
 		Size = UDim2.fromOffset(200, 200),
 		Position = UDim2.new(1, -100, 0.5, -100),
 		AnchorPoint = Vector2.new(0.5, 0.5),

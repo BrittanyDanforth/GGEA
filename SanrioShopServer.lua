@@ -36,6 +36,8 @@ local ProductGranted = createRemote("ProductGranted", "RemoteEvent")
 local GrantProductCurrency = createRemote("GrantProductCurrency", "RemoteEvent")
 local AutoCollectToggle = createRemote("AutoCollectToggle", "RemoteEvent")
 local GetAutoCollectState = createRemote("GetAutoCollectState", "RemoteFunction")
+-- Client hover handler expects this to exist; create to avoid infinite yield
+local ButtonHoverEffect = createRemote("ButtonHoverEffect", "RemoteEvent")
 
 -- Data stores
 local AutoCollectDataStore = DataStoreService:GetDataStore("AutoCollectStates")
