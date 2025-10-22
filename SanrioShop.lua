@@ -395,8 +395,12 @@ function Shop.new()
 end
 
 function Shop:preloadImages()
-	-- ✨ Gift box icon, cash icon, gamepass icon
-	local ids={"rbxassetid://124787967389088","rbxassetid://10709728059","rbxassetid://10709727148"}
+	-- ✨ Gift box icon (REPLACE WITH YOUR CORRECT ASSET ID!)
+	-- Current: Using Roblox's default gift icon as placeholder
+	-- TODO: Get your actual decal ID and replace 14270868971
+	local giftBoxId = "rbxassetid://14270868971" -- ← CHANGE THIS to your real ID!
+	
+	local ids={giftBoxId,"rbxassetid://10709728059","rbxassetid://10709727148"}
 	for _,p in ipairs(Core.DataManager.products.cash) do if p.icon then table.insert(ids,p.icon) end end
 	for _,p in ipairs(Core.DataManager.products.gamepasses) do if p.icon then table.insert(ids,p.icon) end end
 	task.spawn(function() 
@@ -405,6 +409,8 @@ function Shop:preloadImages()
 		end)
 		if not success then
 			warn("[SanrioShop] Image preload warning:", err)
+		else
+			print("[SanrioShop] ✅ Preloaded gift box icon:", giftBoxId)
 		end
 	end)
 end
@@ -471,9 +477,12 @@ function Shop:createToggleButton()
 	glow.Parent = self.toggleButton
 
 	-- ✨ YOUR GIFT BOX DECAL - BIG AND CENTERED!
+	-- TODO: Replace this ID with your actual gift box decal
+	local GIFT_BOX_ICON = "rbxassetid://14270868971" -- ← CHANGE THIS!
+	
 	local giftBoxSize = isPhone and 56 or (isTablet and 64 or 72)
 	UI.Components.Image({ 
-		Image="rbxassetid://124787967389088", 
+		Image=GIFT_BOX_ICON, 
 		Size=UDim2.fromOffset(giftBoxSize, giftBoxSize), 
 		Position=UDim2.fromScale(0.5, 0.5), 
 		AnchorPoint=Vector2.new(0.5, 0.5),
@@ -555,7 +564,8 @@ function Shop:createMainInterface()
 	local headerTextSize = (prof.title >= 20) and 28 or 26
 	local header = UI.Components.Frame({ Size=UDim2.new(1,-40,0,headerHeight), Position=UDim2.fromOffset(20,20), BackgroundColor3=UI.Theme:get("surfaceAlt"), cornerRadius=UDim.new(0,16), parent=self.mainPanel }):render()
 	-- ✨ YOUR GIFT BOX in the header too!
-	UI.Components.Image({ Image="rbxassetid://124787967389088", Size=UDim2.fromOffset(52,52), Position=UDim2.fromOffset(12, math.max(6, headerHeight-56)), parent=header }):render()
+	local GIFT_BOX_ICON = "rbxassetid://14270868971" -- ← Must match button icon!
+	UI.Components.Image({ Image=GIFT_BOX_ICON, Size=UDim2.fromOffset(52,52), Position=UDim2.fromOffset(12, math.max(6, headerHeight-56)), parent=header }):render()
 	UI.Components.TextLabel({ Text="Sanrio Shop", Size=UDim2.new(1,-180,1,0), Position=UDim2.fromOffset(78,0), TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=headerTextSize, parent=header }):render()
 	UI.Components.Button({ Text="✕", Size=UDim2.fromOffset(44,44), Position=UDim2.new(1,-56,0.5,0), AnchorPoint=Vector2.new(0,0.5), BackgroundColor3=UI.Theme:get("accent"), TextColor3=Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=22, cornerRadius=UDim.new(0.5,0), parent=header, onClick=function() self:close() end }):render()
 
@@ -1141,4 +1151,6 @@ task.spawn(function()
 end)
 
 print("[SanrioShop] ✨ Loaded: Mobile-optimized + BEST VALUE ribbons, bonus labels, confetti, smart caching, gift box button!")
+print("[SanrioShop] 🎁 Using gift box icon: rbxassetid://14270868971")
+print("[SanrioShop] 💡 TIP: Replace asset ID 14270868971 with YOUR decal ID!")
 return shop
