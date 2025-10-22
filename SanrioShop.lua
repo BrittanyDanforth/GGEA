@@ -395,20 +395,38 @@ function Shop.new()
 end
 
 function Shop:preloadImages()
-	local ids={"rbxassetid://124787967389088","rbxassetid://10709728059","rbxassetid://10709727148"} -- ✨ NEW: gift box icon
+	-- ✨ Gift box icon, cash icon, gamepass icon
+	local ids={"rbxassetid://124787967389088","rbxassetid://10709728059","rbxassetid://10709727148"}
 	for _,p in ipairs(Core.DataManager.products.cash) do if p.icon then table.insert(ids,p.icon) end end
 	for _,p in ipairs(Core.DataManager.products.gamepasses) do if p.icon then table.insert(ids,p.icon) end end
-	task.spawn(function() pcall(function() ContentProvider:PreloadAsync(ids) end) end)
+	task.spawn(function() 
+		local success, err = pcall(function() 
+			ContentProvider:PreloadAsync(ids) 
+		end)
+		if not success then
+			warn("[SanrioShop] Image preload warning:", err)
+		end
+	end)
 end
 
 function Shop:initialize()
 	Core.SoundSystem.initialize()
 	Core.DataManager.refreshPrices()
 	self:preloadImages()
-	self:createToggleButton()
-	self:createMainInterface()
-	self:setupInputHandlers()
-	self:setupRemoteHandlers()
+	
+	local success, err = pcall(function()
+		self:createToggleButton()
+		self:createMainInterface()
+		self:setupInputHandlers()
+		self:setupRemoteHandlers()
+	end)
+	
+	if not success then
+		warn("[SanrioShop] Initialization failed:", err)
+		return
+	end
+	
+	print("[SanrioShop] ✅ Initialized successfully!")
 end
 
 -- ✨ UPGRADED toggle button (gift box + glow + pulse)
