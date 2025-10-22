@@ -429,18 +429,20 @@ function Shop:initialize()
 	print("[SanrioShop] ✅ Initialized successfully!")
 end
 
--- ✨ UPGRADED toggle button (gift box + glow + pulse)
+-- ✨ UPGRADED toggle button (YOUR GIFT BOX DECAL + glow + pulse)
 function Shop:createToggleButton()
 	local sg=PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
 	sg.Name="SanrioShopToggle"; sg.ResetOnSpawn=false; sg.DisplayOrder=999
-	sg.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets -- ✨ NEW: Safe insets
+	sg.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
 	sg.Parent=PlayerGui
 
 	local isPhone  = Core.Utils_isPhone()
 	local isTablet = Core.Utils_isTablet()
-	local buttonSize = (isPhone and UDim2.fromOffset(140,50))
-		or (isTablet and UDim2.fromOffset(160,56))
-		or UDim2.fromOffset(180,60)
+	
+	-- ✨ Make it more square/rectangular to show off the gift box
+	local buttonSize = (isPhone and UDim2.fromOffset(70,70))
+		or (isTablet and UDim2.fromOffset(80,80))
+		or UDim2.fromOffset(90,90)
 
 	local pos, anchor
 	if isPhone then
@@ -451,29 +453,34 @@ function Shop:createToggleButton()
 		pos = UDim2.new(1,-16,0.5,-70);    anchor=Vector2.new(1,0.5)
 	end
 
-	local iconSize = isPhone and 26 or (isTablet and 30 or 32)
-	local iconPos  = isPhone and UDim2.fromOffset(12,10) or (isTablet and UDim2.fromOffset(14,13) or UDim2.fromOffset(16,14))
-	local textSize = isPhone and 18 or (isTablet and 19 or 20)
-	local textPos  = isPhone and UDim2.fromOffset(46,0) or (isTablet and UDim2.fromOffset(52,0) or UDim2.fromOffset(56,0))
-
+	-- ✨ Button with rounded corners (not a pill!)
 	self.toggleButton = UI.Components.Button({
 		Text="", Size=buttonSize, Position=pos, AnchorPoint=anchor,
-		BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(1,0),
-		stroke={color=UI.Theme:get("accent"),thickness=2}, parent=sg, onClick=function() self:toggle() end
+		BackgroundColor3=UI.Theme:get("surface"), 
+		cornerRadius=UDim.new(0,16), -- ✨ Rounded square, not pill!
+		stroke={color=UI.Theme:get("accent"),thickness=2}, 
+		parent=sg, 
+		onClick=function() self:toggle() end
 	}):render()
 
-	-- ✨ NEW: Soft glow (outer stroke for depth)
+	-- ✨ Soft pink glow for depth
 	local glow = Instance.new("UIStroke")
 	glow.Color = UI.Theme:get("accent")
 	glow.Thickness = 3
 	glow.Transparency = 0.5
 	glow.Parent = self.toggleButton
 
-	-- ✨ NEW: Gift box icon
-	UI.Components.Image({ Image="rbxassetid://124787967389088", Size=UDim2.fromOffset(iconSize,iconSize), Position=iconPos, parent=self.toggleButton }):render()
-	UI.Components.TextLabel({ Text="Shop", Size=UDim2.new(1,-64,1,0), Position=textPos, TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=textSize, parent=self.toggleButton }):render()
+	-- ✨ YOUR GIFT BOX DECAL - BIG AND CENTERED!
+	local giftBoxSize = isPhone and 56 or (isTablet and 64 or 72)
+	UI.Components.Image({ 
+		Image="rbxassetid://124787967389088", 
+		Size=UDim2.fromOffset(giftBoxSize, giftBoxSize), 
+		Position=UDim2.fromScale(0.5, 0.5), 
+		AnchorPoint=Vector2.new(0.5, 0.5),
+		parent=self.toggleButton 
+	}):render()
 
-	-- ✨ NEW: Optional SALE badge (if bonus exists)
+	-- ✨ Optional SALE badge (if bonus exists)
 	local hasBonus = false
 	for _,p in ipairs(Core.DataManager.products.cash) do if p.bonus and p.bonus > 0 then hasBonus = true break end end
 	if hasBonus then
@@ -481,21 +488,21 @@ function Shop:createToggleButton()
 		badge.BackgroundColor3 = UI.Theme:get("accent")
 		badge.TextColor3 = Color3.new(1,1,1)
 		badge.Font = Enum.Font.GothamBold
-		badge.TextSize = 12
+		badge.TextSize = 11
 		badge.Text = "SALE"
 		badge.AnchorPoint = Vector2.new(1,0)
-		badge.Position = UDim2.new(1, -8, 0, -6)
-		badge.Size = UDim2.fromOffset(44, 20)
+		badge.Position = UDim2.new(1, 2, 0, -8)
+		badge.Size = UDim2.fromOffset(40, 18)
 		badge.Parent = self.toggleButton
 		local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(1,0); c.Parent = badge
 	end
 
-	-- ✨ NEW: Idle pulse (phones only)
+	-- ✨ Idle pulse (phones only)
 	if isPhone then
 		local s = Instance.new("UIScale"); s.Scale = 1; s.Parent = self.toggleButton
 		task.spawn(function()
 			while self.toggleButton and self.toggleButton.Parent do
-				Core.Animation.tween(s, {Scale = 1.03}, 0.7)
+				Core.Animation.tween(s, {Scale = 1.04}, 0.7)
 				task.wait(0.9)
 				Core.Animation.tween(s, {Scale = 1.00}, 0.6)
 				task.wait(3.2)
@@ -547,7 +554,8 @@ function Shop:createMainInterface()
 	local headerHeight = prof.headerH
 	local headerTextSize = (prof.title >= 20) and 28 or 26
 	local header = UI.Components.Frame({ Size=UDim2.new(1,-40,0,headerHeight), Position=UDim2.fromOffset(20,20), BackgroundColor3=UI.Theme:get("surfaceAlt"), cornerRadius=UDim.new(0,16), parent=self.mainPanel }):render()
-	UI.Components.Image({ Image="rbxassetid://124787967389088", Size=UDim2.fromOffset(52,52), Position=UDim2.fromOffset(12, math.max(6, headerHeight-56)), parent=header }):render() -- ✨ NEW: gift box
+	-- ✨ YOUR GIFT BOX in the header too!
+	UI.Components.Image({ Image="rbxassetid://124787967389088", Size=UDim2.fromOffset(52,52), Position=UDim2.fromOffset(12, math.max(6, headerHeight-56)), parent=header }):render()
 	UI.Components.TextLabel({ Text="Sanrio Shop", Size=UDim2.new(1,-180,1,0), Position=UDim2.fromOffset(78,0), TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=headerTextSize, parent=header }):render()
 	UI.Components.Button({ Text="✕", Size=UDim2.fromOffset(44,44), Position=UDim2.new(1,-56,0.5,0), AnchorPoint=Vector2.new(0,0.5), BackgroundColor3=UI.Theme:get("accent"), TextColor3=Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=22, cornerRadius=UDim.new(0.5,0), parent=header, onClick=function() self:close() end }):render()
 
