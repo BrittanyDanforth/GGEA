@@ -1,14 +1,15 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.2 - TRUTHINESS FIX]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.3 - INSTANT SWITCHING]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
 	✅ Highlight cleared when no target (no lingering blue outlines)
-	✅ Highlight updates ALWAYS (not just during tutorial step)
-	✅ Switch logic with hysteresis (prevents jitter/stuck feeling)
+	✅ INSTANT highlight switching (no hysteresis, always closest)
+	✅ Removed early-return optimization (was preventing updates)
+	✅ Debug logging (shows which gate is selected and when it switches)
 	
 	✅ Path stays FLAT on ground (no floating!)
-	✅ Highlights CLOSEST gate (true distance-based switching)
+	✅ Highlights TRUE CLOSEST gate (instant distance-based switching)
 	✅ Smooth fade-out when gate claimed
 	✅ Robust ownership detection (all tycoon kits)
 	✅ Event-driven instant claim detection
@@ -370,11 +371,7 @@ local function createTutorialUI()
 end
 
 local function createHighlight(target)
-	-- Don't recreate if already highlighting this exact part
-	if TutorialState.lastHighlightedPart == target and TutorialState.highlightPart and TutorialState.highlightPart.Parent then
-		return
-	end
-	
+	-- 🔥 ALWAYS recreate highlight (ensures it updates even if targeting same part)
 	if TutorialState.highlightPart then
 		TutorialState.highlightPart:Destroy()
 		TutorialState.highlightPart = nil
@@ -826,6 +823,13 @@ local function findNearestUnclaimedGate()
 			end
 		end
 	end
+	
+	-- 🔍 Debug: Log which gate was selected
+	if nearestGate then
+		print(string.format("🎯 [Gate] Selected: %s (%.1f studs away)", 
+			nearestGate.tycoon.Name, nearestDistance))
+	end
+	
 	return nearestGate, false
 end
 
@@ -1166,29 +1170,20 @@ task.spawn(function()
 			end
 			PathState.active = true
 			
-			-- 🐛 FIX D: Clean switch logic with hysteresis (prevents jitter)
-			local character = player.Character
-			local humanoidRoot = character and character:FindFirstChild("HumanoidRootPart")
-			local current = PathState.currentTargetGate
-			local SWITCH_MARGIN = 1.0 -- studs; set to 0 for snap, >0 for stability
+			-- 🐛 FIX C & D: ALWAYS update to closest gate (findNearestUnclaimedGate already returns the TRUE closest!)
+			local actuallyChanged = (PathState.currentTargetGate ~= targetGate)
 			
-			local shouldSwitch = (current == nil)
-			if current and targetGate and humanoidRoot then
-				local charPos = humanoidRoot.Position
-				local curDist = (current.position - charPos).Magnitude
-				local newDist = (targetGate.position - charPos).Magnitude
-				shouldSwitch = (newDist + SWITCH_MARGIN < curDist)
+			if actuallyChanged and targetGate then
+				print(string.format("🔄 [Highlight] Switching: %s → %s", 
+					PathState.currentTargetGate and PathState.currentTargetGate.tycoon.Name or "nil",
+					targetGate.tycoon.Name))
 			end
 			
-			if shouldSwitch then
-				local actuallyChanged = (PathState.currentTargetGate ~= targetGate)
-				PathState.currentTargetGate = targetGate
-				
-				-- 🐛 FIX C: Update highlight whenever target changes (not just during tutorial step!)
-				if actuallyChanged and targetGate then
-					createHighlight(targetGate.part)
-					print("🔄 [Tutorial] Switched highlight to new gate (distance-based)")
-				end
+			PathState.currentTargetGate = targetGate
+			
+			-- Update highlight EVERY TIME the target changes (instant, responsive switching!)
+			if actuallyChanged and targetGate then
+				createHighlight(targetGate.part)
 			end
 		end
 		
@@ -1268,13 +1263,14 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.2 - TRUTHINESS FIX")
-print("🐛 FIX A: Correct unclaimed detection (0 and \"\" now work!)")
-print("🐛 FIX B: Highlight cleared when no target (no lingering)")
-print("🐛 FIX C: Highlight ALWAYS updates (not step-limited)")
-print("🐛 FIX D: Switch logic with hysteresis (no jitter)")
+print("✅ Tycoon Path Guide v7.3 - INSTANT SWITCHING")
+print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
+print("🐛 FIX: Highlight cleared when no target")
+print("🐛 FIX: INSTANT switching (no hysteresis)")
+print("🐛 FIX: Removed early-return optimization")
+print("🔍 DEBUG: Logging gate selection & switches")
 print("🌍 Path stays FLAT on ground (no floating!)")
-print("🎯 Highlights TRUE closest gate (distance-based)")
+print("🎯 Highlights TRUE closest gate (instant updates)")
 print("✨ Smooth fade-out when gate claimed")
 print("⚡ Event-driven instant claim detection")
 print("🔧 Robust ownership (all tycoon kits)")
