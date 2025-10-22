@@ -1,23 +1,20 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.2-FINAL - MOBILE-FIRST]
-	🎓 NEW: Built-in tutorial for first 2 droppers!
-	🔧 FIXED: PathState.ownedTycoon race condition
-	- Fixed: Path now updates instantly with player movement
-	- Fixed: Path extends much closer to the gate
-	- ✨ Tutorial: Guides players through Dropper 1 & 2
-	- 📱 Mobile-optimized: Touch-friendly, readable text
-	- Place in StarterPlayer > StarterPlayerScripts as a LocalScript
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.4-FINAL-POLISHED]
+	✅ Auto-Collect Compatible (monitors leaderstats.Cash!)
+	✅ Built-in tutorial for the first few items
+	✅ Clean, minimal UI - no overlapping elements
+	✅ Uses workspace.DescendantAdded for reliable purchase detection
+	
+	Place in: StarterPlayer > StarterPlayerScripts as a LocalScript
 --]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
 
 local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
-local camera = workspace.CurrentCamera
 local playerGui = player:WaitForChild("PlayerGui")
 
 --============================================================================--
@@ -26,11 +23,10 @@ local playerGui = player:WaitForChild("PlayerGui")
 local Config = {
 	-- Visual Appearance
 	Colors = {
-		PATH = Color3.fromRGB(255, 179, 212),      -- Light Pink
-		GLOW = Color3.fromRGB(255, 204, 229),      -- Lighter Pink Glow
-		PULSE = Color3.fromRGB(255, 230, 240),     -- Ultra Light Pink for flow
-		TUTORIAL_HIGHLIGHT = Color3.fromRGB(100, 200, 255), -- Blue highlight
-		TUTORIAL_ARROW = Color3.fromRGB(255, 220, 100), -- Yellow arrow
+		PATH = Color3.fromRGB(255, 179, 212),
+		GLOW = Color3.fromRGB(255, 204, 229),
+		PULSE = Color3.fromRGB(255, 230, 240),
+		TUTORIAL_HIGHLIGHT = Color3.fromRGB(100, 200, 255),
 	},
 
 	-- Path Geometry
@@ -56,7 +52,7 @@ local Config = {
 	POSITION_SMOOTHING = 0.3,
 	TARGET_SMOOTHING = 0.25,
 	TRANSPARENCY_SMOOTHING = 0.15,
-	GATE_UPDATE_INTERVAL = 0.25, -- Faster polling for tutorial
+	GATE_UPDATE_INTERVAL = 0.25,
 	PATH_UPDATE_RATE = 1/30,
 
 	-- Anti-bunching
@@ -75,27 +71,33 @@ local Config = {
 	TUTORIAL_STEPS = {
 		{
 			name = "claim_gate",
-			title = "Claim a Tycoon",
-			body = "Walk to a glowing gate and step on it to claim.",
+			title = "Welcome to Your Tycoon! 🎀",
+			description = "Touch the gate to claim your tycoon!",
 			target = "gate",
 		},
 		{
 			name = "buy_dropper1",
-			title = "Buy Dropper 1",
-			body = "Step on the green button labeled 'Begin Working!'",
+			title = "Buy Your First Dropper! 💎",
+			description = "This cute item will drop cash for you!\n\nWalk to the glowing button and touch it.",
 			targetButton = "Begin Working!",
 		},
 		{
 			name = "collect_money",
-			title = "Collect $50",
-			body = "Walk to the green collector to pick up your cash!",
+			title = "Collect Your Cash! 💰",
+			description = "Cash from your dropper is being collected! You'll need it to buy the next upgrade.",
 			target = "collector",
 		},
 		{
 			name = "buy_dropper2",
-			title = "Buy Dropper 2",
-			body = "Step on the button that costs $70. Collect more cash if needed!",
+			title = "Upgrade Time! ✨",
+			description = "Buy the next dropper to earn cash faster!\n\nIt costs $70 - you should have enough now.",
 			targetButton = "Buy Dropper - [$70]",
+		},
+		{
+			name = "tutorial_complete",
+			title = "You're All Set! 🎉",
+			description = "Great job! Keep buying upgrades to grow your tycoon.\n\nTap anywhere to dismiss this tutorial.",
+			target = nil,
 		},
 	},
 }
@@ -138,8 +140,7 @@ raycastParams.IgnoreWater = true
 --                     📱 MOBILE DETECTION
 --============================================================================--
 local function viewport()
-	local cam = workspace.CurrentCamera
-	return cam and cam.ViewportSize or Vector2.new(1920, 1080)
+	return workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
 end
 
 local function isMobileLike()
@@ -157,65 +158,7 @@ local function isTablet()
 end
 
 --============================================================================--
---                     🎓 TUTORIAL HELPERS (TOP LEVEL!)
---============================================================================--
-
--- Track session cash (NO ServerStorage on client!)
-local SessionCash = 0
-
--- Get player's owned tycoon
-local function getMyTycoon()
-	for _, tycoon in ipairs(workspace:GetChildren()) do
-		local owner = tycoon:FindFirstChild("Owner")
-		if owner and owner:IsA("ObjectValue") and owner.Value == player then
-			return tycoon
-		end
-	end
-	return nil
-end
-
--- Hook into player's specific tycoon purchases (NO workspace.DescendantAdded spam!)
-local function hookMyTycoonPurchases()
-	local myTycoon = getMyTycoon()
-	if not myTycoon then
-		warn("🎓 [Tutorial] No tycoon found to hook!")
-		return
-	end
-	
-	print("🎓 [Tutorial] Hooking into tycoon:", myTycoon.Name)
-	
-	local purchasedObjects = myTycoon:WaitForChild("PurchasedObjects", 5)
-	if not purchasedObjects then
-		warn("🎓 [Tutorial] PurchasedObjects not found!")
-		return
-	end
-	
-	-- Listen for purchases in THIS tycoon only
-	purchasedObjects.ChildAdded:Connect(function(child)
-		if not TutorialState.enabled or TutorialState.completed then return end
-		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-		if not step then return end
-		
-		print("🔍 [Tutorial] Purchase detected:", child.Name, "| Step:", step.name)
-		
-		if step.name == "buy_dropper1" and child.Name == "Dropper1" then
-			print("✅ [Tutorial] Dropper1 bought! → Collect step")
-			task.defer(nextTutorialStep)
-		elseif step.name == "buy_dropper2" and child.Name == "Dropper2" then
-			print("🎉 [Tutorial] Dropper2 bought! → Complete!")
-			task.defer(function()
-				nextTutorialStep()
-				task.wait(0.8)
-				skipTutorial()
-			end)
-		end
-	end)
-	
-	print("🎓 [Tutorial] ✅ Hooked to PurchasedObjects!")
-end
-
---============================================================================--
---                       🎓 TUTORIAL UI SYSTEM
+--                       🎓 TUTORIAL UI SYSTEM (POLISHED!)
 --============================================================================--
 
 local function createTutorialUI()
@@ -226,26 +169,25 @@ local function createTutorialUI()
 	gui.IgnoreGuiInset = true
 	gui.Parent = playerGui
 
-	-- Responsive sizing (BIGGER for phones!)
 	local phone = isPhone()
 	local tablet = isTablet()
 
-	local cardW = phone and 350 or (tablet and 420 or 480)
-	local cardH = phone and 180 or (tablet and 160 or 150)
-	local titleSize = phone and 22 or (tablet and 24 or 26)
-	local bodySize = phone and 15 or (tablet and 16 or 17)
+	local cardW = phone and 340 or (tablet and 400 or 450)
+	local cardH = phone and 140 or (tablet and 125 or 115)
+	local titleSize = phone and 20 or (tablet and 22 or 24)
+	local bodySize = phone and 14 or (tablet and 15 or 16)
 
-	-- Card (starts above screen, will slide down!)
+	-- Main card
 	local card = Instance.new("Frame")
 	card.Name = "Card"
 	card.AnchorPoint = Vector2.new(0.5, 0)
-	card.Position = UDim2.new(0.5, 0, 0, -cardH - 20) -- Start off-screen!
+	card.Position = UDim2.new(0.5, 0, 0, -cardH - 20)
 	card.Size = UDim2.fromOffset(cardW, cardH)
 	card.BackgroundColor3 = Color3.fromRGB(255, 248, 252)
 	card.BorderSizePixel = 0
 	card.Parent = gui
-	
-	-- ✨ Slide down animation!
+
+	-- Slide down animation
 	task.spawn(function()
 		task.wait(0.3)
 		TweenService:Create(card, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -253,38 +195,23 @@ local function createTutorialUI()
 		}):Play()
 	end)
 
-	local corner = Instance.new("UICorner")
+	local corner = Instance.new("UICorner", card)
 	corner.CornerRadius = UDim.new(0, 16)
-	corner.Parent = card
-
-	local stroke = Instance.new("UIStroke")
+	
+	local stroke = Instance.new("UIStroke", card)
 	stroke.Color = Color3.fromRGB(255, 180, 210)
 	stroke.Thickness = 3
-	stroke.Parent = card
-
-	local shadow = Instance.new("ImageLabel")
-	shadow.Name = "Shadow"
-	shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-	shadow.Position = UDim2.fromScale(0.5, 0.5)
-	shadow.Size = UDim2.fromScale(1.05, 1.05)
-	shadow.BackgroundTransparency = 1
-	shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-	shadow.ImageTransparency = 0.8
-	shadow.ZIndex = -1
-	shadow.Parent = card
-
-	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 16)
-	padding.PaddingBottom = UDim.new(0, 16)
-	padding.PaddingLeft = UDim.new(0, 20)
-	padding.PaddingRight = UDim.new(0, 20)
-	padding.Parent = card
+	
+	local padding = Instance.new("UIPadding", card)
+	padding.PaddingTop = UDim.new(0, 14)
+	padding.PaddingBottom = UDim.new(0, 14)
+	padding.PaddingLeft = UDim.new(0, 18)
+	padding.PaddingRight = UDim.new(0, 18)
 
 	-- Title
-	local title = Instance.new("TextLabel")
+	local title = Instance.new("TextLabel", card)
 	title.Name = "Title"
-	title.Size = UDim2.new(1, -40, 0, titleSize + 6)
+	title.Size = UDim2.new(1, -70, 0, titleSize + 4)
 	title.BackgroundTransparency = 1
 	title.Font = Enum.Font.FredokaOne
 	title.TextSize = titleSize
@@ -292,13 +219,12 @@ local function createTutorialUI()
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.TextYAlignment = Enum.TextYAlignment.Top
 	title.Text = "Tutorial"
-	title.Parent = card
 
 	-- Body
-	local body = Instance.new("TextLabel")
+	local body = Instance.new("TextLabel", card)
 	body.Name = "Body"
-	body.Position = UDim2.new(0, 0, 0, titleSize + 10)
-	body.Size = UDim2.new(1, -40, 1, -(titleSize + 26))
+	body.Position = UDim2.new(0, 0, 0, titleSize + 6)
+	body.Size = UDim2.new(1, -70, 1, -(titleSize + 20))
 	body.BackgroundTransparency = 1
 	body.Font = Enum.Font.Gotham
 	body.TextSize = bodySize
@@ -306,59 +232,35 @@ local function createTutorialUI()
 	body.TextXAlignment = Enum.TextXAlignment.Left
 	body.TextYAlignment = Enum.TextYAlignment.Top
 	body.TextWrapped = true
-	body.Text = "" -- Will be set by updateTutorialStep()
-	body.Parent = card
-	
-	-- Step indicator (e.g., "1/4")
-	local stepIndicator = Instance.new("TextLabel")
-	stepIndicator.Name = "StepIndicator"
-	stepIndicator.AnchorPoint = Vector2.new(0, 0)
-	stepIndicator.Position = UDim2.new(0, 0, 0, 0)
-	stepIndicator.Size = UDim2.fromOffset(50, 24)
-	stepIndicator.BackgroundColor3 = Color3.fromRGB(255, 180, 210)
-	stepIndicator.BorderSizePixel = 0
-	stepIndicator.Font = Enum.Font.GothamBold
-	stepIndicator.TextSize = 13
-	stepIndicator.TextColor3 = Color3.new(1, 1, 1)
-	stepIndicator.Text = "1/4"
-	stepIndicator.Parent = card
+	body.Text = "Welcome!"
 
-	local stepCorner = Instance.new("UICorner")
-	stepCorner.CornerRadius = UDim.new(0, 8)
-	stepCorner.Parent = stepIndicator
-
-	-- Skip button
-	local skipBtn = Instance.new("TextButton")
+	-- Skip button (top-right, cleaner positioning)
+	local skipBtn = Instance.new("TextButton", card)
 	skipBtn.Name = "SkipButton"
 	skipBtn.AnchorPoint = Vector2.new(1, 0)
-	skipBtn.Position = UDim2.new(1, -12, 0, 12)
-	skipBtn.Size = UDim2.fromOffset(60, 28)
+	skipBtn.Position = UDim2.new(1, -10, 0, 10)
+	skipBtn.Size = UDim2.fromOffset(55, 26)
 	skipBtn.BackgroundColor3 = Color3.fromRGB(230, 220, 255)
 	skipBtn.Text = "Skip"
 	skipBtn.Font = Enum.Font.GothamBold
-	skipBtn.TextSize = 13
+	skipBtn.TextSize = 12
 	skipBtn.TextColor3 = Color3.fromRGB(150, 120, 160)
 	skipBtn.BorderSizePixel = 0
-	skipBtn.Parent = card
-
-	local skipCorner = Instance.new("UICorner")
+	
+	local skipCorner = Instance.new("UICorner", skipBtn)
 	skipCorner.CornerRadius = UDim.new(0, 8)
-	skipCorner.Parent = skipBtn
 
 	TutorialState.tutorialGui = gui
 	TutorialState.skipButton = skipBtn
-
-	return gui, title, body, skipBtn
+	return gui
 end
 
 local function createHighlight(target)
 	if TutorialState.highlightPart then
 		TutorialState.highlightPart:Destroy()
 	end
-
 	if not target or not target:IsA("BasePart") then return end
 
-	-- Selection box highlight
 	local highlight = Instance.new("SelectionBox")
 	highlight.Name = "TutorialHighlight"
 	highlight.Adornee = target
@@ -368,16 +270,13 @@ local function createHighlight(target)
 	highlight.SurfaceTransparency = 0.7
 	highlight.Parent = target
 
-	-- Pulsing effect
 	task.spawn(function()
-		while highlight.Parent do
-			TweenService:Create(highlight, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-				Transparency = 0.1
-			}):Play()
+		while highlight and highlight.Parent do
+			local tweenInfo = TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+			TweenService:Create(highlight, tweenInfo, {Transparency = 0.1}):Play()
 			task.wait(0.8)
-			TweenService:Create(highlight, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-				Transparency = 0.5
-			}):Play()
+			if not (highlight and highlight.Parent) then break end
+			TweenService:Create(highlight, tweenInfo, {Transparency = 0.5}):Play()
 			task.wait(0.8)
 		end
 	end)
@@ -391,182 +290,106 @@ local function updateTutorialStep()
 	local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
 	if not step then
 		TutorialState.completed = true
-		if TutorialState.tutorialGui then
-			TutorialState.tutorialGui:Destroy()
-		end
-		if TutorialState.highlightPart then
-			TutorialState.highlightPart:Destroy()
-		end
+		if TutorialState.tutorialGui then TutorialState.tutorialGui:Destroy() end
+		if TutorialState.highlightPart then TutorialState.highlightPart:Destroy() end
 		return
 	end
 
 	print("🎓 [Tutorial] Step " .. TutorialState.currentStep .. ":", step.name)
 
-	-- Update UI (set Title & Body every time!)
 	if TutorialState.tutorialGui then
 		local card = TutorialState.tutorialGui.Card
-		local title = card:FindFirstChild("Title")
-		local bodyLabel = card:FindFirstChild("Body")
-		local stepIndicator = card:FindFirstChild("StepIndicator")
-		
-		if title then 
-			title.Text = step.title or "Tutorial"
-			print("📝 [Tutorial] Set title:", step.title)
-		end
-		if bodyLabel then 
-			bodyLabel.Text = step.body or step.description or ""
-			print("📝 [Tutorial] Set body:", step.body or step.description)
-		end
-		if stepIndicator then 
-			stepIndicator.Text = TutorialState.currentStep .. "/" .. #Config.TUTORIAL_STEPS
-		end
+		card.Title.Text = step.title
+		card.Body.Text = step.description
 	end
 
-	-- Find and highlight target (ONLY in player's tycoon!)
-	-- Skip highlight if player doesn't own tycoon yet (claim_gate step)
-	if step.name == "claim_gate" then
-		print("🎯 [Tutorial] Claim step - no highlight needed")
-		return
-	end
-	
-	local myTycoon = getMyTycoon()
-	if not myTycoon then 
-		print("⚠️ [Tutorial] Player doesn't own tycoon yet - can't highlight")
-		return 
-	end
-	
+	if TutorialState.highlightPart then TutorialState.highlightPart:Destroy() end
+
+	local targetPart = nil
 	if step.targetButton then
-		-- Find button in MY tycoon only
-		local buttons = myTycoon:FindFirstChild("Buttons")
-		if buttons then
-			local button = buttons:FindFirstChild(step.targetButton)
-			if button then
-				local head = button:FindFirstChild("Head")
-				if head and head.CanCollide and head.Transparency < 0.5 then
-					createHighlight(head)
-					print("✨ [Tutorial] Highlighting button:", step.targetButton)
+		for _, tycoon in pairs(workspace:GetChildren()) do
+			local buttonsFolder = tycoon:FindFirstChild("Buttons")
+			if buttonsFolder then
+				local buttonModel = buttonsFolder:FindFirstChild(step.targetButton)
+				if buttonModel then
+					targetPart = buttonModel:FindFirstChild("Head")
+					if targetPart and targetPart.CanCollide and targetPart.Transparency < 0.5 then
+						print("✨ [Tutorial] Highlighting button:", step.targetButton)
+						break
+					end
 				end
 			end
 		end
-	elseif step.target == "collector" then
-		-- Find Giver in MY tycoon only
-		local essentials = myTycoon:FindFirstChild("Essentials")
-		if essentials then
-			local giver = essentials:FindFirstChild("Giver")
-			if giver then
-				createHighlight(giver)
-				print("✨ [Tutorial] Highlighting collector")
+	elseif step.target == "collector" and PathState.ownedTycoon then
+		for _, tycoon in pairs(workspace:GetChildren()) do
+			local ownerVal = tycoon:FindFirstChild("Owner")
+			if ownerVal and ownerVal.Value == player then
+				local essentials = tycoon:FindFirstChild("Essentials")
+				targetPart = essentials and essentials:FindFirstChild("Giver")
+				if targetPart then
+					print("✨ [Tutorial] Highlighting collector")
+					break
+				end
 			end
 		end
 	end
+
+	if targetPart then createHighlight(targetPart) end
 end
 
 local function nextTutorialStep()
-	if not TutorialState.enabled or TutorialState.completed then 
-		print("⚠️ [Tutorial] nextTutorialStep blocked - enabled:", TutorialState.enabled, "completed:", TutorialState.completed)
-		return 
-	end
+	if not TutorialState.enabled or TutorialState.completed then return end
 
 	local oldStep = TutorialState.currentStep
 	TutorialState.currentStep = TutorialState.currentStep + 1
-	print("➡️ [Tutorial] Advancing from step", oldStep, "to step", TutorialState.currentStep)
-	
-	-- ✨ Bounce animation when moving to next step
+	print("➡️ [Tutorial] Step " .. oldStep .. " → " .. TutorialState.currentStep)
+
 	if TutorialState.tutorialGui then
 		local card = TutorialState.tutorialGui.Card
 		local originalSize = card.Size
-		
-		TweenService:Create(card, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-			Size = UDim2.fromOffset(originalSize.X.Offset * 1.05, originalSize.Y.Offset * 1.05)
-		}):Play()
-		
-		task.wait(0.15)
-		
-		TweenService:Create(card, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-			Size = originalSize
-		}):Play()
+		local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		local biggerSize = UDim2.fromOffset(originalSize.X.Offset * 1.05, originalSize.Y.Offset * 1.05)
+
+		local t1 = TweenService:Create(card, tweenInfo, { Size = biggerSize })
+		local t2 = TweenService:Create(card, tweenInfo, { Size = originalSize })
+		t1:Play()
+		t1.Completed:Wait()
+		t2:Play()
 	end
-	
+
 	updateTutorialStep()
 end
 
 local function skipTutorial()
 	TutorialState.completed = true
 	TutorialState.enabled = false
-	if TutorialState.tutorialGui then
-		TutorialState.tutorialGui:Destroy()
-	end
-	if TutorialState.highlightPart then
-		TutorialState.highlightPart:Destroy()
-	end
+	if TutorialState.tutorialGui then TutorialState.tutorialGui:Destroy() end
+	if TutorialState.highlightPart then TutorialState.highlightPart:Destroy() end
 	print("✅ [Tutorial] Skipped!")
-end
-
---============================================================================--
---                     🎓 TUTORIAL EVENT LISTENERS
---============================================================================--
-
-local function setupTutorialListeners()
-	if not TutorialState.enabled then return end
-
-	-- Listen for MoneyCollected event (detects when player collects cash)
-	local moneyCollectedEvent = ReplicatedStorage:FindFirstChild("TycoonRemotes") 
-		and ReplicatedStorage.TycoonRemotes:FindFirstChild("MoneyCollected")
-	
-	if moneyCollectedEvent then
-		print("🎓 [Tutorial] ✅ Listening for MoneyCollected")
-		moneyCollectedEvent.OnClientEvent:Connect(function(amount)
-			if not TutorialState.enabled or TutorialState.completed then return end
-			local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-			if step and step.name == "collect_money" then
-				SessionCash = SessionCash + amount
-				print("💰 [Tutorial] Collected $" .. amount .. " (total: $" .. SessionCash .. ")")
-				if SessionCash >= 50 then
-					print("✅ [Tutorial] Collected enough! → Buy Dropper 2")
-					task.defer(nextTutorialStep)
-				end
-			end
-		end)
-	else
-		print("🎓 [Tutorial] ClaimedTycoon RemoteEvent not found - using polling fallback")
-	end
-
-	-- Skip button
-	if TutorialState.skipButton then
-		TutorialState.skipButton.Activated:Connect(function()
-			print("⏭️ [Tutorial] Skipped")
-			skipTutorial()
-		end)
-	end
 end
 
 --============================================================================--
 --                            UTILITY FUNCTIONS
 --============================================================================--
 
--- Quadratic Bezier curve interpolation
 local function quadraticBezier(t, p0, p1, p2)
 	local u = 1 - t
 	return u * u * p0 + 2 * u * t * p1 + t * t * p2
 end
 
--- Get ground position with raycast (prefers player's ground level)
 local function getGroundPosition(position, ignoreList, playerHeight)
 	raycastParams.FilterDescendantsInstances = ignoreList
 
-	-- First, try from player's height level
 	if playerHeight then
 		local rayOrigin = Vector3.new(position.X, playerHeight + 5, position.Z)
 		local rayDirection = Vector3.new(0, -10, 0)
 		local rayResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
 
 		if rayResult and math.abs(rayResult.Position.Y - playerHeight) < 10 then
-			-- Found ground near player's level
 			return rayResult.Position + Vector3.new(0, Config.GROUND_OFFSET, 0), rayResult.Normal
 		end
 	end
 
-	-- Fallback: cast from above
 	local rayOrigin = position + Vector3.new(0, 20, 0)
 	local rayDirection = Vector3.new(0, -100, 0)
 	local rayResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
@@ -594,27 +417,21 @@ local function createSegment(index)
 	segment.CastShadow = false
 	segment.Transparency = 1
 
-	-- Point light for glow
-	local pointLight = Instance.new("PointLight")
+	local pointLight = Instance.new("PointLight", segment)
 	pointLight.Brightness = 0
 	pointLight.Color = Config.Colors.GLOW
 	pointLight.Range = Config.LIGHT_BASE_RANGE
-	pointLight.Parent = segment
 
-	-- Selection box for outline glow
-	local selection = Instance.new("SelectionBox")
+	local selection = Instance.new("SelectionBox", segment)
 	selection.Adornee = segment
 	selection.Color3 = Config.Colors.GLOW
 	selection.LineThickness = 0.05
 	selection.Transparency = 1
-	selection.Parent = segment
 
-	-- Attributes for smooth animation
 	segment:SetAttribute("TargetTransparency", 1)
 	segment:SetAttribute("FadeFactor", 0)
 	segment:SetAttribute("SegmentIndex", index)
 
-	-- Store in state
 	PathState.segments[index] = {
 		part = segment,
 		light = pointLight,
@@ -622,7 +439,6 @@ local function createSegment(index)
 		currentTransparency = 1,
 		targetTransparency = 1,
 	}
-
 	return segment
 end
 
@@ -632,32 +448,26 @@ end
 
 local function findTycoonGates()
 	local now = tick()
-
-	-- Use cache if recent
 	if now - PathState.lastGateUpdate < Config.GATE_UPDATE_INTERVAL * 0.5 and #PathState.cachedGates > 0 then
 		return PathState.cachedGates
 	end
-
 	PathState.lastGateUpdate = now
 	PathState.cachedGates = {}
-
-	-- Search for tycoon gates
-	for _, obj in pairs(workspace:GetDescendants()) do
+	
+	for _, obj in ipairs(workspace:GetDescendants()) do
 		if obj:IsA("Model") then
 			local name = obj.Name:lower()
 			if name == "touch to claim!" or name:find("gate") or name:find("claim") then
 				local touchPart = obj:FindFirstChild("Head") or obj:FindFirstChildWhichIsA("BasePart")
-
 				if touchPart then
-					-- Find the tycoon owner value
 					local parent = obj.Parent
 					while parent and parent ~= workspace do
 						local owner = parent:FindFirstChild("Owner")
 						if owner and owner:IsA("ObjectValue") then
 							table.insert(PathState.cachedGates, {
-								owner = owner,
-								position = touchPart.Position,
-								part = touchPart,
+								owner = owner, 
+								position = touchPart.Position, 
+								part = touchPart
 							})
 							break
 						end
@@ -667,34 +477,28 @@ local function findTycoonGates()
 			end
 		end
 	end
-
 	return PathState.cachedGates
 end
 
 local function findNearestUnclaimedGate()
 	local character = player.Character
 	if not character then return nil, false end
-
 	local humanoidRoot = character:FindFirstChild("HumanoidRootPart")
 	if not humanoidRoot then return nil, false end
 
 	local gates = findTycoonGates()
-	local nearestGate = nil
-	local nearestDistance = math.huge
-
-	for _, gateData in pairs(gates) do
+	local nearestGate, nearestDistance = nil, math.huge
+	
+	for _, gateData in ipairs(gates) do
 		if gateData.owner.Value == player then
-			-- 🔧 FIXED: Don't set PathState.ownedTycoon here - let the caller decide!
-			return nil, true -- Player owns a tycoon
+			return nil, true
 		elseif not gateData.owner.Value then
 			local distance = (gateData.position - humanoidRoot.Position).Magnitude
 			if distance < nearestDistance then
-				nearestDistance = distance
-				nearestGate = gateData
+				nearestDistance, nearestGate = distance, gateData
 			end
 		end
 	end
-
 	return nearestGate, false
 end
 
@@ -705,165 +509,100 @@ end
 local function hidePath()
 	if not PathState.active then return end
 	PathState.active = false
-
-	-- Fade out all segments
-	for _, segmentData in pairs(PathState.segments) do
+	
+	for _, segmentData in ipairs(PathState.segments) do
 		if segmentData and segmentData.part then
 			segmentData.targetTransparency = 1
 			segmentData.part:SetAttribute("TargetTransparency", 1)
 		end
 	end
-
-	-- Immediate cleanup - don't wait
-	task.spawn(function()
-		task.wait(Config.FADE_OUT_TIME)
+	
+	task.delay(Config.FADE_OUT_TIME, function()
 		if PathState.pathModel then
-			-- Destroy all children first
-			for _, child in pairs(PathState.pathModel:GetChildren()) do
-				child:Destroy()
-			end
 			PathState.pathModel:Destroy()
 			PathState.pathModel = nil
+			PathState.segments = {}
 		end
-		-- Clear segments table
-		PathState.segments = {}
 	end)
 end
 
 local function updatePath()
 	local character = player.Character
-	if not character then
+	if not character or not character.PrimaryPart or not PathState.currentTargetGate then
 		hidePath()
 		return
 	end
+	
+	local startPos, endPos = character.PrimaryPart.Position, PathState.currentTargetGate.position
+	local direction, distance = (endPos - startPos).Unit, (endPos - startPos).Magnitude
 
-	local humanoidRoot = character:FindFirstChild("HumanoidRootPart")
-	if not humanoidRoot or not PathState.currentTargetGate then
-		hidePath()
-		return
-	end
-
-	-- Use actual positions for more responsive feel
-	local startPos = humanoidRoot.Position
-	local endPos = PathState.currentTargetGate.position
-
-	-- Calculate adjusted end position (stop before the gate)
-	local direction = (endPos - startPos).Unit
-	local distance = (endPos - startPos).Magnitude
-
-	-- Adjust end position to stop PATH_END_OFFSET studs before the gate
 	if distance > Config.PATH_END_OFFSET then
-		endPos = endPos - (direction * Config.PATH_END_OFFSET)
-		distance = distance - Config.PATH_END_OFFSET
+		endPos -= direction * Config.PATH_END_OFFSET
+		distance -= Config.PATH_END_OFFSET
 	end
 
-	-- Check distance constraints
 	if distance < Config.MIN_DISTANCE or distance > Config.MAX_DISTANCE then
 		hidePath()
 		return
 	end
 
-	-- Initialize smoothed positions if needed
-	if not PathState.smoothedStartPos then
-		PathState.smoothedStartPos = startPos
-	end
-	if not PathState.smoothedEndPos then
-		PathState.smoothedEndPos = endPos
-	end
+	if not PathState.smoothedStartPos then PathState.smoothedStartPos = startPos end
+	if not PathState.smoothedEndPos then PathState.smoothedEndPos = endPos end
 
-	-- Update smoothed positions (more responsive)
 	PathState.smoothedStartPos = PathState.smoothedStartPos:Lerp(startPos, Config.TARGET_SMOOTHING)
 	PathState.smoothedEndPos = PathState.smoothedEndPos:Lerp(endPos, Config.TARGET_SMOOTHING)
 
-	-- Use smoothed positions for path
-	local smoothStart = PathState.smoothedStartPos
-	local smoothEnd = PathState.smoothedEndPos
+	local smoothStart, smoothEnd = PathState.smoothedStartPos, PathState.smoothedEndPos
 	local smoothDistance = (smoothEnd - smoothStart).Magnitude
 
-	-- Create path model if needed
 	if not PathState.pathModel or not PathState.pathModel.Parent then
-		PathState.pathModel = Instance.new("Model")
+		PathState.pathModel = Instance.new("Model", workspace)
 		PathState.pathModel.Name = "LocalTycoonPath"
-		PathState.pathModel.Parent = workspace
-		PathState.segments = {} -- Reset segments table
+		PathState.segments = {}
 	end
 
-	-- Calculate bezier curve control point for arc
 	local midPoint = (smoothStart + smoothEnd) / 2
 	local arcHeight = math.min(smoothDistance * Config.PATH_ARC_HEIGHT, 5)
 	local controlPoint = midPoint + Vector3.new(0, arcHeight, 0)
-
 	local segmentCount = math.min(math.floor(smoothDistance / Config.SEGMENT_SPACING), Config.MAX_SEGMENTS)
 	local ignoreList = {character, PathState.pathModel}
 	local segmentPositions = {}
 
-	-- Update each segment
 	for i = 1, segmentCount do
-		local segmentData = PathState.segments[i]
-		local segment
+		local segment = (PathState.segments[i] and PathState.segments[i].part) or createSegment(i)
+		segment.Parent = PathState.pathModel
 
-		-- Get or create segment
-		if not segmentData or not segmentData.part or not segmentData.part.Parent then
-			segment = createSegment(i)
-			segment.Parent = PathState.pathModel
-			segmentData = PathState.segments[i]
-		else
-			segment = segmentData.part
-		end
-
-		-- Calculate position on bezier curve
 		local t = i / (segmentCount + 1)
 		local pathPos = quadraticBezier(t, smoothStart, controlPoint, smoothEnd)
-
-		-- Get ground position
-		local playerHeight = humanoidRoot.Position.Y
-		local groundPos, groundNormal = getGroundPosition(pathPos, ignoreList, playerHeight)
+		local groundPos, groundNormal = getGroundPosition(pathPos, ignoreList, character.PrimaryPart.Position.Y)
 		segmentPositions[i] = groundPos
 
-		-- Calculate direction
-		local nextT = math.min(t + 0.01, 1)
-		local nextPathPos = quadraticBezier(nextT, smoothStart, controlPoint, smoothEnd)
+		local nextPathPos = quadraticBezier(math.min(t + 0.01, 1), smoothStart, controlPoint, smoothEnd)
 		local lookDirection = (nextPathPos - pathPos).Unit
+		local rightVector = lookDirection:Cross(groundNormal).Unit
+		local upVector = rightVector:Cross(lookDirection).Unit
+		segment.CFrame = segment.CFrame:Lerp(CFrame.fromMatrix(groundPos, rightVector, upVector, -lookDirection), Config.POSITION_SMOOTHING)
 
-		-- Orient segment
-		local rightVector = lookDirection:Cross(groundNormal)
-		if rightVector.Magnitude > 0.01 then
-			rightVector = rightVector.Unit
-			local upVector = rightVector:Cross(lookDirection).Unit
-			local targetCFrame = CFrame.fromMatrix(groundPos, rightVector, upVector, -lookDirection)
-
-			segment.CFrame = segment.CFrame:Lerp(targetCFrame, Config.POSITION_SMOOTHING)
-		end
-
-		-- Scale taper
 		local scale = 1 - (t * Config.SCALE_REDUCTION)
 		segment.Size = Config.SEGMENT_SIZE * scale
 
-		-- Anti-bunching calculation
 		local fadeFactor = 0
 		if i > 1 and segmentPositions[i-1] then
 			local spacing = (segmentPositions[i] - segmentPositions[i-1]).Magnitude
 			local minSpacing = Config.SEGMENT_SPACING * Config.BUNCHING_THRESHOLD
-			if spacing < minSpacing then
-				fadeFactor = math.clamp(1 - (spacing / minSpacing), 0, Config.MAX_BUNCH_FADE)
-			end
+			fadeFactor = spacing < minSpacing and math.clamp(1 - (spacing / minSpacing), 0, Config.MAX_BUNCH_FADE) or 0
 		end
 
-		-- Set attributes
 		segment:SetAttribute("FadeFactor", fadeFactor)
 		segment:SetAttribute("TargetTransparency", 0)
 		segment:SetAttribute("Scale", scale)
-
-		-- Update segment data
-		segmentData.targetTransparency = fadeFactor > 0.7 and 1 or 0
+		PathState.segments[i].targetTransparency = fadeFactor > 0.7 and 1 or 0
 	end
-
-	-- Hide unused segments
+	
 	for i = segmentCount + 1, Config.MAX_SEGMENTS do
-		local segmentData = PathState.segments[i]
-		if segmentData and segmentData.part then
-			segmentData.targetTransparency = 1
-			segmentData.part:SetAttribute("TargetTransparency", 1)
+		if PathState.segments[i] and PathState.segments[i].part then
+			PathState.segments[i].targetTransparency = 1
+			PathState.segments[i].part:SetAttribute("TargetTransparency", 1)
 		end
 	end
 end
@@ -874,162 +613,166 @@ end
 
 local function animateSegments(deltaTime)
 	if not PathState.pathModel or not PathState.pathModel.Parent then return end
-
-	PathState.animationTime = PathState.animationTime + deltaTime
-
-	for index, segmentData in pairs(PathState.segments) do
-		if segmentData and segmentData.part and segmentData.part.Parent then
-			local segment = segmentData.part
-			local segmentIndex = segment:GetAttribute("SegmentIndex") or index
-
-			-- Get animation parameters
+	PathState.animationTime += deltaTime
+	
+	for index, segmentData in ipairs(PathState.segments) do
+		local segment = segmentData.part
+		if segment and segment.Parent then
 			local targetTrans = segment:GetAttribute("TargetTransparency") or 1
 			local fadeFactor = segment:GetAttribute("FadeFactor") or 0
-			local scale = segment:GetAttribute("Scale") or 1
-
-			-- Calculate final target transparency
 			local finalTargetTrans = math.max(targetTrans, fadeFactor * 0.8)
-
-			-- Smooth transparency update
-			segmentData.currentTransparency = segmentData.currentTransparency + 
-				(finalTargetTrans - segmentData.currentTransparency) * Config.TRANSPARENCY_SMOOTHING
-
+			segmentData.currentTransparency += (finalTargetTrans - segmentData.currentTransparency) * Config.TRANSPARENCY_SMOOTHING
 			segment.Transparency = segmentData.currentTransparency
 
-			-- Determine visibility
-			local isVisible = segmentData.currentTransparency < 0.9
+			if segmentData.currentTransparency < 0.9 then
+				local pulse = math.sin(PathState.animationTime * Config.PULSE_SPEED + index * 0.2) * 0.5 + 0.5
+				local scale = segment:GetAttribute("Scale") or 1
+				segmentData.light.Brightness = (Config.LIGHT_BASE_BRIGHTNESS + (pulse * Config.LIGHT_PULSE_BRIGHTNESS)) * (1 - segmentData.currentTransparency)
+				segmentData.light.Range = Config.LIGHT_BASE_RANGE * scale
+				segmentData.selection.Transparency = Config.GLOW_BASE_TRANSPARENCY + (pulse * Config.GLOW_PULSE_AMOUNT) + (segmentData.currentTransparency * 0.5)
 
-			if isVisible then
-				-- Pulse animation
-				local pulse = math.sin(PathState.animationTime * Config.PULSE_SPEED + segmentIndex * 0.2) * 0.5 + 0.5
-
-				-- Light animation
-				if segmentData.light then
-					local brightness = Config.LIGHT_BASE_BRIGHTNESS + (pulse * Config.LIGHT_PULSE_BRIGHTNESS)
-					segmentData.light.Brightness = brightness * (1 - segmentData.currentTransparency)
-					segmentData.light.Range = Config.LIGHT_BASE_RANGE * scale
-				end
-
-				-- Selection box animation
-				if segmentData.selection then
-					local glowTrans = Config.GLOW_BASE_TRANSPARENCY + (pulse * Config.GLOW_PULSE_AMOUNT)
-					segmentData.selection.Transparency = glowTrans + (segmentData.currentTransparency * 0.5)
-				end
-
-				-- Color flow effect
-				local flow = (PathState.animationTime * Config.FLOW_SPEED + segmentIndex) % 10
-				if flow < 1 then
-					segment.Color = Config.Colors.GLOW:Lerp(Config.Colors.PULSE, flow)
-				else
-					segment.Color = Config.Colors.PATH
-				end
+				local flow = (PathState.animationTime * Config.FLOW_SPEED + index) % 10
+				segment.Color = flow < 1 and Config.Colors.GLOW:Lerp(Config.Colors.PULSE, flow) or Config.Colors.PATH
 			else
-				-- Hide effects when invisible
-				if segmentData.light then
-					segmentData.light.Brightness = 0
-				end
-				if segmentData.selection then
-					segmentData.selection.Transparency = 1
-				end
+				segmentData.light.Brightness, segmentData.selection.Transparency = 0, 1
 			end
 		end
 	end
 end
 
 --============================================================================--
---                            MAIN UPDATE LOOP
+--                     🎓 TUTORIAL EVENT LISTENERS
 --============================================================================--
 
-RunService.RenderStepped:Connect(function(deltaTime)
-	-- Always update path every frame for responsiveness
-	updatePath()
+local function setupTutorialListeners()
+	if not TutorialState.enabled then return end
 
-	-- Always animate
-	animateSegments(deltaTime)
-end)
+	-- ✅ CASH MONITORING (Auto-Collect Compatible!)
+	local leaderstats = player:WaitForChild("leaderstats", 15)
+	if not leaderstats then 
+		warn("[Tutorial] Leaderstats not found!")
+		return 
+	end
 
--- Gate scanning loop (separate) - RUNS EVERY 0.25 SECONDS!
-task.spawn(function()
-	print("🚪 [Tutorial] Gate scanning loop started! (interval:", Config.GATE_UPDATE_INTERVAL, "sec)")
-	local loopCount = 0
-	
-	while true do
-		task.wait(Config.GATE_UPDATE_INTERVAL)
-		loopCount = loopCount + 1
+	local cash = leaderstats:WaitForChild("Cash", 10)
+	if not cash then
+		warn("[Tutorial] Cash value not found!")
+		return
+	end
 
-		local targetGate, ownsTycoon = findNearestUnclaimedGate()
-		
-		-- Debug every 4 seconds (16 loops at 0.25s)
-		if loopCount % 16 == 0 then
-			print("🔄 [Tutorial] Loop check #" .. loopCount .. " - ownsTycoon:", ownsTycoon, "| PathState.ownedTycoon:", PathState.ownedTycoon)
+	local lastCashValue = cash.Value
+	local moneyConnection
+
+	moneyConnection = cash.Changed:Connect(function(newCashValue)
+		if not TutorialState.enabled or TutorialState.completed then 
+			if moneyConnection then moneyConnection:Disconnect() end
+			return 
 		end
 
-		if ownsTycoon or not targetGate then
-			PathState.currentTargetGate = nil
-			hidePath()
+		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
 
-			-- 🎓 TUTORIAL: Detect when player claims tycoon (POLLING FALLBACK)
+		if step and step.name == "collect_money" and newCashValue > lastCashValue then
+			print("💰 [Tutorial] Cash increased! Advancing step.")
+			task.wait(0.3)
+			nextTutorialStep()
+		end
+
+		lastCashValue = newCashValue
+	end)
+	print("✅ [Tutorial] Monitoring player.leaderstats.Cash")
+
+	-- ✅ PURCHASE DETECTION
+	local purchaseConnection
+	purchaseConnection = workspace.DescendantAdded:Connect(function(descendant)
+		if not TutorialState.enabled or TutorialState.completed then 
+			if purchaseConnection then purchaseConnection:Disconnect() end
+			return 
+		end
+		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+		if not step then return end
+
+		if descendant.Parent and descendant.Parent.Name == "PurchasedObjects" then
+			print("🔍 [Tutorial] Purchase detected:", descendant.Name, "| Current step:", step.name)
+			
+			if step.name == "buy_dropper1" and descendant.Name == "Dropper1" then
+				print("✅ [Tutorial] Dropper1 bought!")
+				task.wait(1.5)
+				nextTutorialStep()
+			elseif step.name == "buy_dropper2" and descendant.Name == "Dropper2" then
+				print("🎉 [Tutorial] Dropper2 bought!")
+				task.wait(0.5)
+				nextTutorialStep()
+			end
+		end
+	end)
+
+	-- Skip button
+	if TutorialState.skipButton then
+		TutorialState.skipButton.Activated:Connect(skipTutorial)
+	end
+
+	-- Last step: tap to dismiss
+	local inputConnection
+	inputConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+		if gameProcessed then return end
+		if not TutorialState.enabled or TutorialState.completed then 
+			if inputConnection then inputConnection:Disconnect() end
+			return 
+		end
+		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+		if step and step.name == "tutorial_complete" then
+			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+				skipTutorial()
+			end
+		end
+	end)
+end
+
+--============================================================================--
+--                            MAIN LOOP & INITIALIZATION
+--============================================================================--
+
+RunService.RenderStepped:Connect(animateSegments)
+
+-- Gate scanning & tutorial progression
+task.spawn(function()
+	print("🚪 [Tutorial] Gate scanning loop started!")
+	while true do
+		local targetGate, ownsTycoon = findNearestUnclaimedGate()
+		
+		if ownsTycoon or not targetGate then
 			if ownsTycoon and not PathState.ownedTycoon then
 				print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-				print("🏠 [Tutorial] ✨ TYCOON OWNERSHIP DETECTED! ✨")
+				print("🏠 [Tutorial] ✨ TYCOON CLAIMED! ✨")
 				print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-				
 				PathState.ownedTycoon = true
 				
 				if TutorialState.enabled and not TutorialState.completed then
 					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-					print("🎓 [Tutorial] Current step:", step and step.name or "none", "| Step index:", TutorialState.currentStep)
-					
 					if step and step.name == "claim_gate" then
-						print("✅ [Tutorial] PERFECT! Player on claim step - advancing to Buy Dropper 1...")
-						task.wait(0.5)
-						nextTutorialStep() -- Move to "buy_dropper1"
-						
-						-- Hook into this tycoon's purchases now
-						print("🎓 [Tutorial] Spawning purchase hook...")
-						task.spawn(hookMyTycoonPurchases)
-					else
-						print("⚠️ [Tutorial] Step mismatch - expected 'claim_gate', got:", step and step.name or "nil")
-						-- Maybe player already past this step, hook anyway
-						print("🎓 [Tutorial] Hooking purchases anyway (player might be returning)...")
-						task.spawn(hookMyTycoonPurchases)
+						print("✅ [Tutorial] Advancing to Buy Dropper 1...")
+						task.wait(1)
+						nextTutorialStep()
 					end
-				else
-					print("⚠️ [Tutorial] Not running - enabled:", TutorialState.enabled, "completed:", TutorialState.completed)
 				end
 			end
-
-			-- Force cleanup if player owns tycoon
-			if ownsTycoon and PathState.pathModel then
-				-- Immediate destroy everything
-				for _, child in pairs(PathState.pathModel:GetChildren()) do
-					child:Destroy()
-				end
-				PathState.pathModel:Destroy()
-				PathState.pathModel = nil
-				PathState.segments = {}
-			end
+			PathState.currentTargetGate = nil
+			hidePath()
 		else
 			if not PathState.active then
-				-- Reset smoothed positions for instant response
-				PathState.smoothedStartPos = nil
-				PathState.smoothedEndPos = nil
+				PathState.smoothedStartPos, PathState.smoothedEndPos = nil, nil
 			end
 			PathState.active = true
 			PathState.currentTargetGate = targetGate
+			updatePath()
 		end
+		task.wait(Config.GATE_UPDATE_INTERVAL)
 	end
 end)
 
---============================================================================--
---                            CLEANUP HANDLERS
---============================================================================--
-
+-- Cleanup on character removal
 player.CharacterRemoving:Connect(function()
-	if PathState.pathModel then
-		PathState.pathModel:Destroy()
-		PathState.pathModel = nil
-	end
+	if PathState.pathModel then PathState.pathModel:Destroy() end
 	PathState = {
 		active = false,
 		currentTargetGate = nil,
@@ -1041,79 +784,26 @@ player.CharacterRemoving:Connect(function()
 		lastGateUpdate = 0,
 		lastPathUpdate = 0,
 		animationTime = 0,
-		ownedTycoon = false,
+		ownedTycoon = false
 	}
 end)
 
---============================================================================--
---                            INITIALIZATION
---============================================================================--
-
--- Wait for character
-if not player.Character then
-	player.CharacterAdded:Wait()
+-- Wait for character and initialize
+if not player.Character then 
+	player.CharacterAdded:Wait() 
 end
 
--- 🎓 Tutorial initialization (NO WAITS - INSTANT!)
+-- Initialize tutorial
 if Config.TUTORIAL_ENABLED then
-	local shouldShowTutorial = true
-	
-	-- Check if player already owns tycoon and has Dropper2 → skip tutorial
-	for _, tycoon in ipairs(workspace:GetChildren()) do
-		local owner = tycoon:FindFirstChild("Owner")
-		if owner and owner.Value == player then
-			local purchased = tycoon:FindFirstChild("PurchasedObjects")
-			if purchased and purchased:FindFirstChild("Dropper2") then
-				shouldShowTutorial = false
-				print("🎓 [Tutorial] SKIPPED - player already owns Dropper2")
-				break
-			end
-		end
-	end
-	
-	if shouldShowTutorial then
-		print("🎓 [Tutorial] Creating UI...")
-		createTutorialUI()
-		print("🎓 [Tutorial] UI created!")
-		
-		TutorialState.enabled = true
-		TutorialState.completed = false
-		TutorialState.currentStep = 1 -- Always start at step 1
-		
-		print("🎓 [Tutorial] Setting up listeners...")
-		setupTutorialListeners()
-		
-		print("🎓 [Tutorial] Updating step display...")
-		updateTutorialStep() -- Sets card Title/Body immediately
-		
-		print("🎓 [Tutorial] ✅ Started! Current step:", Config.TUTORIAL_STEPS[1].name)
-		
-		-- If player already owns tycoon (returning player), hook purchases now
-		local myTycoon = getMyTycoon()
-		if myTycoon then
-			print("🎓 [Tutorial] Player ALREADY owns tycoon:", myTycoon.Name, "- hooking purchases NOW")
-			PathState.ownedTycoon = true -- Mark as owned
-			task.spawn(hookMyTycoonPurchases)
-			
-			-- Check if we should skip the claim step
-			if TutorialState.currentStep == 1 and Config.TUTORIAL_STEPS[1].name == "claim_gate" then
-				print("🎓 [Tutorial] Skipping claim step (player already owns tycoon)")
-				task.wait(0.5)
-				nextTutorialStep()
-			end
-		else
-			print("🎓 [Tutorial] Player does NOT own tycoon yet - waiting for claim...")
-		end
-	else
-		TutorialState.enabled = false
-		TutorialState.completed = true
-	end
+	task.wait(2)
+	createTutorialUI()
+	setupTutorialListeners()
+	updateTutorialStep()
+	print("🎓 [Tutorial] Initialized!")
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v4.2-FINAL (BUILD 2025-10-22-HOTFIX)")
-print("⚡ Instant path updates + no ServerStorage errors!")
-print("🎓 Tutorial: 4 steps → Claim → Drop1 → Collect → Drop2!")
-print("🎯 Claim: Polling (0.25s) | Money: RemoteEvent | Purchases: Scoped")
-print("🔧 HOTFIX: Fixed PathState.ownedTycoon race condition!")
+print("✅ Tycoon Path Guide v4.4-FINAL-POLISHED")
+print("⚡ Fast & Responsive + Auto-Collect Compatible!")
+print("🎯 Clean UI + leaderstats.Cash monitoring")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
