@@ -1040,23 +1040,28 @@ task.spawn(function()
 
 			-- 🎓 TUTORIAL: Detect when player claims tycoon (POLLING FALLBACK)
 			if ownsTycoon and not PathState.ownedTycoon then
+				print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+				print("🏠 [Tutorial] ✨ TYCOON OWNERSHIP DETECTED! ✨")
+				print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+				
 				PathState.ownedTycoon = true
-				print("🏠 [Tutorial] Detected tycoon ownership!")
 				
 				if TutorialState.enabled and not TutorialState.completed then
 					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
 					print("🎓 [Tutorial] Current step:", step and step.name or "none", "| Step index:", TutorialState.currentStep)
 					
 					if step and step.name == "claim_gate" then
-						print("✅ [Tutorial] (Polling) Tycoon claimed! Advancing to Buy Dropper 1...")
+						print("✅ [Tutorial] PERFECT! Player on claim step - advancing to Buy Dropper 1...")
 						task.wait(0.5)
 						nextTutorialStep() -- Move to "buy_dropper1"
 						
 						-- Hook into this tycoon's purchases now
+						print("🎓 [Tutorial] Spawning purchase hook...")
 						task.spawn(hookMyTycoonPurchases)
 					else
 						print("⚠️ [Tutorial] Step mismatch - expected 'claim_gate', got:", step and step.name or "nil")
 						-- Maybe player already past this step, hook anyway
+						print("🎓 [Tutorial] Hooking purchases anyway (player might be returning)...")
 						task.spawn(hookMyTycoonPurchases)
 					end
 				else
@@ -1175,8 +1180,9 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v4.1-FIXED (BUILD 2025-10-22)")
+print("✅ Tycoon Path Guide v4.2-FINAL (BUILD 2025-10-22-HOTFIX)")
 print("⚡ Instant path updates + no ServerStorage errors!")
 print("🎓 Tutorial: 4 steps → Claim → Drop1 → Collect → Drop2!")
 print("🎯 Claim: Polling (0.25s) | Money: RemoteEvent | Purchases: Scoped")
+print("🔧 HOTFIX: Fixed PathState.ownedTycoon race condition!")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
