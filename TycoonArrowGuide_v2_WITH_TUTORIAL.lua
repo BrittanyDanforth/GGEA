@@ -1,9 +1,10 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.0 - MOBILE-FIRST]
-	🎓 NEW: Built-in tutorial for first 2 droppers!
-	- Fixed: Path now updates instantly with player movement
-	- Fixed: Path extends much closer to the gate
-	- ✨ Tutorial: Guides players through Dropper 1 & 2
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.1 - FIXED!]
+	🎓 TUTORIAL: 4 steps using RemoteEvents (NO ServerStorage!)
+	- ✅ Uses MoneyCollected RemoteEvent → works with manual + auto-collect
+	- ✅ Shows instantly on load (no waits)
+	- ✅ Advances reliably: Claim → Drop1 → Collect → Drop2 → Done
+	- ⚡ Path updates every frame for instant response
 	- 📱 Mobile-optimized: Touch-friendly, readable text
 	- Place in StarterPlayer > StarterPlayerScripts as a LocalScript
 --]]
@@ -14,6 +15,7 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local camera = workspace.CurrentCamera
@@ -55,7 +57,7 @@ local Config = {
 	POSITION_SMOOTHING = 0.3,
 	TARGET_SMOOTHING = 0.25,
 	TRANSPARENCY_SMOOTHING = 0.15,
-	GATE_UPDATE_INTERVAL = 1,
+	GATE_UPDATE_INTERVAL = 0.25, -- Snappy gate detection!
 	PATH_UPDATE_RATE = 1/30,
 
 	-- Anti-bunching
@@ -69,29 +71,32 @@ local Config = {
 	GLOW_BASE_TRANSPARENCY = 0.4,
 	GLOW_PULSE_AMOUNT = 0.1,
 
-	-- 🎓 TUTORIAL SETTINGS 
-	-- Flow: Player claims → Buy Dropper 1 → Collect $70 → Buy Dropper 2 → Done!
-	-- Auto-skips for returning players (checks if they own Dropper2)
-	-- Shows live money progress: "$45 / $70"
+	-- 🎓 TUTORIAL SETTINGS (4 CLEAN STEPS - NO SERVERSTORAGE!)
 	TUTORIAL_ENABLED = true,
 	TUTORIAL_STEPS = {
 		{
-			name = "buy_dropper1",
-			title = "Step 1: Buy Your First Dropper! 💎",
-			description = "Touch the glowing \"Begin Working!\" button to buy your first dropper.\n\nIt's FREE and will start dropping cash!",
-			targetButton = "Begin Working!",
+			name = "claim_gate",
+			title = "Claim a Tycoon",
+			body = "Walk to a glowing gate and step on it to claim.",
+			goal = "touch_gate"
 		},
 		{
-			name = "collect_and_save",
-			title = "Step 2: Collect Cash! 💰",
-			description = "Walk to the GREEN COLLECTOR to grab cash from your dropper.\n\nSave up $70 for the next dropper!",
-			target = "collector",
+			name = "buy_dropper1",
+			title = "Buy Dropper 1",
+			body = "Step on the green button labeled Dropper 1.",
+			goal = "spawn_dropper1"
+		},
+		{
+			name = "collect_money",
+			title = "Collect Your Cash",
+			body = "Go to the green collector to cash in your drops.\n(Auto-Collect also counts!)",
+			goal = "first_collect"
 		},
 		{
 			name = "buy_dropper2",
-			title = "Step 3: Buy Dropper #2! ✨",
-			description = "You have $70! Touch the glowing button to buy your second dropper.\n\nIt earns cash faster!",
-			targetButton = "Buy Dropper - [$70]",
+			title = "Buy Dropper 2",
+			body = "Gather $70 (or more) and step on the Dropper 2 button.",
+			goal = "spawn_dropper2"
 		},
 	},
 }
@@ -354,15 +359,15 @@ local function updateTutorialStep()
 
 	print("🎓 [Tutorial] Step " .. TutorialState.currentStep .. ":", step.name)
 
-	-- Update UI
+	-- Update UI (set Title & Body every time!)
 	if TutorialState.tutorialGui then
 		local card = TutorialState.tutorialGui.Card
 		local title = card:FindFirstChild("Title")
-		local body = card:FindFirstChild("Body")
+		local bodyLabel = card:FindFirstChild("Body")
 		local stepIndicator = card:FindFirstChild("StepIndicator")
 		
 		if title then title.Text = step.title end
-		if body then body.Text = step.description end
+		if bodyLabel then bodyLabel.Text = step.body end
 		if stepIndicator then 
 			stepIndicator.Text = TutorialState.currentStep .. "/" .. #Config.TUTORIAL_STEPS
 		end
@@ -838,79 +843,70 @@ end
 --                     🎓 TUTORIAL EVENT LISTENERS
 --============================================================================--
 
+-- 🎓 Track session cash (NO ServerStorage on client!)
+local SessionCash = 0
+
 local function setupTutorialListeners()
 	if not TutorialState.enabled then return end
 
-	-- 💰 Listen for player's money increasing (ServerStorage)
-	local serverStorage = game:GetService("ServerStorage")
-	local playerMoneyFolder = serverStorage:WaitForChild("PlayerMoney", 10)
-	if playerMoneyFolder then
-		task.spawn(function()
-			task.wait(0.5)
-			local playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
-			
-			if not playerMoney then
-				task.wait(1)
-				playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
-			end
-			
-			if playerMoney then
-				local lastMoney = playerMoney.Value
-				print("🎓 [Tutorial] 💰 Tracking money - starts at $" .. lastMoney)
-
-				playerMoney.Changed:Connect(function(newValue)
-					if not TutorialState.enabled or TutorialState.completed then return end
-					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-
-					-- Only care if money INCREASED
-					if newValue > lastMoney and step then
-						print("💰 [Tutorial] Money: $" .. lastMoney .. " → $" .. newValue .. " (Step: " .. (step.name or "unknown") .. ")")
-
-						if step.name == "collect_and_save" then
-							if newValue >= 70 then
-								print("✅ [Tutorial] HAS $70+ ! Advancing to Dropper 2 step...")
-								task.wait(0.6)
-								nextTutorialStep()
-							else
-								-- Show live progress
-								print("📊 [Tutorial] Progress: $" .. newValue .. " / $70")
-								if TutorialState.tutorialGui then
-									local body = TutorialState.tutorialGui.Card:FindFirstChild("Body")
-									if body then
-										body.Text = "Great! Keep collecting!\n\n💵 You have: $" .. newValue .. " / $70\n\nWalk to the GREEN collector when drops appear!"
-									end
-								end
-							end
-						end
-					end
-
-					lastMoney = newValue
-				end)
-			else
-				warn("🎓 [Tutorial] ❌ PlayerMoney not found!")
-			end
-		end)
-	end
-
-	-- Listen for button purchases (Dropper spawns)
-	workspace.DescendantAdded:Connect(function(descendant)
+	-- 💰 Listen for money collection via RemoteEvent (works with manual + auto-collect!)
+	local Remotes = ReplicatedStorage:WaitForChild("TycoonRemotes")
+	local MoneyCollectedRE = Remotes:WaitForChild("MoneyCollected")
+	
+	local function onMoneyCollected(giver, amount, has2x, wasAuto)
 		if not TutorialState.enabled or TutorialState.completed then return end
+		SessionCash += tonumber(amount) or 0
+		
+		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+		if not step then return end
+		
+		print("💰 [Tutorial] Money collected: +" .. amount .. " | Total session: $" .. SessionCash .. " | Step:", step.name)
+		
+		-- Step 3: first collect → advance immediately
+		if step.name == "collect_money" then
+			print("✅ [Tutorial] First cash collected! Moving to Dropper 2 step...")
+			task.defer(nextTutorialStep)
+			return
+		end
+		
+		-- Step 4 gate: $70 accumulated → advance
+		if step.name == "buy_dropper2" and SessionCash >= 70 then
+			print("✅ [Tutorial] Has $70! Auto-advancing...")
+			task.defer(nextTutorialStep)
+		end
+	end
+	
+	MoneyCollectedRE.OnClientEvent:Connect(onMoneyCollected)
+	print("🎓 [Tutorial] Listening for MoneyCollected RemoteEvent")
 
+	-- Listen for tycoon claims + purchases
+	workspace.DescendantAdded:Connect(function(d)
+		if not TutorialState.enabled or TutorialState.completed then return end
 		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
 		if not step then return end
 
-		-- Detect dropper spawns in PurchasedObjects
-		if descendant.Parent and descendant.Parent.Name == "PurchasedObjects" then
-			print("🔍 [Tutorial] Detected spawn:", descendant.Name, "| Current step:", step.name)
-			
-			if step.name == "buy_dropper1" and descendant.Name == "Dropper1" then
-				print("✅ [Tutorial] DROPPER 1 PURCHASED! → Moving to collect step...")
-				task.wait(1)
-				nextTutorialStep()
-			elseif step.name == "buy_dropper2" and descendant.Name == "Dropper2" then
-				print("🎉 [Tutorial] DROPPER 2 PURCHASED! → Closing tutorial...")
-				task.wait(1.2)
-				skipTutorial()
+		-- When tycoon claimed (Owner set to player) → advance claim step
+		if step.name == "claim_gate" then
+			local owner = d:IsA("ObjectValue") and d.Name == "Owner" and d.Value
+			if owner == player then
+				print("✅ [Tutorial] Tycoon claimed! Advancing...")
+				task.defer(nextTutorialStep)
+			end
+			return
+		end
+
+		-- Model spawns land in PurchasedObjects; check names only
+		if d.Parent and d.Parent.Name == "PurchasedObjects" then
+			if step.name == "buy_dropper1" and d.Name == "Dropper1" then
+				print("✅ [Tutorial] Dropper1 spawned! Advancing...")
+				task.defer(nextTutorialStep)
+			elseif step.name == "buy_dropper2" and d.Name == "Dropper2" then
+				print("🎉 [Tutorial] Dropper2 spawned! Tutorial complete!")
+				task.defer(function()
+					nextTutorialStep() -- completes tutorial
+					task.wait(0.8)
+					skipTutorial()     -- fade out card
+				end)
 			end
 		end
 	end)
@@ -946,25 +942,6 @@ task.spawn(function()
 		if ownsTycoon or not targetGate then
 			PathState.currentTargetGate = nil
 			hidePath()
-
-			-- 🎓 TUTORIAL: Start immediately when player owns tycoon!
-			if ownsTycoon and not PathState.ownedTycoon then
-				PathState.ownedTycoon = true
-				
-				if TutorialState.enabled and not TutorialState.completed then
-					print("🎓 [Tutorial] Player claimed tycoon - starting tutorial NOW!")
-					
-					-- Create UI immediately if not exists
-					if not TutorialState.tutorialGui then
-						task.spawn(function()
-							task.wait(0.5) -- tiny wait for tycoon to settle
-							createTutorialUI()
-							setupTutorialListeners()
-							updateTutorialStep()
-						end)
-					end
-				end
-			end
 
 			-- Force cleanup if player owns tycoon
 			if ownsTycoon and PathState.pathModel then
@@ -1020,53 +997,38 @@ if not player.Character then
 	player.CharacterAdded:Wait()
 end
 
--- 🎓 Tutorial check (runs in background, waits for player to claim)
+-- 🎓 Tutorial initialization (NO WAITS - INSTANT!)
 if Config.TUTORIAL_ENABLED then
-	print("🎓 [Tutorial] Ready - 3 steps, starts INSTANTLY when player claims!")
+	local shouldShowTutorial = true
 	
-	-- Check if player already owns tycoon at load time
-	task.spawn(function()
-		task.wait(0.8)
-		
-		local alreadyOwns = false
-		for _, tycoon in pairs(workspace:GetChildren()) do
-			if tycoon:FindFirstChild("Owner") and tycoon.Owner.Value == player then
-				alreadyOwns = true
-				PathState.ownedTycoon = true
-				
-				if tycoon:FindFirstChild("PurchasedObjects") then
-					local hasDrop2 = tycoon.PurchasedObjects:FindFirstChild("Dropper2")
-					local hasDrop1 = tycoon.PurchasedObjects:FindFirstChild("Dropper1")
-					
-					if hasDrop2 then
-						TutorialState.enabled = false
-						TutorialState.completed = true
-						print("🎓 [Tutorial] SKIPPED - player owns Dropper2")
-						return
-					elseif hasDrop1 then
-						TutorialState.currentStep = 2
-						print("🎓 [Tutorial] Player has Dropper1 - starting at step 2")
-					end
-				end
-				
-				-- Player owns tycoon but tutorial not started yet - START IT!
-				if TutorialState.enabled and not TutorialState.tutorialGui then
-					print("🎓 [Tutorial] Player already owns tycoon - starting NOW!")
-					task.wait(0.3)
-					createTutorialUI()
-					setupTutorialListeners()
-					updateTutorialStep()
-				end
+	-- Check if player already owns tycoon and has Dropper2 → skip tutorial
+	for _, tycoon in ipairs(workspace:GetChildren()) do
+		local owner = tycoon:FindFirstChild("Owner")
+		if owner and owner.Value == player then
+			local purchased = tycoon:FindFirstChild("PurchasedObjects")
+			if purchased and purchased:FindFirstChild("Dropper2") then
+				shouldShowTutorial = false
+				print("🎓 [Tutorial] SKIPPED - player already owns Dropper2")
 				break
 			end
 		end
-		
-		if not alreadyOwns then
-			print("🎓 [Tutorial] Waiting for player to claim a tycoon...")
-		end
-	end)
+	end
+	
+	if shouldShowTutorial then
+		-- Start tutorial INSTANTLY (no waits!)
+		createTutorialUI()
+		TutorialState.enabled = true
+		TutorialState.completed = false
+		TutorialState.currentStep = TutorialState.currentStep or 1
+		setupTutorialListeners()
+		updateTutorialStep() -- Sets card Title/Body immediately
+		print("🎓 [Tutorial] Started instantly - 4 steps!")
+	else
+		TutorialState.enabled = false
+		TutorialState.completed = true
+	end
 end
 
-print("✅ Tycoon Path Guide v4.0 + Tutorial!")
-print("⚡ Responsive path to unclaimed gates")
-print("🎓 Tutorial: 3 simple steps → Dropper 1 → Collect $70 → Dropper 2 → Done!")
+print("✅ Tycoon Path Guide v4.0 + Tutorial (FIXED!)")
+print("⚡ Instant response - no ServerStorage polling!")
+print("🎓 Tutorial: 4 steps using RemoteEvents → Claim → Drop1 → Collect → Drop2 → Done!")
