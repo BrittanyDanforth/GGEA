@@ -1,8 +1,9 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.3-AUTO-COLLECT-FIX]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.3-GIVER-FIX]
 	🎓 Built-in tutorial for first 2 droppers!
 	🔧 Uses workspace.DescendantAdded (PROVEN TO WORK!)
-	🔧 AUTO-SKIPS collect step if auto-collect gamepass active!
+	🔧 AUTO-SKIPS collect step after 2s (auto-collect fix!)
+	🔧 FIXED Giver.Touched detection (searches ALL descendants!)
 	- Fast polling: 0.25s for instant gate claim detection
 	- Mobile-optimized: Touch-friendly, readable text
 	- Place in StarterPlayer > StarterPlayerScripts as a LocalScript
@@ -813,24 +814,22 @@ local function setupTutorialListeners()
 		end
 	end)
 
-	-- ✅ Giver.Touched for money collection (PROVEN TO WORK!)
-	for _, tycoon in pairs(workspace:GetChildren()) do
-		if tycoon:FindFirstChild("Essentials") then
-			local giver = tycoon.Essentials:FindFirstChild("Giver")
-			if giver then
-				giver.Touched:Connect(function(hit)
-					if not TutorialState.enabled or TutorialState.completed then return end
-					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-					if step and step.name == "collect_money" then
-						local character = player.Character
-						if character and hit.Parent == character then
-							print("💰 [Tutorial] Money collected!")
-							task.wait(0.3)
-							nextTutorialStep() -- Move to "buy_dropper2"
-						end
+	-- ✅ Giver.Touched for money collection (FIXED - searches all descendants!)
+	for _, giver in pairs(workspace:GetDescendants()) do
+		if giver.Name == "Giver" and giver:IsA("BasePart") then
+			print("🔍 [Tutorial] Found Giver at:", giver:GetFullName())
+			giver.Touched:Connect(function(hit)
+				if not TutorialState.enabled or TutorialState.completed then return end
+				local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+				if step and step.name == "collect_money" then
+					local character = player.Character
+					if character and hit.Parent == character then
+						print("💰 [Tutorial] Money collected via Giver touch!")
+						task.wait(0.3)
+						nextTutorialStep() -- Move to "buy_dropper2"
 					end
-				end)
-			end
+				end
+			end)
 		end
 	end
 
@@ -957,8 +956,9 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v4.3-AUTO-COLLECT-FIX")
+print("✅ Tycoon Path Guide v4.3-GIVER-FIX")
 print("⚡ Fast & Responsive + Tutorial!")
 print("🎯 Uses workspace.DescendantAdded (PROVEN!)")
-print("🔧 AUTO-SKIPS collect step if auto-collect active!")
+print("🔧 AUTO-SKIPS collect step after 2s (auto-collect fix!)")
+print("🔧 FIXED Giver detection (searches ALL descendants!)")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
