@@ -1,8 +1,14 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.1 - DYNAMIC HIGHLIGHTS]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.2 - TRUTHINESS FIX]
+	
+	🐛 CRITICAL FIXES:
+	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
+	✅ Highlight cleared when no target (no lingering blue outlines)
+	✅ Highlight updates ALWAYS (not just during tutorial step)
+	✅ Switch logic with hysteresis (prevents jitter/stuck feeling)
+	
 	✅ Path stays FLAT on ground (no floating!)
-	✅ Highlights CLOSEST gate (updates as you move!)
-	✅ Dynamic highlight switching (follows the path)
+	✅ Highlights CLOSEST gate (true distance-based switching)
 	✅ Smooth fade-out when gate claimed
 	✅ Robust ownership detection (all tycoon kits)
 	✅ Event-driven instant claim detection
@@ -172,6 +178,19 @@ local function tycoonOwnedByPlayer(tycoon, plr: Player): boolean
 	local ownerIdAttr = tycoon:GetAttribute("OwnerId")
 	if typeof(ownerIdAttr) == "number" then
 		return ownerIdAttr == plr.UserId
+	end
+	return false
+end
+
+-- 🐛 FIX A: Correct "unclaimed" detection (handles 0 and "" as unclaimed!)
+local function isUnclaimedOwner(owner: Instance): boolean
+	if not owner then return false end
+	if owner:IsA("ObjectValue") then
+		return owner.Value == nil
+	elseif owner:IsA("StringValue") then
+		return owner.Value == nil or owner.Value == ""
+	elseif owner:IsA("IntValue") or owner:IsA("NumberValue") then
+		return owner.Value == 0
 	end
 	return false
 end
@@ -800,7 +819,7 @@ local function findNearestUnclaimedGate()
 		if tycoonOwnedByPlayer(gateData.tycoon, player) then
 			PathState.playerTycoon = gateData.tycoon
 			return nil, true
-		elseif not gateData.owner.Value then
+		elseif isUnclaimedOwner(gateData.owner) then  -- 🐛 FIX A: Handles 0 and "" correctly!
 			local distance = (gateData.position - humanoidRoot.Position).Magnitude
 			if distance < nearestDistance then
 				nearestDistance, nearestGate = distance, gateData
@@ -815,6 +834,13 @@ end
 --============================================================================--
 
 local function hidePath(immediate: boolean?)
+	-- 🐛 FIX B: Clear highlight when hiding path
+	if TutorialState.highlightPart then
+		TutorialState.highlightPart:Destroy()
+		TutorialState.highlightPart = nil
+		TutorialState.lastHighlightedPart = nil
+	end
+	
 	if not PathState.pathModel and not PathState.active then
 		PathState.active = false
 		PathState.fadingOut = false
@@ -1104,6 +1130,13 @@ task.spawn(function()
 		local targetGate, ownsTycoon = findNearestUnclaimedGate()
 
 		if ownsTycoon or not targetGate then
+			-- 🐛 FIX B: Always clear highlight when no target!
+			if TutorialState.highlightPart then
+				TutorialState.highlightPart:Destroy()
+				TutorialState.highlightPart = nil
+				TutorialState.lastHighlightedPart = nil
+			end
+			
 			if ownsTycoon and not PathState.ownedTycoon then
 				print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 				print("🏠 [Tutorial] ✨ TYCOON CLAIMED! ✨")
@@ -1133,16 +1166,28 @@ task.spawn(function()
 			end
 			PathState.active = true
 			
-			-- 🎯 Update highlight if target changes during tutorial
-			local targetChanged = (PathState.currentTargetGate ~= targetGate)
-			PathState.currentTargetGate = targetGate
+			-- 🐛 FIX D: Clean switch logic with hysteresis (prevents jitter)
+			local character = player.Character
+			local humanoidRoot = character and character:FindFirstChild("HumanoidRootPart")
+			local current = PathState.currentTargetGate
+			local SWITCH_MARGIN = 1.0 -- studs; set to 0 for snap, >0 for stability
 			
-			if targetChanged and TutorialState.enabled and not TutorialState.completed then
-				local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-				if step and step.target == "closest_gate" and targetGate then
-					-- Update highlight to new closest gate!
+			local shouldSwitch = (current == nil)
+			if current and targetGate and humanoidRoot then
+				local charPos = humanoidRoot.Position
+				local curDist = (current.position - charPos).Magnitude
+				local newDist = (targetGate.position - charPos).Magnitude
+				shouldSwitch = (newDist + SWITCH_MARGIN < curDist)
+			end
+			
+			if shouldSwitch then
+				local actuallyChanged = (PathState.currentTargetGate ~= targetGate)
+				PathState.currentTargetGate = targetGate
+				
+				-- 🐛 FIX C: Update highlight whenever target changes (not just during tutorial step!)
+				if actuallyChanged and targetGate then
 					createHighlight(targetGate.part)
-					print("🔄 [Tutorial] Updated highlight to new closest gate")
+					print("🔄 [Tutorial] Switched highlight to new gate (distance-based)")
 				end
 			end
 		end
@@ -1223,10 +1268,13 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.1 - DYNAMIC HIGHLIGHTS")
+print("✅ Tycoon Path Guide v7.2 - TRUTHINESS FIX")
+print("🐛 FIX A: Correct unclaimed detection (0 and \"\" now work!)")
+print("🐛 FIX B: Highlight cleared when no target (no lingering)")
+print("🐛 FIX C: Highlight ALWAYS updates (not step-limited)")
+print("🐛 FIX D: Switch logic with hysteresis (no jitter)")
 print("🌍 Path stays FLAT on ground (no floating!)")
-print("🎯 Highlights CLOSEST gate (updates as you move!)")
-print("🔄 Dynamic highlight switching (follows the path)")
+print("🎯 Highlights TRUE closest gate (distance-based)")
 print("✨ Smooth fade-out when gate claimed")
 print("⚡ Event-driven instant claim detection")
 print("🔧 Robust ownership (all tycoon kits)")
