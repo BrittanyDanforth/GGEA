@@ -88,20 +88,26 @@ local Config = {
 		{
 			name = "collect_money",
 			title = "Collect Your Cash! 💰",
-			description = "Walk to the green collector to pick up your cash!\n\nYou'll need it to buy the next dropper.",
+			description = "Walk to the GREEN COLLECTOR part to pick up your cash!\n\nWatch your money increase at the top of the screen.",
 			target = "collector", -- special case: Giver part
 		},
 		{
+			name = "wait_for_cash",
+			title = "Save Up! 💵",
+			description = "Nice! Keep collecting cash until you have $70.\n\nYour dropper keeps making money - just wait and collect!",
+			target = "collector",
+		},
+		{
 			name = "buy_dropper2",
-			title = "Upgrade Time! ✨",
-			description = "Buy the next dropper (Cinnamoroll Plushie) to earn cash faster!\n\nIt costs $70 - collect from your first dropper first.",
+			title = "Buy Dropper #2! ✨",
+			description = "You have enough! Buy the next dropper (Cinnamoroll Plushie) to earn even faster!\n\nTouch the glowing button.",
 			targetButton = "Buy Dropper - [$70]",
 			completed = false,
 		},
 		{
 			name = "tutorial_complete",
 			title = "You're All Set! 🎉",
-			description = "Great job! Keep buying upgrades to grow your tycoon.\n\nTap anywhere to dismiss this tutorial.",
+			description = "Amazing work! You've unlocked 2 droppers!\n\nKeep buying more upgrades to build your dream tycoon.\n\nThis tutorial will close in 5 seconds...",
 			target = nil,
 		},
 	},
@@ -184,15 +190,23 @@ local function createTutorialUI()
 	local titleSize = phone and 20 or (tablet and 22 or 24)
 	local bodySize = phone and 14 or (tablet and 15 or 16)
 
-	-- Card
+	-- Card (starts above screen, will slide down!)
 	local card = Instance.new("Frame")
 	card.Name = "Card"
 	card.AnchorPoint = Vector2.new(0.5, 0)
-	card.Position = UDim2.new(0.5, 0, 0, 80)
+	card.Position = UDim2.new(0.5, 0, 0, -cardH - 20) -- Start off-screen!
 	card.Size = UDim2.fromOffset(cardW, cardH)
 	card.BackgroundColor3 = Color3.fromRGB(255, 248, 252)
 	card.BorderSizePixel = 0
 	card.Parent = gui
+	
+	-- ✨ Slide down animation!
+	task.spawn(function()
+		task.wait(0.3)
+		TweenService:Create(card, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0.5, 0, 0, 80)
+		}):Play()
+	end)
 
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 16)
@@ -234,6 +248,24 @@ local function createTutorialUI()
 	title.TextYAlignment = Enum.TextYAlignment.Top
 	title.Text = "Tutorial"
 	title.Parent = card
+
+	-- Step indicator (e.g., "Step 2/5")
+	local stepIndicator = Instance.new("TextLabel")
+	stepIndicator.Name = "StepIndicator"
+	stepIndicator.AnchorPoint = Vector2.new(0, 0)
+	stepIndicator.Position = UDim2.new(0, 0, 0, 0)
+	stepIndicator.Size = UDim2.fromOffset(80, 24)
+	stepIndicator.BackgroundColor3 = Color3.fromRGB(255, 180, 210)
+	stepIndicator.BorderSizePixel = 0
+	stepIndicator.Font = Enum.Font.GothamBold
+	stepIndicator.TextSize = 12
+	stepIndicator.TextColor3 = Color3.new(1, 1, 1)
+	stepIndicator.Text = "Step 1/5"
+	stepIndicator.Parent = card
+
+	local stepCorner = Instance.new("UICorner")
+	stepCorner.CornerRadius = UDim.new(0, 8)
+	stepCorner.Parent = stepIndicator
 
 	-- Body
 	local body = Instance.new("TextLabel")
@@ -323,12 +355,36 @@ local function updateTutorialStep()
 		return
 	end
 
+	print("🎓 [Tutorial] Step " .. TutorialState.currentStep .. ":", step.name)
+
 	-- Update UI
 	if TutorialState.tutorialGui then
-		local title = TutorialState.tutorialGui.Card:FindFirstChild("Title")
-		local body = TutorialState.tutorialGui.Card:FindFirstChild("Body")
+		local card = TutorialState.tutorialGui.Card
+		local title = card:FindFirstChild("Title")
+		local body = card:FindFirstChild("Body")
+		local stepIndicator = card:FindFirstChild("StepIndicator")
+		
 		if title then title.Text = step.title end
 		if body then body.Text = step.description end
+		if stepIndicator then 
+			stepIndicator.Text = "Step " .. TutorialState.currentStep .. "/" .. #Config.TUTORIAL_STEPS
+		end
+	end
+
+	-- 🎉 Auto-dismiss on final step
+	if step.name == "tutorial_complete" then
+		task.spawn(function()
+			for i = 5, 1, -1 do
+				task.wait(1)
+				if TutorialState.tutorialGui then
+					local body = TutorialState.tutorialGui.Card:FindFirstChild("Body")
+					if body then
+						body.Text = "Amazing work! You've unlocked 2 droppers!\n\nKeep buying more upgrades to build your dream tycoon.\n\nClosing in " .. i .. " seconds..."
+					end
+				end
+			end
+			skipTutorial()
+		end)
 	end
 
 	-- Find and highlight target
@@ -341,6 +397,7 @@ local function updateTutorialStep()
 						local head = button:FindFirstChild("Head")
 						if head and head.CanCollide and head.Transparency < 0.5 then
 							createHighlight(head)
+							print("✨ [Tutorial] Highlighting button:", step.targetButton)
 							break
 						end
 					end
@@ -354,6 +411,7 @@ local function updateTutorialStep()
 				local giver = tycoon.Essentials:FindFirstChild("Giver")
 				if giver then
 					createHighlight(giver)
+					print("✨ [Tutorial] Highlighting collector")
 					break
 				end
 			end
@@ -365,6 +423,23 @@ local function nextTutorialStep()
 	if not TutorialState.enabled or TutorialState.completed then return end
 
 	TutorialState.currentStep = TutorialState.currentStep + 1
+	
+	-- ✨ Bounce animation when moving to next step
+	if TutorialState.tutorialGui then
+		local card = TutorialState.tutorialGui.Card
+		local originalSize = card.Size
+		
+		TweenService:Create(card, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = UDim2.fromOffset(originalSize.X.Offset * 1.05, originalSize.Y.Offset * 1.05)
+		}):Play()
+		
+		task.wait(0.15)
+		
+		TweenService:Create(card, TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Size = originalSize
+		}):Play()
+	end
+	
 	updateTutorialStep()
 end
 
@@ -785,7 +860,64 @@ end
 local function setupTutorialListeners()
 	if not TutorialState.enabled then return end
 
-	-- Listen for button purchases
+	-- 💰 Listen for player's money increasing (ServerStorage)
+	local serverStorage = game:GetService("ServerStorage")
+	local playerMoneyFolder = serverStorage:WaitForChild("PlayerMoney", 10)
+	if playerMoneyFolder then
+		-- Wait a bit for the money value to be created
+		task.wait(0.5)
+		local playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
+		
+		if not playerMoney then
+			-- Try creating it if it doesn't exist
+			task.wait(1)
+			playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
+		end
+		
+		if playerMoney then
+			local lastMoney = playerMoney.Value
+			print("🎓 [Tutorial] Monitoring money for", player.Name, "- Starting at $" .. lastMoney)
+
+			playerMoney.Changed:Connect(function(newValue)
+				if not TutorialState.enabled or TutorialState.completed then return end
+				local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+
+				print("🎓 [Tutorial] Money changed:", lastMoney, "→", newValue, "| Current step:", step and step.name or "none")
+
+				-- Detect money increase
+				if newValue > lastMoney then
+					if step and step.name == "collect_money" then
+						-- First collection! Move to "wait_for_cash"
+						print("✅ [Tutorial] First cash collected! Moving to save step...")
+						task.wait(1.2)
+						nextTutorialStep()
+					elseif step and step.name == "wait_for_cash" then
+						-- Check if they have $70 yet
+						print("💰 [Tutorial] Current cash: $" .. newValue .. " / $70 needed")
+						if newValue >= 70 then
+							print("✅ [Tutorial] Player has enough! Moving to Dropper 2...")
+							task.wait(0.8)
+							nextTutorialStep() -- Move to "buy_dropper2"
+						else
+							-- Update the card to show progress
+							if TutorialState.tutorialGui then
+								local body = TutorialState.tutorialGui.Card:FindFirstChild("Body")
+								if body then
+									body.Text = "Nice! Keep collecting cash.\n\nYou have $" .. newValue .. " / $70 needed for Dropper 2.\n\nWait for more drops and collect them!"
+								end
+							end
+						end
+					end
+				end
+
+				lastMoney = newValue
+			end)
+		else
+			warn("🎓 [Tutorial] Could not find PlayerMoney value for", player.Name)
+		end
+	end
+
+	-- Listen for button purchases (Dropper spawns)
 	workspace.DescendantAdded:Connect(function(descendant)
 		if not TutorialState.enabled or TutorialState.completed then return end
 
@@ -795,34 +927,30 @@ local function setupTutorialListeners()
 		-- Check if a purchased object was added
 		if descendant.Parent and descendant.Parent.Name == "PurchasedObjects" then
 			if step.name == "buy_dropper1" and descendant.Name == "Dropper1" then
+				print("✅ [Tutorial] Dropper 1 purchased!")
 				task.wait(0.5)
 				nextTutorialStep() -- Move to "collect_money"
 			elseif step.name == "buy_dropper2" and descendant.Name == "Dropper2" then
-				task.wait(0.5)
+				print("🎉 [Tutorial] Dropper 2 purchased! Tutorial complete!")
+				
+				-- 🎊 Celebration effect!
+				if TutorialState.tutorialGui then
+					local card = TutorialState.tutorialGui.Card
+					-- Flash the card pink!
+					local originalColor = card.BackgroundColor3
+					for i = 1, 3 do
+						card.BackgroundColor3 = Color3.fromRGB(255, 200, 220)
+						task.wait(0.15)
+						card.BackgroundColor3 = originalColor
+						task.wait(0.15)
+					end
+				end
+				
+				task.wait(0.8)
 				nextTutorialStep() -- Move to "tutorial_complete"
 			end
 		end
 	end)
-
-	-- Listen for money collection (Giver touch)
-	for _, tycoon in pairs(workspace:GetChildren()) do
-		if tycoon:FindFirstChild("Essentials") then
-			local giver = tycoon.Essentials:FindFirstChild("Giver")
-			if giver then
-				giver.Touched:Connect(function(hit)
-					if not TutorialState.enabled or TutorialState.completed then return end
-					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-					if step and step.name == "collect_money" then
-						local character = player.Character
-						if character and hit.Parent == character then
-							task.wait(0.3)
-							nextTutorialStep() -- Move to "buy_dropper2"
-						end
-					end
-				end)
-			end
-		end
-	end
 
 	-- Skip button
 	if TutorialState.skipButton then
@@ -935,10 +1063,52 @@ end
 -- 🎓 Initialize tutorial if enabled
 if Config.TUTORIAL_ENABLED then
 	task.wait(2) -- Wait for tycoon to load
-	createTutorialUI()
-	setupTutorialListeners()
-	updateTutorialStep()
-	print("🎓 [Tutorial] Initialized! Mobile-optimized guide active.")
+	
+	local shouldShowTutorial = true
+	
+	-- Check if player has already progressed (skip tutorial for returning players)
+	local serverStorage = game:GetService("ServerStorage")
+	local playerMoneyFolder = serverStorage:WaitForChild("PlayerMoney", 10)
+	if playerMoneyFolder then
+		local playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
+		if playerMoney and playerMoney.Value >= 200 then
+			-- Player has significant cash - they know what they're doing!
+			shouldShowTutorial = false
+			print("🎓 [Tutorial] Player has $" .. playerMoney.Value .. " - skipping tutorial (returning player)")
+		elseif playerMoney and playerMoney.Value >= 70 then
+			-- Player already has cash for dropper 2, skip ahead
+			TutorialState.currentStep = 4 -- "buy_dropper2"
+			print("🎓 [Tutorial] Player has $" .. playerMoney.Value .. " - starting at Dropper 2 step")
+		elseif playerMoney and playerMoney.Value > 0 then
+			-- Player has some cash, skip to wait step
+			TutorialState.currentStep = 3 -- "wait_for_cash"
+			print("🎓 [Tutorial] Player has $" .. playerMoney.Value .. " - starting at save money step")
+		end
+	end
+	
+	-- Check if player already owns Dropper2 (skip tutorial!)
+	for _, tycoon in pairs(workspace:GetChildren()) do
+		if tycoon:FindFirstChild("Owner") and tycoon.Owner.Value == player then
+			if tycoon:FindFirstChild("PurchasedObjects") then
+				if tycoon.PurchasedObjects:FindFirstChild("Dropper2") then
+					shouldShowTutorial = false
+					print("🎓 [Tutorial] Player already owns Dropper2 - skipping tutorial")
+					break
+				end
+			end
+		end
+	end
+	
+	if shouldShowTutorial then
+		createTutorialUI()
+		setupTutorialListeners()
+		updateTutorialStep()
+		print("🎓 [Tutorial] Initialized! Mobile-optimized guide active.")
+	else
+		TutorialState.enabled = false
+		TutorialState.completed = true
+		print("🎓 [Tutorial] Skipped for returning player")
+	end
 end
 
 print("✅ Tycoon Path Guide v4.0 - Fast & Responsive + Tutorial!")
