@@ -91,7 +91,7 @@ local Config = {
 		{
 			name = "collect_money",
 			title = "Earning Cash! 💰",
-			description = "Your dropper is working! Cash is being collected automatically.\n\nYou'll need $70 for the next upgrade.",
+			description = "Your dropper is working!\n\nYou'll need $70 for the next upgrade.",
 			target = "collector",
 			waitForCash = 70, -- Wait for $70
 		},
