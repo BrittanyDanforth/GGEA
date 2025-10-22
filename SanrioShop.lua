@@ -155,6 +155,7 @@ Core.Cache = Cache
 -- Initialize caches
 local productCache = Cache.new(Core.CONSTANTS.CACHE_PRODUCT_INFO)
 local ownershipCache = Cache.new(Core.CONSTANTS.CACHE_OWNERSHIP)
+Core.State.lastPriceRefresh = 0
 
 -- Utility Functions
 Core.Utils = {}
@@ -266,42 +267,10 @@ Core.DataManager = {}
 
 Core.DataManager.products = {
 	cash = {
-		{
-			id = 1897730242,
-			amount = 1000,
-			name = "1,000 Cash",
-			description = "A small boost to get you started",
-			icon = "rbxassetid://10709728059",
-			featured = false,
-			price = 0,
-		},
-		{
-			id = 1897730373,
-			amount = 5000,
-			name = "5,000 Cash",
-			description = "Perfect for mid-game expansion",
-			icon = "rbxassetid://10709728059",
-			featured = true,
-			price = 0,
-		},
-		{
-			id = 1897730467,
-			amount = 10000,
-			name = "10,000 Cash",
-			description = "Accelerate your progress significantly",
-			icon = "rbxassetid://10709728059",
-			featured = false,
-			price = 0,
-		},
-		{
-			id = 1897730581,
-			amount = 50000,
-			name = "50,000 Cash",
-			description = "Maximum value for serious players",
-			icon = "rbxassetid://10709728059",
-			featured = true,
-			price = 0,
-		},
+        { id = 1897730242, amount = 1000,  name = "1,000 Cash",  description = "A small boost to get you started", icon = "rbxassetid://10709728059", featured = false, price = 0 },
+        { id = 1897730373, amount = 5000,  name = "5,000 Cash",  description = "Perfect for mid-game expansion",   icon = "rbxassetid://10709728059", featured = true,  price = 0, bonus = 0.10 },
+        { id = 1897730467, amount = 10000, name = "10,000 Cash", description = "Accelerate your progress significantly", icon = "rbxassetid://10709728059", featured = false, price = 0, bonus = 0.15 },
+        { id = 1897730581, amount = 50000, name = "50,000 Cash", description = "Maximum value for serious players", icon = "rbxassetid://10709728059", featured = true,  price = 0, bonus = 0.25, best = true },
 	},
 	gamepasses = {
 		{
@@ -398,6 +367,14 @@ function Core.DataManager.refreshPrices()
 	end
 end
 
+function Core.DataManager.refreshPricesIfStale(intervalSec)
+    intervalSec = intervalSec or 180
+    if (tick() - Core.State.lastPriceRefresh) >= intervalSec then
+        Core.DataManager.refreshPrices()
+        Core.State.lastPriceRefresh = tick()
+    end
+end
+
 -- ========================================
 -- UI MODULE (Embedded)
 -- ========================================
@@ -414,7 +391,7 @@ UI.Theme = {
 			stroke = Color3.fromRGB(222, 226, 235),
 			text = Color3.fromRGB(35, 38, 46),
 			textSecondary = Color3.fromRGB(120, 126, 140),
-			accent = Color3.fromRGB(255, 64, 129),
+            accent = Color3.fromRGB(255, 80, 140),
 			accentAlt = Color3.fromRGB(186, 214, 255),
 			success = Color3.fromRGB(76, 175, 80),
 			warning = Color3.fromRGB(255, 152, 0),
@@ -810,23 +787,24 @@ function Shop:initialize()
 end
 
 function Shop:createToggleButton()
-	local toggleScreen = PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
+    local toggleScreen = PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
 	toggleScreen.Name = "SanrioShopToggle"
 	toggleScreen.ResetOnSpawn = false
 	toggleScreen.DisplayOrder = 999
+    toggleScreen.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
 	toggleScreen.Parent = PlayerGui
 
-	self.toggleButton = UI.Components.Button({
+    self.toggleButton = UI.Components.Button({
 		Name = "ShopToggle",
 		Text = "",
-		Size = UDim2.fromOffset(180, 60),
-		Position = UDim2.new(1, -20, 1, -20),
-		AnchorPoint = Vector2.new(1, 1),
-		BackgroundColor3 = UI.Theme:get("surface"),
+        Size = UDim2.fromOffset(184, 56),
+        Position = UDim2.new(1, -16, 1, -16),
+        AnchorPoint = Vector2.new(1, 1),
+        BackgroundColor3 = Color3.fromRGB(255, 248, 252),
 		cornerRadius = UDim.new(1, 0),
 		stroke = {
-			color = UI.Theme:get("accent"),
-			thickness = 2,
+            color = Color3.fromRGB(255, 80, 140),
+            thickness = 2,
 		},
 		parent = toggleScreen,
 		onClick = function()
@@ -834,26 +812,66 @@ function Shop:createToggleButton()
 		end,
 	}):render()
 
-	local icon = UI.Components.Image({
+    -- Soft outline glow
+    local glow = Instance.new("UIStroke")
+    glow.Color = UI.Theme:get("accent")
+    glow.Thickness = 2
+    glow.Transparency = 0.35
+    glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Outline
+    glow.Parent = self.toggleButton
+
+    local icon = UI.Components.Image({
 		Name = "Icon",
 		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromOffset(32, 32),
-		Position = UDim2.fromOffset(16, 14),
+        Size = UDim2.fromOffset(28, 28),
+        Position = UDim2.fromOffset(14, 14),
 		parent = self.toggleButton,
 	}):render()
 
-	local label = UI.Components.TextLabel({
+    local label = UI.Components.TextLabel({
 		Name = "Label",
-		Text = "Shop",
-		Size = UDim2.new(1, -64, 1, 0),
-		Position = UDim2.fromOffset(56, 0),
+        Text = "Shop",
+        Size = UDim2.new(1, -60, 1, 0),
+        Position = UDim2.fromOffset(50, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Enum.Font.GothamBold,
-		TextSize = 20,
+        TextSize = 18,
 		parent = self.toggleButton,
 	}):render()
 
-	self:addPulseAnimation(self.toggleButton)
+    -- Idle micro-pulse on phones to attract attention
+    if Core.Utils.isMobile() then
+        local s = Instance.new("UIScale")
+        s.Scale = 1
+        s.Parent = self.toggleButton
+        task.spawn(function()
+            while self.toggleButton and self.toggleButton.Parent do
+                Core.Animation.tween(s, {Scale = 1.03}, 0.7)
+                task.wait(0.9)
+                Core.Animation.tween(s, {Scale = 1.00}, 0.6)
+                task.wait(3.0)
+            end
+        end)
+    end
+
+    -- Optional SALE badge if any bonus exists
+    local hasBonus = false
+    for _, p in ipairs(Core.DataManager.products.cash) do
+        if p.bonus and p.bonus > 0 then hasBonus = true break end
+    end
+    if hasBonus then
+        local badge = Instance.new("TextLabel")
+        badge.BackgroundColor3 = UI.Theme:get("accent")
+        badge.TextColor3 = Color3.new(1,1,1)
+        badge.Font = Enum.Font.GothamBold
+        badge.TextSize = 12
+        badge.Text = "SALE"
+        badge.AnchorPoint = Vector2.new(1,0)
+        badge.Position = UDim2.new(1, -8, 0, -6)
+        badge.Size = UDim2.fromOffset(44, 20)
+        badge.Parent = self.toggleButton
+        local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(1,0); c.Parent = badge
+    end
 end
 
 function Shop:createMainInterface()
@@ -862,6 +880,7 @@ function Shop:createMainInterface()
 	self.gui.ResetOnSpawn = false
 	self.gui.DisplayOrder = 1000
 	self.gui.Enabled = false
+self.gui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
 	self.gui.Parent = PlayerGui
 
 	self.blur = Lighting:FindFirstChild("SanrioShopBlur") or Instance.new("BlurEffect")
