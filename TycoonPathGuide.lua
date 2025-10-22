@@ -92,7 +92,7 @@ local Config = {
 		{
 			name = "collect_money",
 			title = "Earning Cash! 💰",
-			description = "Your dropper is working! Cash is being collected automatically.\n\nYou'll need $70 for the next upgrade.",
+			description = "Your dropper is working! Walk to the glowing area to collect your cash.\n\nYou'll need $70 for the next upgrade.",
 			target = "collector",
 			waitForCash = true,
 		},
@@ -108,7 +108,7 @@ local Config = {
 			title = "You're All Set! 🎉",
 			description = "Amazing! Keep buying upgrades to grow your tycoon.\n\nTap anywhere to close.",
 			target = nil,
-			autoClose = 5,
+			autoClose = 2,
 		},
 	},
 }
