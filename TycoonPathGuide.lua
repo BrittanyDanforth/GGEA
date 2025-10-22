@@ -1,10 +1,10 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v6.0 - PERFECT INTEGRATION]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v6.1 - ULTRA POLISHED]
 	✅ Perfect integration with your purchase handler & auto-collect
 	✅ Monitors leaderstats.Cash for auto-collect compatibility
-	✅ Ultra-polished animations and transitions
+	✅ Ultra-smooth simultaneous transitions
+	✅ Instant path fade when gate claimed
 	✅ Mobile-first responsive design
-	✅ Smart detection system that actually works
 	
 	Place in: StarterPlayer > StarterPlayerScripts as a LocalScript
 --]]
@@ -49,14 +49,14 @@ local Config = {
 	PULSE_SPEED = 2,
 	FLOW_SPEED = 3,
 	FADE_IN_TIME = 0.3,
-	FADE_OUT_TIME = 0.4,
-	TEXT_TRANSITION_TIME = 0.3,
+	FADE_OUT_TIME = 0.25, -- Faster fade out
+	TEXT_TRANSITION_TIME = 0.25, -- Faster text transition
 
 	-- Smoothing & Performance
 	POSITION_SMOOTHING = 0.3,
 	TARGET_SMOOTHING = 0.25,
-	TRANSPARENCY_SMOOTHING = 0.15,
-	GATE_UPDATE_INTERVAL = 0.5,
+	TRANSPARENCY_SMOOTHING = 0.25, -- Faster transparency changes
+	GATE_UPDATE_INTERVAL = 0.3, -- Faster gate checks
 	PATH_UPDATE_RATE = 1/30,
 
 	-- Anti-bunching
@@ -72,7 +72,7 @@ local Config = {
 
 	-- 🎓 TUTORIAL SETTINGS
 	TUTORIAL_ENABLED = true,
-	TUTORIAL_STEP_DELAY = 0.5,
+	TUTORIAL_STEP_DELAY = 0.3, -- Faster step transitions
 	TUTORIAL_STEPS = {
 		{
 			name = "claim_gate",
@@ -93,7 +93,7 @@ local Config = {
 			title = "Earning Cash! 💰",
 			description = "Your dropper is working! Cash is being collected automatically.\n\nYou'll need $70 for the next upgrade.",
 			target = "collector",
-			waitForCash = true, -- Wait for any cash increase
+			waitForCash = true,
 		},
 		{
 			name = "buy_dropper2",
@@ -142,6 +142,7 @@ local PathState = {
 	animationTime = 0,
 	ownedTycoon = false,
 	playerTycoon = nil,
+	fadingOut = false, -- New flag for smooth fade
 }
 
 -- Raycast parameters
@@ -374,161 +375,14 @@ local function createHighlight(target)
 	TutorialState.highlightPart = highlight
 end
 
-local function updateTutorialText(newTitle, newBody)
-	if not TutorialState.tutorialGui or TutorialState.isTransitioning then return end
-	
-	TutorialState.isTransitioning = true
-	
-	local card = TutorialState.tutorialGui.Card
-	local titleLabel = card.Title
-	local bodyLabel = card.Body
-	
-	-- Fade out
-	local fadeOutInfo = TweenInfo.new(Config.TEXT_TRANSITION_TIME/2, Enum.EasingStyle.Quad)
-	local fadeOut1 = TweenService:Create(titleLabel, fadeOutInfo, {TextTransparency = 1})
-	local fadeOut2 = TweenService:Create(bodyLabel, fadeOutInfo, {TextTransparency = 1})
-	
-	fadeOut1:Play()
-	fadeOut2:Play()
-	
-	task.wait(Config.TEXT_TRANSITION_TIME/2)
-	
-	-- Update text
-	titleLabel.Text = newTitle
-	bodyLabel.Text = newBody
-	
-	-- Fade in
-	local fadeInInfo = TweenInfo.new(Config.TEXT_TRANSITION_TIME/2, Enum.EasingStyle.Quad)
-	local fadeIn1 = TweenService:Create(titleLabel, fadeInInfo, {TextTransparency = 0})
-	local fadeIn2 = TweenService:Create(bodyLabel, fadeInInfo, {TextTransparency = 0})
-	
-	fadeIn1:Play()
-	fadeIn2:Play()
-	
-	task.wait(Config.TEXT_TRANSITION_TIME/2)
-	TutorialState.isTransitioning = false
-end
-
-local function updateTutorialStep()
-	if not TutorialState.enabled or TutorialState.completed then return end
-
-	local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-	if not step then
-		TutorialState.completed = true
-		skipTutorial()
-		return
-	end
-
-	print("🎓 [Tutorial] Step " .. TutorialState.currentStep .. ":", step.name)
-
-	-- Update text
-	if TutorialState.tutorialGui then
-		updateTutorialText(step.title, step.description)
-	end
-
-	-- Clear old highlight
-	if TutorialState.highlightPart then 
-		TutorialState.highlightPart:Destroy() 
-		TutorialState.highlightPart = nil
-	end
-
-	-- Auto-close timer
-	if step.autoClose then
-		task.delay(step.autoClose, function()
-			if TutorialState.enabled and not TutorialState.completed then
-				skipTutorial()
-			end
-		end)
-	end
-
-	-- Wait before highlighting
-	task.wait(Config.TUTORIAL_STEP_DELAY)
-	
-	-- Find target to highlight
-	local targetPart = nil
-	
-	if step.targetButton and PathState.playerTycoon then
-		-- Look in player's tycoon buttons
-		local buttons = PathState.playerTycoon:FindFirstChild("Buttons")
-		if buttons then
-			local buttonModel = buttons:FindFirstChild(step.targetButton)
-			if buttonModel then
-				targetPart = buttonModel:FindFirstChild("Head")
-				if targetPart and targetPart.Transparency < 0.9 and targetPart.CanCollide then
-					print("✨ [Tutorial] Highlighting button:", step.targetButton)
-				else
-					targetPart = nil
-				end
-			end
-		end
-	elseif step.target == "collector" and PathState.playerTycoon then
-		-- Find collector in player's tycoon
-		local essentials = PathState.playerTycoon:FindFirstChild("Essentials")
-		if essentials then
-			targetPart = essentials:FindFirstChild("Giver") or essentials:FindFirstChild("Collector")
-			if targetPart then
-				print("✨ [Tutorial] Highlighting collector")
-			end
-		end
-	elseif step.target == "gate" then
-		-- Find nearest unclaimed gate
-		local gates = findTycoonGates()
-		for _, gateData in ipairs(gates) do
-			if not gateData.owner.Value then
-				targetPart = gateData.part
-				if targetPart then
-					print("✨ [Tutorial] Highlighting gate")
-					break
-				end
-			end
-		end
-	end
-
-	if targetPart then 
-		createHighlight(targetPart) 
-	end
-end
-
-local function nextTutorialStep()
-	if not TutorialState.enabled or TutorialState.completed or TutorialState.isTransitioning then return end
-	
-	local oldStep = TutorialState.currentStep
-	TutorialState.currentStep = TutorialState.currentStep + 1
-	print("➡️ [Tutorial] Step " .. oldStep .. " → " .. TutorialState.currentStep)
-
-	-- Card pulse animation (FIXED - uses offset-based sizing)
-	if TutorialState.tutorialGui then
-		local card = TutorialState.tutorialGui.Card
-		local originalW = card:GetAttribute("OriginalWidth") or 450
-		local originalH = card:GetAttribute("OriginalHeight") or 125
-		local originalY = card:GetAttribute("OriginalYOffset") or 80
-		
-		local pulseInfo = TweenInfo.new(0.15, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-		
-		-- Pulse up
-		TweenService:Create(card, pulseInfo, {
-			Size = UDim2.fromOffset(originalW + 20, originalH + 10),
-			Position = UDim2.new(0.5, 0, 0, originalY - 5)
-		}):Play()
-		
-		task.wait(0.15)
-		
-		-- Pulse back to normal
-		TweenService:Create(card, pulseInfo, {
-			Size = UDim2.fromOffset(originalW, originalH),
-			Position = UDim2.new(0.5, 0, 0, originalY)
-		}):Play()
-	end
-
-	task.wait(Config.TUTORIAL_STEP_DELAY)
-	updateTutorialStep()
-end
-
+-- ⚠️ MOVED BEFORE OTHER FUNCTIONS TO FIX NIL ERROR
 local function skipTutorial()
 	if TutorialState.completed then return end
 	
 	TutorialState.completed = true
 	TutorialState.enabled = false
+
+	print("✅ [Tutorial] Skipping/Completing...")
 
 	-- Disconnect all connections
 	for _, connection in pairs(TutorialState.connections) do
@@ -593,6 +447,211 @@ local function skipTutorial()
 	end
 
 	print("✅ [Tutorial] Completed!")
+end
+
+local function updateTutorialText(newTitle, newBody)
+	if not TutorialState.tutorialGui or TutorialState.isTransitioning then return end
+	
+	TutorialState.isTransitioning = true
+	
+	local card = TutorialState.tutorialGui.Card
+	local titleLabel = card.Title
+	local bodyLabel = card.Body
+	
+	-- Fade out (faster)
+	local fadeOutInfo = TweenInfo.new(Config.TEXT_TRANSITION_TIME * 0.4, Enum.EasingStyle.Quad)
+	local fadeOut1 = TweenService:Create(titleLabel, fadeOutInfo, {TextTransparency = 1})
+	local fadeOut2 = TweenService:Create(bodyLabel, fadeOutInfo, {TextTransparency = 1})
+	
+	fadeOut1:Play()
+	fadeOut2:Play()
+	
+	task.wait(Config.TEXT_TRANSITION_TIME * 0.4)
+	
+	-- Update text
+	titleLabel.Text = newTitle
+	bodyLabel.Text = newBody
+	
+	-- Fade in (faster)
+	local fadeInInfo = TweenInfo.new(Config.TEXT_TRANSITION_TIME * 0.6, Enum.EasingStyle.Quad)
+	local fadeIn1 = TweenService:Create(titleLabel, fadeInInfo, {TextTransparency = 0})
+	local fadeIn2 = TweenService:Create(bodyLabel, fadeInInfo, {TextTransparency = 0})
+	
+	fadeIn1:Play()
+	fadeIn2:Play()
+	
+	task.wait(Config.TEXT_TRANSITION_TIME * 0.6)
+	TutorialState.isTransitioning = false
+end
+
+-- Forward declarations for functions used before definition
+local findTycoonGates
+
+local function updateTutorialStep()
+	if not TutorialState.enabled or TutorialState.completed then return end
+
+	local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+	if not step then
+		TutorialState.completed = true
+		skipTutorial()
+		return
+	end
+
+	print("🎓 [Tutorial] Step " .. TutorialState.currentStep .. ":", step.name)
+
+	-- Update text
+	if TutorialState.tutorialGui then
+		updateTutorialText(step.title, step.description)
+	end
+
+	-- Clear old highlight
+	if TutorialState.highlightPart then 
+		TutorialState.highlightPart:Destroy() 
+		TutorialState.highlightPart = nil
+	end
+
+	-- Auto-close timer
+	if step.autoClose then
+		task.delay(step.autoClose, function()
+			if TutorialState.enabled and not TutorialState.completed then
+				skipTutorial()
+			end
+		end)
+	end
+
+	-- Wait before highlighting (shorter wait)
+	task.wait(Config.TUTORIAL_STEP_DELAY * 0.5)
+	
+	-- Find target to highlight
+	local targetPart = nil
+	
+	if step.targetButton and PathState.playerTycoon then
+		-- Look in player's tycoon buttons
+		local buttons = PathState.playerTycoon:FindFirstChild("Buttons")
+		if buttons then
+			local buttonModel = buttons:FindFirstChild(step.targetButton)
+			if buttonModel then
+				targetPart = buttonModel:FindFirstChild("Head")
+				if targetPart and targetPart.Transparency < 0.9 and targetPart.CanCollide then
+					print("✨ [Tutorial] Highlighting button:", step.targetButton)
+				else
+					targetPart = nil
+				end
+			end
+		end
+	elseif step.target == "collector" and PathState.playerTycoon then
+		-- Find collector in player's tycoon
+		local essentials = PathState.playerTycoon:FindFirstChild("Essentials")
+		if essentials then
+			targetPart = essentials:FindFirstChild("Giver") or essentials:FindFirstChild("Collector")
+			if targetPart then
+				print("✨ [Tutorial] Highlighting collector")
+			end
+		end
+	elseif step.target == "gate" then
+		-- Find nearest unclaimed gate
+		local gates = findTycoonGates()
+		for _, gateData in ipairs(gates) do
+			if not gateData.owner.Value then
+				targetPart = gateData.part
+				if targetPart then
+					print("✨ [Tutorial] Highlighting gate")
+					break
+				end
+			end
+		end
+	end
+
+	if targetPart then 
+		createHighlight(targetPart) 
+	end
+end
+
+-- ✨ IMPROVED: Simultaneous pulse + text transition
+local function nextTutorialStep()
+	if not TutorialState.enabled or TutorialState.completed or TutorialState.isTransitioning then return end
+	
+	local oldStep = TutorialState.currentStep
+	TutorialState.currentStep = TutorialState.currentStep + 1
+	print("➡️ [Tutorial] Step " .. oldStep .. " → " .. TutorialState.currentStep)
+
+	-- Get next step info immediately
+	local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+	if not step then
+		skipTutorial()
+		return
+	end
+
+	-- 🎯 SIMULTANEOUS ANIMATIONS - Pulse card AND change text at the same time!
+	if TutorialState.tutorialGui then
+		local card = TutorialState.tutorialGui.Card
+		local originalW = card:GetAttribute("OriginalWidth") or 450
+		local originalH = card:GetAttribute("OriginalHeight") or 125
+		local originalY = card:GetAttribute("OriginalYOffset") or 80
+		
+		local pulseTime = 0.2
+		local pulseInfo = TweenInfo.new(pulseTime, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		
+		-- Start pulse animation
+		local pulseTween = TweenService:Create(card, pulseInfo, {
+			Size = UDim2.fromOffset(originalW + 15, originalH + 8),
+		})
+		pulseTween:Play()
+		
+		-- Start text transition immediately (no waiting!)
+		task.spawn(function()
+			updateTutorialText(step.title, step.description)
+		end)
+		
+		-- Pulse back to normal
+		pulseTween.Completed:Connect(function()
+			TweenService:Create(card, pulseInfo, {
+				Size = UDim2.fromOffset(originalW, originalH),
+			}):Play()
+		end)
+	end
+
+	-- Short delay before highlighting
+	task.wait(Config.TUTORIAL_STEP_DELAY)
+	
+	-- Clear old highlight
+	if TutorialState.highlightPart then 
+		TutorialState.highlightPart:Destroy() 
+		TutorialState.highlightPart = nil
+	end
+	
+	-- Find and highlight new target
+	local targetPart = nil
+	
+	if step.targetButton and PathState.playerTycoon then
+		local buttons = PathState.playerTycoon:FindFirstChild("Buttons")
+		if buttons then
+			local buttonModel = buttons:FindFirstChild(step.targetButton)
+			if buttonModel then
+				targetPart = buttonModel:FindFirstChild("Head")
+				if not (targetPart and targetPart.Transparency < 0.9 and targetPart.CanCollide) then
+					targetPart = nil
+				end
+			end
+		end
+	elseif step.target == "collector" and PathState.playerTycoon then
+		local essentials = PathState.playerTycoon:FindFirstChild("Essentials")
+		if essentials then
+			targetPart = essentials:FindFirstChild("Giver") or essentials:FindFirstChild("Collector")
+		end
+	elseif step.target == "gate" then
+		local gates = findTycoonGates()
+		for _, gateData in ipairs(gates) do
+			if not gateData.owner.Value then
+				targetPart = gateData.part
+				break
+			end
+		end
+	end
+
+	if targetPart then 
+		createHighlight(targetPart) 
+	end
 end
 
 --============================================================================--
@@ -738,10 +797,13 @@ end
 --                            PATH MANAGEMENT
 --============================================================================--
 
+-- ✨ IMPROVED: Instant fade-out when gate claimed
 local function hidePath()
 	if not PathState.active then return end
 	PathState.active = false
+	PathState.fadingOut = true
 
+	-- Immediately set all segments to fade out
 	for _, segmentData in ipairs(PathState.segments) do
 		if segmentData and segmentData.part then
 			segmentData.targetTransparency = 1
@@ -749,11 +811,13 @@ local function hidePath()
 		end
 	end
 
-	task.delay(Config.FADE_OUT_TIME, function()
-		if PathState.pathModel then
+	-- Clean up after short delay
+	task.delay(Config.FADE_OUT_TIME * 2, function()
+		if PathState.pathModel and PathState.fadingOut then
 			PathState.pathModel:Destroy()
 			PathState.pathModel = nil
 			PathState.segments = {}
+			PathState.fadingOut = false
 		end
 	end)
 end
@@ -795,6 +859,7 @@ local function updatePath()
 		PathState.pathModel.Name = "LocalTycoonPath"
 		PathState.pathModel.Parent = workspace
 		PathState.segments = {}
+		PathState.fadingOut = false
 	end
 
 	local midPoint = (smoothStart + smoothEnd) / 2
@@ -857,8 +922,11 @@ local function animateSegments(deltaTime)
 			local targetTrans = segment:GetAttribute("TargetTransparency") or 1
 			local fadeFactor = segment:GetAttribute("FadeFactor") or 0
 			local finalTargetTrans = math.max(targetTrans, fadeFactor * 0.8)
+			
+			-- Faster transparency smoothing
+			local smoothingSpeed = PathState.fadingOut and 0.4 or Config.TRANSPARENCY_SMOOTHING
 			segmentData.currentTransparency = segmentData.currentTransparency + 
-				(finalTargetTrans - segmentData.currentTransparency) * Config.TRANSPARENCY_SMOOTHING
+				(finalTargetTrans - segmentData.currentTransparency) * smoothingSpeed
 			segment.Transparency = segmentData.currentTransparency
 
 			if segmentData.currentTransparency < 0.9 then
@@ -995,20 +1063,26 @@ task.spawn(function()
 				print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 				PathState.ownedTycoon = true
 
+				-- Immediately hide path
+				hidePath()
+
 				if TutorialState.enabled and not TutorialState.completed then
 					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
 					if step and step.waitForGateClaim then
 						print("✅ [Tutorial] Gate claimed! Advancing...")
-						task.wait(1)
+						task.wait(0.8) -- Slightly longer wait for smooth transition
 						nextTutorialStep()
 					end
 				end
 			end
 			PathState.currentTargetGate = nil
-			hidePath()
+			if not PathState.fadingOut then
+				hidePath()
+			end
 		else
 			if not PathState.active then
 				PathState.smoothedStartPos, PathState.smoothedEndPos = nil, nil
+				PathState.fadingOut = false
 			end
 			PathState.active = true
 			PathState.currentTargetGate = targetGate
@@ -1053,6 +1127,7 @@ player.CharacterRemoving:Connect(function()
 		animationTime = 0,
 		ownedTycoon = false,
 		playerTycoon = nil,
+		fadingOut = false,
 	}
 end)
 
@@ -1066,6 +1141,7 @@ player.CharacterAdded:Connect(function(character)
 	TutorialState.isTransitioning = false
 	PathState.ownedTycoon = false
 	PathState.playerTycoon = nil
+	PathState.fadingOut = false
 end)
 
 -- Initialize
@@ -1082,8 +1158,8 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v6.0 - PERFECT INTEGRATION")
-print("⚡ Works with your purchase handler & auto-collect!")
-print("🎯 Ultra-polished animations & transitions!")
-print("🎀 Mobile-first responsive design!")
+print("✅ Tycoon Path Guide v6.1 - ULTRA POLISHED")
+print("⚡ Instant path fade & smooth simultaneous transitions!")
+print("💎 Works with your purchase handler & auto-collect!")
+print("🎀 Buttery-smooth mobile-first design!")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
