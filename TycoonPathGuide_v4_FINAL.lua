@@ -1,7 +1,8 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.4-FINAL-POLISHED]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v4.4-ULTRA-POLISHED]
 	✅ Auto-Collect Compatible (monitors leaderstats.Cash!)
-	✅ Built-in tutorial for the first few items
+	✅ Built-in tutorial with cute, specific messages
+	✅ INSTANT fade out animation (no more waiting!)
 	✅ Clean, minimal UI - no overlapping elements
 	✅ Uses workspace.DescendantAdded for reliable purchase detection
 	
@@ -78,25 +79,25 @@ local Config = {
 		{
 			name = "buy_dropper1",
 			title = "Buy Your First Dropper! 💎",
-			description = "This cute item will drop cash for you!\n\nWalk to the glowing button and touch it.",
+			description = "This will drop cute Cinnamoroll backpacks that turn into cash!\n\nWalk to the glowing button and touch it.",
 			targetButton = "Begin Working!",
 		},
 		{
 			name = "collect_money",
-			title = "Collect Your Cash! 💰",
-			description = "Cash from your dropper is being collected! You'll need it to buy the next upgrade.",
+			title = "Earning Cash! 💰",
+			description = "Your dropper is working! Cash is being collected automatically.\n\nYou'll need $70 for the next upgrade.",
 			target = "collector",
 		},
 		{
 			name = "buy_dropper2",
-			title = "Upgrade Time! ✨",
-			description = "Buy the next dropper to earn cash faster!\n\nIt costs $70 - you should have enough now.",
+			title = "Buy Your Second Dropper! ✨",
+			description = "Nice! You have enough cash now.\n\nBuy the second dropper to earn even faster!",
 			targetButton = "Buy Dropper - [$70]",
 		},
 		{
 			name = "tutorial_complete",
 			title = "You're All Set! 🎉",
-			description = "Great job! Keep buying upgrades to grow your tycoon.\n\nTap anywhere to dismiss this tutorial.",
+			description = "Amazing! You're earning cash like a pro!\n\nKeep buying upgrades to build your dream tycoon. Tap anywhere to close.",
 			target = nil,
 		},
 	},
@@ -363,9 +364,24 @@ end
 local function skipTutorial()
 	TutorialState.completed = true
 	TutorialState.enabled = false
-	if TutorialState.tutorialGui then TutorialState.tutorialGui:Destroy() end
-	if TutorialState.highlightPart then TutorialState.highlightPart:Destroy() end
-	print("✅ [Tutorial] Skipped!")
+	
+	-- Fast fade out animation!
+	if TutorialState.tutorialGui then
+		local card = TutorialState.tutorialGui:FindFirstChild("Card")
+		if card then
+			TweenService:Create(card, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+				Position = UDim2.new(0.5, 0, 0, -200)
+			}):Play()
+		end
+		task.wait(0.25)
+		TutorialState.tutorialGui:Destroy()
+	end
+	
+	if TutorialState.highlightPart then 
+		TutorialState.highlightPart:Destroy() 
+	end
+	
+	print("✅ [Tutorial] Completed!")
 end
 
 --============================================================================--
@@ -803,7 +819,7 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v4.4-FINAL-POLISHED")
-print("⚡ Fast & Responsive + Auto-Collect Compatible!")
-print("🎯 Clean UI + leaderstats.Cash monitoring")
+print("✅ Tycoon Path Guide v4.4-ULTRA-POLISHED")
+print("⚡ INSTANT fade + Auto-Collect Compatible!")
+print("🎀 Cute messages + leaderstats.Cash monitoring")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
