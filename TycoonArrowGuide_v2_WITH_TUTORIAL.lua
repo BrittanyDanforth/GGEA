@@ -621,7 +621,7 @@ local function findNearestUnclaimedGate()
 
 	for _, gateData in pairs(gates) do
 		if gateData.owner.Value == player then
-			PathState.ownedTycoon = true
+			-- Don't set PathState.ownedTycoon here - let the caller decide!
 			return nil, true -- Player owns a tycoon
 		elseif not gateData.owner.Value then
 			local distance = (gateData.position - humanoidRoot.Position).Magnitude
