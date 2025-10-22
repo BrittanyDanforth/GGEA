@@ -281,8 +281,26 @@ local function createTutorialUI()
 	body.TextXAlignment = Enum.TextXAlignment.Left
 	body.TextYAlignment = Enum.TextYAlignment.Top
 	body.TextWrapped = true
-	body.Text = "Welcome!"
+	body.Text = "" -- Will be set by updateTutorialStep()
 	body.Parent = card
+	
+	-- Step indicator (e.g., "1/4")
+	local stepIndicator = Instance.new("TextLabel")
+	stepIndicator.Name = "StepIndicator"
+	stepIndicator.AnchorPoint = Vector2.new(0, 0)
+	stepIndicator.Position = UDim2.new(0, 0, 0, 0)
+	stepIndicator.Size = UDim2.fromOffset(50, 24)
+	stepIndicator.BackgroundColor3 = Color3.fromRGB(255, 180, 210)
+	stepIndicator.BorderSizePixel = 0
+	stepIndicator.Font = Enum.Font.GothamBold
+	stepIndicator.TextSize = 13
+	stepIndicator.TextColor3 = Color3.new(1, 1, 1)
+	stepIndicator.Text = "1/4"
+	stepIndicator.Parent = card
+
+	local stepCorner = Instance.new("UICorner")
+	stepCorner.CornerRadius = UDim.new(0, 8)
+	stepCorner.Parent = stepIndicator
 
 	-- Skip button
 	local skipBtn = Instance.new("TextButton")
@@ -366,16 +384,31 @@ local function updateTutorialStep()
 		local bodyLabel = card:FindFirstChild("Body")
 		local stepIndicator = card:FindFirstChild("StepIndicator")
 		
-		if title then title.Text = step.title end
-		if bodyLabel then bodyLabel.Text = step.body end
+		if title then 
+			title.Text = step.title or "Tutorial"
+			print("📝 [Tutorial] Set title:", step.title)
+		end
+		if bodyLabel then 
+			bodyLabel.Text = step.body or step.description or ""
+			print("📝 [Tutorial] Set body:", step.body or step.description)
+		end
 		if stepIndicator then 
 			stepIndicator.Text = TutorialState.currentStep .. "/" .. #Config.TUTORIAL_STEPS
 		end
 	end
 
 	-- Find and highlight target (ONLY in player's tycoon!)
+	-- Skip highlight if player doesn't own tycoon yet (claim_gate step)
+	if step.name == "claim_gate" then
+		print("🎯 [Tutorial] Claim step - no highlight needed")
+		return
+	end
+	
 	local myTycoon = getMyTycoon()
-	if not myTycoon then return end
+	if not myTycoon then 
+		print("⚠️ [Tutorial] Player doesn't own tycoon yet - can't highlight")
+		return 
+	end
 	
 	if step.targetButton then
 		-- Find button in MY tycoon only
@@ -404,9 +437,14 @@ local function updateTutorialStep()
 end
 
 local function nextTutorialStep()
-	if not TutorialState.enabled or TutorialState.completed then return end
+	if not TutorialState.enabled or TutorialState.completed then 
+		print("⚠️ [Tutorial] nextTutorialStep blocked - enabled:", TutorialState.enabled, "completed:", TutorialState.completed)
+		return 
+	end
 
+	local oldStep = TutorialState.currentStep
 	TutorialState.currentStep = TutorialState.currentStep + 1
+	print("➡️ [Tutorial] Advancing from step", oldStep, "to step", TutorialState.currentStep)
 	
 	-- ✨ Bounce animation when moving to next step
 	if TutorialState.tutorialGui then
@@ -838,7 +876,7 @@ local function animateSegments(deltaTime)
 end
 
 --============================================================================--
---                     🎓 TUTORIAL EVENT LISTENERS
+--                     🎓 TUTORIAL HELPERS (TOP LEVEL!)
 --============================================================================--
 
 -- 🎓 Track session cash (NO ServerStorage on client!)
@@ -854,6 +892,50 @@ local function getMyTycoon()
 	end
 	return nil
 end
+
+-- 🎯 Hook into player's specific tycoon purchases (NO workspace.DescendantAdded spam!)
+local function hookMyTycoonPurchases()
+	local myTycoon = getMyTycoon()
+	if not myTycoon then
+		warn("🎓 [Tutorial] No tycoon found to hook!")
+		return
+	end
+	
+	print("🎓 [Tutorial] Hooking into tycoon:", myTycoon.Name)
+	
+	local purchasedObjects = myTycoon:WaitForChild("PurchasedObjects", 5)
+	if not purchasedObjects then
+		warn("🎓 [Tutorial] PurchasedObjects not found!")
+		return
+	end
+	
+	-- Listen for purchases in THIS tycoon only
+	purchasedObjects.ChildAdded:Connect(function(child)
+		if not TutorialState.enabled or TutorialState.completed then return end
+		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+		if not step then return end
+		
+		print("🔍 [Tutorial] Purchase detected:", child.Name, "| Step:", step.name)
+		
+		if step.name == "buy_dropper1" and child.Name == "Dropper1" then
+			print("✅ [Tutorial] Dropper1 bought! → Collect step")
+			task.defer(nextTutorialStep)
+		elseif step.name == "buy_dropper2" and child.Name == "Dropper2" then
+			print("🎉 [Tutorial] Dropper2 bought! → Complete!")
+			task.defer(function()
+				nextTutorialStep()
+				task.wait(0.8)
+				skipTutorial()
+			end)
+		end
+	end)
+	
+	print("🎓 [Tutorial] ✅ Hooked to PurchasedObjects!")
+end
+
+--============================================================================--
+--                     🎓 TUTORIAL EVENT LISTENERS
+--============================================================================--
 
 local function setupTutorialListeners()
 	if not TutorialState.enabled then return end
@@ -924,46 +1006,6 @@ local function setupTutorialListeners()
 	end
 end
 
--- 🎯 Hook into player's specific tycoon purchases (NO workspace.DescendantAdded spam!)
-function hookMyTycoonPurchases()
-	local myTycoon = getMyTycoon()
-	if not myTycoon then
-		warn("🎓 [Tutorial] No tycoon found to hook!")
-		return
-	end
-	
-	print("🎓 [Tutorial] Hooking into tycoon:", myTycoon.Name)
-	
-	local purchasedObjects = myTycoon:WaitForChild("PurchasedObjects", 5)
-	if not purchasedObjects then
-		warn("🎓 [Tutorial] PurchasedObjects not found!")
-		return
-	end
-	
-	-- Listen for purchases in THIS tycoon only
-	purchasedObjects.ChildAdded:Connect(function(child)
-		if not TutorialState.enabled or TutorialState.completed then return end
-		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-		if not step then return end
-		
-		print("🔍 [Tutorial] Purchase detected:", child.Name, "| Step:", step.name)
-		
-		if step.name == "buy_dropper1" and child.Name == "Dropper1" then
-			print("✅ [Tutorial] Dropper1 bought! → Collect step")
-			task.defer(nextTutorialStep)
-		elseif step.name == "buy_dropper2" and child.Name == "Dropper2" then
-			print("🎉 [Tutorial] Dropper2 bought! → Complete!")
-			task.defer(function()
-				nextTutorialStep()
-				task.wait(0.8)
-				skipTutorial()
-			end)
-		end
-	end)
-	
-	print("🎓 [Tutorial] ✅ Hooked to PurchasedObjects!")
-end
-
 --============================================================================--
 --                            MAIN UPDATE LOOP
 --============================================================================--
@@ -976,8 +1018,10 @@ RunService.RenderStepped:Connect(function(deltaTime)
 	animateSegments(deltaTime)
 end)
 
--- Gate scanning loop (separate)
+-- Gate scanning loop (separate) - RUNS EVERY 0.25 SECONDS!
 task.spawn(function()
+	print("🚪 [Tutorial] Gate scanning loop started! (interval:", Config.GATE_UPDATE_INTERVAL, "sec)")
+	
 	while true do
 		task.wait(Config.GATE_UPDATE_INTERVAL)
 
@@ -990,17 +1034,26 @@ task.spawn(function()
 			-- 🎓 TUTORIAL: Detect when player claims tycoon (POLLING FALLBACK)
 			if ownsTycoon and not PathState.ownedTycoon then
 				PathState.ownedTycoon = true
+				print("🏠 [Tutorial] Detected tycoon ownership!")
 				
 				if TutorialState.enabled and not TutorialState.completed then
 					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+					print("🎓 [Tutorial] Current step:", step and step.name or "none", "| Step index:", TutorialState.currentStep)
+					
 					if step and step.name == "claim_gate" then
-						print("✅ [Tutorial] (Polling) Tycoon claimed! → Buy Dropper 1")
+						print("✅ [Tutorial] (Polling) Tycoon claimed! Advancing to Buy Dropper 1...")
 						task.wait(0.5)
 						nextTutorialStep() -- Move to "buy_dropper1"
 						
 						-- Hook into this tycoon's purchases now
 						task.spawn(hookMyTycoonPurchases)
+					else
+						print("⚠️ [Tutorial] Step mismatch - expected 'claim_gate', got:", step and step.name or "nil")
+						-- Maybe player already past this step, hook anyway
+						task.spawn(hookMyTycoonPurchases)
 					end
+				else
+					print("⚠️ [Tutorial] Not running - enabled:", TutorialState.enabled, "completed:", TutorialState.completed)
 				end
 			end
 
@@ -1076,20 +1129,37 @@ if Config.TUTORIAL_ENABLED then
 	end
 	
 	if shouldShowTutorial then
-		-- Start tutorial INSTANTLY (no waits!)
+		print("🎓 [Tutorial] Creating UI...")
 		createTutorialUI()
+		print("🎓 [Tutorial] UI created!")
+		
 		TutorialState.enabled = true
 		TutorialState.completed = false
-		TutorialState.currentStep = TutorialState.currentStep or 1
+		TutorialState.currentStep = 1 -- Always start at step 1
+		
+		print("🎓 [Tutorial] Setting up listeners...")
 		setupTutorialListeners()
+		
+		print("🎓 [Tutorial] Updating step display...")
 		updateTutorialStep() -- Sets card Title/Body immediately
-		print("🎓 [Tutorial] Started instantly - 4 steps!")
+		
+		print("🎓 [Tutorial] ✅ Started! Current step:", Config.TUTORIAL_STEPS[1].name)
 		
 		-- If player already owns tycoon (returning player), hook purchases now
 		local myTycoon = getMyTycoon()
 		if myTycoon then
-			print("🎓 [Tutorial] Player already owns tycoon - hooking purchases")
+			print("🎓 [Tutorial] Player ALREADY owns tycoon:", myTycoon.Name, "- hooking purchases NOW")
+			PathState.ownedTycoon = true -- Mark as owned
 			task.spawn(hookMyTycoonPurchases)
+			
+			-- Check if we should skip the claim step
+			if TutorialState.currentStep == 1 and Config.TUTORIAL_STEPS[1].name == "claim_gate" then
+				print("🎓 [Tutorial] Skipping claim step (player already owns tycoon)")
+				task.wait(0.5)
+				nextTutorialStep()
+			end
+		else
+			print("🎓 [Tutorial] Player does NOT own tycoon yet - waiting for claim...")
 		end
 	else
 		TutorialState.enabled = false
@@ -1097,7 +1167,9 @@ if Config.TUTORIAL_ENABLED then
 	end
 end
 
-print("✅ Tycoon Path Guide v4.1 (FULLY WORKING!)")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+print("✅ Tycoon Path Guide v4.1-FIXED (BUILD 2025-10-22)")
 print("⚡ Instant path updates + no ServerStorage errors!")
-print("🎓 Tutorial: 4 steps → Claim → Drop1 → Collect → Drop2 → Done!")
-print("🎯 Claim detection: Polling gate ownership (works without server RemoteEvent!)")
+print("🎓 Tutorial: 4 steps → Claim → Drop1 → Collect → Drop2!")
+print("🎯 Claim: Polling (0.25s) | Money: RemoteEvent | Purchases: Scoped")
+print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
