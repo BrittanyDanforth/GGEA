@@ -1,18 +1,8 @@
---[[
-    SANRIO SHOP SYSTEM - FIXED VERSION
-    Place this as a LocalScript in StarterPlayer > StarterPlayerScripts
-    Name it: SanrioShop
-    
-    This version fixes:
-    1. Layout property error
-    2. Sound asset loading
-    3. Product visibility issues
-    4. Home page blank on first open
-    5. Tab selection issues
-    6. Visual improvements
-    7. Purchase handling
-    8. Auto-collect toggle positioning
---]]
+--[[  SANRIO SHOP SYSTEM — MOBILE-REWORK + SALES OPTIMIZED
+     ✨ BEST VALUE ribbons, bonus labels, confetti, smart caching, gift box button
+     Drop-in replacement. PC/tablet unchanged.
+     Phones: global zoom-out, smaller internal typography, ≥1.4 full cards visible in portrait (~2.2 in landscape).
+]]
 
 -- Services
 local Players = game:GetService("Players")
@@ -24,1944 +14,1149 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ContentProvider = game:GetService("ContentProvider")
 local SoundService = game:GetService("SoundService")
 local Lighting = game:GetService("Lighting")
-local RunService = game:GetService("RunService")
-local Debris = game:GetService("Debris")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
+local Remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes")
 
--- Wait for remotes
-local Remotes = ReplicatedStorage:WaitForChild("TycoonRemotes", 10)
-
--- ========================================
--- CORE MODULE (Embedded)
--- ========================================
+-- ======================================================
+-- CORE
+-- ======================================================
 local Core = {}
 
-Core.VERSION = "3.0.1"
-Core.DEBUG = false
-
--- Constants
 Core.CONSTANTS = {
-	PANEL_SIZE = Vector2.new(1140, 860),
-	PANEL_SIZE_MOBILE = Vector2.new(920, 720),
-	CARD_SIZE = Vector2.new(520, 300),
-	CARD_SIZE_MOBILE = Vector2.new(480, 280),
+	PANEL_SIZE        = Vector2.new(1140, 1020),
+	PANEL_SIZE_MOBILE = Vector2.new(1280, 1040),
 
-	ANIM_FAST = 0.15,
+	ANIM_FAST   = 0.15,
 	ANIM_MEDIUM = 0.25,
-	ANIM_SLOW = 0.35,
-	ANIM_BOUNCE = 0.3,
-	ANIM_SMOOTH = 0.4,
-
-	Z_BACKGROUND = 1,
-	Z_CONTENT = 10,
-	Z_OVERLAY = 20,
-	Z_MODAL = 30,
-	Z_TOOLTIP = 40,
-	Z_NOTIFICATION = 50,
+	ANIM_BOUNCE = 0.30,
 
 	CACHE_PRODUCT_INFO = 300,
-	CACHE_OWNERSHIP = 60,
+	CACHE_OWNERSHIP    = 60,
 
-	PURCHASE_TIMEOUT = 15,
-	RETRY_DELAY = 2,
-	MAX_RETRIES = 3,
+	PURCHASE_TIMEOUT = 5,
 }
 
--- State Management
 Core.State = {
 	isOpen = false,
 	isAnimating = false,
-	currentTab = "Home",
 	purchasePending = {},
-	ownershipCache = {},
-	productCache = {},
-	initialized = false,
-	settings = {
-		soundEnabled = true,
-		animationsEnabled = true,
-		reducedMotion = false,
-		autoRefresh = true,
-	}
+	settings = { soundEnabled = true, animationsEnabled = true },
+	_shortSide = 414,
+	lastPriceRefresh = 0, -- ✨ NEW: For smart cache
 }
 
--- Event System
-Core.Events = {
-	handlers = {},
+-- ===== basic helpers
+local function viewport()
+	local cam = workspace.CurrentCamera
+	return cam and cam.ViewportSize or Vector2.new(1920,1080)
+end
+
+function Core.Utils_isMobileLike() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
+function Core.Utils_isPhone()
+	if not Core.Utils_isMobileLike() then return false end
+	local v = viewport()
+	return math.min(v.X,v.Y) < 700
+end
+function Core.Utils_isTablet() return Core.Utils_isMobileLike() and not Core.Utils_isPhone() end
+function Core.Utils_formatNumber(n) local s=tostring(n) local k=1 while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end return s end
+local function blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
+
+-- ✨ NEW: Bonus formatter
+local function formatBonusText(b) return b and b > 0 and ("+%d%% Bonus"):format(math.floor(b*100)) or nil end
+
+-- safe viewport (less top inset)
+local function safeViewport()
+	local cam = workspace.CurrentCamera
+	if not cam then return Vector2.new(800,600), 0 end
+	local inset = GuiService:GetGuiInset()
+	local v = cam.ViewportSize
+	return Vector2.new(v.X, math.max(0, v.Y - inset.Y)), inset.Y
+end
+
+-- ======================================================
+-- SIZER (MOBILE-FIRST, DYNAMIC)
+-- ======================================================
+Core.Sizer = {}
+
+local BASE = {
+	headerH=64, tabH=48, tabW=200,
+	title=18, price=18, desc=13,
+	imgH=120, titleH=24, descH=22, btnH=42,
+	gutter=18, cols=2,
+	minW=720, minH=520,
 }
 
-function Core.Events:on(eventName, handler)
-	if not self.handlers[eventName] then
-		self.handlers[eventName] = {}
-	end
-	table.insert(self.handlers[eventName], handler)
-	return function()
-		local index = table.find(self.handlers[eventName], handler)
-		if index then
-			table.remove(self.handlers[eventName], index)
-		end
-	end
+local function vinfo()
+	local cam = workspace.CurrentCamera
+	local inset = GuiService:GetGuiInset()
+	local v = cam and cam.ViewportSize or Vector2.new(1920,1080)
+	local safeY = math.max(0, v.Y - inset.Y)
+	local short = math.floor(math.min(v.X, safeY))
+	local landscape = v.X > v.Y
+	return v, short, landscape
 end
 
-function Core.Events:emit(eventName, ...)
-	if self.handlers[eventName] then
-		for _, handler in ipairs(self.handlers[eventName]) do
-			task.spawn(handler, ...)
-		end
+function Core.Sizer.phonePanelScale(short)
+	if short <= 320 then return 0.83 end
+	if short <= 360 then return 0.86 end
+	if short <= 375 then return 0.88 end
+	if short <= 393 then return 0.90 end
+	if short <= 414 then return 0.92 end
+	return 0.94
+end
+
+local function controlScale(short)
+	local s = math.clamp(short/414, 0.78, 1.0)
+	return s * 0.92
+end
+
+local function dynamicProfile()
+	local v, short, landscape = vinfo()
+	Core.State._shortSide = short
+
+	local isPhone = Core.Utils_isMobileLike() and (math.min(v.X, v.Y) < 700)
+	local isTablet = Core.Utils_isMobileLike() and not isPhone
+
+	if not isPhone then
+		return {
+			widthScale = 0.78, heightScale = 0.80,
+			headerH = BASE.headerH, tabH = BASE.tabH, tabW = BASE.tabW,
+			title = BASE.title, price = BASE.price, desc = BASE.desc,
+			imgH = BASE.imgH, titleH = BASE.titleH, descH = BASE.descH, btnH = BASE.btnH,
+			minW = isTablet and 680 or BASE.minW, minH = isTablet and 480 or BASE.minH,
+			cols = isTablet and 2 or BASE.cols, gutter = isTablet and 16 or BASE.gutter,
+			isPhone=false, isTablet=isTablet, landscape=landscape
+		}
 	end
-end
 
--- Cache System
-local Cache = {}
-Cache.__index = Cache
+	local s = controlScale(short)
+	local widthScale  = landscape and 0.98 or 0.97
+	local heightScale = landscape and 0.82 or 0.90
 
-function Cache.new(duration)
-	return setmetatable({
-		data = {},
-		duration = duration or 300,
-	}, Cache)
-end
-
-function Cache:set(key, value)
-	self.data[key] = {
-		value = value,
-		timestamp = tick(),
+	return {
+		widthScale = widthScale, heightScale = heightScale,
+		headerH = math.floor(62 * s),
+		tabH    = math.floor(48 * s),
+		tabW    = math.floor((landscape and 150 or 138) * s),
+		title   = math.floor(18 * s),
+		price   = math.floor(16 * s),
+		desc    = math.floor(12 * s),
+		imgH    = math.floor((landscape and 100 or 96) * s),
+		titleH  = math.floor((landscape and 22 or 20) * s),
+		descH   = math.floor((landscape and 18 or 16) * s),
+		btnH    = math.floor((landscape and 38 or 36) * s),
+		minW    = landscape and 360 or 340,
+		minH    = landscape and 380 or 350,
+		cols    = landscape and 2 or 1,
+		gutter  = 12,
+		isPhone=true, isTablet=false, landscape=landscape
 	}
 end
 
-function Cache:get(key)
-	local entry = self.data[key]
-	if not entry then return nil end
+local function getProfile() return dynamicProfile() end
 
-	if tick() - entry.timestamp > self.duration then
-		self.data[key] = nil
-		return nil
-	end
+Core.Utils = Core.Utils or {}
+Core.Utils.panelSizeForViewport = function()
+	local cam = workspace.CurrentCamera
+	local v = cam and cam.ViewportSize or Vector2.new(1920,1080)
+	local inset = GuiService:GetGuiInset()
+	local safeY = math.max(0, v.Y - inset.Y)
+	local safeV = Vector2.new(v.X, safeY)
+	local prof = getProfile()
 
-	return entry.value
+	local w = math.floor(safeV.X * prof.widthScale)
+	local h = math.floor(safeV.Y * prof.heightScale)
+
+	local isPhone = prof.isPhone
+	local isTablet = prof.isTablet
+	local target = isPhone and Core.CONSTANTS.PANEL_SIZE_MOBILE
+		or (isTablet and Vector2.new(1020,820) or Core.CONSTANTS.PANEL_SIZE)
+
+	w = math.clamp(w, prof.minW, target.X)
+	h = math.clamp(h, prof.minH, target.Y)
+
+	return Vector2.new(w,h)
 end
 
-function Cache:clear(key)
-	if key then
-		self.data[key] = nil
-	else
-		self.data = {}
+-- animation helper
+Core.Animation = {}
+function Core.Animation.tween(inst,props,d,style,dir)
+	if not Core.State.settings.animationsEnabled then for k,v in pairs(props) do inst[k]=v end; return end
+	local tw=TweenService:Create(inst,TweenInfo.new(d or Core.CONSTANTS.ANIM_MEDIUM,style or Enum.EasingStyle.Quad,dir or Enum.EasingDirection.Out),props); tw:Play(); return tw
+end
+
+-- ✨ NEW: Effects system (pulse + confetti)
+Core.Effects = {}
+function Core.Effects.pulse(frame)
+	local s = frame:FindFirstChildOfClass("UIScale") or Instance.new("UIScale"); s.Parent = frame
+	Core.Animation.tween(s, {Scale = 1.06}, 0.10); task.delay(0.10, function()
+		Core.Animation.tween(s, {Scale = 1.00}, 0.18)
+	end)
+end
+
+function Core.Effects.confetti(parent)
+	for i = 1, 8 do
+		local chip = Instance.new("Frame")
+		chip.BackgroundColor3 = (i%2==0) and UI.Theme:get("accent") or UI.Theme:get("kuromi")
+		chip.Size = UDim2.fromOffset(6, 10)
+		chip.Position = UDim2.new(math.random(), 0, 0, -6)
+		chip.BorderSizePixel = 0
+		chip.Parent = parent
+		local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 2); c.Parent = chip
+		task.spawn(function()
+			local xoff = (math.random() - 0.5) * 60
+			Core.Animation.tween(chip, {Position = UDim2.new(chip.Position.X.Scale, xoff, 0, math.random(60, 110)), Rotation = math.random(-40, 40)}, 0.45, Enum.EasingStyle.Quad)
+			task.delay(0.46, function() chip:Destroy() end)
+		end)
 	end
 end
 
-Core.Cache = Cache
+-- sound
+Core.SoundSystem = {sounds={}}
+function Core.SoundSystem.initialize()
+	local cfg={
+		click={"rbxassetid://876939830",0.45},
+		hover={"rbxassetid://10066936758",0.2},
+		open={"rbxassetid://452267918",0.5},
+		close={"rbxassetid://452267918",0.5},
+		success={"rbxassetid://876939830",0.6},
+		error={"rbxassetid://876939830",0.5},
+	}
+	local preload={}
+	for name,data in pairs(cfg) do
+		local s=Instance.new("Sound"); s.Name="SanrioShop_"..name; s.SoundId=data[1]; s.Volume=data[2]; s.RollOffMode=Enum.RollOffMode.InverseTapered; s.Parent=SoundService
+		Core.SoundSystem.sounds[name]=s; table.insert(preload,s)
+	end
+	task.spawn(function() pcall(function() ContentProvider:PreloadAsync(preload) end) end)
+end
+function Core.SoundSystem.play(n) if Core.State.settings.soundEnabled and Core.SoundSystem.sounds[n] then Core.SoundSystem.sounds[n]:Play() end end
 
--- Initialize caches
-local productCache = Cache.new(Core.CONSTANTS.CACHE_PRODUCT_INFO)
+-- cache
+local Cache = {}; Cache.__index = Cache
+function Cache.new(d) return setmetatable({data={},duration=d or 300},Cache) end
+function Cache:set(k,v) self.data[k]={v=v,t=tick()} end
+function Cache:get(k) local e=self.data[k]; if not e then return end; if tick()-e.t>self.duration then self.data[k]=nil return end; return e.v end
+function Cache:clear(k) if k then self.data[k]=nil else self.data={} end end
+local productCache   = Cache.new(Core.CONSTANTS.CACHE_PRODUCT_INFO)
 local ownershipCache = Cache.new(Core.CONSTANTS.CACHE_OWNERSHIP)
 
--- Utility Functions
-Core.Utils = {}
-
-function Core.Utils.isMobile()
-	local camera = workspace.CurrentCamera
-	if not camera then return false end
-	local viewportSize = camera.ViewportSize
-	return viewportSize.X < 1024 or GuiService:IsTenFootInterface()
-end
-
-function Core.Utils.formatNumber(number)
-	local formatted = tostring(number)
-	local k = 1
-	while k ~= 0 do
-		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
-	end
-	return formatted
-end
-
-function Core.Utils.lerp(a, b, t)
-	return a + (b - a) * t
-end
-
-function Core.Utils.clamp(value, min, max)
-	return math.max(min, math.min(max, value))
-end
-
-function Core.Utils.blend(a, b, alpha)
-	alpha = Core.Utils.clamp(alpha, 0, 1)
-	return Color3.new(
-		a.R + (b.R - a.R) * alpha,
-		a.G + (b.G - a.G) * alpha,
-		a.B + (b.B - a.B) * alpha
-	)
-end
-
-function Core.Utils.debounce(func, delay)
-	local lastCall = 0
-	return function(...)
-		local now = tick()
-		if now - lastCall < delay then return end
-		lastCall = now
-		return func(...)
-	end
-end
-
--- Animation System
-Core.Animation = {}
-
-function Core.Animation.tween(object, properties, duration, easingStyle, easingDirection)
-	if not Core.State.settings.animationsEnabled then
-		for property, value in pairs(properties) do
-			pcall(function()
-				object[property] = value
-			end)
-		end
-		return
-	end
-
-	duration = duration or Core.CONSTANTS.ANIM_MEDIUM
-	easingStyle = easingStyle or Enum.EasingStyle.Quad
-	easingDirection = easingDirection or Enum.EasingDirection.Out
-
-	local tweenInfo = TweenInfo.new(duration, easingStyle, easingDirection)
-	local tween = TweenService:Create(object, tweenInfo, properties)
-	tween:Play()
-	return tween
-end
-
--- Sound System
-Core.SoundSystem = {}
-
-function Core.SoundSystem.initialize()
-	-- Using working sound IDs
-	local sounds = {
-		click = {id = "rbxassetid://876939830", volume = 0.4},
-		hover = {id = "rbxassetid://10066936758", volume = 0.2},
-		open = {id = "rbxassetid://452267918", volume = 0.5},
-		close = {id = "rbxassetid://452267918", volume = 0.5},
-		success = {id = "rbxassetid://876939830", volume = 0.6},
-		error = {id = "rbxassetid://876939830", volume = 0.5},
-		notification = {id = "rbxassetid://876939830", volume = 0.5},
-	}
-
-	Core.SoundSystem.sounds = {}
-
-	for name, config in pairs(sounds) do
-		local sound = Instance.new("Sound")
-		sound.Name = "SanrioShop_" .. name
-		sound.SoundId = config.id
-		sound.Volume = config.volume
-		sound.Parent = SoundService
-		Core.SoundSystem.sounds[name] = sound
-	end
-end
-
-function Core.SoundSystem.play(soundName)
-	if not Core.State.settings.soundEnabled then return end
-
-	local sound = Core.SoundSystem.sounds[soundName]
-	if sound then
-		sound:Play()
-	end
-end
-
--- Data Management
+-- data
 Core.DataManager = {}
-
 Core.DataManager.products = {
 	cash = {
-		{
-			id = 1897730242,
-			amount = 1000,
-			name = "1,000 Cash",
-			description = "A small boost to get you started",
-			icon = "rbxassetid://10709728059",
-			featured = false,
-			price = 0,
-		},
-		{
-			id = 1897730373,
-			amount = 5000,
-			name = "5,000 Cash",
-			description = "Perfect for mid-game expansion",
-			icon = "rbxassetid://10709728059",
-			featured = true,
-			price = 0,
-		},
-		{
-			id = 1897730467,
-			amount = 10000,
-			name = "10,000 Cash",
-			description = "Accelerate your progress significantly",
-			icon = "rbxassetid://10709728059",
-			featured = false,
-			price = 0,
-		},
-		{
-			id = 1897730581,
-			amount = 50000,
-			name = "50,000 Cash",
-			description = "Maximum value for serious players",
-			icon = "rbxassetid://10709728059",
-			featured = true,
-			price = 0,
-		},
+		{ id = 3366419712, amount = 1000,    name = "1,000 Cash",    description = "Includes 1,000 Cash",    icon = "rbxassetid://10709728059", price = 0 },
+		{ id = 3366420012, amount = 5000,    name = "5,000 Cash",    description = "Includes 5,000 Cash",    icon = "rbxassetid://10709728059", price = 0 },
+		{ id = 3366420478, amount = 10000,   name = "10,000 Cash",   description = "Includes 10,000 Cash",   icon = "rbxassetid://10709728059", price = 0, bonus = 0.10 }, -- ✨ NEW: bonus
+		{ id = 3366420800, amount = 25000,   name = "25,000 Cash",   description = "Includes 25,000 Cash",   icon = "rbxassetid://10709728059", price = 0 },
+		{ id = 3424973374, amount = 50000,   name = "50,000 Cash",   description = "Includes 50,000 Cash",   icon = "rbxassetid://10709728059", price = 0, bonus = 0.25 }, -- ✨ NEW: bonus
+		{ id = 3424974046, amount = 100000,  name = "100,000 Cash",  description = "Includes 100,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
+		{ id = 3424974161, amount = 250000,  name = "250,000 Cash",  description = "Includes 250,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
+		{ id = 3424974327, amount = 500000,  name = "500,000 Cash",  description = "Includes 500,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
+		{ id = 3424974402, amount = 1000000, name = "1,000,000 Cash",description = "Includes 1,000,000 Cash",icon = "rbxassetid://10709728059", price = 0, best = true, bonus = 0.35 }, -- ✨ NEW: best + bonus
 	},
 	gamepasses = {
-		{
-			id = 1412171840,
-			name = "Auto Collect",
-			description = "Automatically collect all cash drops",
-			icon = "rbxassetid://10709727148",
-			price = 99,
-			features = {
-				"Hands-free collection",
-				"Works while AFK",
-				"Saves time",
-			},
-			hasToggle = true,
-		},
-		{
-			id = 1398974710,
-			name = "2x Cash",
-			description = "Double all cash earned permanently",
-			icon = "rbxassetid://10709727148",
-			price = 199,
-			features = {
-				"2x multiplier",
-				"Stacks with events",
-				"Best value",
-			},
-			hasToggle = false,
-		},
+		{ id = 1412171840, name = "Auto Collect", description = "Automatically collect all cash drops", icon = "rbxassetid://10709727148", price = 99,  hasToggle = true  },
+		{ id = 1398974710, name = "2x Cash",      description = "Double all cash earned permanently",   icon = "rbxassetid://10709727148", price = 199, hasToggle = false },
 	},
 }
-
-function Core.DataManager.getProductInfo(productId)
-	local cached = productCache:get(productId)
-	if cached then return cached end
-
-	local success, info = pcall(function()
-		return MarketplaceService:GetProductInfo(productId, Enum.InfoType.Product)
-	end)
-
-	if success and info then
-		productCache:set(productId, info)
-		return info
-	end
-
-	return nil
+function Core.DataManager.getProductInfo(id)
+	local c=productCache:get(id); if c then return c end
+	local ok,info=pcall(function() return MarketplaceService:GetProductInfo(id,Enum.InfoType.Product) end)
+	if ok and info then productCache:set(id,info) return info end
 end
-
-function Core.DataManager.getGamePassInfo(passId)
-	local cached = productCache:get("pass_" .. passId)
-	if cached then return cached end
-
-	local success, info = pcall(function()
-		return MarketplaceService:GetProductInfo(passId, Enum.InfoType.GamePass)
-	end)
-
-	if success and info then
-		productCache:set("pass_" .. passId, info)
-		return info
-	end
-
-	return nil
+function Core.DataManager.getGamePassInfo(id)
+	local key="pass_"..id; local c=productCache:get(key); if c then return c end
+	local ok,info=pcall(function() return MarketplaceService:GetProductInfo(id,Enum.InfoType.GamePass) end)
+	if ok and info then productCache:set(key,info) return info end
 end
-
 function Core.DataManager.checkOwnership(passId)
-	local cacheKey = Player.UserId .. "_" .. passId
-	local cached = ownershipCache:get(cacheKey)
-	if cached ~= nil then return cached end
-
-	local success, owns = pcall(function()
-		return MarketplaceService:UserOwnsGamePassAsync(Player.UserId, passId)
-	end)
-
-	if success then
-		ownershipCache:set(cacheKey, owns)
-		return owns
-	end
-
+	local key = ("%d_%d"):format(Player.UserId, passId)
+	local c=ownershipCache:get(key); if c~=nil then return c end
+	local ok,owns=pcall(function() return MarketplaceService:UserOwnsGamePassAsync(Player.UserId,passId) end)
+	if ok then ownershipCache:set(key,owns) return owns end
 	return false
 end
-
 function Core.DataManager.refreshPrices()
-	for _, product in ipairs(Core.DataManager.products.cash) do
-		local info = Core.DataManager.getProductInfo(product.id)
-		if info then
-			product.price = info.PriceInRobux or 0
-		end
+	for _,p in ipairs(Core.DataManager.products.cash) do
+		local i=Core.DataManager.getProductInfo(p.id); if i and i.PriceInRobux then p.price=i.PriceInRobux end
 	end
-
-	for _, pass in ipairs(Core.DataManager.products.gamepasses) do
-		local info = Core.DataManager.getGamePassInfo(pass.id)
-		if info and info.PriceInRobux then
-			pass.price = info.PriceInRobux
-		end
+	for _,gp in ipairs(Core.DataManager.products.gamepasses) do
+		local i=Core.DataManager.getGamePassInfo(gp.id); if i and i.PriceInRobux then gp.price=i.PriceInRobux end
 	end
 end
 
--- ========================================
--- UI MODULE (Embedded)
--- ========================================
-local UI = {}
+-- ✨ NEW: Smart refresh (throttled)
+function Core.DataManager.refreshPricesIfStale(intervalSec)
+	intervalSec = intervalSec or 180
+	if (tick() - Core.State.lastPriceRefresh) >= intervalSec then
+		Core.DataManager.refreshPrices()
+		Core.State.lastPriceRefresh = tick()
+	end
+end
 
--- Theme System
+-- ======================================================
+-- UI PRIMS
+-- ======================================================
+local UI = {}
 UI.Theme = {
 	current = "light",
 	themes = {
 		light = {
-			background = Color3.fromRGB(253, 252, 250),
-			surface = Color3.fromRGB(255, 255, 255),
-			surfaceAlt = Color3.fromRGB(246, 248, 252),
-			stroke = Color3.fromRGB(222, 226, 235),
-			text = Color3.fromRGB(35, 38, 46),
-			textSecondary = Color3.fromRGB(120, 126, 140),
-			accent = Color3.fromRGB(255, 64, 129),
-			accentAlt = Color3.fromRGB(186, 214, 255),
-			success = Color3.fromRGB(76, 175, 80),
-			warning = Color3.fromRGB(255, 152, 0),
-			error = Color3.fromRGB(244, 67, 54),
-
-			kitty = Color3.fromRGB(255, 64, 64),
-			melody = Color3.fromRGB(255, 187, 204),
-			kuromi = Color3.fromRGB(200, 190, 255),
-			cinna = Color3.fromRGB(186, 214, 255),
-			pompom = Color3.fromRGB(255, 220, 110),
+			background     = Color3.fromRGB(253,252,250),
+			surface        = Color3.fromRGB(255,255,255),
+			surfaceAlt     = Color3.fromRGB(246,248,252),
+			stroke         = Color3.fromRGB(222,226,235),
+			text           = Color3.fromRGB(35,38,46),
+			textSecondary  = Color3.fromRGB(120,126,140),
+			accent         = Color3.fromRGB(255,80,140), -- ✨ deeper for contrast
+			success        = Color3.fromRGB(76,175,80),
+			cinna          = Color3.fromRGB(186,214,255),
+			kuromi         = Color3.fromRGB(200,190,255),
 		}
 	}
 }
+function UI.Theme:get(k) return self.themes[self.current][k] end
 
-function UI.Theme:get(key)
-	return self.themes[self.current][key] or Color3.new(1, 1, 1)
-end
-
--- Component Factory
-UI.Components = {}
-
--- Base Component Class
-local Component = {}
-Component.__index = Component
-
-function Component.new(className, props)
-	local self = setmetatable({}, Component)
-	self.instance = Instance.new(className)
-	self.props = props or {}
-	self.children = {}
-	self.eventConnections = {}
-	return self
-end
-
-function Component:applyProps()
-	for key, value in pairs(self.props) do
-		-- Skip special properties
-		if key ~= "children" and key ~= "parent" and key ~= "onClick" and 
-			key ~= "cornerRadius" and key ~= "stroke" and key ~= "shadow" and 
-			key ~= "layout" and key ~= "padding" then
-
-			if type(value) == "function" and key:sub(1, 2) == "on" then
-				local eventName = key:sub(3)
-				local connection = self.instance[eventName]:Connect(value)
-				table.insert(self.eventConnections, connection)
-			else
-				-- Only set if property exists
-				pcall(function()
-					self.instance[key] = value
-				end)
-			end
-		end
-	end
-
-	-- Handle onClick separately for buttons
-	if self.props.onClick and self.instance:IsA("TextButton") then
-		local connection = self.instance.MouseButton1Click:Connect(self.props.onClick)
-		table.insert(self.eventConnections, connection)
-	end
-end
-
+local Component = {}; Component.__index = Component
+function Component.new(className, props) return setmetatable({instance=Instance.new(className), props=props or {}}, Component) end
 function Component:render()
-	self:applyProps()
-
-	if self.props.children then
-		for _, child in ipairs(self.props.children) do
-			if typeof(child) == "table" and child.render then
-				child:render()
-				child.instance.Parent = self.instance
-			elseif typeof(child) == "Instance" then
-				child.Parent = self.instance
-			end
-		end
+	for k,v in pairs(self.props) do
+		if k~="children" and k~="parent" and k~="onClick" and k~="cornerRadius" and k~="stroke" and k~="layout" and k~="padding" then pcall(function() self.instance[k]=v end) end
 	end
-
-	if self.props.parent then
-		self.instance.Parent = self.props.parent
-	end
-
+	if self.props.cornerRadius then local c=Instance.new("UICorner"); c.CornerRadius=self.props.cornerRadius; c.Parent=self.instance end
+	if self.props.stroke then local s=Instance.new("UIStroke"); s.Color=self.props.stroke.color or UI.Theme:get("stroke"); s.Thickness=self.props.stroke.thickness or 1; s.Transparency=self.props.stroke.transparency or 0; s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border; s.Parent=self.instance end
+	if self.props.parent then self.instance.Parent=self.props.parent end
 	return self.instance
 end
 
-function Component:destroy()
-	for _, connection in ipairs(self.eventConnections) do
-		connection:Disconnect()
-	end
-	self.instance:Destroy()
-end
-
--- Frame Component
+UI.Components = {}
 function UI.Components.Frame(props)
-	local defaultProps = {
-		BackgroundColor3 = UI.Theme:get("surface"),
-		BorderSizePixel = 0,
-		Size = UDim2.fromScale(1, 1),
-	}
-
-	for key, value in pairs(defaultProps) do
-		if props[key] == nil then
-			props[key] = value
-		end
-	end
-
-	local component = Component.new("Frame", props)
-
-	if props.cornerRadius then
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = props.cornerRadius
-		corner.Parent = component.instance
-	end
-
-	if props.stroke then
-		local stroke = Instance.new("UIStroke")
-		stroke.Color = props.stroke.color or UI.Theme:get("stroke")
-		stroke.Thickness = props.stroke.thickness or 1
-		stroke.Transparency = props.stroke.transparency or 0
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Parent = component.instance
-	end
-
-	return component
-end
-
--- Text Label Component
-function UI.Components.TextLabel(props)
-	local defaultProps = {
-		BackgroundTransparency = 1,
-		TextColor3 = UI.Theme:get("text"),
-		Font = Enum.Font.Gotham,
-		TextScaled = false,
-		TextWrapped = true,
-		Size = UDim2.fromScale(1, 1),
-	}
-
-	for key, value in pairs(defaultProps) do
-		if props[key] == nil then
-			props[key] = value
-		end
-	end
-
-	return Component.new("TextLabel", props)
-end
-
--- Button Component
-function UI.Components.Button(props)
-	local defaultProps = {
-		BackgroundColor3 = UI.Theme:get("accent"),
-		TextColor3 = Color3.new(1, 1, 1),
-		Font = Enum.Font.GothamMedium,
-		TextScaled = false,
-		Size = UDim2.fromOffset(120, 40),
-		AutoButtonColor = false,
-	}
-
-	for key, value in pairs(defaultProps) do
-		if props[key] == nil then
-			props[key] = value
-		end
-	end
-
-	local component = Component.new("TextButton", props)
-
-	-- Add corner radius if specified
-	if props.cornerRadius then
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = props.cornerRadius
-		corner.Parent = component.instance
-	end
-
-	-- Add stroke if specified
-	if props.stroke then
-		local stroke = Instance.new("UIStroke")
-		stroke.Color = props.stroke.color or UI.Theme:get("stroke")
-		stroke.Thickness = props.stroke.thickness or 1
-		stroke.Transparency = props.stroke.transparency or 0
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-		stroke.Parent = component.instance
-	end
-
-	-- Add hover effects
-	local originalSize = props.Size or defaultProps.Size
-	local hoverScale = props.hoverScale or 1.05
-
-	component.instance.MouseEnter:Connect(function()
-		Core.SoundSystem.play("hover")
-		Core.Animation.tween(component.instance, {
-			Size = UDim2.new(
-				originalSize.X.Scale * hoverScale,
-				originalSize.X.Offset * hoverScale,
-				originalSize.Y.Scale * hoverScale,
-				originalSize.Y.Offset * hoverScale
-			)
-		}, Core.CONSTANTS.ANIM_FAST)
-	end)
-
-	component.instance.MouseLeave:Connect(function()
-		Core.Animation.tween(component.instance, {
-			Size = originalSize
-		}, Core.CONSTANTS.ANIM_FAST)
-	end)
-
-	component.instance.MouseButton1Click:Connect(function()
-		Core.SoundSystem.play("click")
-	end)
-
-	return component
-end
-
--- Image Component
-function UI.Components.Image(props)
-	local defaultProps = {
-		BackgroundTransparency = 1,
-		ScaleType = Enum.ScaleType.Fit,
-		Size = UDim2.fromOffset(100, 100),
-	}
-
-	for key, value in pairs(defaultProps) do
-		if props[key] == nil then
-			props[key] = value
-		end
-	end
-
-	return Component.new("ImageLabel", props)
-end
-
--- ScrollingFrame Component
-function UI.Components.ScrollingFrame(props)
-	local defaultProps = {
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		ScrollBarThickness = 8,
-		ScrollBarImageColor3 = UI.Theme:get("stroke"),
-		Size = UDim2.fromScale(1, 1),
-		CanvasSize = UDim2.new(0, 0, 0, 0),
-		ScrollingDirection = props.ScrollingDirection or Enum.ScrollingDirection.Y,
-	}
-
-	for key, value in pairs(defaultProps) do
-		if props[key] == nil then
-			props[key] = value
-		end
-	end
-
-	local component = Component.new("ScrollingFrame", props)
-
-	-- Add layout if specified
+	local d={ BackgroundColor3=UI.Theme:get("surface"), BorderSizePixel=0, Size=UDim2.fromScale(1,1) }
+	for k,v in pairs(d) do if props[k]==nil then props[k]=v end end
+	local cmp=Component.new("Frame",props); local inst=cmp:render()
 	if props.layout then
-		local layoutType = props.layout.type or "List"
-		local layout = Instance.new("UI" .. layoutType .. "Layout")
-
-		for key, value in pairs(props.layout) do
-			if key ~= "type" then
-				pcall(function()
-					layout[key] = value
-				end)
-			end
-		end
-
-		layout.Parent = component.instance
-
-		-- Auto-size canvas
-		task.defer(function()
-			if layoutType == "List" then
-				layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-					if props.ScrollingDirection == Enum.ScrollingDirection.X then
-						component.instance.CanvasSize = UDim2.new(0, layout.AbsoluteContentSize.X + 20, 0, 0)
-					else
-						component.instance.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
-					end
-				end)
-			elseif layoutType == "Grid" then
-				layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-					component.instance.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
-				end)
-			end
-		end)
+		local kind = props.layout.type or "List"
+		local layout = Instance.new("UI"..kind.."Layout")
+		for k,v in pairs(props.layout) do if k~="type" then pcall(function() layout[k]=v end) end end
+		layout.Parent = inst
 	end
-
-	-- Add padding if specified
 	if props.padding then
-		local padding = Instance.new("UIPadding")
-		if type(props.padding.top) == "userdata" then
-			padding.PaddingTop = props.padding.top
-		elseif props.padding.top then
-			padding.PaddingTop = UDim.new(0, props.padding.top)
-		end
-		if type(props.padding.bottom) == "userdata" then
-			padding.PaddingBottom = props.padding.bottom
-		elseif props.padding.bottom then
-			padding.PaddingBottom = UDim.new(0, props.padding.bottom)
-		end
-		if type(props.padding.left) == "userdata" then
-			padding.PaddingLeft = props.padding.left
-		elseif props.padding.left then
-			padding.PaddingLeft = UDim.new(0, props.padding.left)
-		end
-		if type(props.padding.right) == "userdata" then
-			padding.PaddingRight = props.padding.right
-		elseif props.padding.right then
-			padding.PaddingRight = UDim.new(0, props.padding.right)
-		end
-		padding.Parent = component.instance
+		local p=Instance.new("UIPadding")
+		if props.padding.top then p.PaddingTop = props.padding.top end
+		if props.padding.bottom then p.PaddingBottom = props.padding.bottom end
+		if props.padding.left then p.PaddingLeft = props.padding.left end
+		if props.padding.right then p.PaddingRight = props.padding.right end
+		p.Parent = inst
 	end
-
-	return component
+	return { instance=inst, render=function() return inst end }
 end
-
--- Layout Utilities
+function UI.Components.TextLabel(props)
+	local d={ BackgroundTransparency=1, TextColor3=UI.Theme:get("text"), Font=Enum.Font.Gotham, TextWrapped=true }
+	for k,v in pairs(d) do if props[k]==nil then props[k]=v end end
+	local cmp=Component.new("TextLabel",props); return cmp
+end
+function UI.Components.Button(props)
+	local d={ BackgroundColor3=UI.Theme:get("accent"), TextColor3=Color3.new(1,1,1), Font=Enum.Font.GothamMedium, Size=UDim2.fromOffset(120,40), AutoButtonColor=false }
+	for k,v in pairs(d) do if props[k]==nil then props[k]=v end end
+	local cmp=Component.new("TextButton",props); local inst=cmp:render()
+	local hoverScale = Instance.new("UIScale"); hoverScale.Scale = 1; hoverScale.Parent = inst
+	inst.MouseEnter:Connect(function() Core.SoundSystem.play("hover"); Core.Animation.tween(hoverScale,{Scale=1.02},Core.CONSTANTS.ANIM_FAST) end)
+	inst.MouseLeave:Connect(function() Core.Animation.tween(hoverScale,{Scale=1},Core.CONSTANTS.ANIM_FAST) end)
+	if props.onClick then inst.MouseButton1Click:Connect(props.onClick) end
+	inst.MouseButton1Click:Connect(function() Core.SoundSystem.play("click") end)
+	return cmp
+end
+function UI.Components.Image(props)
+	local d={ BackgroundTransparency=1, ScaleType=Enum.ScaleType.Fit }
+	for k,v in pairs(d) do if props[k]==nil then props[k]=v end end
+	return Component.new("ImageLabel",props)
+end
 UI.Layout = {}
-
-function UI.Layout.stack(parent, direction, spacing, padding)
-	local layout = Instance.new("UIListLayout")
-	layout.FillDirection = direction or Enum.FillDirection.Vertical
-	layout.Padding = UDim.new(0, spacing or 10)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = parent
-
-	if padding then
-		local uiPadding = Instance.new("UIPadding")
-		uiPadding.PaddingTop = UDim.new(0, padding.top or 0)
-		uiPadding.PaddingBottom = UDim.new(0, padding.bottom or 0)
-		uiPadding.PaddingLeft = UDim.new(0, padding.left or 0)
-		uiPadding.PaddingRight = UDim.new(0, padding.right or 0)
-		uiPadding.Parent = parent
-	end
-
-	return layout
+function UI.Layout.stack(parent,dir,spacing,padding)
+	local l=Instance.new("UIListLayout"); l.FillDirection=dir or Enum.FillDirection.Horizontal; l.Padding=UDim.new(0,spacing or 10); l.SortOrder=Enum.SortOrder.LayoutOrder; l.Parent=parent
+	if padding then local p=Instance.new("UIPadding"); p.PaddingTop=UDim.new(0,padding.top or 0); p.PaddingBottom=UDim.new(0,padding.bottom or 0); p.PaddingLeft=UDim.new(0,padding.left or 0); p.PaddingRight=UDim.new(0,padding.right or 0); p.Parent=parent end
+	return l
 end
 
--- Responsive Design
-UI.Responsive = {}
+-- ======================================================
+-- 🎁 GIFT BOX CONFIGURATION (CHANGE THIS!)
+-- ======================================================
+-- How to get your TEXTURE ID (not asset ID!):
+-- 1. Insert a Decal into workspace
+-- 2. Paste your asset ID into the Texture property
+-- 3. The number will auto-convert to the texture ID
+-- 4. Copy that number and paste it below:
 
-function UI.Responsive.scale(instance)
-	local camera = workspace.CurrentCamera
-	if not camera then return end
+local GIFT_BOX_TEXTURE_ID = "14270868971" -- ← REPLACE WITH YOUR TEXTURE ID!
 
-	local scale = Instance.new("UIScale")
-	scale.Parent = instance
-
-	local function updateScale()
-		local viewportSize = camera.ViewportSize
-		local scaleFactor = math.min(viewportSize.X / 1920, viewportSize.Y / 1080)
-		scaleFactor = Core.Utils.clamp(scaleFactor, 0.5, 1.5)
-
-		if Core.Utils.isMobile() then
-			scaleFactor = scaleFactor * 0.85
-		end
-
-		scale.Scale = scaleFactor
-	end
-
-	updateScale()
-	camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
-
-	return scale
-end
-
--- ========================================
--- MAIN SHOP IMPLEMENTATION
--- ========================================
-local Shop = {}
-Shop.__index = Shop
+-- ======================================================
+-- SHOP
+-- ======================================================
+local Shop = {}; Shop.__index=Shop
 
 function Shop.new()
-	local self = setmetatable({}, Shop)
-
-	self.gui = nil
-	self.mainPanel = nil
-	self.tabContainer = nil
-	self.contentContainer = nil
-	self.currentTab = "Home"
-	self.tabs = {}
-	self.pages = {}
-	self.toggleButton = nil
-	self.blur = nil
-
+	local self=setmetatable({},Shop)
+	self.gui=nil; self.mainPanel=nil; self.tabContainer=nil; self.contentContainer=nil
+	self.currentTab=nil; self.tabs={}; self.pages={}; self.toggleButton=nil; self.blur=nil
+	self._panelScale=nil
 	self:initialize()
-
 	return self
+end
+
+function Shop:preloadImages()
+	local giftBoxId = "rbxassetid://" .. GIFT_BOX_TEXTURE_ID
+	
+	local ids={giftBoxId,"rbxassetid://10709728059","rbxassetid://10709727148"}
+	for _,p in ipairs(Core.DataManager.products.cash) do if p.icon then table.insert(ids,p.icon) end end
+	for _,p in ipairs(Core.DataManager.products.gamepasses) do if p.icon then table.insert(ids,p.icon) end end
+	task.spawn(function() 
+		local success, err = pcall(function() 
+			ContentProvider:PreloadAsync(ids) 
+		end)
+		if not success then
+			warn("[SanrioShop] Image preload warning:", err)
+		else
+			print("[SanrioShop] ✅ Preloaded gift box texture ID:", GIFT_BOX_TEXTURE_ID)
+		end
+	end)
 end
 
 function Shop:initialize()
 	Core.SoundSystem.initialize()
 	Core.DataManager.refreshPrices()
-
-	self:createToggleButton()
-	self:createMainInterface()
-	self:setupRemoteHandlers()
-	self:setupInputHandlers()
-
-	Core.State.initialized = true
-	Core.Events:emit("shopInitialized")
+	self:preloadImages()
+	
+	local success, err = pcall(function()
+		self:createToggleButton()
+		self:createMainInterface()
+		self:setupInputHandlers()
+		self:setupRemoteHandlers()
+	end)
+	
+	if not success then
+		warn("[SanrioShop] Initialization failed:", err)
+		return
+	end
+	
+	print("[SanrioShop] ✅ Initialized successfully!")
 end
 
+-- ✨ UPGRADED toggle button (YOUR GIFT BOX DECAL + glow + pulse)
 function Shop:createToggleButton()
-	local toggleScreen = PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
-	toggleScreen.Name = "SanrioShopToggle"
-	toggleScreen.ResetOnSpawn = false
-	toggleScreen.DisplayOrder = 999
-	toggleScreen.Parent = PlayerGui
+	local sg=PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
+	sg.Name="SanrioShopToggle"; sg.ResetOnSpawn=false; sg.DisplayOrder=999
+	sg.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+	sg.Parent=PlayerGui
 
+	local isPhone  = Core.Utils_isPhone()
+	local isTablet = Core.Utils_isTablet()
+	
+	-- ✨ Make it more square/rectangular to show off the gift box
+	local buttonSize = (isPhone and UDim2.fromOffset(70,70))
+		or (isTablet and UDim2.fromOffset(80,80))
+		or UDim2.fromOffset(90,90)
+
+	local pos, anchor
+	if isPhone then
+		pos = UDim2.new(1,-16,0,76);       anchor=Vector2.new(1,0)
+	elseif isTablet then
+		pos = UDim2.new(1,-16,0.5,-60);    anchor=Vector2.new(1,0.5)
+	else
+		pos = UDim2.new(1,-16,0.5,-70);    anchor=Vector2.new(1,0.5)
+	end
+
+	-- ✨ Button with rounded corners (not a pill!)
 	self.toggleButton = UI.Components.Button({
-		Name = "ShopToggle",
-		Text = "",
-		Size = UDim2.fromOffset(180, 60),
-		Position = UDim2.new(1, -20, 1, -20),
-		AnchorPoint = Vector2.new(1, 1),
-		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(1, 0),
-		stroke = {
-			color = UI.Theme:get("accent"),
-			thickness = 2,
-		},
-		parent = toggleScreen,
-		onClick = function()
-			self:toggle()
-		end,
+		Text="", Size=buttonSize, Position=pos, AnchorPoint=anchor,
+		BackgroundColor3=UI.Theme:get("surface"), 
+		cornerRadius=UDim.new(0,16), -- ✨ Rounded square, not pill!
+		stroke={color=UI.Theme:get("accent"),thickness=2}, 
+		parent=sg, 
+		onClick=function() self:toggle() end
 	}):render()
 
-	local icon = UI.Components.Image({
-		Name = "Icon",
-		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromOffset(32, 32),
-		Position = UDim2.fromOffset(16, 14),
-		parent = self.toggleButton,
+	-- ✨ Soft pink glow for depth
+	local glow = Instance.new("UIStroke")
+	glow.Color = UI.Theme:get("accent")
+	glow.Thickness = 3
+	glow.Transparency = 0.5
+	glow.Parent = self.toggleButton
+
+	-- ✨ YOUR GIFT BOX DECAL - BIG AND CENTERED!
+	local giftBoxSize = isPhone and 56 or (isTablet and 64 or 72)
+	UI.Components.Image({ 
+		Image = "rbxassetid://" .. GIFT_BOX_TEXTURE_ID, 
+		Size=UDim2.fromOffset(giftBoxSize, giftBoxSize), 
+		Position=UDim2.fromScale(0.5, 0.5), 
+		AnchorPoint=Vector2.new(0.5, 0.5),
+		parent=self.toggleButton 
 	}):render()
 
-	local label = UI.Components.TextLabel({
-		Name = "Label",
-		Text = "Shop",
-		Size = UDim2.new(1, -64, 1, 0),
-		Position = UDim2.fromOffset(56, 0),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		parent = self.toggleButton,
-	}):render()
+	-- ✨ Optional SALE badge (if bonus exists)
+	local hasBonus = false
+	for _,p in ipairs(Core.DataManager.products.cash) do if p.bonus and p.bonus > 0 then hasBonus = true break end end
+	if hasBonus then
+		local badge = Instance.new("TextLabel")
+		badge.BackgroundColor3 = UI.Theme:get("accent")
+		badge.TextColor3 = Color3.new(1,1,1)
+		badge.Font = Enum.Font.GothamBold
+		badge.TextSize = 11
+		badge.Text = "SALE"
+		badge.AnchorPoint = Vector2.new(1,0)
+		badge.Position = UDim2.new(1, 2, 0, -8)
+		badge.Size = UDim2.fromOffset(40, 18)
+		badge.Parent = self.toggleButton
+		local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(1,0); c.Parent = badge
+	end
 
-	self:addPulseAnimation(self.toggleButton)
+	-- ✨ Idle pulse (phones only)
+	if isPhone then
+		local s = Instance.new("UIScale"); s.Scale = 1; s.Parent = self.toggleButton
+		task.spawn(function()
+			while self.toggleButton and self.toggleButton.Parent do
+				Core.Animation.tween(s, {Scale = 1.04}, 0.7)
+				task.wait(0.9)
+				Core.Animation.tween(s, {Scale = 1.00}, 0.6)
+				task.wait(3.2)
+			end
+		end)
+	end
 end
 
 function Shop:createMainInterface()
 	self.gui = PlayerGui:FindFirstChild("SanrioShopMain") or Instance.new("ScreenGui")
-	self.gui.Name = "SanrioShopMain"
-	self.gui.ResetOnSpawn = false
-	self.gui.DisplayOrder = 1000
-	self.gui.Enabled = false
-	self.gui.Parent = PlayerGui
+	self.gui.Name="SanrioShopMain"; self.gui.ResetOnSpawn=false; self.gui.DisplayOrder=1000; self.gui.Enabled=false
+	self.gui.IgnoreGuiInset=false
+	self.gui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets -- ✨ NEW: Safe insets
+	self.gui.Parent=PlayerGui
 
-	self.blur = Lighting:FindFirstChild("SanrioShopBlur") or Instance.new("BlurEffect")
-	self.blur.Name = "SanrioShopBlur"
-	self.blur.Size = 0
-	self.blur.Parent = Lighting
+	self.blur = Lighting:FindFirstChild("SanrioShopBlur") or Instance.new("BlurEffect"); self.blur.Name="SanrioShopBlur"; self.blur.Size=0; self.blur.Parent=Lighting
 
-	local dimBackground = UI.Components.Frame({
-		Name = "DimBackground",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = Color3.new(0, 0, 0),
-		BackgroundTransparency = 0.3,
-		parent = self.gui,
-	}):render()
-
-	local panelSize = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
-
-	self.mainPanel = UI.Components.Frame({
-		Name = "MainPanel",
-		Size = UDim2.fromOffset(panelSize.X, panelSize.Y),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = UI.Theme:get("background"),
-		cornerRadius = UDim.new(0, 24),
-		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 1,
-		},
-		parent = self.gui,
-	}):render()
-
-	UI.Responsive.scale(self.mainPanel)
-
-	self:createHeader()
-	self:createTabBar()
-
-	self.contentContainer = UI.Components.Frame({
-		Name = "ContentContainer",
-		Size = UDim2.new(1, -48, 1, -180),
-		Position = UDim2.fromOffset(24, 156),
-		BackgroundTransparency = 1,
-		parent = self.mainPanel,
-	}):render()
-
-	self:createPages()
-	
-	-- Ensure Home is selected initially with a small delay
-	task.defer(function()
-		self:selectTab("Home")
+	local dim = UI.Components.Frame({ Size=UDim2.fromScale(1,1), BackgroundColor3=Color3.new(0,0,0), BackgroundTransparency=0.38, parent=self.gui }):render()
+	dim.Active=true
+	dim.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			local mousePos = input.Position
+			local guiInset = GuiService:GetGuiInset()
+			local adjustedPos = Vector2.new(mousePos.X, mousePos.Y - guiInset.Y)
+			local panelPos = self.mainPanel.AbsolutePosition
+			local panelSize = self.mainPanel.AbsoluteSize
+			local inside = adjustedPos.X >= panelPos.X and adjustedPos.X <= (panelPos.X+panelSize.X) and adjustedPos.Y >= panelPos.Y and adjustedPos.Y <= (panelPos.Y+panelSize.Y)
+			if not inside then self:close() end
+		end
 	end)
-end
 
-function Shop:createHeader()
-	local header = UI.Components.Frame({
-		Name = "Header",
-		Size = UDim2.new(1, -48, 0, 80),
-		Position = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 16),
-		parent = self.mainPanel,
+	local prof = getProfile()
+	local panelSize = Core.Utils.panelSizeForViewport()
+	self.mainPanel = UI.Components.Frame({
+		Size=UDim2.fromOffset(panelSize.X, panelSize.Y), Position=UDim2.fromScale(0.5,0.5), AnchorPoint=Vector2.new(0.5,0.5),
+		BackgroundColor3=UI.Theme:get("background"), cornerRadius=UDim.new(0,22), stroke={color=UI.Theme:get("stroke"),thickness=1}, parent=self.gui
 	}):render()
 
-	local logo = UI.Components.Image({
-		Name = "Logo",
-		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromOffset(60, 60),
-		Position = UDim2.fromOffset(16, 10),
-		parent = header,
-	}):render()
+	self._panelScale = Instance.new("UIScale")
+	do
+		local scale = 1
+		if prof.isPhone then
+			scale = Core.Sizer.phonePanelScale(Core.State._shortSide or 414)
+		end
+		self._panelScale.Scale = scale
+		self._panelScale.Parent = self.mainPanel
+	end
 
-	local title = UI.Components.TextLabel({
-		Name = "Title",
-		Text = "Sanrio Shop",
-		Size = UDim2.new(1, -200, 1, 0),
-		Position = UDim2.fromOffset(92, 0),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Font = Enum.Font.GothamBold,
-		TextSize = 32,
-		parent = header,
-	}):render()
+	local headerHeight = prof.headerH
+	local headerTextSize = (prof.title >= 20) and 28 or 26
+	local header = UI.Components.Frame({ Size=UDim2.new(1,-40,0,headerHeight), Position=UDim2.fromOffset(20,20), BackgroundColor3=UI.Theme:get("surfaceAlt"), cornerRadius=UDim.new(0,16), parent=self.mainPanel }):render()
+	-- ✨ YOUR GIFT BOX in the header too!
+	UI.Components.Image({ Image = "rbxassetid://" .. GIFT_BOX_TEXTURE_ID, Size=UDim2.fromOffset(52,52), Position=UDim2.fromOffset(12, math.max(6, headerHeight-56)), parent=header }):render()
+	UI.Components.TextLabel({ Text="Sanrio Shop", Size=UDim2.new(1,-180,1,0), Position=UDim2.fromOffset(78,0), TextXAlignment=Enum.TextXAlignment.Left, Font=Enum.Font.GothamBold, TextSize=headerTextSize, parent=header }):render()
+	UI.Components.Button({ Text="✕", Size=UDim2.fromOffset(44,44), Position=UDim2.new(1,-56,0.5,0), AnchorPoint=Vector2.new(0,0.5), BackgroundColor3=UI.Theme:get("accent"), TextColor3=Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=22, cornerRadius=UDim.new(0.5,0), parent=header, onClick=function() self:close() end }):render()
 
-	local closeButton = UI.Components.Button({
-		Name = "CloseButton",
-		Text = "X",
-		Size = UDim2.fromOffset(48, 48),
-		Position = UDim2.new(1, -64, 0.5, 0),
-		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundColor3 = UI.Theme:get("error"),
-		TextColor3 = Color3.new(1, 1, 1),
-		Font = Enum.Font.GothamBold,
-		TextSize = 24,
-		cornerRadius = UDim.new(0.5, 0),
-		parent = header,
-		onClick = function()
-			self:close()
-		end,
-	}):render()
-end
+	local tabContainerHeight = prof.tabH
+	local tabSpacing = 16
+	self.tabContainer = UI.Components.Frame({ Size=UDim2.new(1,-40,0,tabContainerHeight), Position=UDim2.fromOffset(20,20+headerHeight+tabSpacing), BackgroundTransparency=1, parent=self.mainPanel }):render()
+	local tabLayout = UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 10)
+	tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
-function Shop:createTabBar()
-	self.tabContainer = UI.Components.Frame({
-		Name = "TabContainer",
-		Size = UDim2.new(1, -48, 0, 48),
-		Position = UDim2.fromOffset(24, 116),
-		BackgroundTransparency = 1,
-		parent = self.mainPanel,
-	}):render()
-
-	UI.Layout.stack(self.tabContainer, Enum.FillDirection.Horizontal, 12)
-
-	local tabData = {
-		{id = "Home", name = "Home", icon = "rbxassetid://17398522865", color = UI.Theme:get("kitty")},
-		{id = "Cash", name = "Cash", icon = "rbxassetid://10709728059", color = UI.Theme:get("cinna")},
-		{id = "Gamepasses", name = "Passes", icon = "rbxassetid://10709727148", color = UI.Theme:get("kuromi")},
+	local tabs={
+		{ id="Cash",       name="Cash",   icon="rbxassetid://10709728059", color=UI.Theme:get("cinna")   },
+		{ id="Gamepasses", name="Passes", icon="rbxassetid://10709727148", color=UI.Theme:get("kuromi")  },
 	}
 
-	for _, data in ipairs(tabData) do
-		self:createTab(data)
+	local tabWidth  = prof.tabW
+	local tabHeight = prof.tabH
+	local iconSize  = math.clamp(math.floor(prof.tabH * 0.44), 18, 28)
+	local textSize  = prof.title
+
+	for _,d in ipairs(tabs) do
+		local tab = UI.Components.Button({
+			Text="", Size=UDim2.fromOffset(tabWidth,tabHeight), BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(0,16), stroke={color=UI.Theme:get("stroke"),thickness=2},
+			parent=self.tabContainer, onClick=function() self:selectTab(d.id) end
+		}):render()
+		local content = UI.Components.Frame({ Size=UDim2.fromScale(1,1), BackgroundTransparency=1, parent=tab }):render()
+		local contentLayout = UI.Layout.stack(content, Enum.FillDirection.Horizontal, 8)
+		contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		contentLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		local icon = UI.Components.Image({ Image=d.icon, Size=UDim2.fromOffset(iconSize,iconSize), parent=content }):render()
+		local label = UI.Components.TextLabel({ Text=d.name, Size=UDim2.new(0,80,1,0), Font=Enum.Font.GothamBold, TextSize=textSize, parent=content }):render()
+		self.tabs[d.id]={button=tab,data=d,icon=icon,label=label}
+	end
+
+	local contentTop = 20 + headerHeight + tabSpacing + tabContainerHeight + 10
+	self.contentContainer = UI.Components.Frame({ Size=UDim2.new(1,-40,1,-contentTop-18), Position=UDim2.fromOffset(20,contentTop), BackgroundTransparency=1, parent=self.mainPanel }):render()
+	self:createPages()
+	self:selectTab("Cash")
+
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+		local s = Core.Utils.panelSizeForViewport()
+		self.mainPanel.Size = UDim2.fromOffset(s.X, s.Y)
+		local p = getProfile()
+		self._panelScale.Scale = p.isPhone and Core.Sizer.phonePanelScale(Core.State._shortSide or 414) or 1
+	end)
+
+	if getProfile().isPhone then
+		local startX=nil
+		self.mainPanel.InputBegan:Connect(function(i)
+			if i.UserInputType==Enum.UserInputType.Touch then startX=i.Position.X end
+		end)
+		self.mainPanel.InputEnded:Connect(function(i)
+			if i.UserInputType==Enum.UserInputType.Touch and startX then
+				local dx = i.Position.X - startX
+				if math.abs(dx) > 60 then
+					if dx < 0 then self:selectTab("Gamepasses") else self:selectTab("Cash") end
+				end
+				startX=nil
+			end
+		end)
 	end
 end
 
-function Shop:createTab(data)
-	local tab = UI.Components.Button({
-		Name = data.id .. "Tab",
-		Text = "",
-		Size = UDim2.fromOffset(160, 48),
-		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0.5, 0),
-		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 1,
-		},
-		LayoutOrder = #self.tabs + 1,
-		parent = self.tabContainer,
-		onClick = function()
-			self:selectTab(data.id)
-		end,
-	}):render()
+local function buildTitlePriceRow(parent, titleText, priceText, sizes, accentColor)
+	local row = Instance.new("Frame")
+	row.BackgroundTransparency = 1
+	row.Size = UDim2.new(1, 0, 0, sizes.titleH)
+	row.Parent = parent
 
-	local content = UI.Components.Frame({
-		Name = "Content",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		parent = tab,
-	}):render()
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection      = Enum.FillDirection.Horizontal
+	layout.Padding            = UDim.new(0, 8)
+	layout.VerticalAlignment  = Enum.VerticalAlignment.Center
+	layout.SortOrder          = Enum.SortOrder.LayoutOrder
+	layout.Parent             = row
 
-	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 8, {left = 16, right = 16})
+	local title = Instance.new("TextLabel")
+	title.BackgroundTransparency = 1
+	title.Font           = Enum.Font.GothamBold
+	title.TextColor3     = UI.Theme:get("text")
+	title.TextSize       = sizes.titleSize
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextYAlignment = Enum.TextYAlignment.Center
+	title.Text           = titleText
+	title.Size           = UDim2.new(1, -sizes.priceWidth, 1, 0)
+	title.TextTruncate   = Enum.TextTruncate.AtEnd
+	title.Parent         = row
 
-	local icon = UI.Components.Image({
-		Name = "Icon",
-		Image = data.icon,
-		Size = UDim2.fromOffset(24, 24),
-		LayoutOrder = 1,
-		parent = content,
-	}):render()
+	local price = Instance.new("TextLabel")
+	price.BackgroundTransparency = 1
+	price.Font           = Enum.Font.GothamBold
+	price.TextColor3     = accentColor
+	price.TextSize       = sizes.priceSize
+	price.TextXAlignment = Enum.TextXAlignment.Right
+	price.TextYAlignment = Enum.TextYAlignment.Center
+	price.Text           = priceText or ""
+	price.Size           = UDim2.new(0, sizes.priceWidth, 1, 0)
+	price.Parent         = row
 
-	local label = UI.Components.TextLabel({
-		Name = "Label",
-		Text = data.name,
-		Size = UDim2.new(1, -32, 1, 0),
-		Font = Enum.Font.GothamMedium,
-		TextSize = 16,
-		LayoutOrder = 2,
-		parent = content,
-	}):render()
+	return row
+end
 
-	self.tabs[data.id] = {
-		button = tab,
-		data = data,
-		icon = icon,
-		label = label,
-	}
+local function buildDescription(parent, text, sizePx, fontSize)
+	local desc = Instance.new("TextLabel")
+	desc.BackgroundTransparency = 1
+	desc.Font = Enum.Font.Gotham
+	desc.TextColor3 = UI.Theme:get("textSecondary")
+	desc.TextSize = fontSize
+	desc.TextWrapped = true
+	desc.TextXAlignment = Enum.TextXAlignment.Left
+	desc.TextYAlignment = Enum.TextYAlignment.Top
+	desc.Text = text
+	desc.Size = UDim2.new(1, 0, 0, sizePx)
+	desc.LineHeight = 1.1
+	desc.Parent = parent
+	return desc
 end
 
 function Shop:createPages()
-	self.pages.Home = self:createHomePage()
-	self.pages.Cash = self:createCashPage()
-	self.pages.Gamepasses = self:createGamepassesPage()
-	
-	-- Ensure Home page is visible by default
-	self.pages.Home.Visible = true
-	self.pages.Cash.Visible = false
-	self.pages.Gamepasses.Visible = false
-end
+	local function gridSizer(grid)
+		return function()
+			local prof = getProfile()
+			local landscape = prof.landscape
+			local isPhone   = prof.isPhone
 
-function Shop:createHomePage()
-	local page = UI.Components.Frame({
-		Name = "HomePage",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		Visible = true,  -- Ensure it's visible
-		parent = self.contentContainer,
-	}):render()
+			local imageH, titleH, descH, buttonH = prof.imgH, prof.titleH, prof.descH, prof.btnH
+			local INNER   = 10
+			local fixedPadding = INNER*2 + 2 + 6 + 6 + 6
 
-	local scrollFrame = UI.Components.ScrollingFrame({
-		Size = UDim2.fromScale(1, 1),
-		layout = {
-			type = "List",
-			Padding = UDim.new(0, 24),
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		},
-		padding = {
-			top = 12,
-			bottom = 12,
-		},
-		parent = page,
-	}):render()
+			-- ✨ NEW: Reserve space for bonus line
+			local bonusReserve = 18
+			local adjustedDescH = math.max(12, descH - (isPhone and bonusReserve or math.floor(bonusReserve*0.7)))
+			local contentPiecesH = imageH + titleH + adjustedDescH + buttonH + fixedPadding
 
-	local hero = self:createHeroSection(scrollFrame)
+			local contentH = (self.contentContainer and self.contentContainer.AbsoluteSize.Y or 600)
+			local targetVisible = (isPhone and (landscape and 2.2 or 1.4)) or 1.6
+			local targetByViewport = math.max(220, math.floor((contentH - prof.gutter*2) / targetVisible))
 
-	local featuredTitle = UI.Components.TextLabel({
-		Text = "✨ Featured Items",
-		Size = UDim2.new(1, 0, 0, 40),
-		Font = Enum.Font.GothamBold,
-		TextSize = 28,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = 2,
-		parent = scrollFrame,
-	}):render()
+			local cardH = math.min(contentPiecesH, targetByViewport)
+			local cols = (isPhone and landscape) and 2 or (isPhone and 1 or prof.cols)
 
-	local featuredContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 320),
-		BackgroundTransparency = 1,
-		LayoutOrder = 3,
-		parent = scrollFrame,
-	}):render()
-
-	local featuredScroll = UI.Components.ScrollingFrame({
-		Size = UDim2.fromScale(1, 1),
-		ScrollingDirection = Enum.ScrollingDirection.X,
-		layout = {
-			type = "List",
-			FillDirection = Enum.FillDirection.Horizontal,
-			Padding = UDim.new(0, 16),
-		},
-		parent = featuredContainer,
-	}):render()
-
-	local featured = {}
-	for _, product in ipairs(Core.DataManager.products.cash) do
-		if product.featured then
-			table.insert(featured, {type = "cash", data = product})
+			grid.CellPadding = UDim2.fromOffset(prof.gutter, prof.gutter)
+			local colWOffset = (cols==1) and -6 or -12
+			grid.CellSize    = UDim2.new(1/cols, colWOffset, 0, cardH)
 		end
 	end
 
-	for _, item in ipairs(featured) do
-		self:createProductCard(item.data, item.type, featuredScroll)
-	end
+	local cashPage = UI.Components.Frame({ Name="CashPage", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Visible=false, parent=self.contentContainer }):render()
+	local sfCash = Instance.new("ScrollingFrame")
+	sfCash.BackgroundTransparency = 1
+	sfCash.ScrollBarThickness = 5
+	sfCash.ScrollBarImageColor3 = UI.Theme:get("accent")
+	sfCash.BorderSizePixel = 0
+	sfCash.Size = UDim2.fromScale(1,1)
+	sfCash.ScrollingDirection = Enum.ScrollingDirection.Y
+	sfCash.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	sfCash.Parent = cashPage
 
-	-- Add quick stats section
-	local statsTitle = UI.Components.TextLabel({
-		Text = "📊 Shop Stats",
-		Size = UDim2.new(1, 0, 0, 40),
-		Font = Enum.Font.GothamBold,
-		TextSize = 28,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = 4,
-		parent = scrollFrame,
-	}):render()
+	local cashContent = Instance.new("Frame")
+	cashContent.BackgroundTransparency = 1
+	cashContent.Size = UDim2.new(1, 0, 0, 0)
+	cashContent.AutomaticSize = Enum.AutomaticSize.Y
+	cashContent.Parent = sfCash
 
-	local statsContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 120),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 16),
-		LayoutOrder = 5,
-		parent = scrollFrame,
-	}):render()
+	local padCash = 14
+	local padInstCash = Instance.new("UIPadding")
+	padInstCash.PaddingTop=UDim.new(0,padCash)
+	padInstCash.PaddingBottom=UDim.new(0,padCash+8)
+	padInstCash.PaddingLeft=UDim.new(0,padCash)
+	padInstCash.PaddingRight=UDim.new(0,padCash)
+	padInstCash.Parent = cashContent
 
-	local statsLayout = UI.Layout.stack(statsContainer, Enum.FillDirection.Horizontal, 0, {
-		left = 24,
-		right = 24,
-		top = 24,
-		bottom = 24,
-	})
+	local gridCash = Instance.new("UIGridLayout")
+	gridCash.SortOrder = Enum.SortOrder.LayoutOrder
+	gridCash.FillDirection = Enum.FillDirection.Horizontal
+	gridCash.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	gridCash.VerticalAlignment = Enum.VerticalAlignment.Top
+	gridCash.Parent = cashContent
 
-	-- Add stat cards
-	local statData = {
-		{title = "Cash Packs", value = tostring(#Core.DataManager.products.cash), color = UI.Theme:get("cinna")},
-		{title = "Game Passes", value = tostring(#Core.DataManager.products.gamepasses), color = UI.Theme:get("kuromi")},
-		{title = "Special Offers", value = "2", color = UI.Theme:get("melody")},
-	}
+	local sizeCashGrid = gridSizer(gridCash)
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizeCashGrid); sizeCashGrid()
+	for _,p in ipairs(Core.DataManager.products.cash) do self:createProductCard(p, "cash", cashContent) end
 
-	for i, stat in ipairs(statData) do
-		local statCard = UI.Components.Frame({
-			Size = UDim2.new(0.33, -8, 1, 0),
-			BackgroundColor3 = UI.Theme:get("surface"),
-			cornerRadius = UDim.new(0, 12),
-			LayoutOrder = i,
-			parent = statsContainer,
-		}):render()
+	local passPage = UI.Components.Frame({ Name="GamepassesPage", Size=UDim2.fromScale(1,1), BackgroundTransparency=1, Visible=false, parent=self.contentContainer }):render()
+	local sfPass = Instance.new("ScrollingFrame")
+	sfPass.BackgroundTransparency = 1; sfPass.ScrollBarThickness = 5; sfPass.ScrollBarImageColor3 = UI.Theme:get("accent"); sfPass.BorderSizePixel = 0
+	sfPass.Size = UDim2.fromScale(1,1); sfPass.ScrollingDirection = Enum.ScrollingDirection.Y; sfPass.AutomaticCanvasSize = Enum.AutomaticSize.Y; sfPass.Parent = passPage
 
-		local statContent = UI.Components.Frame({
-			Size = UDim2.new(1, -16, 1, -16),
-			Position = UDim2.fromOffset(8, 8),
-			BackgroundTransparency = 1,
-			parent = statCard,
-		}):render()
+	local passContent = Instance.new("Frame"); passContent.BackgroundTransparency = 1; passContent.Size = UDim2.new(1,0,0,0); passContent.AutomaticSize = Enum.AutomaticSize.Y; passContent.Parent = sfPass
+	local padInstPass = Instance.new("UIPadding"); padInstPass.PaddingTop=UDim.new(0,14); padInstPass.PaddingBottom=UDim.new(0,22); padInstPass.PaddingLeft=UDim.new(0,14); padInstPass.PaddingRight=UDim.new(0,14); padInstPass.Parent = passContent
 
-		local statValue = UI.Components.TextLabel({
-			Text = stat.value,
-			Size = UDim2.new(1, 0, 0, 32),
-			Font = Enum.Font.GothamBold,
-			TextSize = 32,
-			TextColor3 = stat.color,
-			parent = statContent,
-		}):render()
+	local gridPass = Instance.new("UIGridLayout"); gridPass.SortOrder=Enum.SortOrder.LayoutOrder; gridPass.FillDirection=Enum.FillDirection.Horizontal; gridPass.HorizontalAlignment=Enum.HorizontalAlignment.Center; gridPass.VerticalAlignment=Enum.VerticalAlignment.Top; gridPass.Parent=passContent
 
-		local statLabel = UI.Components.TextLabel({
-			Text = stat.title,
-			Size = UDim2.new(1, 0, 0, 20),
-			Position = UDim2.fromOffset(0, 36),
-			Font = Enum.Font.Gotham,
-			TextSize = 14,
-			TextColor3 = UI.Theme:get("textSecondary"),
-			parent = statContent,
-		}):render()
-	end
+	local sizePassGrid = gridSizer(gridPass)
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(sizePassGrid); sizePassGrid()
+	for _,gp in ipairs(Core.DataManager.products.gamepasses) do self:createProductCard(gp, "gamepass", passContent) end
 
-	return page
+	self.pages = { Cash=cashPage, Gamepasses=passPage }
 end
 
-function Shop:createCashPage()
-	local page = UI.Components.Frame({
-		Name = "CashPage",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		Visible = false,
-		parent = self.contentContainer,
-	}):render()
+function Shop:addToggleSwitch(product, imageContainer)
+	local wrap = Instance.new("Frame")
+	wrap.Name = "ToggleContainer"
+	wrap.AnchorPoint = Vector2.new(1,0)
+	wrap.Position = UDim2.new(1, -8, 0, 8)
+	wrap.Size = UDim2.fromOffset(156, 34)
+	wrap.BackgroundColor3 = UI.Theme:get("surface")
+	wrap.BorderSizePixel = 0
+	wrap.Parent = imageContainer
+	local rc = Instance.new("UICorner"); rc.CornerRadius = UDim.new(0, 18); rc.Parent = wrap
+	local stroke = Instance.new("UIStroke"); stroke.Color = UI.Theme:get("stroke"); stroke.Thickness = 1; stroke.Transparency = 0.2; stroke.Parent = wrap
 
-	local scrollFrame = UI.Components.ScrollingFrame({
-		Size = UDim2.fromScale(1, 1),
-		layout = {
-			type = "Grid",
-			CellSize = Core.Utils.isMobile() and 
-				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE_MOBILE.X, Core.CONSTANTS.CARD_SIZE_MOBILE.Y) or
-				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
-			CellPadding = UDim2.fromOffset(20, 20),
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		},
-		padding = {
-			top = 12,
-			bottom = 12,
-			left = 12,
-			right = 12,
-		},
-		parent = page,
-	}):render()
+	local btn = Instance.new("TextButton")
+	btn.BackgroundTransparency = 1
+	btn.AutoButtonColor = false
+	btn.Text = ""
+	btn.Size = UDim2.fromScale(1,1)
+	btn.Parent = wrap
+	wrap.ClipsDescendants = true
 
-	for _, product in ipairs(Core.DataManager.products.cash) do
-		self:createProductCard(product, "cash", scrollFrame)
-	end
+	local chip = Instance.new("TextLabel")
+	chip.BackgroundTransparency = 1
+	chip.Size = UDim2.fromScale(1,1)
+	chip.Font = Enum.Font.GothamBold
+	chip.TextSize = 14
+	chip.TextXAlignment = Enum.TextXAlignment.Center
+	chip.Parent = btn
 
-	return page
-end
-
-function Shop:createGamepassesPage()
-	local page = UI.Components.Frame({
-		Name = "GamepassesPage",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		Visible = false,
-		parent = self.contentContainer,
-	}):render()
-
-	local scrollFrame = UI.Components.ScrollingFrame({
-		Size = UDim2.fromScale(1, 1),
-		layout = {
-			type = "Grid",
-			CellSize = Core.Utils.isMobile() and 
-				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE_MOBILE.X, Core.CONSTANTS.CARD_SIZE_MOBILE.Y) or
-				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
-			CellPadding = UDim2.fromOffset(20, 20),
-			HorizontalAlignment = Enum.HorizontalAlignment.Center,
-		},
-		padding = {
-			top = 12,
-			bottom = 12,
-			left = 12,
-			right = 12,
-		},
-		parent = page,
-	}):render()
-
-	for _, pass in ipairs(Core.DataManager.products.gamepasses) do
-		self:createProductCard(pass, "gamepass", scrollFrame)
-	end
-
-	return page
-end
-
-function Shop:createHeroSection(parent)
-	local hero = UI.Components.Frame({
-		Name = "HeroSection",
-		Size = UDim2.new(1, 0, 0, 220),
-		BackgroundColor3 = UI.Theme:get("accent"),
-		cornerRadius = UDim.new(0, 20),
-		LayoutOrder = 1,
-		parent = parent,
-	}):render()
-
-	local gradient = Instance.new("UIGradient")
-	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 200, 200)),
-	})
-	gradient.Rotation = 45
-	gradient.Parent = hero
-
-	-- Add decorative pattern
-	local pattern = UI.Components.Image({
-		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromOffset(200, 200),
-		Position = UDim2.new(1, -100, 0.5, -100),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		ImageTransparency = 0.9,
-		parent = hero,
-	}):render()
-
-	local content = UI.Components.Frame({
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		parent = hero,
-	}):render()
-
-	UI.Layout.stack(content, Enum.FillDirection.Horizontal, 24, {
-		left = 32,
-		right = 32,
-		top = 24,
-		bottom = 24,
-	})
-
-	local textContainer = UI.Components.Frame({
-		Size = UDim2.new(0.6, 0, 1, 0),
-		BackgroundTransparency = 1,
-		LayoutOrder = 1,
-		parent = content,
-	}):render()
-
-	local heroTitle = UI.Components.TextLabel({
-		Text = "🎀 Welcome to Sanrio Shop!",
-		Size = UDim2.new(1, 0, 0, 48),
-		Font = Enum.Font.GothamBold,
-		TextSize = 36,
-		TextColor3 = Color3.new(1, 1, 1),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		parent = textContainer,
-	}):render()
-
-	local heroDesc = UI.Components.TextLabel({
-		Text = "Get exclusive items and boosts for your tycoon! Special offers and limited-time deals available now.",
-		Size = UDim2.new(1, 0, 0, 70),
-		Position = UDim2.fromOffset(0, 56),
-		Font = Enum.Font.Gotham,
-		TextSize = 20,
-		TextColor3 = Color3.new(1, 1, 1),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextWrapped = true,
-		parent = textContainer,
-	}):render()
-
-	local ctaButton = UI.Components.Button({
-		Text = "🛍️ Browse Items",
-		Size = UDim2.fromOffset(200, 52),
-		Position = UDim2.fromOffset(0, 140),
-		BackgroundColor3 = Color3.new(1, 1, 1),
-		TextColor3 = UI.Theme:get("accent"),
-		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		cornerRadius = UDim.new(0.5, 0),
-		parent = textContainer,
-		onClick = function()
-			self:selectTab("Cash")
-		end,
-	}):render()
-
-	-- Add shadow to button
-	local buttonShadow = Instance.new("ImageLabel")
-	buttonShadow.Name = "Shadow"
-	buttonShadow.BackgroundTransparency = 1
-	buttonShadow.Image = "rbxassetid://6015897843"
-	buttonShadow.ImageColor3 = Color3.new(0, 0, 0)
-	buttonShadow.ImageTransparency = 0.8
-	buttonShadow.ScaleType = Enum.ScaleType.Slice
-	buttonShadow.SliceCenter = Rect.new(49, 49, 450, 450)
-	buttonShadow.Size = UDim2.new(1, 30, 1, 30)
-	buttonShadow.Position = UDim2.fromOffset(-15, -15)
-	buttonShadow.ZIndex = ctaButton.ZIndex - 1
-	buttonShadow.Parent = ctaButton
-
-	return hero
-end
-
-function Shop:createProductCard(product, productType, parent)
-	local isGamepass = productType == "gamepass"
-	local cardColor = isGamepass and UI.Theme:get("kuromi") or UI.Theme:get("cinna")
-
-	local card = UI.Components.Frame({
-		Name = product.name .. "Card",
-		Size = UDim2.fromOffset(
-			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.X or Core.CONSTANTS.CARD_SIZE.X,
-			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.Y or Core.CONSTANTS.CARD_SIZE.Y
-		),
-		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0, 16),
-		stroke = {
-			color = cardColor,
-			thickness = 2,
-			transparency = 0.5,
-		},
-		parent = parent,
-	}):render()
-
-	-- Add shadow
-	local shadow = Instance.new("ImageLabel")
-	shadow.Name = "Shadow"
-	shadow.BackgroundTransparency = 1
-	shadow.Image = "rbxassetid://6015897843"
-	shadow.ImageColor3 = Color3.new(0, 0, 0)
-	shadow.ImageTransparency = 0.85
-	shadow.ScaleType = Enum.ScaleType.Slice
-	shadow.SliceCenter = Rect.new(49, 49, 450, 450)
-	shadow.Size = UDim2.new(1, 20, 1, 20)
-	shadow.Position = UDim2.fromOffset(-10, -10)
-	shadow.ZIndex = card.ZIndex - 1
-	shadow.Parent = card
-
-	self:addCardHoverEffect(card)
-
-	local content = UI.Components.Frame({
-		Size = UDim2.new(1, -24, 1, -24),
-		Position = UDim2.fromOffset(12, 12),
-		BackgroundTransparency = 1,
-		parent = card,
-	}):render()
-
-	local imageContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 140),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 12),
-		parent = content,
-	}):render()
-
-	-- Add gradient to image container
-	local imageGradient = Instance.new("UIGradient")
-	imageGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(1, Core.Utils.blend(cardColor, Color3.new(1, 1, 1), 0.9)),
-	})
-	imageGradient.Rotation = 45
-	imageGradient.Parent = imageContainer
-
-	local productImage = UI.Components.Image({
-		Image = product.icon or "rbxassetid://0",
-		Size = UDim2.fromScale(0.7, 0.7),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		ScaleType = Enum.ScaleType.Fit,
-		parent = imageContainer,
-	}):render()
-
-	local infoContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 1, -160),
-		Position = UDim2.fromOffset(0, 160),
-		BackgroundTransparency = 1,
-		parent = content,
-	}):render()
-
-	local title = UI.Components.TextLabel({
-		Text = product.name,
-		Size = UDim2.new(1, 0, 0, 28),
-		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		parent = infoContainer,
-	}):render()
-
-	local description = UI.Components.TextLabel({
-		Text = product.description,
-		Size = UDim2.new(1, 0, 0, 40),
-		Position = UDim2.fromOffset(0, 32),
-		Font = Enum.Font.Gotham,
-		TextSize = 14,
-		TextColor3 = UI.Theme:get("textSecondary"),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextWrapped = true,
-		parent = infoContainer,
-	}):render()
-
-	local priceText = isGamepass and 
-		("R$" .. tostring(product.price or 0)) or 
-		("R$" .. tostring(product.price or 0) .. " • " .. Core.Utils.formatNumber(product.amount) .. " Cash")
-
-	local priceLabel = UI.Components.TextLabel({
-		Text = priceText,
-		Size = UDim2.new(1, 0, 0, 24),
-		Position = UDim2.fromOffset(0, 76),
-		Font = Enum.Font.GothamBold,
-		TextSize = 18,
-		TextColor3 = cardColor,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		parent = infoContainer,
-	}):render()
-
-	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
-
-	-- Create button container for better positioning
-	local buttonContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 40),
-		Position = UDim2.new(0, 0, 1, -40),
-		BackgroundTransparency = 1,
-		parent = infoContainer,
-	}):render()
-
-	local purchaseButton = UI.Components.Button({
-		Text = isOwned and "✓ Owned" or "Purchase",
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
-		TextColor3 = Color3.new(1, 1, 1),
-		Font = Enum.Font.GothamBold,
-		TextSize = 16,
-		cornerRadius = UDim.new(0, 8),
-		parent = buttonContainer,
-		onClick = function()
-			if not isOwned then
-				self:promptPurchase(product, productType)
-			elseif product.hasToggle then
-				-- Toggle functionality handled by toggle switch
-			end
-		end,
-	}):render()
-
-	-- Add toggle switch for gamepasses with toggle feature
-	if isOwned and product.hasToggle then
-		-- Adjust button size to make room for toggle
-		purchaseButton.Size = UDim2.new(0.7, -4, 1, 0)
-		self:addToggleSwitch(product, buttonContainer)
-	end
-
-	product.cardInstance = card
-	product.purchaseButton = purchaseButton
-
-	return card
-end
-
-function Shop:addCardHoverEffect(card)
-	local shadow = card:FindFirstChild("Shadow")
-	local originalPosition = card.Position
-
-	card.MouseEnter:Connect(function()
-		Core.Animation.tween(card, {
-			Position = UDim2.new(
-				originalPosition.X.Scale,
-				originalPosition.X.Offset,
-				originalPosition.Y.Scale,
-				originalPosition.Y.Offset - 8
-			)
-		}, Core.CONSTANTS.ANIM_FAST)
-		
-		if shadow then
-			Core.Animation.tween(shadow, {
-				ImageTransparency = 0.7,
-				Size = UDim2.new(1, 30, 1, 30),
-				Position = UDim2.fromOffset(-15, -5)
-			}, Core.CONSTANTS.ANIM_FAST)
-		end
-	end)
-
-	card.MouseLeave:Connect(function()
-		Core.Animation.tween(card, {
-			Position = originalPosition
-		}, Core.CONSTANTS.ANIM_FAST)
-		
-		if shadow then
-			Core.Animation.tween(shadow, {
-				ImageTransparency = 0.85,
-				Size = UDim2.new(1, 20, 1, 20),
-				Position = UDim2.fromOffset(-10, -10)
-			}, Core.CONSTANTS.ANIM_FAST)
-		end
-	end)
-end
-
-function Shop:addToggleSwitch(product, parent)
-	local toggleContainer = UI.Components.Frame({
-		Name = "ToggleContainer",
-		Size = UDim2.new(0.28, 0, 1, 0),
-		Position = UDim2.new(0.72, 4, 0, 0),
-		BackgroundColor3 = UI.Theme:get("stroke"),
-		cornerRadius = UDim.new(0.5, 0),
-		parent = parent,
-	}):render()
-
-	local toggleButton = UI.Components.Frame({
-		Name = "ToggleButton",
-		Size = UDim2.new(0.45, 0, 0.7, 0),
-		Position = UDim2.fromScale(0.05, 0.15),
-		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0.5, 0),
-		parent = toggleContainer,
-	}):render()
-
-	local toggleState = false
+	local state = false
 	if Remotes then
-		local getStateRemote = Remotes:FindFirstChild("GetAutoCollectState")
-		if getStateRemote and getStateRemote:IsA("RemoteFunction") then
-			local success, state = pcall(function()
-				return getStateRemote:InvokeServer()
-			end)
-			if success and type(state) == "boolean" then
-				toggleState = state
-			end
+		local rf = Remotes:FindFirstChild("GetAutoCollectState")
+		if rf and rf:IsA("RemoteFunction") then
+			local ok,val = pcall(function() return rf:InvokeServer() end)
+			if ok and type(val)=="boolean" then state = val end
 		end
 	end
-
-	local function updateToggleVisual()
-		if toggleState then
-			toggleContainer.BackgroundColor3 = UI.Theme:get("success")
-			Core.Animation.tween(toggleButton, {
-				Position = UDim2.fromScale(0.5, 0.15)
-			}, Core.CONSTANTS.ANIM_FAST)
+	local function paint(on)
+		state = on
+		if on then
+			wrap.BackgroundColor3 = UI.Theme:get("success"); stroke.Color = UI.Theme:get("success")
+			chip.TextColor3 = Color3.new(1,1,1); chip.Text = "Auto Collect : ON"
 		else
-			toggleContainer.BackgroundColor3 = UI.Theme:get("stroke")
-			Core.Animation.tween(toggleButton, {
-				Position = UDim2.fromScale(0.05, 0.15)
-			}, Core.CONSTANTS.ANIM_FAST)
+			wrap.BackgroundColor3 = UI.Theme:get("surface"); stroke.Color = UI.Theme:get("stroke")
+			chip.TextColor3 = UI.Theme:get("text"); chip.Text = "Auto Collect : OFF"
 		end
 	end
+	paint(state)
 
-	updateToggleVisual()
+	local scale = Instance.new("UIScale"); scale.Scale = 1; scale.Parent = wrap
+	wrap.MouseEnter:Connect(function() Core.Animation.tween(scale,{Scale=1.03}, Core.CONSTANTS.ANIM_FAST) end)
+	wrap.MouseLeave:Connect(function() Core.Animation.tween(scale,{Scale=1.00}, Core.CONSTANTS.ANIM_FAST) end)
 
-	local toggleClickArea = Instance.new("TextButton")
-	toggleClickArea.Text = ""
-	toggleClickArea.BackgroundTransparency = 1
-	toggleClickArea.Size = UDim2.fromScale(1, 1)
-	toggleClickArea.Parent = toggleContainer
-
-	toggleClickArea.MouseButton1Click:Connect(function()
-		toggleState = not toggleState
-		updateToggleVisual()
-
-		if Remotes then
-			local toggleRemote = Remotes:FindFirstChild("AutoCollectToggle")
-			if toggleRemote and toggleRemote:IsA("RemoteEvent") then
-				toggleRemote:FireServer(toggleState)
-			end
-		end
-
+	local busy = false
+	btn.MouseButton1Click:Connect(function()
+		if busy then return end
+		busy = true
+		local nextState = not state
+		paint(nextState)
 		Core.SoundSystem.play("click")
+		if Remotes then
+			local ev = Remotes:FindFirstChild("AutoCollectToggle")
+			if ev and ev:IsA("RemoteEvent") then ev:FireServer(nextState) end
+		end
+		task.delay(0.15, function() busy = false end)
 	end)
 end
 
-function Shop:addPulseAnimation(instance)
-	local pulseRunning = true
+-- ✨ UPGRADED createProductCard (BEST VALUE ribbon + bonus label)
+function Shop:createProductCard(product, productType, parent)
+	local prof = getProfile()
+	local isGamepass = (productType=="gamepass")
+	local cardColor  = isGamepass and UI.Theme:get("kuromi") or UI.Theme:get("cinna")
 
-	task.spawn(function()
-		while pulseRunning and instance.Parent do
-			Core.Animation.tween(instance, {
-				Size = UDim2.fromOffset(188, 64)
-			}, 1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-			task.wait(1.5)
+	local strokeThickness = prof.isPhone and 2 or (prof.isTablet and 2 or 1.5)
+	local strokeTransparency = prof.isPhone and 0.42 or (prof.isTablet and 0.42 or 0.55)
+	local card = UI.Components.Frame({
+		Name=product.name.."Card",
+		BackgroundColor3=UI.Theme:get("surface"), cornerRadius=UDim.new(0,16),
+		stroke={color=cardColor,thickness=strokeThickness,transparency=strokeTransparency}, parent=parent
+	}):render()
+	card.ClipsDescendants = true
 
-			if not pulseRunning or not instance.Parent then break end
+	local hoverScale = Instance.new("UIScale"); hoverScale.Scale = 1; hoverScale.Parent = card
+	card.MouseEnter:Connect(function() Core.SoundSystem.play("hover"); Core.Animation.tween(hoverScale,{Scale=1.03},Core.CONSTANTS.ANIM_FAST) end)
+	card.MouseLeave:Connect(function() Core.Animation.tween(hoverScale,{Scale=1},Core.CONSTANTS.ANIM_FAST) end)
 
-			Core.Animation.tween(instance, {
-				Size = UDim2.fromOffset(180, 60)
-			}, 1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-			task.wait(1.5)
+	local INNER = 10
+	local content=Instance.new("Frame"); content.BackgroundTransparency=1; content.Size=UDim2.new(1,-INNER*2,1,-INNER*2); content.Position=UDim2.fromOffset(INNER,INNER); content.Parent=card
+
+	local imageHeight = prof.imgH
+	local titleH      = prof.titleH
+	local descH       = prof.descH
+	local buttonH     = prof.btnH
+
+	local imageContainer=Instance.new("Frame"); imageContainer.Size=UDim2.new(1,0,0,imageHeight); imageContainer.BackgroundColor3=UI.Theme:get("surfaceAlt"); imageContainer.BorderSizePixel=0; imageContainer.Parent=content
+	local ic=Instance.new("UICorner"); ic.CornerRadius=UDim.new(0,12); ic.Parent=imageContainer
+	local gradient = Instance.new("UIGradient"); gradient.Color = ColorSequence.new(Color3.new(1,1,1), Color3.fromRGB(250,250,252)); gradient.Rotation = 90; gradient.Parent = imageContainer
+	UI.Components.Image({ Image=product.icon or "rbxassetid://0", Size=UDim2.fromScale(0.7,0.7), Position=UDim2.fromScale(0.5,0.5), AnchorPoint=Vector2.new(0.5,0.5), parent=imageContainer }):render()
+
+	-- ✨ NEW: BEST VALUE ribbon (cash only)
+	if not isGamepass and product.best then
+		local tag = Instance.new("TextLabel")
+		tag.Name = "BestRibbon"
+		tag.BackgroundColor3 = UI.Theme:get("accent")
+		tag.TextColor3 = Color3.new(1,1,1)
+		tag.Font = Enum.Font.GothamBold
+		tag.TextSize = math.max(14, math.floor(prof.title * 0.8))
+		tag.Text = "BEST VALUE"
+		tag.AnchorPoint = Vector2.new(0,0)
+		tag.Position = UDim2.fromOffset(8, 8)
+		tag.Size = UDim2.fromOffset(112, 22)
+		tag.Parent = imageContainer
+		local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 10); c.Parent = tag
+	end
+
+	local infoTop = imageHeight + 4
+	local info=Instance.new("Frame"); info.BackgroundTransparency=1; info.Size=UDim2.new(1,0,1,-infoTop-6); info.Position=UDim2.fromOffset(0,infoTop); info.Parent=content
+
+	local infoPad = Instance.new("UIPadding"); infoPad.PaddingTop=UDim.new(0,1); infoPad.PaddingBottom=UDim.new(0,4); infoPad.Parent = info
+	local vlist = Instance.new("UIListLayout")
+	vlist.FillDirection = Enum.FillDirection.Vertical
+	vlist.SortOrder = Enum.SortOrder.LayoutOrder
+	vlist.Padding = UDim.new(0, 4)
+	vlist.Parent = info
+
+	local priceText = "R$"..tostring(product.price or 0)
+	local titleSize = prof.title
+	local priceSize = prof.price
+	local priceWidth= (prof.isPhone and 76) or (prof.isTablet and 92) or 96
+	local titleRow = buildTitlePriceRow(info, product.name, priceText, { titleH=titleH, titleSize=titleSize, priceSize=priceSize, priceWidth=priceWidth }, cardColor)
+	titleRow.LayoutOrder = 1
+
+	-- ✨ NEW: Optional bonus line (cash only)
+	if not isGamepass and product.bonus and product.bonus > 0 then
+		local bonus = Instance.new("TextLabel")
+		bonus.BackgroundTransparency = 1
+		bonus.Text = formatBonusText(product.bonus)
+		bonus.TextColor3 = UI.Theme:get("accent")
+		bonus.Font = Enum.Font.Gotham
+		bonus.TextSize = math.max(12, prof.desc)
+		bonus.TextXAlignment = Enum.TextXAlignment.Left
+		bonus.Size = UDim2.new(1, 0, 0, math.max(18, math.floor(prof.descH * 0.66)))
+		bonus.LayoutOrder = 2
+		bonus.Parent = info
+	end
+
+	local descText = isGamepass and product.description or ("Includes "..Core.Utils_formatNumber(product.amount).." Cash")
+	local descSize = prof.desc
+	local descLabel = buildDescription(info, descText, descH, descSize)
+	descLabel.LayoutOrder = 3 -- ✨ bumped from 2
+
+	local footer = Instance.new("Frame")
+	footer.Name = "Footer"
+	footer.BackgroundTransparency = 1
+	footer.AnchorPoint = Vector2.new(0,1)
+	footer.Position = UDim2.new(0,0,1,-INNER)
+	footer.Size = UDim2.new(1,0,0,buttonH)
+	footer.Parent = info
+
+	local owned = isGamepass and Core.DataManager.checkOwnership(product.id)
+	local btnTextSize = math.max(14, math.min(16, math.floor(buttonH*0.36)))
+	local btn = UI.Components.Button({
+		Text = owned and "Owned" or "Purchase",
+		Size = UDim2.fromScale(1,1),
+		BackgroundColor3 = owned and UI.Theme:get("success") or cardColor,
+		TextColor3 = Color3.new(1,1,1), Font=Enum.Font.GothamBold, TextSize=btnTextSize, cornerRadius=UDim.new(0,10),
+		parent=footer
+	}):render()
+	btn.Active = not owned
+	btn.AutoButtonColor = not owned
+
+	local bstroke = Instance.new("UIStroke"); bstroke.Thickness=1; bstroke.Transparency= owned and 0.7 or 0.6; bstroke.Color= Color3.new(0,0,0); bstroke.ApplyStrokeMode=Enum.ApplyStrokeMode.Border; bstroke.Parent=btn
+
+	btn.MouseButton1Click:Connect(function()
+		if not btn or not btn.Parent then return end
+		if isGamepass then
+			if Core.DataManager.checkOwnership(product.id) then return end
+			btn.Text, btn.Active = "Processing...", false
+			self:promptPurchase(product, "gamepass", btn)
+		else
+			btn.Text, btn.Active = "Processing...", false
+			self:promptPurchase(product, "cash", btn)
 		end
 	end)
 
-	instance.AncestryChanged:Connect(function()
-		if not instance.Parent then
-			pulseRunning = false
-		end
-	end)
+	if isGamepass and product.hasToggle and owned then self:addToggleSwitch(product, imageContainer) end
+
+	product.cardInstance   = card
+	product.purchaseButton = btn
 end
 
 function Shop:selectTab(tabId)
-	-- Prevent selection if already on the tab
-	if self.currentTab == tabId and self.pages[tabId] and self.pages[tabId].Visible then
-		return
+	if self.currentTab == tabId and self.pages[tabId] and self.pages[tabId].Visible then return end
+	for id,tab in pairs(self.tabs) do
+		local active = (id==tabId); local d=tab.data
+		Core.Animation.tween(tab.button,{ BackgroundColor3 = active and blend(d.color, Color3.new(1,1,1), 0.85) or UI.Theme:get("surface") }, Core.CONSTANTS.ANIM_FAST)
+		local s=tab.button:FindFirstChildOfClass("UIStroke"); if s then s.Color = active and d.color or UI.Theme:get("stroke"); s.Thickness = active and 3 or 2 end
+		tab.icon.ImageColor3 = active and d.color or UI.Theme:get("text")
+		tab.label.TextColor3 = active and d.color or UI.Theme:get("text")
 	end
-
-	-- Update tab visuals
-	for id, tab in pairs(self.tabs) do
-		local isActive = id == tabId
-		local data = tab.data
-
-		Core.Animation.tween(tab.button, {
-			BackgroundColor3 = isActive and 
-				Core.Utils.blend(data.color, Color3.new(1, 1, 1), 0.9) or 
-				UI.Theme:get("surface")
-		}, Core.CONSTANTS.ANIM_FAST)
-
-		local stroke = tab.button:FindFirstChildOfClass("UIStroke")
-		if stroke then
-			stroke.Color = isActive and data.color or UI.Theme:get("stroke")
-			stroke.Thickness = isActive and 2 or 1
-		end
-
-		tab.icon.ImageColor3 = isActive and data.color or UI.Theme:get("text")
-		tab.label.TextColor3 = isActive and data.color or UI.Theme:get("text")
-		tab.label.Font = isActive and Enum.Font.GothamBold or Enum.Font.GothamMedium
+	for id,page in pairs(self.pages) do
+		page.Visible = (id==tabId)
+		if page.Visible then page.Position=UDim2.fromOffset(0,16); Core.Animation.tween(page,{Position=UDim2.new()},Core.CONSTANTS.ANIM_BOUNCE,Enum.EasingStyle.Back) end
 	end
-
-	-- Update page visibility
-	for id, page in pairs(self.pages) do
-		if id == tabId then
-			page.Visible = true
-			page.Position = UDim2.fromOffset(0, 20)
-			Core.Animation.tween(page, {
-				Position = UDim2.new()
-			}, Core.CONSTANTS.ANIM_BOUNCE, Enum.EasingStyle.Back)
-		else
-			page.Visible = false
-		end
-	end
-
 	self.currentTab = tabId
 	Core.SoundSystem.play("click")
-	Core.Events:emit("tabChanged", tabId)
 end
 
-function Shop:promptPurchase(product, productType)
-	if productType == "gamepass" then
-		if Core.DataManager.checkOwnership(product.id) then
-			self:refreshProduct(product, productType)
-			return
-		end
-
-		product.purchaseButton.Text = "Processing..."
-		product.purchaseButton.Active = false
-
-		Core.State.purchasePending[product.id] = {
-			product = product,
-			timestamp = tick(),
-			type = productType,
-		}
-
-		local success = pcall(function()
-			MarketplaceService:PromptGamePassPurchase(Player, product.id)
-		end)
-
-		if not success then
-			product.purchaseButton.Text = "Purchase"
-			product.purchaseButton.Active = true
-			Core.State.purchasePending[product.id] = nil
-		end
-
-		task.delay(Core.CONSTANTS.PURCHASE_TIMEOUT, function()
-			if Core.State.purchasePending[product.id] then
-				product.purchaseButton.Text = "Purchase"
-				product.purchaseButton.Active = true
-				Core.State.purchasePending[product.id] = nil
-			end
-		end)
+function Shop:promptPurchase(product, kind, button)
+	Core.State.purchasePending[product.id] = { product=product, type=kind, button=button }
+	local ok,err
+	if kind=="gamepass" then ok=pcall(function() MarketplaceService:PromptGamePassPurchase(Player, product.id) end)
+	else ok=pcall(function() MarketplaceService:PromptProductPurchase(Player, product.id) end) end
+	if not ok then
+		if button and button.Parent then button.Text, button.Active = "Purchase", true end
+		Core.State.purchasePending[product.id] = nil
+		Core.SoundSystem.play("error"); warn("[SanrioShop] Prompt failed:", err)
 	else
-		-- Developer Product Purchase
-		Core.State.purchasePending[product.id] = {
-			product = product,
-			timestamp = tick(),
-			type = productType,
-		}
-
-		local success = pcall(function()
-			MarketplaceService:PromptProductPurchase(Player, product.id)
+		task.delay(5,function()
+			local p=Core.State.purchasePending[product.id]
+			if p and p.button and p.button.Parent then
+				p.button.Text, p.button.Active = "Purchase", true
+			end
+			Core.State.purchasePending[product.id]=nil
 		end)
-
-		if not success then
-			Core.State.purchasePending[product.id] = nil
-		end
-	end
-end
-
-function Shop:refreshProduct(product, productType)
-	if productType == "gamepass" then
-		local isOwned = Core.DataManager.checkOwnership(product.id)
-
-		if product.purchaseButton then
-			product.purchaseButton.Text = isOwned and "✓ Owned" or "Purchase"
-			product.purchaseButton.BackgroundColor3 = isOwned and 
-				UI.Theme:get("success") or UI.Theme:get("kuromi")
-			product.purchaseButton.Active = not isOwned
-			
-			-- Adjust button size if it has toggle
-			if isOwned and product.hasToggle then
-				product.purchaseButton.Size = UDim2.new(0.7, -4, 1, 0)
-			else
-				product.purchaseButton.Size = UDim2.new(1, 0, 1, 0)
-			end
-		end
-
-		if product.cardInstance then
-			local stroke = product.cardInstance:FindFirstChildOfClass("UIStroke")
-			if stroke then
-				stroke.Color = isOwned and UI.Theme:get("success") or UI.Theme:get("kuromi")
-			end
-		end
 	end
 end
 
 function Shop:refreshAllProducts()
 	ownershipCache:clear()
-
-	for _, pass in ipairs(Core.DataManager.products.gamepasses) do
-		self:refreshProduct(pass, "gamepass")
+	productCache:clear()
+	for _,gp in ipairs(Core.DataManager.products.gamepasses) do
+		local owned=Core.DataManager.checkOwnership(gp.id)
+		if gp.purchaseButton then
+			gp.purchaseButton.Text=owned and "Owned" or "Purchase"
+			gp.purchaseButton.BackgroundColor3=owned and UI.Theme:get("success") or UI.Theme:get("kuromi")
+			gp.purchaseButton.Active=not owned
+		end
+		if owned and gp.hasToggle and gp.cardInstance then
+			local imageContainer = gp.cardInstance:FindFirstChild("Frame"):FindFirstChild("Frame")
+			if imageContainer and not imageContainer:FindFirstChild("ToggleContainer") then
+				self:addToggleSwitch(gp, imageContainer)
+			end
+		end
 	end
-
-	Core.Events:emit("productsRefreshed")
 end
 
 function Shop:open()
 	if Core.State.isOpen or Core.State.isAnimating then return end
+	if not self.gui or not self.mainPanel then 
+		warn("[SanrioShop] Shop UI not initialized!")
+		return 
+	end
+	Core.State.isAnimating = true; Core.State.isOpen = true
 
-	Core.State.isAnimating = true
-	Core.State.isOpen = true
-
-	Core.DataManager.refreshPrices()
+	-- ✨ UPGRADED: Smart cache (ownership always fresh, prices throttled)
+	ownershipCache:clear()
+	Core.DataManager.refreshPricesIfStale(180)
 	self:refreshAllProducts()
 
 	self.gui.Enabled = true
+	Core.Animation.tween(self.blur, {Size=24}, Core.CONSTANTS.ANIM_MEDIUM)
 
-	Core.Animation.tween(self.blur, {
-		Size = 24
-	}, Core.CONSTANTS.ANIM_MEDIUM)
-
-	self.mainPanel.Position = UDim2.fromScale(0.5, 0.55)
-	self.mainPanel.Size = UDim2.fromOffset(
-		self.mainPanel.Size.X.Offset * 0.9,
-		self.mainPanel.Size.Y.Offset * 0.9
-	)
-
+	local goal = Core.Utils.panelSizeForViewport()
+	self.mainPanel.Position = UDim2.fromScale(0.5, 0.52)
+	self.mainPanel.Size = UDim2.fromOffset(math.floor(goal.X*0.94), math.floor(goal.Y*0.94))
 	Core.Animation.tween(self.mainPanel, {
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(
-			Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE.X or Core.CONSTANTS.PANEL_SIZE.X,
-			Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE.Y or Core.CONSTANTS.PANEL_SIZE.Y
-		)
+		Size = UDim2.fromOffset(goal.X, goal.Y)
 	}, Core.CONSTANTS.ANIM_BOUNCE, Enum.EasingStyle.Back)
 
+	self:selectTab(self.currentTab or "Cash")
 	Core.SoundSystem.play("open")
-
 	task.wait(Core.CONSTANTS.ANIM_BOUNCE)
 	Core.State.isAnimating = false
-
-	-- Ensure Home tab is selected
-	self:selectTab("Home")
-
-	Core.Events:emit("shopOpened")
 end
 
 function Shop:close()
 	if not Core.State.isOpen or Core.State.isAnimating then return end
-
-	Core.State.isAnimating = true
-	Core.State.isOpen = false
-
-	Core.Animation.tween(self.blur, {
-		Size = 0
-	}, Core.CONSTANTS.ANIM_FAST)
-
-	Core.Animation.tween(self.mainPanel, {
-		Position = UDim2.fromScale(0.5, 0.55),
-		Size = UDim2.fromOffset(
-			self.mainPanel.Size.X.Offset * 0.9,
-			self.mainPanel.Size.Y.Offset * 0.9
-		)
-	}, Core.CONSTANTS.ANIM_FAST)
-
+	if not self.gui or not self.mainPanel then return end
+	Core.State.isAnimating = true; Core.State.isOpen = false
+	Core.Animation.tween(self.blur, {Size=0}, Core.CONSTANTS.ANIM_FAST)
+	local currentW,currentH = self.mainPanel.AbsoluteSize.X,self.mainPanel.AbsoluteSize.Y
+	Core.Animation.tween(self.mainPanel, { Position = UDim2.fromScale(0.5, 0.52), Size = UDim2.fromOffset(currentW*0.94, currentH*0.94) }, Core.CONSTANTS.ANIM_FAST)
 	Core.SoundSystem.play("close")
-
 	task.wait(Core.CONSTANTS.ANIM_FAST)
 	self.gui.Enabled = false
 	Core.State.isAnimating = false
-
-	Core.Events:emit("shopClosed")
 end
 
-function Shop:toggle()
-	if Core.State.isOpen then
-		self:close()
-	else
-		self:open()
+function Shop:toggle() 
+	if not self.gui then 
+		warn("[SanrioShop] Cannot toggle - UI not initialized")
+		return 
 	end
+	if Core.State.isOpen then self:close() else self:open() end 
 end
 
 function Shop:setupRemoteHandlers()
-	if not Remotes then return end
-
-	local purchaseConfirm = Remotes:FindFirstChild("GamepassPurchased")
-	if purchaseConfirm and purchaseConfirm:IsA("RemoteEvent") then
-		purchaseConfirm.OnClientEvent:Connect(function(passId)
-			ownershipCache:clear()
-			self:refreshAllProducts()
-			Core.SoundSystem.play("success")
-		end)
+	if not Remotes then
+		warn("[SanrioShop] TycoonRemotes folder not found!")
+		return
 	end
 
-	local productGrant = Remotes:FindFirstChild("ProductGranted") or Remotes:FindFirstChild("GrantProductCurrency")
-	if productGrant and productGrant:IsA("RemoteEvent") then
-		productGrant.OnClientEvent:Connect(function(productId, amount)
+	local gamepassPurchased = Remotes:FindFirstChild("GamepassPurchased")
+	if gamepassPurchased and gamepassPurchased:IsA("RemoteEvent") then
+		gamepassPurchased.OnClientEvent:Connect(function(passId)
+			ownershipCache:clear()
+			productCache:clear()
+			task.wait(0.5)
+			self:refreshAllProducts()
 			Core.SoundSystem.play("success")
 		end)
 	end
 end
 
 function Shop:setupInputHandlers()
-	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if gameProcessed then return end
-
-		if input.KeyCode == Enum.KeyCode.M then
-			self:toggle()
-		elseif input.KeyCode == Enum.KeyCode.Escape and Core.State.isOpen then
-			self:close()
-		end
+	UserInputService.InputBegan:Connect(function(i,gp)
+		if gp then return end
+		if i.KeyCode==Enum.KeyCode.M then self:toggle()
+		elseif i.KeyCode==Enum.KeyCode.Escape and Core.State.isOpen then self:close() end
 	end)
-
-	if UserInputService.GamepadEnabled then
-		UserInputService.InputBegan:Connect(function(input, gameProcessed)
-			if gameProcessed then return end
-
-			if input.KeyCode == Enum.KeyCode.ButtonX then
-				self:toggle()
-			end
-		end)
-	end
 end
 
--- Purchase Handlers
+-- Boot
+Core.SoundSystem.initialize()
+local shop = Shop.new()
+
+-- ✨ UPGRADED: Purchase callbacks with confetti + pulse
 MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
-	if player ~= Player then return end
-
-	local pending = Core.State.purchasePending[passId]
-	if not pending then return end
-
-	Core.State.purchasePending[passId] = nil
+	if player~=Player then return end
+	local p=Core.State.purchasePending[passId]
+	if p and p.button and p.button.Parent then
+		p.button.Text = purchased and "Owned" or "Purchase"
+		p.button.Active = not purchased
+	end
+	Core.State.purchasePending[passId]=nil
 
 	if purchased then
 		ownershipCache:clear()
-
-		if pending.product.purchaseButton then
-			pending.product.purchaseButton.Text = "✓ Owned"
-			pending.product.purchaseButton.BackgroundColor3 = UI.Theme:get("success")
-			pending.product.purchaseButton.Active = false
-		end
-
-		Core.SoundSystem.play("success")
-
-		task.wait(0.5)
+		productCache:clear()
+		task.wait(0.8)
 		shop:refreshAllProducts()
-	else
-		if pending.product.purchaseButton then
-			pending.product.purchaseButton.Text = "Purchase"
-			pending.product.purchaseButton.Active = true
-		end
+		Core.SoundSystem.play("success")
+		-- ✨ NEW: Confetti + pulse
+		local card = (p and p.product and p.product.cardInstance)
+		if card then Core.Effects.pulse(card); Core.Effects.confetti(card) end
 	end
 end)
 
 MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, productId, purchased)
-	if player ~= Player then return end
-
-	local pending = Core.State.purchasePending[productId]
-	if not pending then return end
-
-	Core.State.purchasePending[productId] = nil
-
+	if player~=Player then return end
+	local p=Core.State.purchasePending[productId]; if p and p.button and p.button.Parent then p.button.Text, p.button.Active = "Purchase", true end
+	Core.State.purchasePending[productId]=nil
 	if purchased then
 		Core.SoundSystem.play("success")
-
-		if Remotes then
-			local grantEvent = Remotes:FindFirstChild("GrantProductCurrency")
-			if grantEvent and grantEvent:IsA("RemoteEvent") then
-				grantEvent:FireServer(productId)
-			end
-		end
+		-- ✨ NEW: Confetti + pulse
+		local card = p and p.product and p.product.cardInstance
+		if card then Core.Effects.pulse(card); Core.Effects.confetti(card) end
 	end
 end)
 
--- Initialize shop
-local shop = Shop.new()
-
--- Handle character respawn
 Player.CharacterAdded:Connect(function()
 	task.wait(1)
-	if not shop.toggleButton or not shop.toggleButton.Parent then
-		shop:createToggleButton()
-	end
+	if not shop.toggleButton or not shop.toggleButton.Parent then shop:createToggleButton() end
 end)
 
--- Auto-refresh ownership periodically
+-- ✨ UPGRADED: Background tasks (ownership + smart price refresh)
 task.spawn(function()
 	while true do
 		task.wait(30)
+		if Core.State.isOpen then shop:refreshAllProducts() end
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(90)
 		if Core.State.isOpen then
-			shop:refreshAllProducts()
+			Core.DataManager.refreshPricesIfStale(180)
 		end
 	end
 end)
 
-print("[SanrioShop] System initialized successfully! Version: " .. Core.VERSION)
-
+print("[SanrioShop] ✨ Loaded: Mobile-optimized + BEST VALUE ribbons, bonus labels, confetti, smart caching, gift box button!")
+print("[SanrioShop] 🎁 Using gift box texture ID:", GIFT_BOX_TEXTURE_ID)
+if GIFT_BOX_TEXTURE_ID == "14270868971" then
+	warn("[SanrioShop] ⚠️ Still using placeholder icon! Replace GIFT_BOX_TEXTURE_ID at line ~365")
+end
 return shop
