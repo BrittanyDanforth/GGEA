@@ -69,46 +69,26 @@ local Config = {
 	GLOW_BASE_TRANSPARENCY = 0.4,
 	GLOW_PULSE_AMOUNT = 0.1,
 
-	-- 🎓 TUTORIAL SETTINGS
+	-- 🎓 TUTORIAL SETTINGS (3 SIMPLE STEPS!)
 	TUTORIAL_ENABLED = true,
 	TUTORIAL_STEPS = {
 		{
-			name = "claim_gate",
-			title = "Welcome to Your Tycoon! 🎀",
-			description = "Touch the gate to claim your tycoon!",
-			target = "gate", -- special case: gate
-		},
-		{
 			name = "buy_dropper1",
-			title = "Buy Your First Dropper! 💎",
-			description = "This cute Cinnamoroll backpack will drop cash for you!\n\nWalk to the glowing button and touch it.",
-			targetButton = "Begin Working!", -- button name
-			completed = false,
+			title = "Step 1: Buy Your First Dropper! 💎",
+			description = "Touch the glowing \"Begin Working!\" button to buy your first dropper.\n\nIt's FREE and will start dropping cash!",
+			targetButton = "Begin Working!",
 		},
 		{
-			name = "collect_money",
-			title = "Collect Your Cash! 💰",
-			description = "Walk to the GREEN COLLECTOR part to pick up your cash!\n\nWatch your money increase at the top of the screen.",
-			target = "collector", -- special case: Giver part
-		},
-		{
-			name = "wait_for_cash",
-			title = "Save Up! 💵",
-			description = "Nice! Keep collecting cash until you have $70.\n\nYour dropper keeps making money - just wait and collect!",
+			name = "collect_and_save",
+			title = "Step 2: Collect Cash! 💰",
+			description = "Walk to the GREEN COLLECTOR to grab cash from your dropper.\n\nSave up $70 for the next dropper!",
 			target = "collector",
 		},
 		{
 			name = "buy_dropper2",
-			title = "Buy Dropper #2! ✨",
-			description = "You have enough! Buy the next dropper (Cinnamoroll Plushie) to earn even faster!\n\nTouch the glowing button.",
+			title = "Step 3: Buy Dropper #2! ✨",
+			description = "You have $70! Touch the glowing button to buy your second dropper.\n\nIt earns cash faster!",
 			targetButton = "Buy Dropper - [$70]",
-			completed = false,
-		},
-		{
-			name = "tutorial_complete",
-			title = "You're All Set! 🎉",
-			description = "Amazing work! You've unlocked 2 droppers!\n\nKeep buying more upgrades to build your dream tycoon.\n\nThis tutorial will close in 5 seconds...",
-			target = nil,
 		},
 	},
 }
@@ -367,24 +347,8 @@ local function updateTutorialStep()
 		if title then title.Text = step.title end
 		if body then body.Text = step.description end
 		if stepIndicator then 
-			stepIndicator.Text = "Step " .. TutorialState.currentStep .. "/" .. #Config.TUTORIAL_STEPS
+			stepIndicator.Text = TutorialState.currentStep .. "/" .. #Config.TUTORIAL_STEPS
 		end
-	end
-
-	-- 🎉 Auto-dismiss on final step
-	if step.name == "tutorial_complete" then
-		task.spawn(function()
-			for i = 5, 1, -1 do
-				task.wait(1)
-				if TutorialState.tutorialGui then
-					local body = TutorialState.tutorialGui.Card:FindFirstChild("Body")
-					if body then
-						body.Text = "Amazing work! You've unlocked 2 droppers!\n\nKeep buying more upgrades to build your dream tycoon.\n\nClosing in " .. i .. " seconds..."
-					end
-				end
-			end
-			skipTutorial()
-		end)
 	end
 
 	-- Find and highlight target
@@ -864,57 +828,51 @@ local function setupTutorialListeners()
 	local serverStorage = game:GetService("ServerStorage")
 	local playerMoneyFolder = serverStorage:WaitForChild("PlayerMoney", 10)
 	if playerMoneyFolder then
-		-- Wait a bit for the money value to be created
-		task.wait(0.5)
-		local playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
-		
-		if not playerMoney then
-			-- Try creating it if it doesn't exist
-			task.wait(1)
-			playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
-		end
-		
-		if playerMoney then
-			local lastMoney = playerMoney.Value
-			print("🎓 [Tutorial] Monitoring money for", player.Name, "- Starting at $" .. lastMoney)
+		task.spawn(function()
+			task.wait(0.5)
+			local playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
+			
+			if not playerMoney then
+				task.wait(1)
+				playerMoney = playerMoneyFolder:FindFirstChild(player.Name)
+			end
+			
+			if playerMoney then
+				local lastMoney = playerMoney.Value
+				print("🎓 [Tutorial] Monitoring money for", player.Name)
 
-			playerMoney.Changed:Connect(function(newValue)
-				if not TutorialState.enabled or TutorialState.completed then return end
-				local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+				playerMoney.Changed:Connect(function(newValue)
+					if not TutorialState.enabled or TutorialState.completed then return end
+					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
 
-				print("🎓 [Tutorial] Money changed:", lastMoney, "→", newValue, "| Current step:", step and step.name or "none")
+					-- Only care if money INCREASED
+					if newValue > lastMoney and step then
+						print("💰 [Tutorial] $" .. lastMoney .. " → $" .. newValue .. " | Step:", step.name)
 
-				-- Detect money increase
-				if newValue > lastMoney then
-					if step and step.name == "collect_money" then
-						-- First collection! Move to "wait_for_cash"
-						print("✅ [Tutorial] First cash collected! Moving to save step...")
-						task.wait(1.2)
-						nextTutorialStep()
-					elseif step and step.name == "wait_for_cash" then
-						-- Check if they have $70 yet
-						print("💰 [Tutorial] Current cash: $" .. newValue .. " / $70 needed")
-						if newValue >= 70 then
-							print("✅ [Tutorial] Player has enough! Moving to Dropper 2...")
-							task.wait(0.8)
-							nextTutorialStep() -- Move to "buy_dropper2"
-						else
-							-- Update the card to show progress
-							if TutorialState.tutorialGui then
-								local body = TutorialState.tutorialGui.Card:FindFirstChild("Body")
-								if body then
-									body.Text = "Nice! Keep collecting cash.\n\nYou have $" .. newValue .. " / $70 needed for Dropper 2.\n\nWait for more drops and collect them!"
+						if step.name == "collect_and_save" then
+							-- Check if they have $70 yet
+							if newValue >= 70 then
+								print("✅ [Tutorial] Has $70! Moving to Dropper 2...")
+								task.wait(0.5)
+								nextTutorialStep()
+							else
+								-- Update progress live
+								if TutorialState.tutorialGui then
+									local body = TutorialState.tutorialGui.Card:FindFirstChild("Body")
+									if body then
+										body.Text = "Good! Keep collecting.\n\nYou have $" .. newValue .. " / $70\n\nWait for drops, then walk to the green collector!"
+									end
 								end
 							end
 						end
 					end
-				end
 
-				lastMoney = newValue
-			end)
-		else
-			warn("🎓 [Tutorial] Could not find PlayerMoney value for", player.Name)
-		end
+					lastMoney = newValue
+				end)
+			else
+				warn("🎓 [Tutorial] No PlayerMoney for", player.Name)
+			end
+		end)
 	end
 
 	-- Listen for button purchases (Dropper spawns)
@@ -927,27 +885,13 @@ local function setupTutorialListeners()
 		-- Check if a purchased object was added
 		if descendant.Parent and descendant.Parent.Name == "PurchasedObjects" then
 			if step.name == "buy_dropper1" and descendant.Name == "Dropper1" then
-				print("✅ [Tutorial] Dropper 1 purchased!")
-				task.wait(0.5)
-				nextTutorialStep() -- Move to "collect_money"
-			elseif step.name == "buy_dropper2" and descendant.Name == "Dropper2" then
-				print("🎉 [Tutorial] Dropper 2 purchased! Tutorial complete!")
-				
-				-- 🎊 Celebration effect!
-				if TutorialState.tutorialGui then
-					local card = TutorialState.tutorialGui.Card
-					-- Flash the card pink!
-					local originalColor = card.BackgroundColor3
-					for i = 1, 3 do
-						card.BackgroundColor3 = Color3.fromRGB(255, 200, 220)
-						task.wait(0.15)
-						card.BackgroundColor3 = originalColor
-						task.wait(0.15)
-					end
-				end
-				
+				print("✅ [Tutorial] Dropper 1 bought! Moving to collect step...")
 				task.wait(0.8)
-				nextTutorialStep() -- Move to "tutorial_complete"
+				nextTutorialStep() -- Move to "collect_and_save"
+			elseif step.name == "buy_dropper2" and descendant.Name == "Dropper2" then
+				print("🎉 [Tutorial] Dropper 2 bought! Tutorial complete!")
+				task.wait(1.5)
+				skipTutorial() -- Just close it!
 			end
 		end
 	end)
@@ -955,22 +899,10 @@ local function setupTutorialListeners()
 	-- Skip button
 	if TutorialState.skipButton then
 		TutorialState.skipButton.Activated:Connect(function()
+			print("⏭️ [Tutorial] Player clicked Skip")
 			skipTutorial()
 		end)
 	end
-
-	-- Last step: tap anywhere to dismiss
-	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if gameProcessed then return end
-		if not TutorialState.enabled or TutorialState.completed then return end
-		
-		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-		if step and step.name == "tutorial_complete" then
-			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-				skipTutorial()
-			end
-		end
-	end)
 end
 
 --============================================================================--
@@ -996,18 +928,27 @@ task.spawn(function()
 			PathState.currentTargetGate = nil
 			hidePath()
 
-			-- 🎓 TUTORIAL: Player claimed tycoon!
-			if ownsTycoon and TutorialState.enabled and not TutorialState.completed then
-				local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-				if step and step.name == "claim_gate" then
-					task.wait(1)
-					nextTutorialStep() -- Move to "buy_dropper1"
+			-- 🎓 TUTORIAL: Start immediately when player owns tycoon!
+			if ownsTycoon and not PathState.ownedTycoon then
+				PathState.ownedTycoon = true
+				
+				if TutorialState.enabled and not TutorialState.completed then
+					print("🎓 [Tutorial] Player claimed tycoon - starting tutorial NOW!")
+					
+					-- Create UI immediately if not exists
+					if not TutorialState.tutorialGui then
+						task.spawn(function()
+							task.wait(0.5) -- tiny wait for tycoon to settle
+							createTutorialUI()
+							setupTutorialListeners()
+							updateTutorialStep()
+						end)
+					end
 				end
 			end
 
 			-- Force cleanup if player owns tycoon
 			if ownsTycoon and PathState.pathModel then
-				-- Immediate destroy everything
 				for _, child in pairs(PathState.pathModel:GetChildren()) do
 					child:Destroy()
 				end
