@@ -812,11 +812,13 @@ local function findNearestUnclaimedGate()
 	local gates = findTycoonGates()
 	local nearestGate, nearestDistance = nil, math.huge
 
+	local candidateCount = 0
 	for _, gateData in ipairs(gates) do
 		if tycoonOwnedByPlayer(gateData.tycoon, player) then
 			PathState.playerTycoon = gateData.tycoon
 			return nil, true
 		elseif isUnclaimedOwner(gateData.owner) then  -- 🐛 FIX A: Handles 0 and "" correctly!
+			candidateCount = candidateCount + 1
 			local distance = (gateData.position - humanoidRoot.Position).Magnitude
 			if distance < nearestDistance then
 				nearestDistance, nearestGate = distance, gateData
@@ -824,10 +826,13 @@ local function findNearestUnclaimedGate()
 		end
 	end
 	
-	-- 🔍 Debug: Log which gate was selected
-	if nearestGate then
-		print(string.format("🎯 [Gate] Selected: %s (%.1f studs away)", 
-			nearestGate.tycoon.Name, nearestDistance))
+	-- 🔍 Debug: Log gate selection (only when it changes)
+	local selectedName = nearestGate and nearestGate.tycoon.Name or "none"
+	local lastSelectedName = PathState.currentTargetGate and PathState.currentTargetGate.tycoon.Name or "none"
+	
+	if selectedName ~= lastSelectedName then
+		print(string.format("🎯 [Gate Selection] %s → %s (%.1f studs, %d candidates)", 
+			lastSelectedName, selectedName, nearestDistance, candidateCount))
 	end
 	
 	return nearestGate, false
