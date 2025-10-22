@@ -890,16 +890,22 @@ local function setupTutorialListeners()
 			local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
 			if not step then return end
 
-			-- For collect_money step, wait for specific amount
+			-- For collect_money step, check if we have enough cash
 			if step.waitForCash then
-				if typeof(step.waitForCash) == "number" and newValue >= step.waitForCash then
-					print("💰 [Tutorial] Required cash reached: $" .. step.waitForCash)
-					task.wait(0.8) -- Small delay
-					nextTutorialStep()
-				elseif step.waitForCash == true and newValue > TutorialState.initialCash then
-					print("💰 [Tutorial] Cash collected! Advancing...")
-					task.wait(0.5)
-					nextTutorialStep()
+				if typeof(step.waitForCash) == "number" then
+					-- Wait for specific amount (like $70)
+					if newValue >= step.waitForCash then
+						print("💰 [Tutorial] Required cash reached: $" .. step.waitForCash)
+						task.wait(0.8) -- Small delay
+						nextTutorialStep()
+					end
+				elseif step.waitForCash == true then
+					-- Just wait for any increase
+					if newValue > TutorialState.initialCash then
+						print("💰 [Tutorial] Cash increased! Advancing...")
+						task.wait(0.5)
+						nextTutorialStep()
+					end
 				end
 			end
 		end)
