@@ -226,6 +226,37 @@ function Core.Animation.tween(object, properties, duration, easingStyle, easingD
 	return tween
 end
 
+-- Lightweight effects (pulse + confetti)
+Core.Effects = {}
+
+function Core.Effects.pulse(frame)
+    if not frame then return end
+    local s = frame:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+    s.Parent = frame
+    Core.Animation.tween(s, {Scale = 1.06}, 0.10)
+    task.delay(0.10, function()
+        Core.Animation.tween(s, {Scale = 1.00}, 0.18)
+    end)
+end
+
+function Core.Effects.confetti(parent)
+    if not parent then return end
+    for i = 1, 8 do
+        local chip = Instance.new("Frame")
+        chip.BackgroundColor3 = (i % 2 == 0) and UI.Theme:get("accent") or UI.Theme:get("kuromi")
+        chip.Size = UDim2.fromOffset(6, 10)
+        chip.Position = UDim2.new(math.random(), 0, 0, -6)
+        chip.BorderSizePixel = 0
+        chip.Parent = parent
+        local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 2); c.Parent = chip
+        task.spawn(function()
+            local xoff = (math.random() - 0.5) * 60
+            Core.Animation.tween(chip, {Position = UDim2.new(chip.Position.X.Scale, xoff, 0, math.random(60, 110)), Rotation = math.random(-40, 40)}, 0.45, Enum.EasingStyle.Quad)
+            task.delay(0.46, function() chip:Destroy() end)
+        end)
+    end
+end
+
 -- Sound System
 Core.SoundSystem = {}
 
@@ -1856,7 +1887,7 @@ function Shop:open()
 	Core.State.isAnimating = true
 	Core.State.isOpen = true
 
-	Core.DataManager.refreshPrices()
+    Core.DataManager.refreshPricesIfStale(180)
 	self:refreshAllProducts()
 
 	self.gui.Enabled = true
@@ -1976,19 +2007,25 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 
 	Core.State.purchasePending[passId] = nil
 
-	if purchased then
-		ownershipCache:clear()
+    if purchased then
+        ownershipCache:clear()
 
         if pending.product.purchaseButton then
             pending.product.purchaseButton.Text = "Owned"
-			pending.product.purchaseButton.BackgroundColor3 = UI.Theme:get("success")
-			pending.product.purchaseButton.Active = false
-		end
+            pending.product.purchaseButton.BackgroundColor3 = UI.Theme:get("success")
+            pending.product.purchaseButton.Active = false
+        end
 
-		Core.SoundSystem.play("success")
+        Core.SoundSystem.play("success")
 
-		task.wait(0.5)
-		shop:refreshAllProducts()
+        -- feel-good feedback
+        if pending.product and pending.product.cardInstance then
+            Core.Effects.pulse(pending.product.cardInstance)
+            Core.Effects.confetti(pending.product.cardInstance)
+        end
+
+        task.wait(0.5)
+        shop:refreshAllProducts()
 	else
 		if pending.product.purchaseButton then
 			pending.product.purchaseButton.Text = "Purchase"
@@ -2005,15 +2042,21 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, produc
 
 	Core.State.purchasePending[productId] = nil
 
-	if purchased then
-		Core.SoundSystem.play("success")
+    if purchased then
+        Core.SoundSystem.play("success")
 
-		if Remotes then
-			local grantEvent = Remotes:FindFirstChild("GrantProductCurrency")
-			if grantEvent and grantEvent:IsA("RemoteEvent") then
-				grantEvent:FireServer(productId)
-			end
-		end
+        if Remotes then
+            local grantEvent = Remotes:FindFirstChild("GrantProductCurrency")
+            if grantEvent and grantEvent:IsA("RemoteEvent") then
+                grantEvent:FireServer(productId)
+            end
+        end
+
+        local pendingLocal = pending
+        if pendingLocal and pendingLocal.product and pendingLocal.product.cardInstance then
+            Core.Effects.pulse(pendingLocal.product.cardInstance)
+            Core.Effects.confetti(pendingLocal.product.cardInstance)
+        end
 	end
 end)
 
@@ -2031,11 +2074,21 @@ end)
 -- Auto-refresh ownership periodically
 task.spawn(function()
 	while true do
-		task.wait(30)
-		if Core.State.isOpen then
-			shop:refreshAllProducts()
-		end
+        task.wait(30)
+        if Core.State.isOpen then
+            shop:refreshAllProducts()
+        end
 	end
+end)
+
+-- Background price warm-up (throttled)
+task.spawn(function()
+    while true do
+        task.wait(90)
+        if Core.State.isOpen then
+            Core.DataManager.refreshPricesIfStale(180)
+        end
+    end
 end)
 
 print("[SanrioShop] System initialized successfully! Version: " .. Core.VERSION)
