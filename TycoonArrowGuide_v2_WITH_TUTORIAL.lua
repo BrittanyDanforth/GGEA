@@ -846,78 +846,142 @@ end
 -- 🎓 Track session cash (NO ServerStorage on client!)
 local SessionCash = 0
 
+-- 🎯 Get player's owned tycoon (scoped helper)
+local function getMyTycoon()
+	for _, tycoon in ipairs(workspace:GetChildren()) do
+		local owner = tycoon:FindFirstChild("Owner")
+		if owner and owner:IsA("ObjectValue") and owner.Value == player then
+			return tycoon
+		end
+	end
+	return nil
+end
+
 local function setupTutorialListeners()
 	if not TutorialState.enabled then return end
 
-	-- 💰 Listen for money collection via RemoteEvent (works with manual + auto-collect!)
-	local Remotes = ReplicatedStorage:WaitForChild("TycoonRemotes")
-	local MoneyCollectedRE = Remotes:WaitForChild("MoneyCollected")
-	
-	local function onMoneyCollected(giver, amount, has2x, wasAuto)
-		if not TutorialState.enabled or TutorialState.completed then return end
-		SessionCash += tonumber(amount) or 0
-		
-		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-		if not step then return end
-		
-		print("💰 [Tutorial] Money collected: +" .. amount .. " | Total session: $" .. SessionCash .. " | Step:", step.name)
-		
-		-- Step 3: first collect → advance immediately
-		if step.name == "collect_money" then
-			print("✅ [Tutorial] First cash collected! Moving to Dropper 2 step...")
-			task.defer(nextTutorialStep)
-			return
-		end
-		
-		-- Step 4 gate: $70 accumulated → advance
-		if step.name == "buy_dropper2" and SessionCash >= 70 then
-			print("✅ [Tutorial] Has $70! Auto-advancing...")
-			task.defer(nextTutorialStep)
-		end
+	local Remotes = ReplicatedStorage:WaitForChild("TycoonRemotes", 10)
+	if not Remotes then
+		warn("🎓 [Tutorial] TycoonRemotes folder missing!")
+		return
 	end
-	
-	MoneyCollectedRE.OnClientEvent:Connect(onMoneyCollected)
-	print("🎓 [Tutorial] Listening for MoneyCollected RemoteEvent")
 
-	-- Listen for tycoon claims + purchases
-	workspace.DescendantAdded:Connect(function(d)
-		if not TutorialState.enabled or TutorialState.completed then return end
-		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
-		if not step then return end
-
-		-- When tycoon claimed (Owner set to player) → advance claim step
-		if step.name == "claim_gate" then
-			local owner = d:IsA("ObjectValue") and d.Name == "Owner" and d.Value
-			if owner == player then
-				print("✅ [Tutorial] Tycoon claimed! Advancing...")
+	-- 💰 Listen for money collection via RemoteEvent
+	local MoneyCollectedRE = Remotes:FindFirstChild("MoneyCollected")
+	if MoneyCollectedRE then
+		local function onMoneyCollected(giver, amount, has2x, wasAuto)
+			if not TutorialState.enabled or TutorialState.completed then return end
+			SessionCash += tonumber(amount) or 0
+			
+			local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+			if not step then return end
+			
+			print("💰 [Tutorial] +$" .. amount .. " | Total: $" .. SessionCash .. " | Step:", step.name)
+			
+			-- Step 3: first collect → advance
+			if step.name == "collect_money" then
+				print("✅ [Tutorial] First cash! → Dropper 2 step")
+				task.defer(nextTutorialStep)
+				return
+			end
+			
+			-- Step 4: $70 gate → advance
+			if step.name == "buy_dropper2" and SessionCash >= 70 then
+				print("✅ [Tutorial] Has $70! → Advancing")
 				task.defer(nextTutorialStep)
 			end
-			return
 		end
+		
+		MoneyCollectedRE.OnClientEvent:Connect(onMoneyCollected)
+		print("🎓 [Tutorial] ✅ Listening for MoneyCollected")
+	else
+		warn("🎓 [Tutorial] MoneyCollected RemoteEvent missing!")
+	end
 
-		-- Model spawns land in PurchasedObjects; check names only
-		if d.Parent and d.Parent.Name == "PurchasedObjects" then
-			if step.name == "buy_dropper1" and d.Name == "Dropper1" then
-				print("✅ [Tutorial] Dropper1 spawned! Advancing...")
+	-- 🏠 Listen for tycoon claim (server fires ClaimedTycoon)
+	local ClaimedTycoonRE = Remotes:FindFirstChild("ClaimedTycoon")
+	if ClaimedTycoonRE then
+		ClaimedTycoonRE.OnClientEvent:Connect(function()
+			if not TutorialState.enabled or TutorialState.completed then return end
+			local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+			
+			if step and step.name == "claim_gate" then
+				print("✅ [Tutorial] Tycoon claimed! → Buy Dropper 1")
+				task.wait(0.3)
 				task.defer(nextTutorialStep)
-			elseif step.name == "buy_dropper2" and d.Name == "Dropper2" then
-				print("🎉 [Tutorial] Dropper2 spawned! Tutorial complete!")
-				task.defer(function()
-					nextTutorialStep() -- completes tutorial
-					task.wait(0.8)
-					skipTutorial()     -- fade out card
-				end)
+				
+				-- Now hook into this specific tycoon's purchases
+				task.spawn(hookMyTycoonPurchases)
 			end
-		end
-	end)
+		end)
+		print("🎓 [Tutorial] ✅ Listening for ClaimedTycoon")
+	else
+		warn("🎓 [Tutorial] ClaimedTycoon RemoteEvent missing - using fallback")
+		-- Fallback: poll for tycoon ownership
+		task.spawn(function()
+			while TutorialState.enabled and not TutorialState.completed do
+				task.wait(0.5)
+				local myTycoon = getMyTycoon()
+				if myTycoon then
+					local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+					if step and step.name == "claim_gate" then
+						print("✅ [Tutorial] (Fallback) Tycoon claimed!")
+						task.defer(nextTutorialStep)
+						task.spawn(hookMyTycoonPurchases)
+						break
+					end
+				end
+			end
+		end)
+	end
 
 	-- Skip button
 	if TutorialState.skipButton then
 		TutorialState.skipButton.Activated:Connect(function()
-			print("⏭️ [Tutorial] Player clicked Skip")
+			print("⏭️ [Tutorial] Skipped")
 			skipTutorial()
 		end)
 	end
+end
+
+-- 🎯 Hook into player's specific tycoon purchases (NO workspace.DescendantAdded spam!)
+function hookMyTycoonPurchases()
+	local myTycoon = getMyTycoon()
+	if not myTycoon then
+		warn("🎓 [Tutorial] No tycoon found to hook!")
+		return
+	end
+	
+	print("🎓 [Tutorial] Hooking into tycoon:", myTycoon.Name)
+	
+	local purchasedObjects = myTycoon:WaitForChild("PurchasedObjects", 5)
+	if not purchasedObjects then
+		warn("🎓 [Tutorial] PurchasedObjects not found!")
+		return
+	end
+	
+	-- Listen for purchases in THIS tycoon only
+	purchasedObjects.ChildAdded:Connect(function(child)
+		if not TutorialState.enabled or TutorialState.completed then return end
+		local step = Config.TUTORIAL_STEPS[TutorialState.currentStep]
+		if not step then return end
+		
+		print("🔍 [Tutorial] Purchase detected:", child.Name, "| Step:", step.name)
+		
+		if step.name == "buy_dropper1" and child.Name == "Dropper1" then
+			print("✅ [Tutorial] Dropper1 bought! → Collect step")
+			task.defer(nextTutorialStep)
+		elseif step.name == "buy_dropper2" and child.Name == "Dropper2" then
+			print("🎉 [Tutorial] Dropper2 bought! → Complete!")
+			task.defer(function()
+				nextTutorialStep()
+				task.wait(0.8)
+				skipTutorial()
+			end)
+		end
+	end)
+	
+	print("🎓 [Tutorial] ✅ Hooked to PurchasedObjects!")
 end
 
 --============================================================================--
