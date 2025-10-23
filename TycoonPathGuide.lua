@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.3 - CLEAR INSTRUCTIONS]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.4 - NATURAL INSTRUCTIONS]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -7,7 +7,7 @@
 	✅ Highlight updates ALWAYS (not just during tutorial step)
 	✅ Switch logic with hysteresis (prevents jitter/stuck feeling)
 	✅ Simple text instructions (no button/collector highlighting)
-	✅ Clear color-coded directions (RED buttons, GREEN collector)
+	✅ Natural directions ("glowing button", "green part")
 	✅ Works universally across all tycoons!
 	
 	✅ Path stays FLAT on ground (no floating!)
@@ -95,19 +95,19 @@ local Config = {
 		{
 			name = "buy_dropper1",
 			title = "Buy Your First Dropper! 💎",
-			description = "Walk to the RED button on the ground and touch it.\n\nIt says \"Begin Working! - [$0]\"",
+			description = "Walk to the glowing button on the ground and touch it.\n\nIt says \"Begin Working! - [$0]\"",
 			waitForPurchase = "Dropper1",
 		},
 		{
 			name = "collect_money",
 			title = "Earning Cash! 💰",
-			description = "Your dropper is working! Walk to the GREEN cash collector to collect your money.\n\nYou'll need $70 for the next upgrade.",
+			description = "Your dropper is working! Walk to the cash collector and step on the green part to collect your cash.\n\nYou'll need $70 for the next upgrade.",
 			waitForCash = true,
 		},
 		{
 			name = "buy_dropper2",
 			title = "Buy Your Second Dropper! ✨",
-			description = "Nice! You have enough cash now.\n\nWalk to the next RED button that says \"Buy Dropper - [$70]\"",
+			description = "Nice! You have enough cash now.\n\nWalk to the next glowing button that says \"Buy Dropper - [$70]\"",
 			waitForPurchase = "Dropper2",
 		},
 		{
@@ -1193,11 +1193,11 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.3 - CLEAR INSTRUCTIONS")
+print("✅ Tycoon Path Guide v7.4 - NATURAL INSTRUCTIONS")
 print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
 print("🐛 FIX: Highlight cleared when no target")
 print("🐛 FIX: Hysteresis for stable switching (no jitter)")
-print("✨ NEW: Simple color-coded text instructions")
+print("✨ NEW: Natural text instructions (glowing button, green part)")
 print("✨ NEW: Works universally (all tycoons!)")
 print("🌍 Path stays FLAT on ground (no floating!)")
 print("🎯 Highlights CLOSEST gate (distance-based)")
