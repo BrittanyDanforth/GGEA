@@ -409,54 +409,61 @@ function Shop:createProductItem(product, productType, parent)
 	-- Container with YOUR CUSTOM CARD BACKGROUND!
 	local container = Instance.new("ImageLabel")
 	container.Name = product.name .. "Item"
-	container.Size = UDim2.new(1, 0, 0, 48)
+	container.Size = UDim2.new(1, 0, 0, 52)
 	container.BackgroundTransparency = 1
 	container.Image = "rbxassetid://108251319294182"
-	container.ScaleType = Enum.ScaleType.Stretch
+	container.ScaleType = Enum.ScaleType.Crop
 	container.ImageColor3 = Color3.new(1, 1, 1)
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
+	-- Inner content frame for padding
+	local content = Instance.new("Frame")
+	content.Size = UDim2.new(1, -20, 1, -8)
+	content.Position = UDim2.fromOffset(10, 4)
+	content.BackgroundTransparency = 1
+	content.Parent = container
+
 	-- Name on the left
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.5, -10, 0, 20)
-	nameLabel.Position = UDim2.fromOffset(8, 4)
+	nameLabel.Size = UDim2.new(0.55, 0, 0, 18)
+	nameLabel.Position = UDim2.fromOffset(0, 4)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.TextSize = 16
+	nameLabel.TextSize = 15
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	nameLabel.Parent = container
+	nameLabel.Parent = content
 
 	-- Amount/description below name
 	local descText = isGamepass and product.description or (formatNumber(product.amount))
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(0.5, -10, 0, 16)
-	descLabel.Position = UDim2.fromOffset(8, 26)
+	descLabel.Size = UDim2.new(0.55, 0, 0, 14)
+	descLabel.Position = UDim2.fromOffset(0, 24)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = descText
 	descLabel.TextColor3 = theme.textSecondary
 	descLabel.Font = Enum.Font.Gotham
-	descLabel.TextSize = 12
+	descLabel.TextSize = 11
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	descLabel.Parent = container
+	descLabel.Parent = content
 
 	-- Buy button - clean and flat
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.fromOffset(90, 38)
-	buyBtn.Position = UDim2.new(1, -98, 0.5, 0)
+	buyBtn.Size = UDim2.fromOffset(90, 36)
+	buyBtn.Position = UDim2.new(1, -94, 0.5, 0)
 	buyBtn.AnchorPoint = Vector2.new(0, 0.5)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "R$" .. tostring(product.price or 0)
 	buyBtn.TextColor3 = Color3.new(1, 1, 1)
 	buyBtn.Font = Enum.Font.GothamBold
-	buyBtn.TextSize = 15
+	buyBtn.TextSize = 14
 	buyBtn.AutoButtonColor = false
 	buyBtn.BorderSizePixel = 0
-	buyBtn.Parent = container
+	buyBtn.Parent = content
 	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 8); btnCorner.Parent = buyBtn
 
 	-- Hover effect on button
@@ -474,8 +481,8 @@ function Shop:createProductItem(product, productType, parent)
 
 	-- Toggle for Auto Collect
 	if isGamepass and product.hasToggle and owned then
-		buyBtn.Size = UDim2.fromOffset(70, 38)
-		buyBtn.Position = UDim2.new(1, -78, 0.5, 0)
+		buyBtn.Size = UDim2.fromOffset(70, 36)
+		buyBtn.Position = UDim2.new(1, -74, 0.5, 0)
 		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
