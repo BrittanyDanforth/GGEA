@@ -349,8 +349,8 @@ function Shop:createPages()
 	self.cashPage.Parent = self.contentFrame
 
 	local cashGrid = Instance.new("UIGridLayout")
-	cashGrid.CellSize = UDim2.new(0.48, 0, 0, 105)
-	cashGrid.CellPadding = UDim2.fromOffset(12, 12)
+	cashGrid.CellSize = UDim2.new(0.48, 0, 0, 95)
+	cashGrid.CellPadding = UDim2.fromOffset(10, 10)
 	cashGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	cashGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	cashGrid.Parent = self.cashPage
@@ -384,7 +384,7 @@ function Shop:createPages()
 	gpPad.Parent = self.gpPage
 
 	local gpGrid = Instance.new("UIGridLayout")
-	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 105)
+	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 95)
 	gpGrid.CellPadding = UDim2.fromOffset(10, 10)
 	gpGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gpGrid.SortOrder = Enum.SortOrder.LayoutOrder
@@ -462,23 +462,37 @@ function Shop:createProductCard(product, productType, parent)
 	descLabel.TextWrapped = true
 	descLabel.Parent = textArea
 
-	-- Price/Buy button at bottom
+	-- Show OWNED text if gamepass is owned (above button area)
+	if isGamepass and owned and not product.hasToggle then
+		local ownedLabel = Instance.new("TextLabel")
+		ownedLabel.Size = UDim2.new(1, 0, 0, 16)
+		ownedLabel.Position = UDim2.new(0, 0, 1, -54)
+		ownedLabel.BackgroundTransparency = 1
+		ownedLabel.Text = "✓ OWNED"
+		ownedLabel.TextColor3 = theme.success
+		ownedLabel.Font = Enum.Font.GothamBold
+		ownedLabel.TextSize = 12
+		ownedLabel.TextXAlignment = Enum.TextXAlignment.Center
+		ownedLabel.Parent = card
+	end
+
+	-- Price/Buy button OR Toggle at bottom
 	local buyBtn = Instance.new("TextButton")
 	buyBtn.Size = UDim2.new(1, -16, 0, 28)
 	buyBtn.Position = UDim2.new(0, 8, 1, -36)
-	buyBtn.BackgroundColor3 = owned and theme.success or cardColor
-	buyBtn.Text = owned and "✓ OWNED" or ("💰 R$" .. tostring(product.price or 0))
+	buyBtn.BackgroundColor3 = cardColor
+	buyBtn.Text = "R$" .. tostring(product.price or 0)
 	buyBtn.TextColor3 = Color3.new(1, 1, 1)
 	buyBtn.Font = Enum.Font.GothamBold
 	buyBtn.TextSize = 14
 	buyBtn.AutoButtonColor = false
-	buyBtn.Active = not owned
+	buyBtn.Active = true
 	buyBtn.Parent = card
 	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 10); btnCorner.Parent = buyBtn
 
-	-- Toggle for Auto Collect
+	-- Toggle for Auto Collect (replaces button completely)
 	if isGamepass and product.hasToggle and owned then
-		buyBtn.Text = "AUTO: OFF"
+		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
 			local rf = Remotes:FindFirstChild("GetAutoCollectState")
@@ -492,15 +506,26 @@ function Shop:createProductCard(product, productType, parent)
 			state = on
 			if on then
 				buyBtn.BackgroundColor3 = theme.success
-				buyBtn.Text = "AUTO: ON ✓"
+				buyBtn.Text = "ON"
 			else
 				buyBtn.BackgroundColor3 = theme.stroke
-				buyBtn.Text = "AUTO: OFF"
+				buyBtn.Text = "OFF"
 			end
 		end
 		paint(state)
 		
-		buyBtn.Active = true
+		-- Add OWNED label above toggle
+		local ownedLabel = Instance.new("TextLabel")
+		ownedLabel.Size = UDim2.new(1, 0, 0, 14)
+		ownedLabel.Position = UDim2.new(0, 0, 1, -52)
+		ownedLabel.BackgroundTransparency = 1
+		ownedLabel.Text = "✓ OWNED"
+		ownedLabel.TextColor3 = theme.success
+		ownedLabel.Font = Enum.Font.GothamBold
+		ownedLabel.TextSize = 10
+		ownedLabel.TextXAlignment = Enum.TextXAlignment.Center
+		ownedLabel.Parent = card
+		
 		buyBtn.MouseButton1Click:Connect(function()
 			local nextState = not state
 			paint(nextState)
@@ -510,6 +535,11 @@ function Shop:createProductCard(product, productType, parent)
 				if ev and ev:IsA("RemoteEvent") then ev:FireServer(nextState) end
 			end
 		end)
+	elseif isGamepass and owned then
+		-- Non-toggle gamepass that's owned
+		buyBtn.BackgroundColor3 = theme.success
+		buyBtn.Text = "✓ OWNED"
+		buyBtn.Active = false
 	else
 		-- Regular purchase button
 		buyBtn.MouseButton1Click:Connect(function()
