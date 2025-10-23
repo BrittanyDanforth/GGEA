@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.8 - AUTO-CLOSE FIX]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.9 - FIRST-TIME ONLY]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -17,10 +17,17 @@
 	✅ Optimized card sizing (no cutoff!)
 	✅ TextWrapped enabled for clean flow
 	✅ CUTE RISE-AND-FADE EXIT ANIMATION! 🎀
-	✅ SNAPPY timing (0.28s animation, 1.4s total dwell)
+	✅ SNAPPY timing (0.28s animation, 4.5s total dwell on final step)
 	✅ Exit starts early so it finishes EXACTLY at autoClose time
+	✅ Smoother text transitions (Sine easing, no flicker!)
 	✅ No extra waits - crisp and responsive!
 	✅ No more 15-second hangs - auto-close works on ALL steps!
+	
+	🎓 SMART TUTORIAL SYSTEM:
+	✅ Only shows for FIRST 2 joins (not every time!)
+	✅ DataStore tracking per player
+	✅ View count increments on completion
+	✅ Backwards compatible (shows if no server script)
 	
 	✅ Path stays FLAT on ground (no floating!)
 	✅ Highlights CLOSEST gate (true distance-based switching)
@@ -30,6 +37,7 @@
 	✅ Auto-collect compatible
 	✅ Ultra-polished animations
 	
+	⚠️ REQUIRES: TutorialTracker.lua in ServerScriptService (for view counting)
 	Place in: StarterPlayer > StarterPlayerScripts as a LocalScript
 --]]
 
@@ -38,6 +46,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local playerGui = player:WaitForChild("PlayerGui")
@@ -96,6 +105,7 @@ local Config = {
 
 	-- 🎓 TUTORIAL SETTINGS
 	TUTORIAL_ENABLED = true,
+	TUTORIAL_MAX_VIEWS = 2, -- Show tutorial max 2 times (1st and 2nd join)
 	TUTORIAL_STEP_DELAY = 0.3,
 	TUTORIAL_STEPS = {
 		{
@@ -147,6 +157,7 @@ local TutorialState = {
 	skipButton = nil,
 	connections = {},
 	initialCash = 0,
+	shouldShow = false, -- Will be set based on view count
 }
 
 --============================================================================--
@@ -172,6 +183,32 @@ local PathState = {
 local raycastParams = RaycastParams.new()
 raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 raycastParams.IgnoreWater = true
+
+--============================================================================--
+--                     🎓 TUTORIAL VIEW COUNT CHECK
+--============================================================================--
+
+local function shouldShowTutorial(): boolean
+	-- Try to get remote function from ReplicatedStorage
+	local remotesFolder = ReplicatedStorage:FindFirstChild("TycoonRemotes")
+	local checkTutorial = remotesFolder and remotesFolder:FindFirstChild("CheckTutorialStatus")
+	
+	if checkTutorial and checkTutorial:IsA("RemoteFunction") then
+		local success, viewCount = pcall(function()
+			return checkTutorial:InvokeServer()
+		end)
+		
+		if success and typeof(viewCount) == "number" then
+			local shouldShow = viewCount < Config.TUTORIAL_MAX_VIEWS
+			print("🎓 [Tutorial] View count:", viewCount, "- Should show:", shouldShow)
+			return shouldShow
+		end
+	end
+	
+	-- Fallback: Always show if remote doesn't exist (backwards compatible!)
+	print("⚠️ [Tutorial] No CheckTutorialStatus remote - showing tutorial (fallback)")
+	return true
+end
 
 --============================================================================--
 --                     🔧 ROBUST OWNERSHIP DETECTION
@@ -500,6 +537,15 @@ local function skipTutorial()
 		TutorialState.skipButton.Active = false
 	end
 
+	-- Increment tutorial view count on server
+	local remotesFolder = ReplicatedStorage:FindFirstChild("TycoonRemotes")
+	local incrementTutorial = remotesFolder and remotesFolder:FindFirstChild("IncrementTutorialViews")
+	if incrementTutorial and incrementTutorial:IsA("RemoteFunction") then
+		pcall(function()
+			incrementTutorial:InvokeServer()
+		end)
+	end
+
 	-- Use the cute rise-and-fade animation!
 	playExitUp()
 
@@ -508,33 +554,37 @@ end
 
 local function updateTutorialText(newTitle, newBody)
 	if not TutorialState.tutorialGui or TutorialState.isTransitioning then return end
-	
+
 	TutorialState.isTransitioning = true
-	
+
 	local card = TutorialState.tutorialGui.Card
 	local titleLabel = card.Title
 	local bodyLabel = card.Body
+
+	-- Smoother fade timing to prevent flicker
+	local fadeOutTime = 0.15
+	local fadeInTime = 0.2
 	
-	local fadeOutInfo = TweenInfo.new(Config.TEXT_TRANSITION_TIME * 0.4, Enum.EasingStyle.Quad)
+	local fadeOutInfo = TweenInfo.new(fadeOutTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 	local fadeOut1 = TweenService:Create(titleLabel, fadeOutInfo, {TextTransparency = 1})
 	local fadeOut2 = TweenService:Create(bodyLabel, fadeOutInfo, {TextTransparency = 1})
-	
+
 	fadeOut1:Play()
 	fadeOut2:Play()
-	
-	task.wait(Config.TEXT_TRANSITION_TIME * 0.4)
-	
+
+	fadeOut1.Completed:Wait()
+
 	titleLabel.Text = newTitle
 	bodyLabel.Text = newBody
-	
-	local fadeInInfo = TweenInfo.new(Config.TEXT_TRANSITION_TIME * 0.6, Enum.EasingStyle.Quad)
+
+	local fadeInInfo = TweenInfo.new(fadeInTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 	local fadeIn1 = TweenService:Create(titleLabel, fadeInInfo, {TextTransparency = 0})
 	local fadeIn2 = TweenService:Create(bodyLabel, fadeInInfo, {TextTransparency = 0})
-	
+
 	fadeIn1:Play()
 	fadeIn2:Play()
-	
-	task.wait(Config.TEXT_TRANSITION_TIME * 0.6)
+
+	fadeIn1.Completed:Wait()
 	TutorialState.isTransitioning = false
 end
 
@@ -1225,28 +1275,39 @@ if Config.TUTORIAL_ENABLED then
 	task.wait(2)
 	
 	if player.Character then
-		print("🎓 [Tutorial] Initializing...")
-		createTutorialUI()
-		setupTutorialListeners()
-		updateTutorialStep()
-		print("🎓 [Tutorial] Ready!")
+		-- Check if player should see tutorial (first 2 times only!)
+		local shouldShow = shouldShowTutorial()
+		TutorialState.shouldShow = shouldShow
+		
+		if shouldShow then
+			print("🎓 [Tutorial] Initializing...")
+			TutorialState.enabled = true
+			createTutorialUI()
+			setupTutorialListeners()
+			updateTutorialStep()
+			print("🎓 [Tutorial] Ready!")
+		else
+			print("🎓 [Tutorial] Player has seen tutorial before - skipping")
+			TutorialState.enabled = false
+		end
 	end
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.8 - AUTO-CLOSE FIX")
+print("✅ Tycoon Path Guide v7.9 - FIRST-TIME ONLY")
 print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
 print("🐛 FIX: Highlight cleared when no target")
 print("🐛 FIX: Hysteresis for stable switching (no jitter)")
 print("🐛 FIX: Auto-close timer schedules in nextTutorialStep()!")
-print("🐛 FIX: No more 15-second hangs - works on ALL steps!")
+print("🐛 FIX: Smoother text transitions (Sine easing, no flicker!)")
+print("🎓 NEW: Only shows for FIRST 2 JOINS (DataStore tracking!)")
+print("🎓 NEW: View count increments on completion")
 print("✨ NEW: Natural text instructions (glowing button, green part)")
 print("🎀 NEW: Cute bubbly font (FredokaOne everywhere!)")
 print("🎀 NEW: Bigger text (16-18px, easy to read)")
 print("🎀 NEW: Optimized card sizing (no cutoff!)")
 print("🎀 NEW: CUTE RISE-AND-FADE EXIT! (0.28s animation)")
-print("🎀 NEW: SNAPPY timing! (1.4s total, exit starts at 1.12s)")
-print("🎀 NEW: No extra waits - crisp & responsive!")
+print("🎀 NEW: Perfect timing! (4.5s final step, exit starts at 4.22s)")
 print("🌍 Path stays FLAT on ground (no floating!)")
 print("🎯 Highlights CLOSEST gate (distance-based)")
 print("✨ Smooth fade-out when gate claimed")
