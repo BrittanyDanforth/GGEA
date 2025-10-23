@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v8.1 - MOBILE UI FIX]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v8.2 - COMPACT UI]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -39,13 +39,16 @@
 	✅ Pulse connection auto-cleanup on completion
 	✅ Cache cleanup on PlayerRemoving (server-side)
 	
-	📱 MOBILE UI FIX:
+	📱 COMPACT MOBILE UI:
 	✅ Safe insets (respects notches & nav bars!)
 	✅ Viewport-based sizing (85% width, capped at 360px)
 	✅ Phone-specific scaling (0.76x-0.93x based on screen size)
-	✅ Dynamic text sizing (scales with card width)
-	✅ Tighter padding on phones (14px vs 20px)
-	✅ No more screen-covering cards!
+	✅ SUPER COMPACT height (115px on phones, 125px on desktop!)
+	✅ Smaller text (18/14px on phones, 22/16px on desktop)
+	✅ Minimal padding (10px phones, 14px desktop)
+	✅ Tighter spacing (4px title→body gap)
+	✅ Smaller skip button (52x24px on phones)
+	✅ No wasted space - efficient & clean!
 	
 	✅ Path stays FLAT on ground (no floating!)
 	✅ Highlights CLOSEST gate (true distance-based switching)
@@ -363,24 +366,24 @@ local function createTutorialUI()
 	local v, insetY = safeViewport()
 	local shortSide = math.min(v.X, v.Y)
 
-	-- ✅ Viewport-based sizing (more responsive!)
+	-- ✅ Viewport-based sizing (COMPACT & efficient!)
 	local cardW, cardH
 	if phone then
 		-- Phone: 85% of width, but capped at 360px
 		cardW = math.min(360, math.floor(v.X * 0.85))
-		cardH = 158 -- Slightly shorter for phones
+		cardH = 115 -- ✅ WAY shorter! Just enough for text
 	elseif tablet then
 		cardW = 400
-		cardH = 155
+		cardH = 120
 	else
 		cardW = 450
-		cardH = 145
+		cardH = 125
 	end
 
-	-- ✅ Dynamic text sizing based on card width
-	local scale = cardW / 450 -- Relative to desktop baseline
-	local titleSize = math.floor(26 * scale)
-	local bodySize = math.floor(18 * scale)
+	-- ✅ Dynamic text sizing (smaller for compact card!)
+	local scale = cardW / 450
+	local titleSize = phone and 18 or math.floor(22 * scale)
+	local bodySize = phone and 14 or math.floor(16 * scale)
 
 	local overlay = Instance.new("Frame")
 	overlay.Name = "Overlay"
@@ -435,18 +438,18 @@ local function createTutorialUI()
 	end
 	cardScale.Parent = card
 
-	-- ✅ Tighter padding on phones
-	local paddingAmount = phone and 14 or (tablet and 16 or 20)
+	-- ✅ COMPACT padding (minimal but clean!)
+	local paddingAmount = phone and 10 or (tablet and 12 or 14)
 	local padding = Instance.new("UIPadding")
 	padding.PaddingTop = UDim.new(0, paddingAmount)
 	padding.PaddingBottom = UDim.new(0, paddingAmount)
-	padding.PaddingLeft = UDim.new(0, paddingAmount)
-	padding.PaddingRight = UDim.new(0, paddingAmount)
+	padding.PaddingLeft = UDim.new(0, paddingAmount + 4)
+	padding.PaddingRight = UDim.new(0, paddingAmount + 4)
 	padding.Parent = card
 
 	local title = Instance.new("TextLabel")
 	title.Name = "Title"
-	title.Size = UDim2.new(1, -70, 0, titleSize + 4)
+	title.Size = UDim2.new(1, -65, 0, titleSize + 2)
 	title.BackgroundTransparency = 1
 	title.Font = Enum.Font.FredokaOne
 	title.TextSize = titleSize
@@ -459,8 +462,8 @@ local function createTutorialUI()
 
 	local body = Instance.new("TextLabel")
 	body.Name = "Body"
-	body.Position = UDim2.new(0, 0, 0, titleSize + 8)
-	body.Size = UDim2.new(1, -70, 1, -(titleSize + 16))
+	body.Position = UDim2.new(0, 0, 0, titleSize + 4) -- ✅ Tighter spacing!
+	body.Size = UDim2.new(1, -65, 1, -(titleSize + 8)) -- ✅ More efficient space usage!
 	body.BackgroundTransparency = 1
 	body.Font = Enum.Font.FredokaOne
 	body.TextSize = bodySize
@@ -476,19 +479,19 @@ local function createTutorialUI()
 	local skipBtn = Instance.new("TextButton")
 	skipBtn.Name = "SkipButton"
 	skipBtn.AnchorPoint = Vector2.new(1, 0)
-	skipBtn.Position = UDim2.new(1, -10, 0, 10)
-	skipBtn.Size = UDim2.fromOffset(60, 28)
+	skipBtn.Position = UDim2.new(1, -6, 0, 6) -- ✅ Closer to corner!
+	skipBtn.Size = UDim2.fromOffset(phone and 52 or 58, phone and 24 or 26) -- ✅ Smaller!
 	skipBtn.BackgroundColor3 = Color3.fromRGB(230, 220, 255)
 	skipBtn.Text = "Skip"
 	skipBtn.Font = Enum.Font.FredokaOne
-	skipBtn.TextSize = 14
+	skipBtn.TextSize = phone and 12 or 13 -- ✅ Smaller text!
 	skipBtn.TextColor3 = Color3.fromRGB(150, 120, 160)
 	skipBtn.BorderSizePixel = 0
 	skipBtn.AutoButtonColor = false
 	skipBtn.Parent = card
 
 	local skipCorner = Instance.new("UICorner")
-	skipCorner.CornerRadius = UDim.new(0, 8)
+	skipCorner.CornerRadius = UDim.new(0, 6) -- ✅ Tighter corners!
 	skipCorner.Parent = skipBtn
 
 	skipBtn.MouseEnter:Connect(function()
@@ -532,17 +535,17 @@ local function createTutorialUI()
 		local newV, newInsetY = safeViewport()
 		local newShortSide = math.min(newV.X, newV.Y)
 		
-		-- Recalculate card size
+		-- Recalculate card size (COMPACT!)
 		local newCardW, newCardH
 		if newPhone then
 			newCardW = math.min(360, math.floor(newV.X * 0.85))
-			newCardH = 158
+			newCardH = 115
 		elseif isTablet() then
 			newCardW = 400
-			newCardH = 155
+			newCardH = 120
 		else
 			newCardW = 450
-			newCardH = 145
+			newCardH = 125
 		end
 		
 		-- Update card size
@@ -557,12 +560,14 @@ local function createTutorialUI()
 			cardScale.Scale = 1
 		end
 		
-		-- Update text sizes
+		-- Update text sizes (smaller!)
 		local newScale = newCardW / 450
-		title.TextSize = math.floor(26 * newScale)
-		body.TextSize = math.floor(18 * newScale)
-		body.Position = UDim2.new(0, 0, 0, title.TextSize + 8)
-		body.Size = UDim2.new(1, -70, 1, -(title.TextSize + 16))
+		local newTitleSize = newPhone and 18 or math.floor(22 * newScale)
+		local newBodySize = newPhone and 14 or math.floor(16 * newScale)
+		title.TextSize = newTitleSize
+		body.TextSize = newBodySize
+		body.Position = UDim2.new(0, 0, 0, newTitleSize + 4)
+		body.Size = UDim2.new(1, -65, 1, -(newTitleSize + 8))
 	end)
 
 	return gui
@@ -1475,23 +1480,21 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v8.1 - MOBILE UI FIX")
-print("📱 FIX: Tutorial card now properly sized on phones!")
-print("📱 FIX: Safe insets (respects notches & nav bars)")
-print("📱 FIX: Viewport-based sizing (85% width, 360px max)")
-print("📱 FIX: Aggressive scaling on small screens (0.76x-0.93x)")
-print("📱 FIX: Dynamic text sizing + tighter padding")
-print("⚡ OPTIMIZED: Server call cached (no spam!)")
-print("⚡ OPTIMIZED: Highlight cooldown (no rapid flicker!)")
-print("⚡ OPTIMIZED: All connections cleaned up (no leaks!)")
-print("⚡ OPTIMIZED: Debounced functions (no double-calls!)")
-print("⚡ OPTIMIZED: Async server calls (non-blocking!)")
+print("✅ Tycoon Path Guide v8.2 - COMPACT UI!")
+print("📱 COMPACT: Card height reduced 115px→125px (was 158px!)")
+print("📱 COMPACT: Smaller text (18/14px phones, 22/16px desktop)")
+print("📱 COMPACT: Minimal padding (10px phones, 14px desktop)")
+print("📱 COMPACT: Tighter spacing (4px gaps, no waste!)")
+print("📱 COMPACT: Smaller skip button (52x24px phones)")
+print("📱 Safe insets (respects notches & nav bars)")
+print("📱 Aggressive scaling (0.76x-0.93x on small screens)")
+print("⚡ OPTIMIZED: No memory leaks, cached calls, smooth!")
 print("🎓 Only shows for FIRST 2 JOINS (DataStore tracking!)")
 print("✨ Natural text instructions (glowing button, green part)")
 print("🎀 Cute bubbly font (FredokaOne everywhere!)")
 print("🎀 CUTE RISE-AND-FADE EXIT! (0.28s animation)")
 print("🌍 Path stays FLAT on ground (no floating!)")
 print("🎯 Highlights CLOSEST gate (distance-based)")
-print("🎀 Production-ready & buttery-smooth!")
+print("🎀 Production-ready, efficient & buttery-smooth!")
 print("⚠️ REQUIRES: TutorialTracker.lua in ServerScriptService")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
