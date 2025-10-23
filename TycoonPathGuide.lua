@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.4 - NATURAL INSTRUCTIONS]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.5 - CUTE BUBBLY UI]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -9,6 +9,12 @@
 	✅ Simple text instructions (no button/collector highlighting)
 	✅ Natural directions ("glowing button", "green part")
 	✅ Works universally across all tycoons!
+	
+	✨ UI IMPROVEMENTS:
+	✅ Cute bubbly font (FredokaOne for everything!)
+	✅ Bigger, easier to read text (16-19px)
+	✅ Taller card to fit text better
+	✅ TextWrapped enabled for clean flow
 	
 	✅ Path stays FLAT on ground (no floating!)
 	✅ Highlights CLOSEST gate (true distance-based switching)
@@ -232,9 +238,9 @@ local function createTutorialUI()
 	local tablet = isTablet()
 
 	local cardW = phone and 340 or (tablet and 400 or 450)
-	local cardH = phone and 150 or (tablet and 135 or 125)
-	local titleSize = phone and 20 or (tablet and 22 or 24)
-	local bodySize = phone and 14 or (tablet and 15 or 16)
+	local cardH = phone and 160 or (tablet and 145 or 135)
+	local titleSize = phone and 22 or (tablet and 24 or 26)
+	local bodySize = phone and 16 or (tablet and 18 or 19)
 
 	local overlay = Instance.new("Frame")
 	overlay.Name = "Overlay"
@@ -305,7 +311,7 @@ local function createTutorialUI()
 	body.Position = UDim2.new(0, 0, 0, titleSize + 8)
 	body.Size = UDim2.new(1, -70, 1, -(titleSize + 20))
 	body.BackgroundTransparency = 1
-	body.Font = Enum.Font.Gotham
+	body.Font = Enum.Font.FredokaOne
 	body.TextSize = bodySize
 	body.TextColor3 = Color3.fromRGB(120, 100, 130)
 	body.TextXAlignment = Enum.TextXAlignment.Left
@@ -322,8 +328,8 @@ local function createTutorialUI()
 	skipBtn.Size = UDim2.fromOffset(60, 28)
 	skipBtn.BackgroundColor3 = Color3.fromRGB(230, 220, 255)
 	skipBtn.Text = "Skip"
-	skipBtn.Font = Enum.Font.GothamBold
-	skipBtn.TextSize = 13
+	skipBtn.Font = Enum.Font.FredokaOne
+	skipBtn.TextSize = 14
 	skipBtn.TextColor3 = Color3.fromRGB(150, 120, 160)
 	skipBtn.BorderSizePixel = 0
 	skipBtn.AutoButtonColor = false
@@ -1193,12 +1199,14 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.4 - NATURAL INSTRUCTIONS")
+print("✅ Tycoon Path Guide v7.5 - CUTE BUBBLY UI")
 print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
 print("🐛 FIX: Highlight cleared when no target")
 print("🐛 FIX: Hysteresis for stable switching (no jitter)")
 print("✨ NEW: Natural text instructions (glowing button, green part)")
-print("✨ NEW: Works universally (all tycoons!)")
+print("🎀 NEW: Cute bubbly font (FredokaOne everywhere!)")
+print("🎀 NEW: Bigger text (16-19px, easy to read)")
+print("🎀 NEW: Taller card (fits text perfectly)")
 print("🌍 Path stays FLAT on ground (no floating!)")
 print("🎯 Highlights CLOSEST gate (distance-based)")
 print("✨ Smooth fade-out when gate claimed")
