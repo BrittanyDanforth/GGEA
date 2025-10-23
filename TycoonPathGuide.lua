@@ -107,7 +107,7 @@ local Config = {
 		{
 			name = "collect_money",
 			title = "Earning Cash! 💰",
-			description = "Your dropper is working! Walk to the cash collector and step on the green part to collect your cash. You'll need $70 for the next upgrade.",
+			description = "Walk to the cash collector and step on the green part. You need $70 for the next upgrade!",
 			waitForCash = true,
 		},
 		{
@@ -238,7 +238,7 @@ local function createTutorialUI()
 	local tablet = isTablet()
 
 	local cardW = phone and 340 or (tablet and 400 or 450)
-	local cardH = phone and 160 or (tablet and 145 or 135)
+	local cardH = phone and 180 or (tablet and 165 or 155)
 	local titleSize = phone and 22 or (tablet and 24 or 26)
 	local bodySize = phone and 16 or (tablet and 18 or 19)
 
