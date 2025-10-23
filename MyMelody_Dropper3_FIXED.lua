@@ -1,14 +1,14 @@
 --[[
-	✅ MyMelody Dropper 3 - FIXED VERSION
+	✅ MyMelody Dropper 3 - FIXED VERSION (v2.0 - Auto-Create PartStorage)
 	Tier: Basic Drop (Same as Dropper 2)
 	Cash: $30 | Rate: 1.0s | Size: 1.25x1.7x1.7
 	
 	🔧 FIXES:
-	✅ Uses tycoon's PartStorage (not workspace.PartStorage!)
-	✅ Uses DropperCore system (modern, multi-tycoon safe)
+	✅ Auto-creates PartStorage if missing (no more infinite yield!)
+	✅ Uses tycoon's local PartStorage (multi-tycoon safe)
+	✅ Uses DropperCore system (modern & optimized)
 	✅ Auto-tags drops with TycoonId attribute
 	✅ Proper cleanup on tycoon reset
-	✅ No infinite yield warnings
 	
 	📍 PLACE IN: Workspace > YourTycoon > Tycoons > MyMelody > PurchasedObjects > Dropper3 > DropperScript
 ]]
@@ -17,9 +17,30 @@ local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
 task.wait(1)
 
+-- ✅ SMART STORAGE FINDER - Creates PartStorage if missing!
+local function getOrCreatePartStorage()
+	local tycoon = script.Parent.Parent.Parent -- MyMelody tycoon model
+	
+	local essentials = tycoon:FindFirstChild("Essentials")
+	if not essentials then
+		essentials = Instance.new("Folder")
+		essentials.Name = "Essentials"
+		essentials.Parent = tycoon
+	end
+	
+	local partStorage = essentials:FindFirstChild("PartStorage")
+	if not partStorage then
+		partStorage = Instance.new("Folder")
+		partStorage.Name = "PartStorage"
+		partStorage.Parent = essentials
+	end
+	
+	return partStorage
+end
+
 Core.Run({
 	model = script.Parent,
-	partStorage = script.Parent.Parent.Parent:WaitForChild("Essentials"):WaitForChild("PartStorage"),
+	partStorage = getOrCreatePartStorage(),
 
 	namePrefix = "MyMelodyDrop_",
 	dropGroup = "MyMelodyDrops",
@@ -49,4 +70,4 @@ Core.Run({
 	elasticity = 0,
 })
 
-print("✅ [MyMelody Dropper 3] Loaded - spawns to tycoon's PartStorage!")
+print("✅ [MyMelody Dropper 3] Loaded - no more infinite yield!")
