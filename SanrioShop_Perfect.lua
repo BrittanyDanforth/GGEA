@@ -359,8 +359,9 @@ function Shop:createPages()
 		self.cashPage.CanvasSize = UDim2.new(0, 0, 0, cashGrid.AbsoluteContentSize.Y + 16)
 	end)
 
-	for _, p in ipairs(products.cash) do
-		self:createProductCard(p, "cash", self.cashPage)
+	for i, p in ipairs(products.cash) do
+		p.LayoutOrder = i
+		self:createProductItem(p, "cash", self.cashPage)
 	end
 
 	-- Gamepasses page
@@ -394,104 +395,99 @@ function Shop:createPages()
 		self.gpPage.CanvasSize = UDim2.new(0, 0, 0, gpGrid.AbsoluteContentSize.Y + 16)
 	end)
 
-	for _, gp in ipairs(products.gamepasses) do
-		self:createProductCard(gp, "gamepass", self.gpPage)
+	for i, gp in ipairs(products.gamepasses) do
+		gp.LayoutOrder = i
+		self:createProductItem(gp, "gamepass", self.gpPage)
 	end
 end
 
-function Shop:createProductCard(product, productType, parent)
+function Shop:createProductItem(product, productType, parent)
 	local isGamepass = (productType == "gamepass")
-	local cardColor = isGamepass and theme.kuromi or theme.cinna
+	local accentColor = isGamepass and theme.kuromi or theme.cinna
 	local owned = isGamepass and checkOwnership(product.id)
 
-	-- Simple flat card
-	local card = Instance.new("TextButton")
-	card.Name = product.name .. "Card"
-	card.BackgroundColor3 = blend(cardColor, Color3.new(1,1,1), 0.85)
-	card.BorderSizePixel = 0
-	card.AutoButtonColor = false
-	card.Text = ""
-	card.ClipsDescendants = true
-	card.Parent = parent
+	-- List item row
+	local row = Instance.new("TextButton")
+	row.Name = product.name .. "Row"
+	row.Size = UDim2.new(1, 0, 0, 52)
+	row.BackgroundColor3 = theme.surface
+	row.BorderSizePixel = 0
+	row.AutoButtonColor = false
+	row.Text = ""
+	row.LayoutOrder = product.LayoutOrder or 1
+	row.Parent = parent
 
-	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 12); corner.Parent = card
+	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 12); corner.Parent = row
+	local stroke = Instance.new("UIStroke"); stroke.Color = accentColor; stroke.Thickness = 2; stroke.Transparency = 0.7; stroke.Parent = row
 
 	-- Hover effect
-	local hoverScale = Instance.new("UIScale"); hoverScale.Scale = 1; hoverScale.Parent = card
-	card.MouseEnter:Connect(function() 
+	row.MouseEnter:Connect(function() 
 		playSound("hover")
-		TweenService:Create(hoverScale,TweenInfo.new(0.15),{Scale=1.03}):Play()
-		TweenService:Create(card,TweenInfo.new(0.15),{BackgroundColor3=blend(cardColor, Color3.new(1,1,1), 0.75)}):Play()
+		TweenService:Create(stroke,TweenInfo.new(0.15),{Transparency=0.3}):Play()
 	end)
-	card.MouseLeave:Connect(function() 
-		TweenService:Create(hoverScale,TweenInfo.new(0.15),{Scale=1}):Play()
-		TweenService:Create(card,TweenInfo.new(0.15),{BackgroundColor3=blend(cardColor, Color3.new(1,1,1), 0.85)}):Play()
+	row.MouseLeave:Connect(function() 
+		TweenService:Create(stroke,TweenInfo.new(0.15),{Transparency=0.7}):Play()
 	end)
 
-	-- Main text area
-	local textArea = Instance.new("Frame")
-	textArea.Size = UDim2.new(1, -16, 1, -36)
-	textArea.Position = UDim2.fromOffset(8, 8)
-	textArea.BackgroundTransparency = 1
-	textArea.Parent = card
+	-- Icon on left
+	local icon = Instance.new("ImageLabel")
+	icon.Image = product.icon or "rbxassetid://0"
+	icon.Size = UDim2.fromOffset(36, 36)
+	icon.Position = UDim2.fromOffset(10, 8)
+	icon.BackgroundTransparency = 1
+	icon.Parent = row
 
-	-- Product name (larger, centered)
+	-- Text area in middle
+	local textContainer = Instance.new("Frame")
+	textContainer.Size = UDim2.new(1, -160, 1, -10)
+	textContainer.Position = UDim2.fromOffset(52, 5)
+	textContainer.BackgroundTransparency = 1
+	textContainer.Parent = row
+
+	-- Product name
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(1, 0, 0, 20)
-	nameLabel.Position = UDim2.fromOffset(0, 10)
+	nameLabel.Size = UDim2.new(1, 0, 0, 18)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.TextSize = 16
-	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+	nameLabel.TextSize = 15
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	nameLabel.Parent = textArea
+	nameLabel.Parent = textContainer
 
-	-- Amount/Description
+	-- Amount/description
 	local descText = isGamepass and product.description or (formatNumber(product.amount) .. " Cash")
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(1, 0, 0, 32)
-	descLabel.Position = UDim2.fromOffset(0, 34)
+	descLabel.Size = UDim2.new(1, 0, 0, 16)
+	descLabel.Position = UDim2.fromOffset(0, 20)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = descText
 	descLabel.TextColor3 = theme.textSecondary
 	descLabel.Font = Enum.Font.Gotham
-	descLabel.TextSize = 12
-	descLabel.TextXAlignment = Enum.TextXAlignment.Center
-	descLabel.TextWrapped = true
-	descLabel.Parent = textArea
+	descLabel.TextSize = 11
+	descLabel.TextXAlignment = Enum.TextXAlignment.Left
+	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	descLabel.Parent = textContainer
 
-	-- Show OWNED text if gamepass is owned (above button area)
-	if isGamepass and owned and not product.hasToggle then
-		local ownedLabel = Instance.new("TextLabel")
-		ownedLabel.Size = UDim2.new(1, 0, 0, 16)
-		ownedLabel.Position = UDim2.new(0, 0, 1, -54)
-		ownedLabel.BackgroundTransparency = 1
-		ownedLabel.Text = "✓ OWNED"
-		ownedLabel.TextColor3 = theme.success
-		ownedLabel.Font = Enum.Font.GothamBold
-		ownedLabel.TextSize = 12
-		ownedLabel.TextXAlignment = Enum.TextXAlignment.Center
-		ownedLabel.Parent = card
-	end
-
-	-- Price/Buy button OR Toggle at bottom
+	-- Button on right
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.new(1, -16, 0, 28)
-	buyBtn.Position = UDim2.new(0, 8, 1, -36)
-	buyBtn.BackgroundColor3 = cardColor
+	buyBtn.Size = UDim2.fromOffset(100, 36)
+	buyBtn.Position = UDim2.new(1, -108, 0.5, 0)
+	buyBtn.AnchorPoint = Vector2.new(0, 0.5)
+	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "R$" .. tostring(product.price or 0)
 	buyBtn.TextColor3 = Color3.new(1, 1, 1)
 	buyBtn.Font = Enum.Font.GothamBold
 	buyBtn.TextSize = 14
 	buyBtn.AutoButtonColor = false
-	buyBtn.Active = true
-	buyBtn.Parent = card
+	buyBtn.Parent = row
 	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 10); btnCorner.Parent = buyBtn
 
-	-- Toggle for Auto Collect (replaces button completely)
+	-- Toggle for Auto Collect
 	if isGamepass and product.hasToggle and owned then
+		buyBtn.Size = UDim2.fromOffset(80, 36)
+		buyBtn.Position = UDim2.new(1, -88, 0.5, 0)
 		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
@@ -514,18 +510,6 @@ function Shop:createProductCard(product, productType, parent)
 		end
 		paint(state)
 		
-		-- Add OWNED label above toggle
-		local ownedLabel = Instance.new("TextLabel")
-		ownedLabel.Size = UDim2.new(1, 0, 0, 14)
-		ownedLabel.Position = UDim2.new(0, 0, 1, -52)
-		ownedLabel.BackgroundTransparency = 1
-		ownedLabel.Text = "✓ OWNED"
-		ownedLabel.TextColor3 = theme.success
-		ownedLabel.Font = Enum.Font.GothamBold
-		ownedLabel.TextSize = 10
-		ownedLabel.TextXAlignment = Enum.TextXAlignment.Center
-		ownedLabel.Parent = card
-		
 		buyBtn.MouseButton1Click:Connect(function()
 			local nextState = not state
 			paint(nextState)
@@ -536,12 +520,10 @@ function Shop:createProductCard(product, productType, parent)
 			end
 		end)
 	elseif isGamepass and owned then
-		-- Non-toggle gamepass that's owned
 		buyBtn.BackgroundColor3 = theme.success
-		buyBtn.Text = "✓ OWNED"
+		buyBtn.Text = "OWNED"
 		buyBtn.Active = false
 	else
-		-- Regular purchase button
 		buyBtn.MouseButton1Click:Connect(function()
 			if owned then return end
 			buyBtn.Text = "..."
@@ -550,11 +532,11 @@ function Shop:createProductCard(product, productType, parent)
 		end)
 	end
 
-	product.cardInstance = card
+	product.cardInstance = row
 	product.purchaseButton = buyBtn
 end
 
--- Toggle functionality is now integrated into createProductCard
+-- Toggle functionality is now integrated into createProductItem
 
 -- ✅ DYNAMIC SIZING (from first script)
 function Shop:setupDynamicSizing()
