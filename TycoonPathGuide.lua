@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v8.0 - OPTIMIZED & LEAK-FREE]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v8.1 - MOBILE UI FIX]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -38,6 +38,14 @@
 	✅ Async server increment (non-blocking!)
 	✅ Pulse connection auto-cleanup on completion
 	✅ Cache cleanup on PlayerRemoving (server-side)
+	
+	📱 MOBILE UI FIX:
+	✅ Safe insets (respects notches & nav bars!)
+	✅ Viewport-based sizing (85% width, capped at 360px)
+	✅ Phone-specific scaling (0.76x-0.93x based on screen size)
+	✅ Dynamic text sizing (scales with card width)
+	✅ Tighter padding on phones (14px vs 20px)
+	✅ No more screen-covering cards!
 	
 	✅ Path stays FLAT on ground (no floating!)
 	✅ Highlights CLOSEST gate (true distance-based switching)
@@ -299,10 +307,18 @@ local function isUnclaimedOwner(owner: Instance): boolean
 end
 
 --============================================================================--
---                     📱 MOBILE DETECTION
+--                     📱 MOBILE DETECTION & SIZING
 --============================================================================--
 local function viewport()
 	return workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
+end
+
+local function safeViewport()
+	local cam = workspace.CurrentCamera
+	if not cam then return Vector2.new(800, 600), 0 end
+	local inset = GuiService:GetGuiInset()
+	local v = cam.ViewportSize
+	return Vector2.new(v.X, math.max(0, v.Y - inset.Y)), inset.Y
 end
 
 local function isMobileLike()
@@ -319,6 +335,16 @@ local function isTablet()
 	return isMobileLike() and not isPhone()
 end
 
+-- Phone-specific scaling (smaller screens = more aggressive scale-down)
+local function phoneTutorialScale(shortSide)
+	if shortSide <= 320 then return 0.76 end
+	if shortSide <= 360 then return 0.80 end
+	if shortSide <= 375 then return 0.84 end
+	if shortSide <= 393 then return 0.87 end
+	if shortSide <= 414 then return 0.90 end
+	return 0.93
+end
+
 --============================================================================--
 --                       🎓 TUTORIAL UI SYSTEM
 --============================================================================--
@@ -328,16 +354,33 @@ local function createTutorialUI()
 	gui.Name = "TutorialGui"
 	gui.DisplayOrder = 10000
 	gui.ResetOnSpawn = false
-	gui.IgnoreGuiInset = true
+	gui.IgnoreGuiInset = false -- ✅ Respect safe insets!
+	gui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets -- ✅ Mobile safe area!
 	gui.Parent = playerGui
 
 	local phone = isPhone()
 	local tablet = isTablet()
+	local v, insetY = safeViewport()
+	local shortSide = math.min(v.X, v.Y)
 
-	local cardW = phone and 340 or (tablet and 400 or 450)
-	local cardH = phone and 170 or (tablet and 155 or 145)
-	local titleSize = phone and 22 or (tablet and 24 or 26)
-	local bodySize = phone and 16 or (tablet and 17 or 18)
+	-- ✅ Viewport-based sizing (more responsive!)
+	local cardW, cardH
+	if phone then
+		-- Phone: 85% of width, but capped at 360px
+		cardW = math.min(360, math.floor(v.X * 0.85))
+		cardH = 158 -- Slightly shorter for phones
+	elseif tablet then
+		cardW = 400
+		cardH = 155
+	else
+		cardW = 450
+		cardH = 145
+	end
+
+	-- ✅ Dynamic text sizing based on card width
+	local scale = cardW / 450 -- Relative to desktop baseline
+	local titleSize = math.floor(26 * scale)
+	local bodySize = math.floor(18 * scale)
 
 	local overlay = Instance.new("Frame")
 	overlay.Name = "Overlay"
@@ -383,11 +426,22 @@ local function createTutorialUI()
 	shadowCorner.CornerRadius = UDim.new(0, 16)
 	shadowCorner.Parent = shadow
 
+	-- ✅ Phone-specific scaling (prevents covering entire screen!)
+	local cardScale = Instance.new("UIScale")
+	if phone then
+		cardScale.Scale = phoneTutorialScale(shortSide)
+	else
+		cardScale.Scale = 1
+	end
+	cardScale.Parent = card
+
+	-- ✅ Tighter padding on phones
+	local paddingAmount = phone and 14 or (tablet and 16 or 20)
 	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 16)
-	padding.PaddingBottom = UDim.new(0, 16)
-	padding.PaddingLeft = UDim.new(0, 20)
-	padding.PaddingRight = UDim.new(0, 20)
+	padding.PaddingTop = UDim.new(0, paddingAmount)
+	padding.PaddingBottom = UDim.new(0, paddingAmount)
+	padding.PaddingLeft = UDim.new(0, paddingAmount)
+	padding.PaddingRight = UDim.new(0, paddingAmount)
 	padding.Parent = card
 
 	local title = Instance.new("TextLabel")
@@ -468,6 +522,47 @@ local function createTutorialUI()
 			TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 			Position = UDim2.new(0.5, 0, 0, phone and 60 or 80)
 		}):Play()
+	end)
+
+	-- ✅ Dynamic viewport resize (handles rotation, window resize, etc!)
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+		if not gui or not gui.Parent or not card or not card.Parent then return end
+		
+		local newPhone = isPhone()
+		local newV, newInsetY = safeViewport()
+		local newShortSide = math.min(newV.X, newV.Y)
+		
+		-- Recalculate card size
+		local newCardW, newCardH
+		if newPhone then
+			newCardW = math.min(360, math.floor(newV.X * 0.85))
+			newCardH = 158
+		elseif isTablet() then
+			newCardW = 400
+			newCardH = 155
+		else
+			newCardW = 450
+			newCardH = 145
+		end
+		
+		-- Update card size
+		card.Size = UDim2.fromOffset(newCardW, newCardH)
+		card:SetAttribute("OriginalWidth", newCardW)
+		card:SetAttribute("OriginalHeight", newCardH)
+		
+		-- Update scale
+		if newPhone then
+			cardScale.Scale = phoneTutorialScale(newShortSide)
+		else
+			cardScale.Scale = 1
+		end
+		
+		-- Update text sizes
+		local newScale = newCardW / 450
+		title.TextSize = math.floor(26 * newScale)
+		body.TextSize = math.floor(18 * newScale)
+		body.Position = UDim2.new(0, 0, 0, title.TextSize + 8)
+		body.Size = UDim2.new(1, -70, 1, -(title.TextSize + 16))
 	end)
 
 	return gui
@@ -1380,28 +1475,23 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v8.0 - OPTIMIZED & LEAK-FREE")
-print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
-print("🐛 FIX: Highlight cleared when no target")
-print("🐛 FIX: Hysteresis for stable switching (no jitter)")
-print("🐛 FIX: Auto-close timer schedules in nextTutorialStep()!")
-print("🐛 FIX: Smoother text transitions (Sine easing, no flicker!)")
+print("✅ Tycoon Path Guide v8.1 - MOBILE UI FIX")
+print("📱 FIX: Tutorial card now properly sized on phones!")
+print("📱 FIX: Safe insets (respects notches & nav bars)")
+print("📱 FIX: Viewport-based sizing (85% width, 360px max)")
+print("📱 FIX: Aggressive scaling on small screens (0.76x-0.93x)")
+print("📱 FIX: Dynamic text sizing + tighter padding")
 print("⚡ OPTIMIZED: Server call cached (no spam!)")
 print("⚡ OPTIMIZED: Highlight cooldown (no rapid flicker!)")
 print("⚡ OPTIMIZED: All connections cleaned up (no leaks!)")
 print("⚡ OPTIMIZED: Debounced functions (no double-calls!)")
 print("⚡ OPTIMIZED: Async server calls (non-blocking!)")
-print("⚡ OPTIMIZED: Memory cleanup on PlayerRemoving")
-print("🎓 NEW: Only shows for FIRST 2 JOINS (DataStore tracking!)")
-print("✨ NEW: Natural text instructions (glowing button, green part)")
-print("🎀 NEW: Cute bubbly font (FredokaOne everywhere!)")
-print("🎀 NEW: Bigger text (16-18px, easy to read)")
-print("🎀 NEW: CUTE RISE-AND-FADE EXIT! (0.28s animation)")
-print("🎀 NEW: Perfect timing! (4.5s final step)")
+print("🎓 Only shows for FIRST 2 JOINS (DataStore tracking!)")
+print("✨ Natural text instructions (glowing button, green part)")
+print("🎀 Cute bubbly font (FredokaOne everywhere!)")
+print("🎀 CUTE RISE-AND-FADE EXIT! (0.28s animation)")
 print("🌍 Path stays FLAT on ground (no floating!)")
 print("🎯 Highlights CLOSEST gate (distance-based)")
-print("✨ Smooth fade-out when gate claimed")
-print("🔧 Robust ownership (all tycoon kits)")
 print("🎀 Production-ready & buttery-smooth!")
 print("⚠️ REQUIRES: TutorialTracker.lua in ServerScriptService")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
