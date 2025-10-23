@@ -80,7 +80,7 @@ local function createButton(name, imageId)
 	img.Size = UDim2.fromScale(1, 1)
 	img.BackgroundTransparency = 1
 	img.Image = imageId
-	img.ScaleType = Enum.ScaleType.Fit
+	img.ScaleType = Enum.ScaleType.Crop
 	img.Parent = btn
 	
 	-- Simple hover effect
