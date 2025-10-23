@@ -406,11 +406,14 @@ function Shop:createProductItem(product, productType, parent)
 	local accentColor = isGamepass and theme.kuromi or theme.cinna
 	local owned = isGamepass and checkOwnership(product.id)
 
-	-- Container (NO background, NO borders, NO card look!)
-	local container = Instance.new("Frame")
+	-- Container with YOUR CUSTOM CARD BACKGROUND!
+	local container = Instance.new("ImageLabel")
 	container.Name = product.name .. "Item"
 	container.Size = UDim2.new(1, 0, 0, 48)
 	container.BackgroundTransparency = 1
+	container.Image = "rbxassetid://108251319294182"
+	container.ScaleType = Enum.ScaleType.Stretch
+	container.ImageColor3 = Color3.new(1, 1, 1)
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
@@ -467,14 +470,7 @@ function Shop:createProductItem(product, productType, parent)
 		end
 	end)
 
-	-- Separator line below
-	local line = Instance.new("Frame")
-	line.Size = UDim2.new(1, -16, 0, 1)
-	line.Position = UDim2.new(0, 8, 1, -1)
-	line.BackgroundColor3 = theme.stroke
-	line.BackgroundTransparency = 0.5
-	line.BorderSizePixel = 0
-	line.Parent = container
+	-- No separator needed with custom card background!
 
 	-- Toggle for Auto Collect
 	if isGamepass and product.hasToggle and owned then
