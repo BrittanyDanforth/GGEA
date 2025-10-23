@@ -406,88 +406,80 @@ function Shop:createProductItem(product, productType, parent)
 	local accentColor = isGamepass and theme.kuromi or theme.cinna
 	local owned = isGamepass and checkOwnership(product.id)
 
-	-- List item row
-	local row = Instance.new("TextButton")
-	row.Name = product.name .. "Row"
-	row.Size = UDim2.new(1, 0, 0, 52)
-	row.BackgroundColor3 = theme.surface
-	row.BorderSizePixel = 0
-	row.AutoButtonColor = false
-	row.Text = ""
-	row.LayoutOrder = product.LayoutOrder or 1
-	row.Parent = parent
+	-- Container (NO background, NO borders, NO card look!)
+	local container = Instance.new("Frame")
+	container.Name = product.name .. "Item"
+	container.Size = UDim2.new(1, 0, 0, 48)
+	container.BackgroundTransparency = 1
+	container.LayoutOrder = product.LayoutOrder or 1
+	container.Parent = parent
 
-	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 12); corner.Parent = row
-	local stroke = Instance.new("UIStroke"); stroke.Color = accentColor; stroke.Thickness = 2; stroke.Transparency = 0.7; stroke.Parent = row
-
-	-- Hover effect
-	row.MouseEnter:Connect(function() 
-		playSound("hover")
-		TweenService:Create(stroke,TweenInfo.new(0.15),{Transparency=0.3}):Play()
-	end)
-	row.MouseLeave:Connect(function() 
-		TweenService:Create(stroke,TweenInfo.new(0.15),{Transparency=0.7}):Play()
-	end)
-
-	-- Icon on left
-	local icon = Instance.new("ImageLabel")
-	icon.Image = product.icon or "rbxassetid://0"
-	icon.Size = UDim2.fromOffset(36, 36)
-	icon.Position = UDim2.fromOffset(10, 8)
-	icon.BackgroundTransparency = 1
-	icon.Parent = row
-
-	-- Text area in middle
-	local textContainer = Instance.new("Frame")
-	textContainer.Size = UDim2.new(1, -160, 1, -10)
-	textContainer.Position = UDim2.fromOffset(52, 5)
-	textContainer.BackgroundTransparency = 1
-	textContainer.Parent = row
-
-	-- Product name
+	-- Name on the left
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(1, 0, 0, 18)
+	nameLabel.Size = UDim2.new(0.5, -10, 0, 20)
+	nameLabel.Position = UDim2.fromOffset(8, 4)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.TextSize = 15
+	nameLabel.TextSize = 16
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	nameLabel.Parent = textContainer
+	nameLabel.Parent = container
 
-	-- Amount/description
-	local descText = isGamepass and product.description or (formatNumber(product.amount) .. " Cash")
+	-- Amount/description below name
+	local descText = isGamepass and product.description or (formatNumber(product.amount))
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(1, 0, 0, 16)
-	descLabel.Position = UDim2.fromOffset(0, 20)
+	descLabel.Size = UDim2.new(0.5, -10, 0, 16)
+	descLabel.Position = UDim2.fromOffset(8, 26)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = descText
 	descLabel.TextColor3 = theme.textSecondary
 	descLabel.Font = Enum.Font.Gotham
-	descLabel.TextSize = 11
+	descLabel.TextSize = 12
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	descLabel.Parent = textContainer
+	descLabel.Parent = container
 
-	-- Button on right
+	-- Buy button - clean and flat
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.fromOffset(100, 36)
-	buyBtn.Position = UDim2.new(1, -108, 0.5, 0)
+	buyBtn.Size = UDim2.fromOffset(90, 38)
+	buyBtn.Position = UDim2.new(1, -98, 0.5, 0)
 	buyBtn.AnchorPoint = Vector2.new(0, 0.5)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "R$" .. tostring(product.price or 0)
 	buyBtn.TextColor3 = Color3.new(1, 1, 1)
 	buyBtn.Font = Enum.Font.GothamBold
-	buyBtn.TextSize = 14
+	buyBtn.TextSize = 15
 	buyBtn.AutoButtonColor = false
-	buyBtn.Parent = row
-	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 10); btnCorner.Parent = buyBtn
+	buyBtn.BorderSizePixel = 0
+	buyBtn.Parent = container
+	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 8); btnCorner.Parent = buyBtn
+
+	-- Hover effect on button
+	buyBtn.MouseEnter:Connect(function()
+		playSound("hover")
+		TweenService:Create(buyBtn,TweenInfo.new(0.12),{BackgroundColor3=blend(accentColor, Color3.new(1,1,1), 0.2)}):Play()
+	end)
+	buyBtn.MouseLeave:Connect(function()
+		if not owned or (isGamepass and product.hasToggle) then
+			TweenService:Create(buyBtn,TweenInfo.new(0.12),{BackgroundColor3=accentColor}):Play()
+		end
+	end)
+
+	-- Separator line below
+	local line = Instance.new("Frame")
+	line.Size = UDim2.new(1, -16, 0, 1)
+	line.Position = UDim2.new(0, 8, 1, -1)
+	line.BackgroundColor3 = theme.stroke
+	line.BackgroundTransparency = 0.5
+	line.BorderSizePixel = 0
+	line.Parent = container
 
 	-- Toggle for Auto Collect
 	if isGamepass and product.hasToggle and owned then
-		buyBtn.Size = UDim2.fromOffset(80, 36)
-		buyBtn.Position = UDim2.new(1, -88, 0.5, 0)
+		buyBtn.Size = UDim2.fromOffset(70, 38)
+		buyBtn.Position = UDim2.new(1, -78, 0.5, 0)
 		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
@@ -532,7 +524,7 @@ function Shop:createProductItem(product, productType, parent)
 		end)
 	end
 
-	product.cardInstance = row
+	product.cardInstance = container
 	product.purchaseButton = buyBtn
 end
 
