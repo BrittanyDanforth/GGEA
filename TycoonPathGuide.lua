@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.5 - CUTE BUBBLY UI]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.6 - RISE & FADE EXIT]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -12,9 +12,11 @@
 	
 	✨ UI IMPROVEMENTS:
 	✅ Cute bubbly font (FredokaOne for everything!)
-	✅ Bigger, easier to read text (16-19px)
-	✅ Taller card to fit text better
+	✅ Bigger, easier to read text (16-18px)
+	✅ Optimized card sizing (no cutoff!)
 	✅ TextWrapped enabled for clean flow
+	✅ CUTE RISE-AND-FADE EXIT ANIMATION! 🎀
+	✅ Auto-closes after 2 seconds (no tap needed)
 	
 	✅ Path stays FLAT on ground (no floating!)
 	✅ Highlights CLOSEST gate (true distance-based switching)
@@ -93,8 +95,8 @@ local Config = {
 	TUTORIAL_STEPS = {
 		{
 			name = "claim_gate",
-			title = "Welcome to Your Tycoon! 🎀",
-			description = "Touch the gate to claim your tycoon!",
+			title = "Welcome to Sanrio Tycoon! 🎀",
+			description = "Touch any gate to claim your tycoon!",
 			target = "closest_gate",
 			waitForGateClaim = true,
 		},
@@ -107,7 +109,7 @@ local Config = {
 		{
 			name = "collect_money",
 			title = "Earning Cash! 💰",
-			description = "Your dropper is working! Step on the green part to collect cash. You need $70 next!",
+			description = "Your dropper is working! Step on the green part to collect cash. You need $70 for the next dropper!",
 			waitForCash = true,
 		},
 		{
@@ -119,7 +121,7 @@ local Config = {
 		{
 			name = "tutorial_complete",
 			title = "You're All Set! 🎉",
-			description = "Amazing! Keep buying upgrades to grow your tycoon. Tap anywhere to close.",
+			description = "Amazing! Keep buying upgrades to grow your tycoon.",
 			target = nil,
 			autoClose = 2,
 		},
@@ -415,9 +417,63 @@ local function createHighlight(target)
 	TutorialState.lastHighlightedPart = target
 end
 
+local function playExitUp()
+	if not TutorialState.tutorialGui then return end
+	local gui = TutorialState.tutorialGui
+	local card = gui:FindFirstChild("Card")
+	local overlay = gui:FindFirstChild("Overlay")
+	if not card then return end
+
+	-- compute offscreen Y target (rise up)
+	local offY = -(card.AbsoluteSize.Y + 120)
+
+	-- fade timings
+	local t = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+
+	-- fade texts/buttons
+	for _, child in ipairs(card:GetChildren()) do
+		if child:IsA("TextLabel") or child:IsA("TextButton") then
+			TweenService:Create(child, t, {
+				TextTransparency = 1,
+				BackgroundTransparency = 1
+			}):Play()
+		end
+	end
+
+	-- fade stroke + shadow
+	local stroke = card:FindFirstChildOfClass("UIStroke")
+	if stroke then
+		TweenService:Create(stroke, t, {Transparency = 1}):Play()
+	end
+	local shadow = card:FindFirstChild("Shadow")
+	if shadow then
+		TweenService:Create(shadow, t, {ImageTransparency = 1}):Play()
+	end
+
+	-- slide up + fade card bg
+	local exitTween = TweenService:Create(card, t, {
+		Position = UDim2.new(0.5, 0, 0, offY),
+		BackgroundTransparency = 1
+	})
+	exitTween:Play()
+
+	-- dim overlay out too
+	if overlay then
+		TweenService:Create(overlay, t, {BackgroundTransparency = 1}):Play()
+	end
+
+	-- cleanup when done
+	exitTween.Completed:Connect(function()
+		if TutorialState.tutorialGui then
+			TutorialState.tutorialGui:Destroy()
+			TutorialState.tutorialGui = nil
+		end
+	end)
+end
+
 local function skipTutorial()
 	if TutorialState.completed then return end
-	
+
 	TutorialState.completed = true
 	TutorialState.enabled = false
 
@@ -434,51 +490,14 @@ local function skipTutorial()
 		TutorialState.lastHighlightedPart = nil
 	end
 
-	if TutorialState.tutorialGui then
-		local gui = TutorialState.tutorialGui
-		local card = gui:FindFirstChild("Card")
-		local overlay = gui:FindFirstChild("Overlay")
-		
-		if card then
-			local skipBtn = card:FindFirstChild("SkipButton")
-			if skipBtn then skipBtn.Active = false end
-			
-			local fadeInfo = TweenInfo.new(Config.FADE_OUT_TIME, Enum.EasingStyle.Quad)
-			
-			TweenService:Create(card, fadeInfo, {
-				Position = UDim2.new(0.5, 0, 0, -200),
-				BackgroundTransparency = 1
-			}):Play()
-			
-			local stroke = card:FindFirstChild("UIStroke")
-			if stroke then
-				TweenService:Create(stroke, fadeInfo, {Transparency = 1}):Play()
-			end
-			
-			local shadow = card:FindFirstChild("Shadow")
-			if shadow then
-				TweenService:Create(shadow, fadeInfo, {ImageTransparency = 1}):Play()
-			end
-			
-			for _, child in pairs(card:GetChildren()) do
-				if child:IsA("TextLabel") or child:IsA("TextButton") then
-					TweenService:Create(child, fadeInfo, {
-						TextTransparency = 1,
-						BackgroundTransparency = 1
-					}):Play()
-				end
-			end
-			
-			if overlay then
-				TweenService:Create(overlay, fadeInfo, {BackgroundTransparency = 1}):Play()
-			end
-			
-			task.wait(Config.FADE_OUT_TIME + 0.1)
-		end
-		
-		gui:Destroy()
-		TutorialState.tutorialGui = nil
+	-- Disable skip button
+	if TutorialState.skipButton then
+		TutorialState.skipButton.Active = false
 	end
+
+	-- Use the cute rise-and-fade animation!
+	playExitUp()
+	task.wait(0.5)
 
 	print("✅ [Tutorial] Completed!")
 end
@@ -1200,14 +1219,16 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.5 - CUTE BUBBLY UI")
+print("✅ Tycoon Path Guide v7.6 - RISE & FADE EXIT")
 print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
 print("🐛 FIX: Highlight cleared when no target")
 print("🐛 FIX: Hysteresis for stable switching (no jitter)")
 print("✨ NEW: Natural text instructions (glowing button, green part)")
 print("🎀 NEW: Cute bubbly font (FredokaOne everywhere!)")
-print("🎀 NEW: Bigger text (16-19px, easy to read)")
-print("🎀 NEW: Taller card (fits text perfectly)")
+print("🎀 NEW: Bigger text (16-18px, easy to read)")
+print("🎀 NEW: Optimized card sizing (no cutoff!)")
+print("🎀 NEW: CUTE RISE-AND-FADE EXIT! Slides up & fades out")
+print("🎀 NEW: Auto-closes in 2 seconds (no tap needed)")
 print("🌍 Path stays FLAT on ground (no floating!)")
 print("🎯 Highlights CLOSEST gate (distance-based)")
 print("✨ Smooth fade-out when gate claimed")
