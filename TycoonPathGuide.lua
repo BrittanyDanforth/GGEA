@@ -107,7 +107,7 @@ local Config = {
 		{
 			name = "collect_money",
 			title = "Earning Cash! 💰",
-			description = "Walk to the cash collector and step on the green part. You need $70 for the next upgrade!",
+			description = "Your dropper is working! Step on the green part to collect cash. You need $70 next!",
 			waitForCash = true,
 		},
 		{
@@ -238,9 +238,9 @@ local function createTutorialUI()
 	local tablet = isTablet()
 
 	local cardW = phone and 340 or (tablet and 400 or 450)
-	local cardH = phone and 180 or (tablet and 165 or 155)
+	local cardH = phone and 170 or (tablet and 155 or 145)
 	local titleSize = phone and 22 or (tablet and 24 or 26)
-	local bodySize = phone and 16 or (tablet and 18 or 19)
+	local bodySize = phone and 16 or (tablet and 17 or 18)
 
 	local overlay = Instance.new("Frame")
 	overlay.Name = "Overlay"
@@ -309,7 +309,7 @@ local function createTutorialUI()
 	local body = Instance.new("TextLabel")
 	body.Name = "Body"
 	body.Position = UDim2.new(0, 0, 0, titleSize + 8)
-	body.Size = UDim2.new(1, -70, 1, -(titleSize + 20))
+	body.Size = UDim2.new(1, -70, 1, -(titleSize + 16))
 	body.BackgroundTransparency = 1
 	body.Font = Enum.Font.FredokaOne
 	body.TextSize = bodySize
@@ -317,6 +317,7 @@ local function createTutorialUI()
 	body.TextXAlignment = Enum.TextXAlignment.Left
 	body.TextYAlignment = Enum.TextYAlignment.Top
 	body.TextWrapped = true
+	body.TextScaled = false
 	body.TextTransparency = 0
 	body.Text = "Preparing tutorial..."
 	body.Parent = card
