@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.7 - SNAPPY EXIT]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.8 - AUTO-CLOSE FIX]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -9,6 +9,7 @@
 	✅ Simple text instructions (no button/collector highlighting)
 	✅ Natural directions ("glowing button", "green part")
 	✅ Works universally across all tycoons!
+	✅ AUTO-CLOSE TIMER FIX - schedules in nextTutorialStep() too!
 	
 	✨ UI IMPROVEMENTS:
 	✅ Cute bubbly font (FredokaOne for everything!)
@@ -19,6 +20,7 @@
 	✅ SNAPPY timing (0.28s animation, 1.4s total dwell)
 	✅ Exit starts early so it finishes EXACTLY at autoClose time
 	✅ No extra waits - crisp and responsive!
+	✅ No more 15-second hangs - auto-close works on ALL steps!
 	
 	✅ Path stays FLAT on ground (no floating!)
 	✅ Highlights CLOSEST gate (true distance-based switching)
@@ -593,6 +595,17 @@ local function nextTutorialStep()
 		return
 	end
 
+	-- Schedule auto-close for this new step (if it has one)
+	if step.autoClose then
+		local lead = math.max(0.05, step.autoClose - Config.EXIT_TWEEN_TIME)
+		task.delay(lead, function()
+			if TutorialState.enabled and not TutorialState.completed
+				and Config.TUTORIAL_STEPS[TutorialState.currentStep] == step then
+				skipTutorial()
+			end
+		end)
+	end
+
 	if TutorialState.tutorialGui then
 		local card = TutorialState.tutorialGui.Card
 		local originalW = card:GetAttribute("OriginalWidth") or 450
@@ -625,8 +638,6 @@ local function nextTutorialStep()
 		TutorialState.highlightPart = nil
 		TutorialState.lastHighlightedPart = nil
 	end
-	
-	-- No highlighting for buttons/collectors - just clear instructions!
 end
 
 --============================================================================--
@@ -1223,10 +1234,12 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.7 - SNAPPY EXIT")
+print("✅ Tycoon Path Guide v7.8 - AUTO-CLOSE FIX")
 print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
 print("🐛 FIX: Highlight cleared when no target")
 print("🐛 FIX: Hysteresis for stable switching (no jitter)")
+print("🐛 FIX: Auto-close timer schedules in nextTutorialStep()!")
+print("🐛 FIX: No more 15-second hangs - works on ALL steps!")
 print("✨ NEW: Natural text instructions (glowing button, green part)")
 print("🎀 NEW: Cute bubbly font (FredokaOne everywhere!)")
 print("🎀 NEW: Bigger text (16-18px, easy to read)")
