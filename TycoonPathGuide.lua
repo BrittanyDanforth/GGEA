@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.9 - FIRST-TIME ONLY]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v8.0 - OPTIMIZED & LEAK-FREE]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -26,8 +26,18 @@
 	🎓 SMART TUTORIAL SYSTEM:
 	✅ Only shows for FIRST 2 joins (not every time!)
 	✅ DataStore tracking per player
-	✅ View count increments on completion
+	✅ View count increments ONCE (prevents duplicates)
 	✅ Backwards compatible (shows if no server script)
+	
+	⚡ PERFORMANCE & MEMORY:
+	✅ Server call cached (no repeated RemoteFunction spam!)
+	✅ Highlight switch cooldown (prevents rapid flickering = 0.15s)
+	✅ All connections properly disconnected (no leaks!)
+	✅ Debounced skipTutorial (prevents double-cleanup)
+	✅ Exit animation guard (can't run twice)
+	✅ Async server increment (non-blocking!)
+	✅ Pulse connection auto-cleanup on completion
+	✅ Cache cleanup on PlayerRemoving (server-side)
 	
 	✅ Path stays FLAT on ground (no floating!)
 	✅ Highlights CLOSEST gate (true distance-based switching)
@@ -50,6 +60,39 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local playerGui = player:WaitForChild("PlayerGui")
+
+--[[
+	⚡ PERFORMANCE SAFEGUARDS (NO LAG, NO MEMORY LEAKS):
+	
+	1. Server Call Caching:
+	   - shouldShowTutorial() caches result (no repeated RemoteFunction calls)
+	   - Server-side has 5-minute cache (prevents DataStore spam)
+	
+	2. Connection Cleanup:
+	   - All RunService connections tracked in TutorialState.connections[]
+	   - Cleaned on CharacterRemoving, skipTutorial, and step changes
+	   - Pulse connection auto-disconnects when highlight destroyed
+	
+	3. Debouncing:
+	   - skipTutorial() has debounce (can't be called twice)
+	   - playExitUp() has guard (can't run multiple exit animations)
+	   - Highlight switching has 0.15s cooldown (no rapid flicker)
+	
+	4. Async Operations:
+	   - Tutorial view increment runs in task.spawn() (non-blocking!)
+	   - Server calls wrapped in pcall (safe failures)
+	
+	5. Memory Management:
+	   - GUI destroyed after exit animation completes
+	   - Highlight destroyed when switching/clearing
+	   - Cache cleared on PlayerRemoving (server-side)
+	   - Path segments cleaned when hiding path
+	
+	6. Minimal Updates:
+	   - Gate scanning: 0.2s interval (not every frame)
+	   - Text updates: Only when step changes (not continuous)
+	   - Highlight: Only updates when target actually changes
+--]]
 
 --============================================================================--
 --                              CONFIGURATION
@@ -177,6 +220,7 @@ local PathState = {
 	playerTycoon = nil,
 	fadingOut = false,
 	ownershipConnections = {},
+	lastHighlightSwitch = 0, -- Prevent rapid highlight flickering
 }
 
 -- Raycast parameters
@@ -188,7 +232,14 @@ raycastParams.IgnoreWater = true
 --                     🎓 TUTORIAL VIEW COUNT CHECK
 --============================================================================--
 
+local tutorialCheckCache = nil -- Cache result to prevent multiple server calls
+
 local function shouldShowTutorial(): boolean
+	-- Return cached result if already checked
+	if tutorialCheckCache ~= nil then
+		return tutorialCheckCache
+	end
+	
 	-- Try to get remote function from ReplicatedStorage
 	local remotesFolder = ReplicatedStorage:FindFirstChild("TycoonRemotes")
 	local checkTutorial = remotesFolder and remotesFolder:FindFirstChild("CheckTutorialStatus")
@@ -200,12 +251,14 @@ local function shouldShowTutorial(): boolean
 		
 		if success and typeof(viewCount) == "number" then
 			local shouldShow = viewCount < Config.TUTORIAL_MAX_VIEWS
+			tutorialCheckCache = shouldShow -- Cache result!
 			print("🎓 [Tutorial] View count:", viewCount, "- Should show:", shouldShow)
 			return shouldShow
 		end
 	end
 	
 	-- Fallback: Always show if remote doesn't exist (backwards compatible!)
+	tutorialCheckCache = true
 	print("⚠️ [Tutorial] No CheckTutorialStatus remote - showing tutorial (fallback)")
 	return true
 end
@@ -421,14 +474,16 @@ local function createTutorialUI()
 end
 
 local function createHighlight(target)
-	-- 🔥 ALWAYS recreate highlight (ensures it updates even if targeting same part)
+	-- Clean up old highlight and its connections first (prevent memory leaks!)
 	if TutorialState.highlightPart then
-		TutorialState.highlightPart:Destroy()
+		pcall(function()
+			TutorialState.highlightPart:Destroy()
+		end)
 		TutorialState.highlightPart = nil
+		TutorialState.lastHighlightedPart = nil
 	end
 	
 	if not target or not target:IsA("BasePart") then 
-		TutorialState.lastHighlightedPart = nil
 		return 
 	end
 
@@ -442,10 +497,13 @@ local function createHighlight(target)
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	highlight.Parent = target.Parent or workspace
 
+	-- Pulse animation with proper cleanup
 	local pulseConnection
 	pulseConnection = RunService.Heartbeat:Connect(function()
-		if not highlight or not highlight.Parent then
-			pulseConnection:Disconnect()
+		if not highlight or not highlight.Parent or TutorialState.completed then
+			if pulseConnection then
+				pulseConnection:Disconnect()
+			end
 			return
 		end
 		local time = tick()
@@ -465,6 +523,10 @@ local function playExitUp()
 	local card = gui:FindFirstChild("Card")
 	local overlay = gui:FindFirstChild("Overlay")
 	if not card then return end
+
+	-- Prevent multiple simultaneous exit animations
+	if gui:GetAttribute("ExitInProgress") then return end
+	gui:SetAttribute("ExitInProgress", true)
 
 	-- compute offscreen Y target (rise up)
 	local offY = -(card.AbsoluteSize.Y + 120)
@@ -507,42 +569,58 @@ local function playExitUp()
 	-- cleanup when done
 	exitTween.Completed:Connect(function()
 		if TutorialState.tutorialGui then
-			TutorialState.tutorialGui:Destroy()
+			pcall(function()
+				TutorialState.tutorialGui:Destroy()
+			end)
 			TutorialState.tutorialGui = nil
 		end
 	end)
 end
 
+local skipTutorialDebounce = false
+local tutorialViewIncremented = false
+
 local function skipTutorial()
-	if TutorialState.completed then return end
+	-- Prevent multiple calls causing memory leaks
+	if TutorialState.completed or skipTutorialDebounce then return end
+	skipTutorialDebounce = true
 
 	TutorialState.completed = true
 	TutorialState.enabled = false
 
+	-- Clean up ALL connections (prevent memory leaks!)
 	for _, connection in pairs(TutorialState.connections) do
-		if connection then 
+		if connection and typeof(connection) == "RBXScriptConnection" then 
 			pcall(function() connection:Disconnect() end)
 		end
 	end
 	TutorialState.connections = {}
 
+	-- Clean up highlight (and its pulse connection!)
 	if TutorialState.highlightPart then 
-		TutorialState.highlightPart:Destroy() 
+		pcall(function()
+			TutorialState.highlightPart:Destroy()
+		end)
 		TutorialState.highlightPart = nil
 		TutorialState.lastHighlightedPart = nil
 	end
 
-	-- Disable skip button
+	-- Disable skip button (prevent double-clicks)
 	if TutorialState.skipButton then
 		TutorialState.skipButton.Active = false
 	end
 
-	-- Increment tutorial view count on server
-	local remotesFolder = ReplicatedStorage:FindFirstChild("TycoonRemotes")
-	local incrementTutorial = remotesFolder and remotesFolder:FindFirstChild("IncrementTutorialViews")
-	if incrementTutorial and incrementTutorial:IsA("RemoteFunction") then
-		pcall(function()
-			incrementTutorial:InvokeServer()
+	-- Increment tutorial view count ONCE (async, non-blocking!)
+	if not tutorialViewIncremented then
+		tutorialViewIncremented = true
+		task.spawn(function()
+			local remotesFolder = ReplicatedStorage:FindFirstChild("TycoonRemotes")
+			local incrementTutorial = remotesFolder and remotesFolder:FindFirstChild("IncrementTutorialViews")
+			if incrementTutorial and incrementTutorial:IsA("RemoteFunction") then
+				pcall(function()
+					incrementTutorial:InvokeServer()
+				end)
+			end
 		end)
 	end
 
@@ -1202,9 +1280,13 @@ task.spawn(function()
 			local actuallyChanged = (PathState.currentTargetGate ~= targetGate)
 			PathState.currentTargetGate = targetGate
 			
-			-- Update highlight EVERY TIME the target changes (instant, responsive switching!)
+			-- Update highlight with small cooldown (prevents rapid flickering at gate boundaries)
 			if actuallyChanged and targetGate then
-				createHighlight(targetGate.part)
+				local now = tick()
+				if now - PathState.lastHighlightSwitch > 0.15 then
+					createHighlight(targetGate.part)
+					PathState.lastHighlightSwitch = now
+				end
 			end
 		end
 		
@@ -1262,10 +1344,14 @@ end)
 player.CharacterAdded:Connect(function(character)
 	print("👤 [Tutorial] Character added")
 	
-	TutorialState.currentStep = 1
-	TutorialState.completed = false
-	TutorialState.isTransitioning = false
-	TutorialState.lastHighlightedPart = nil
+	-- Only reset tutorial if it was shown originally
+	if TutorialState.shouldShow then
+		TutorialState.currentStep = 1
+		TutorialState.completed = false
+		TutorialState.isTransitioning = false
+		TutorialState.lastHighlightedPart = nil
+	end
+	
 	PathState.ownedTycoon = false
 	PathState.playerTycoon = nil
 	PathState.fadingOut = false
@@ -1294,24 +1380,28 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.9 - FIRST-TIME ONLY")
+print("✅ Tycoon Path Guide v8.0 - OPTIMIZED & LEAK-FREE")
 print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
 print("🐛 FIX: Highlight cleared when no target")
 print("🐛 FIX: Hysteresis for stable switching (no jitter)")
 print("🐛 FIX: Auto-close timer schedules in nextTutorialStep()!")
 print("🐛 FIX: Smoother text transitions (Sine easing, no flicker!)")
+print("⚡ OPTIMIZED: Server call cached (no spam!)")
+print("⚡ OPTIMIZED: Highlight cooldown (no rapid flicker!)")
+print("⚡ OPTIMIZED: All connections cleaned up (no leaks!)")
+print("⚡ OPTIMIZED: Debounced functions (no double-calls!)")
+print("⚡ OPTIMIZED: Async server calls (non-blocking!)")
+print("⚡ OPTIMIZED: Memory cleanup on PlayerRemoving")
 print("🎓 NEW: Only shows for FIRST 2 JOINS (DataStore tracking!)")
-print("🎓 NEW: View count increments on completion")
 print("✨ NEW: Natural text instructions (glowing button, green part)")
 print("🎀 NEW: Cute bubbly font (FredokaOne everywhere!)")
 print("🎀 NEW: Bigger text (16-18px, easy to read)")
-print("🎀 NEW: Optimized card sizing (no cutoff!)")
 print("🎀 NEW: CUTE RISE-AND-FADE EXIT! (0.28s animation)")
-print("🎀 NEW: Perfect timing! (4.5s final step, exit starts at 4.22s)")
+print("🎀 NEW: Perfect timing! (4.5s final step)")
 print("🌍 Path stays FLAT on ground (no floating!)")
 print("🎯 Highlights CLOSEST gate (distance-based)")
 print("✨ Smooth fade-out when gate claimed")
-print("⚡ Event-driven instant claim detection")
 print("🔧 Robust ownership (all tycoon kits)")
 print("🎀 Production-ready & buttery-smooth!")
+print("⚠️ REQUIRES: TutorialTracker.lua in ServerScriptService")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")

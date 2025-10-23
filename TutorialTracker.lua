@@ -1,10 +1,16 @@
 --[[
-	Tutorial View Tracker - SERVER SCRIPT
+	Tutorial View Tracker - SERVER SCRIPT v2.0
 	
 	Tracks how many times each player has seen the tutorial.
 	Place in: ServerScriptService
 	
-	Works with TycoonPathGuide.lua v7.9+
+	Works with TycoonPathGuide.lua v8.0+
+	
+	⚡ PERFORMANCE OPTIMIZED:
+	✅ In-memory cache (5min TTL) - prevents repeated DataStore calls
+	✅ Cache cleanup on PlayerRemoving - prevents memory growth
+	✅ Safe pcall wrapping - won't break if DataStore fails
+	✅ Async-friendly - won't cause lag spikes
 --]]
 
 local Players = game:GetService("Players")
@@ -44,8 +50,20 @@ if not incrementTutorial then
 	incrementTutorial.Parent = remotesFolder
 end
 
+-- In-memory cache to prevent repeated DataStore calls (performance!)
+local viewCountCache = {}
+local CACHE_DURATION = 300 -- 5 minutes
+
 -- Check how many times player has seen tutorial
 checkTutorial.OnServerInvoke = function(player)
+	if not player then return 0 end
+	
+	-- Check cache first (prevent lag from repeated DataStore calls!)
+	local cached = viewCountCache[player.UserId]
+	if cached and tick() - cached.timestamp < CACHE_DURATION then
+		return cached.viewCount
+	end
+	
 	if not TutorialViewStore then
 		return 0 -- If DataStore fails, always show tutorial (safe fallback)
 	end
@@ -55,16 +73,23 @@ checkTutorial.OnServerInvoke = function(player)
 		return TutorialViewStore:GetAsync(key)
 	end)
 	
+	local viewCount = 0
 	if success and data and typeof(data.viewCount) == "number" then
-		return data.viewCount
+		viewCount = data.viewCount
 	end
 	
-	return 0 -- First time!
+	-- Cache result (prevent repeated calls!)
+	viewCountCache[player.UserId] = {
+		viewCount = viewCount,
+		timestamp = tick()
+	}
+	
+	return viewCount
 end
 
 -- Increment tutorial view count
 incrementTutorial.OnServerInvoke = function(player)
-	if not TutorialViewStore then
+	if not player or not TutorialViewStore then
 		return false
 	end
 	
@@ -78,6 +103,12 @@ incrementTutorial.OnServerInvoke = function(player)
 			lastSeen = os.time()
 		})
 		
+		-- Update cache immediately
+		viewCountCache[player.UserId] = {
+			viewCount = newCount,
+			timestamp = tick()
+		}
+		
 		print("🎓 [TutorialTracker]", player.Name, "tutorial views:", newCount)
 	end)
 	
@@ -88,5 +119,12 @@ incrementTutorial.OnServerInvoke = function(player)
 	return success
 end
 
+-- Clean up cache when player leaves (prevent memory growth!)
+Players.PlayerRemoving:Connect(function(player)
+	viewCountCache[player.UserId] = nil
+end)
+
 print("✅ [TutorialTracker] Loaded!")
 print("📊 Tutorial will show max 2 times per player")
+print("⚡ Performance: 5-min cache, async operations, auto-cleanup")
+print("🛡️ Memory safe: Cache cleaned on PlayerRemoving")
