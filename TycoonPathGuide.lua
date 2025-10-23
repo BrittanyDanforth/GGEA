@@ -128,7 +128,7 @@ local Config = {
 			title = "You're All Set! 🎉",
 			description = "Amazing! Keep buying upgrades to grow your tycoon.",
 			target = nil,
-			autoClose = 1.4,
+			autoClose = 4.5,
 		},
 	},
 }
