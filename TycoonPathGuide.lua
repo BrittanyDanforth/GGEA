@@ -1,5 +1,5 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.6 - RISE & FADE EXIT]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.7 - SNAPPY EXIT]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
@@ -16,7 +16,9 @@
 	✅ Optimized card sizing (no cutoff!)
 	✅ TextWrapped enabled for clean flow
 	✅ CUTE RISE-AND-FADE EXIT ANIMATION! 🎀
-	✅ Auto-closes after 2 seconds (no tap needed)
+	✅ SNAPPY timing (0.28s animation, 1.4s total dwell)
+	✅ Exit starts early so it finishes EXACTLY at autoClose time
+	✅ No extra waits - crisp and responsive!
 	
 	✅ Path stays FLAT on ground (no floating!)
 	✅ Highlights CLOSEST gate (true distance-based switching)
@@ -70,6 +72,7 @@ local Config = {
 	FADE_IN_TIME = 0.3,
 	FADE_OUT_TIME = 0.4,
 	TEXT_TRANSITION_TIME = 0.25,
+	EXIT_TWEEN_TIME = 0.28,
 
 	-- Smoothing & Performance
 	POSITION_SMOOTHING = 0.3,
@@ -123,7 +126,7 @@ local Config = {
 			title = "You're All Set! 🎉",
 			description = "Amazing! Keep buying upgrades to grow your tycoon.",
 			target = nil,
-			autoClose = 2,
+			autoClose = 1.4,
 		},
 	},
 }
@@ -428,7 +431,7 @@ local function playExitUp()
 	local offY = -(card.AbsoluteSize.Y + 120)
 
 	-- fade timings
-	local t = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+	local t = TweenInfo.new(Config.EXIT_TWEEN_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 
 	-- fade texts/buttons
 	for _, child in ipairs(card:GetChildren()) do
@@ -497,7 +500,6 @@ local function skipTutorial()
 
 	-- Use the cute rise-and-fade animation!
 	playExitUp()
-	task.wait(0.5)
 
 	print("✅ [Tutorial] Completed!")
 end
@@ -560,7 +562,9 @@ local function updateTutorialStep()
 	end
 
 	if step.autoClose then
-		task.delay(step.autoClose, function()
+		-- start the exit so it FINISHES at autoClose
+		local lead = math.max(0.05, (step.autoClose or 0) - Config.EXIT_TWEEN_TIME)
+		task.delay(lead, function()
 			if TutorialState.enabled and not TutorialState.completed then
 				skipTutorial()
 			end
