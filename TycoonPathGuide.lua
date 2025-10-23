@@ -1,15 +1,17 @@
 --[[
-	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.3 - INSTANT SWITCHING]
+	CLIENT-ONLY TYCOON PATH GUIDE + TUTORIAL [v7.2.1 - FLEXIBLE MATCHING]
 	
 	🐛 CRITICAL FIXES:
 	✅ Correct "unclaimed" detection (handles 0 and "" properly!)
 	✅ Highlight cleared when no target (no lingering blue outlines)
-	✅ INSTANT highlight switching (no hysteresis, always closest)
-	✅ Removed early-return optimization (was preventing updates)
-	✅ Debug logging (shows which gate is selected and when it switches)
+	✅ Highlight updates ALWAYS (not just during tutorial step)
+	✅ Switch logic with hysteresis (prevents jitter/stuck feeling)
+	✅ Flexible button name matching (works across all tycoons!)
+	✅ Flexible collector detection (Giver/Collector/MoneyCollector/etc.)
+	✅ Debug logging (shows available buttons/collectors)
 	
 	✅ Path stays FLAT on ground (no floating!)
-	✅ Highlights TRUE CLOSEST gate (instant distance-based switching)
+	✅ Highlights CLOSEST gate (true distance-based switching)
 	✅ Smooth fade-out when gate claimed
 	✅ Robust ownership detection (all tycoon kits)
 	✅ Event-driven instant claim detection
@@ -549,23 +551,89 @@ local function updateTutorialStep()
 	if step.targetButton and PathState.playerTycoon then
 		local buttons = PathState.playerTycoon:FindFirstChild("Buttons")
 		if buttons then
+			-- 🔍 Debug: List all available buttons
+			print("🔍 [Tutorial] Looking for button:", step.targetButton)
+			print("🔍 [Tutorial] Available buttons in", PathState.playerTycoon.Name .. ":")
+			for _, btn in ipairs(buttons:GetChildren()) do
+				print("  -", btn.Name)
+			end
+			
+			-- Try exact match first
 			local buttonModel = buttons:FindFirstChild(step.targetButton)
+			
+			-- If exact match fails, try flexible matching
+			if not buttonModel then
+				local searchTerms = {
+					["Begin Working!"] = {"begin", "work", "start", "dropper"},
+					["Buy Dropper - [$70]"] = {"dropper", "70", "second", "buy dropper"},
+				}
+				
+				local terms = searchTerms[step.targetButton] or {}
+				for _, btn in ipairs(buttons:GetChildren()) do
+					local btnNameLower = btn.Name:lower()
+					for _, term in ipairs(terms) do
+						if btnNameLower:find(term) then
+							buttonModel = btn
+							print("✅ [Tutorial] Found button via flexible match:", btn.Name)
+							break
+						end
+					end
+					if buttonModel then break end
+				end
+			end
+			
 			if buttonModel then
 				targetPart = buttonModel:FindFirstChild("Head")
 				if targetPart and targetPart.Transparency < 0.9 and targetPart.CanCollide then
-					print("✨ [Tutorial] Highlighting button:", step.targetButton)
+					print("✨ [Tutorial] Highlighting button:", buttonModel.Name)
 				else
 					targetPart = nil
+					print("⚠️ [Tutorial] Button found but Head is transparent or non-collidable")
 				end
+			else
+				print("❌ [Tutorial] Could not find button:", step.targetButton)
 			end
+		else
+			print("❌ [Tutorial] No Buttons folder found in", PathState.playerTycoon.Name)
 		end
 	elseif step.target == "collector" and PathState.playerTycoon then
 		local essentials = PathState.playerTycoon:FindFirstChild("Essentials")
 		if essentials then
-			targetPart = essentials:FindFirstChild("Giver") or essentials:FindFirstChild("Collector")
-			if targetPart then
-				print("✨ [Tutorial] Highlighting collector")
+			print("🔍 [Tutorial] Looking for collector in Essentials...")
+			print("🔍 [Tutorial] Essentials children:")
+			for _, child in ipairs(essentials:GetChildren()) do
+				if child:IsA("BasePart") then
+					print("  -", child.Name, "(BasePart)")
+				end
 			end
+			
+			-- Try multiple common collector names
+			targetPart = essentials:FindFirstChild("Giver") 
+				or essentials:FindFirstChild("Collector")
+				or essentials:FindFirstChild("MoneyCollector")
+				or essentials:FindFirstChild("CashCollector")
+			
+			-- Flexible search if exact match fails
+			if not targetPart then
+				for _, child in ipairs(essentials:GetChildren()) do
+					if child:IsA("BasePart") then
+						local nameLower = child.Name:lower()
+						if nameLower:find("giver") or nameLower:find("collect") or nameLower:find("cash") or nameLower:find("money") then
+							targetPart = child
+							print("✅ [Tutorial] Found collector via flexible match:", child.Name)
+							break
+						end
+					end
+				end
+			end
+			
+			if targetPart then
+				print("✨ [Tutorial] Highlighting collector:", targetPart.Name)
+			else
+				print("❌ [Tutorial] Could not find collector in Essentials")
+			end
+		else
+			print("❌ [Tutorial] No Essentials folder found in", PathState.playerTycoon.Name)
 		end
 	elseif step.target == "closest_gate" then
 		-- 🎯 Highlight the SAME gate that the path is pointing to!
@@ -631,7 +699,29 @@ local function nextTutorialStep()
 	if step.targetButton and PathState.playerTycoon then
 		local buttons = PathState.playerTycoon:FindFirstChild("Buttons")
 		if buttons then
+			-- Try exact match first
 			local buttonModel = buttons:FindFirstChild(step.targetButton)
+			
+			-- If exact match fails, try flexible matching
+			if not buttonModel then
+				local searchTerms = {
+					["Begin Working!"] = {"begin", "work", "start", "dropper"},
+					["Buy Dropper - [$70]"] = {"dropper", "70", "second", "buy dropper"},
+				}
+				
+				local terms = searchTerms[step.targetButton] or {}
+				for _, btn in ipairs(buttons:GetChildren()) do
+					local btnNameLower = btn.Name:lower()
+					for _, term in ipairs(terms) do
+						if btnNameLower:find(term) then
+							buttonModel = btn
+							break
+						end
+					end
+					if buttonModel then break end
+				end
+			end
+			
 			if buttonModel then
 				targetPart = buttonModel:FindFirstChild("Head")
 				if not (targetPart and targetPart.Transparency < 0.9 and targetPart.CanCollide) then
@@ -642,7 +732,24 @@ local function nextTutorialStep()
 	elseif step.target == "collector" and PathState.playerTycoon then
 		local essentials = PathState.playerTycoon:FindFirstChild("Essentials")
 		if essentials then
-			targetPart = essentials:FindFirstChild("Giver") or essentials:FindFirstChild("Collector")
+			-- Try multiple common collector names
+			targetPart = essentials:FindFirstChild("Giver") 
+				or essentials:FindFirstChild("Collector")
+				or essentials:FindFirstChild("MoneyCollector")
+				or essentials:FindFirstChild("CashCollector")
+			
+			-- Flexible search if exact match fails
+			if not targetPart then
+				for _, child in ipairs(essentials:GetChildren()) do
+					if child:IsA("BasePart") then
+						local nameLower = child.Name:lower()
+						if nameLower:find("giver") or nameLower:find("collect") or nameLower:find("cash") or nameLower:find("money") then
+							targetPart = child
+							break
+						end
+					end
+				end
+			end
 		end
 	elseif step.target == "closest_gate" then
 		-- 🎯 Highlight the SAME gate that the path is pointing to!
@@ -1268,14 +1375,15 @@ if Config.TUTORIAL_ENABLED then
 end
 
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("✅ Tycoon Path Guide v7.3 - INSTANT SWITCHING")
+print("✅ Tycoon Path Guide v7.2.1 - FLEXIBLE MATCHING")
 print("🐛 FIX: Correct unclaimed detection (0 and \"\" now work!)")
 print("🐛 FIX: Highlight cleared when no target")
-print("🐛 FIX: INSTANT switching (no hysteresis)")
-print("🐛 FIX: Removed early-return optimization")
-print("🔍 DEBUG: Logging gate selection & switches")
+print("🐛 FIX: Hysteresis for stable switching (no jitter)")
+print("🔧 NEW: Flexible button name matching (all tycoons!)")
+print("🔧 NEW: Flexible collector detection (Giver/Collector/etc.)")
+print("🔍 DEBUG: Shows available buttons & collectors")
 print("🌍 Path stays FLAT on ground (no floating!)")
-print("🎯 Highlights TRUE closest gate (instant updates)")
+print("🎯 Highlights CLOSEST gate (distance-based)")
 print("✨ Smooth fade-out when gate claimed")
 print("⚡ Event-driven instant claim detection")
 print("🔧 Robust ownership (all tycoon kits)")
