@@ -356,7 +356,7 @@ function Shop:createPages()
 	cashGrid.Parent = self.cashPage
 
 	cashGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self.cashPage.CanvasSize = UDim2.new(0, 0, 0, cashGrid.AbsoluteContentSize.Y + 20)
+		self.cashPage.CanvasSize = UDim2.new(0, 0, 0, cashGrid.AbsoluteContentSize.Y + 16)
 	end)
 
 	for _, p in ipairs(products.cash) do
@@ -368,22 +368,30 @@ function Shop:createPages()
 	self.gpPage.Name = "GamepassPage"
 	self.gpPage.BackgroundTransparency = 1
 	self.gpPage.BorderSizePixel = 0
-	self.gpPage.ScrollBarThickness = 6
+	self.gpPage.ScrollBarThickness = 5
 	self.gpPage.ScrollBarImageColor3 = theme.accent
 	self.gpPage.Visible = false
 	self.gpPage.Size = UDim2.fromScale(1, 1)
 	self.gpPage.ZIndex = 4
 	self.gpPage.Parent = self.contentFrame
+	
+	-- Add padding
+	local gpPad = Instance.new("UIPadding")
+	gpPad.PaddingTop = UDim.new(0, 8)
+	gpPad.PaddingBottom = UDim.new(0, 8)
+	gpPad.PaddingLeft = UDim.new(0, 8)
+	gpPad.PaddingRight = UDim.new(0, 8)
+	gpPad.Parent = self.gpPage
 
 	local gpGrid = Instance.new("UIGridLayout")
-	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 110)
-	gpGrid.CellPadding = UDim2.fromOffset(12, 12)
+	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 130)
+	gpGrid.CellPadding = UDim2.fromOffset(10, 10)
 	gpGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gpGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	gpGrid.Parent = self.gpPage
 
 	gpGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self.gpPage.CanvasSize = UDim2.new(0, 0, 0, gpGrid.AbsoluteContentSize.Y + 20)
+		self.gpPage.CanvasSize = UDim2.new(0, 0, 0, gpGrid.AbsoluteContentSize.Y + 16)
 	end)
 
 	for _, gp in ipairs(products.gamepasses) do
@@ -395,105 +403,128 @@ function Shop:createProductCard(product, productType, parent)
 	local isGamepass = (productType == "gamepass")
 	local cardColor = isGamepass and theme.kuromi or theme.cinna
 
-	local card = Instance.new("Frame")
+	-- Main card container
+	local card = Instance.new("TextButton")
 	card.Name = product.name .. "Card"
-	card.BackgroundColor3 = theme.surface
+	card.BackgroundColor3 = cardColor
 	card.BorderSizePixel = 0
-	card.ClipsDescendants = true
+	card.AutoButtonColor = false
+	card.Text = ""
+	card.ClipsDescendants = false
 	card.Parent = parent
 
-	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 14); corner.Parent = card
-	local stroke = Instance.new("UIStroke"); stroke.Color = cardColor; stroke.Thickness = 2; stroke.Transparency = 0.45; stroke.Parent = card
+	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 12); corner.Parent = card
 
+	-- Hover effect
 	local hoverScale = Instance.new("UIScale"); hoverScale.Scale = 1; hoverScale.Parent = card
-	card.MouseEnter:Connect(function() playSound("hover"); TweenService:Create(hoverScale,TweenInfo.new(0.15),{Scale=1.03}):Play() end)
-	card.MouseLeave:Connect(function() TweenService:Create(hoverScale,TweenInfo.new(0.15),{Scale=1}):Play() end)
+	card.MouseEnter:Connect(function() 
+		playSound("hover")
+		TweenService:Create(hoverScale,TweenInfo.new(0.12),{Scale=1.04}):Play() 
+	end)
+	card.MouseLeave:Connect(function() 
+		TweenService:Create(hoverScale,TweenInfo.new(0.12),{Scale=1}):Play() 
+	end)
 
-	-- Image area
-	local imgContainer = Instance.new("Frame")
-	imgContainer.Size = UDim2.new(1, 0, 0, 50)
-	imgContainer.Position = UDim2.fromOffset(0, 4)
-	imgContainer.BackgroundColor3 = theme.surfaceAlt
-	imgContainer.BorderSizePixel = 0
-	imgContainer.Parent = card
-	local imgCorner = Instance.new("UICorner"); imgCorner.CornerRadius = UDim.new(0, 10); imgCorner.Parent = imgContainer
+	-- Inner content with padding
+	local content = Instance.new("Frame")
+	content.Size = UDim2.new(1, -8, 1, -8)
+	content.Position = UDim2.fromOffset(4, 4)
+	content.BackgroundColor3 = theme.surface
+	content.BorderSizePixel = 0
+	content.Parent = card
+	local contentCorner = Instance.new("UICorner"); contentCorner.CornerRadius = UDim.new(0, 10); contentCorner.Parent = content
 
-	local img = Instance.new("ImageLabel")
-	img.Image = product.icon or "rbxassetid://0"
-	img.Size = UDim2.fromScale(0.6, 0.6)
-	img.Position = UDim2.fromScale(0.5, 0.5)
-	img.AnchorPoint = Vector2.new(0.5, 0.5)
-	img.BackgroundTransparency = 1
-	img.Parent = imgContainer
-
-	-- BEST VALUE ribbon
+	-- BEST VALUE corner badge
 	if not isGamepass and product.best then
-		local ribbon = Instance.new("TextLabel")
-		ribbon.BackgroundColor3 = theme.accent
-		ribbon.Text = "BEST"
-		ribbon.TextColor3 = Color3.new(1,1,1)
-		ribbon.Font = Enum.Font.GothamBold
-		ribbon.TextSize = 10
-		ribbon.Size = UDim2.fromOffset(38, 16)
-		ribbon.Position = UDim2.fromOffset(4, 4)
-		ribbon.Parent = imgContainer
-		local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 6); c.Parent = ribbon
+		local badge = Instance.new("TextLabel")
+		badge.BackgroundColor3 = theme.accent
+		badge.Text = "BEST"
+		badge.TextColor3 = Color3.new(1,1,1)
+		badge.Font = Enum.Font.GothamBold
+		badge.TextSize = 9
+		badge.Size = UDim2.fromOffset(34, 14)
+		badge.Position = UDim2.fromOffset(4, 4)
+		badge.Parent = content
+		local bc = Instance.new("UICorner"); bc.CornerRadius = UDim.new(0, 4); bc.Parent = badge
 	end
 
-	-- Title
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, -12, 0, 18)
-	title.Position = UDim2.fromOffset(6, 58)
-	title.BackgroundTransparency = 1
-	title.Text = product.name
-	title.TextColor3 = theme.text
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 14
-	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.TextTruncate = Enum.TextTruncate.AtEnd
-	title.Parent = card
+	-- Product icon
+	local icon = Instance.new("ImageLabel")
+	icon.Image = product.icon or "rbxassetid://0"
+	icon.Size = UDim2.fromOffset(32, 32)
+	icon.Position = UDim2.fromScale(0.5, 0)
+	icon.AnchorPoint = Vector2.new(0.5, 0)
+	icon.Position = UDim2.new(0.5, 0, 0, 8)
+	icon.BackgroundTransparency = 1
+	icon.Parent = content
 
-	-- Description
-	local desc = Instance.new("TextLabel")
-	desc.Size = UDim2.new(1, -12, 0, 16)
-	desc.Position = UDim2.fromOffset(6, 78)
-	desc.BackgroundTransparency = 1
-	desc.Text = isGamepass and product.description or (formatNumber(product.amount) .. " Cash")
-	desc.TextColor3 = theme.textSecondary
-	desc.Font = Enum.Font.Gotham
-	desc.TextSize = 11
-	desc.TextXAlignment = Enum.TextXAlignment.Left
-	desc.TextTruncate = Enum.TextTruncate.AtEnd
-	desc.Parent = card
+	-- Product name
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(1, -8, 0, 16)
+	nameLabel.Position = UDim2.fromOffset(4, 46)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = product.name
+	nameLabel.TextColor3 = theme.text
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextSize = 13
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	nameLabel.Parent = content
 
-	-- Bonus label
+	-- Amount/Description
+	local descLabel = Instance.new("TextLabel")
+	descLabel.Size = UDim2.new(1, -8, 0, 14)
+	descLabel.Position = UDim2.fromOffset(4, 64)
+	descLabel.BackgroundTransparency = 1
+	descLabel.Text = isGamepass and product.description or (formatNumber(product.amount))
+	descLabel.TextColor3 = theme.textSecondary
+	descLabel.Font = Enum.Font.Gotham
+	descLabel.TextSize = 10
+	descLabel.TextXAlignment = Enum.TextXAlignment.Center
+	descLabel.TextWrapped = true
+	descLabel.Parent = content
+
+	-- Bonus (if exists)
 	if not isGamepass and product.bonus and product.bonus > 0 then
-		local bonus = Instance.new("TextLabel")
-		bonus.Size = UDim2.new(1, -12, 0, 14)
-		bonus.Position = UDim2.fromOffset(6, 94)
-		bonus.BackgroundTransparency = 1
-		bonus.Text = formatBonusText(product.bonus)
-		bonus.TextColor3 = theme.accent
-		bonus.Font = Enum.Font.Gotham
-		bonus.TextSize = 10
-		bonus.TextXAlignment = Enum.TextXAlignment.Left
-		bonus.Parent = card
+		local bonusLabel = Instance.new("TextLabel")
+		bonusLabel.Size = UDim2.new(1, -8, 0, 12)
+		bonusLabel.Position = UDim2.fromOffset(4, 80)
+		bonusLabel.BackgroundTransparency = 1
+		bonusLabel.Text = formatBonusText(product.bonus)
+		bonusLabel.TextColor3 = theme.accent
+		bonusLabel.Font = Enum.Font.GothamBold
+		bonusLabel.TextSize = 9
+		bonusLabel.TextXAlignment = Enum.TextXAlignment.Center
+		bonusLabel.Parent = content
 	end
 
 	-- Buy button
 	local owned = isGamepass and checkOwnership(product.id)
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.new(1, -12, 0, 26)
-	buyBtn.Position = UDim2.new(0, 6, 1, -30)
-	buyBtn.BackgroundColor3 = owned and theme.success or cardColor
-	buyBtn.Text = owned and "✓ Owned" or ("R$" .. tostring(product.price or 0))
+	buyBtn.Size = UDim2.new(1, -12, 0, 24)
+	buyBtn.Position = UDim2.new(0.5, 0, 1, -28)
+	buyBtn.AnchorPoint = Vector2.new(0.5, 0)
+	buyBtn.BackgroundColor3 = owned and theme.success or theme.accent
+	buyBtn.Text = owned and "✓ OWNED" or ("R$" .. tostring(product.price or 0))
 	buyBtn.TextColor3 = Color3.new(1, 1, 1)
 	buyBtn.Font = Enum.Font.GothamBold
-	buyBtn.TextSize = 13
+	buyBtn.TextSize = 12
 	buyBtn.AutoButtonColor = false
 	buyBtn.Active = not owned
-	buyBtn.Parent = card
+	buyBtn.Parent = content
 	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 8); btnCorner.Parent = buyBtn
+
+	-- Button press effect
+	buyBtn.MouseButton1Down:Connect(function()
+		if not owned then
+			TweenService:Create(buyBtn,TweenInfo.new(0.08),{BackgroundColor3 = blend(buyBtn.BackgroundColor3, Color3.new(0,0,0), 0.15)}):Play()
+		end
+	end)
+	buyBtn.MouseButton1Up:Connect(function()
+		if not owned then
+			TweenService:Create(buyBtn,TweenInfo.new(0.12),{BackgroundColor3 = theme.accent}):Play()
+		end
+	end)
 
 	buyBtn.MouseButton1Click:Connect(function()
 		if owned then return end
@@ -502,9 +533,9 @@ function Shop:createProductCard(product, productType, parent)
 		self:promptPurchase(product, productType, buyBtn)
 	end)
 
-	-- Toggle for Auto Collect
+	-- Toggle for Auto Collect (compact version in corner)
 	if isGamepass and product.hasToggle and owned then
-		self:addToggleSwitch(product, imgContainer)
+		self:addToggleSwitch(product, content)
 	end
 
 	product.cardInstance = card
@@ -512,23 +543,28 @@ function Shop:createProductCard(product, productType, parent)
 end
 
 function Shop:addToggleSwitch(product, parent)
+	-- Compact toggle that replaces the buy button when owned
 	local toggle = Instance.new("Frame")
-	toggle.Size = UDim2.fromOffset(110, 22)
-	toggle.Position = UDim2.new(1, -4, 0, 4)
-	toggle.AnchorPoint = Vector2.new(1, 0)
-	toggle.BackgroundColor3 = theme.surface
+	toggle.Name = "ToggleSwitch"
+	toggle.Size = UDim2.new(1, -12, 0, 24)
+	toggle.Position = UDim2.new(0.5, 0, 1, -28)
+	toggle.AnchorPoint = Vector2.new(0.5, 0)
+	toggle.BackgroundColor3 = theme.stroke
 	toggle.BorderSizePixel = 0
 	toggle.Parent = parent
-	local tc = Instance.new("UICorner"); tc.CornerRadius = UDim.new(0, 11); tc.Parent = toggle
-	local ts = Instance.new("UIStroke"); ts.Color = theme.stroke; ts.Thickness = 1; ts.Parent = toggle
+	local tc = Instance.new("UICorner"); tc.CornerRadius = UDim.new(0, 8); tc.Parent = toggle
+
+	-- Hide the buy button since toggle replaces it
+	local buyBtn = parent:FindFirstChild("TextButton")
+	if buyBtn then buyBtn.Visible = false end
 
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.fromScale(1, 1)
 	label.BackgroundTransparency = 1
-	label.Text = "Auto: OFF"
+	label.Text = "AUTO: OFF"
 	label.TextColor3 = theme.text
 	label.Font = Enum.Font.GothamBold
-	label.TextSize = 10
+	label.TextSize = 11
 	label.Parent = toggle
 
 	local btn = Instance.new("TextButton")
@@ -550,18 +586,24 @@ function Shop:addToggleSwitch(product, parent)
 		state = on
 		if on then
 			toggle.BackgroundColor3 = theme.success
-			ts.Color = theme.success
 			label.TextColor3 = Color3.new(1, 1, 1)
-			label.Text = "Auto: ON"
+			label.Text = "AUTO: ON ✓"
 		else
-			toggle.BackgroundColor3 = theme.surface
-			ts.Color = theme.stroke
+			toggle.BackgroundColor3 = theme.stroke
 			label.TextColor3 = theme.text
-			label.Text = "Auto: OFF"
+			label.Text = "AUTO: OFF"
 		end
 	end
 
 	paint(state)
+
+	-- Hover effect
+	btn.MouseEnter:Connect(function()
+		TweenService:Create(toggle,TweenInfo.new(0.12),{BackgroundColor3 = blend(toggle.BackgroundColor3, state and Color3.new(1,1,1) or Color3.new(0,0,0), 0.1)}):Play()
+	end)
+	btn.MouseLeave:Connect(function()
+		paint(state)
+	end)
 
 	btn.MouseButton1Click:Connect(function()
 		local nextState = not state
