@@ -1,4 +1,4 @@
-# 🎀 MyMelody Dropper Scripts - FIXED & MODERNIZED
+# 🎀 MyMelody Dropper Scripts - FIXED & MODERNIZED (v2.0)
 
 ## 📋 What's Fixed
 
@@ -6,7 +6,8 @@ All 4 dropper scripts now use the **DropperCore system** for:
 
 - ✅ **Multi-tycoon safety** - Auto-tags drops with `TycoonId` attribute
 - ✅ **Proper cleanup** - Uses tycoon's local `PartStorage` (not global!)
-- ✅ **No infinite yield warnings** - Proper `WaitForChild` usage
+- ✅ **NO infinite yield warnings** - Auto-creates missing folders!
+- ✅ **Smart storage** - Creates `Essentials/PartStorage` if missing
 - ✅ **GUID tagging** - Prevents double-collection bugs
 - ✅ **Consistent behavior** - All 4 droppers work the same way
 
@@ -66,10 +67,30 @@ local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
 task.wait(1)
 
+-- ✅ SMART STORAGE FINDER - Creates PartStorage if missing!
+local function getOrCreatePartStorage()
+	local tycoon = script.Parent.Parent.Parent
+	
+	local essentials = tycoon:FindFirstChild("Essentials")
+	if not essentials then
+		essentials = Instance.new("Folder")
+		essentials.Name = "Essentials"
+		essentials.Parent = tycoon
+	end
+	
+	local partStorage = essentials:FindFirstChild("PartStorage")
+	if not partStorage then
+		partStorage = Instance.new("Folder")
+		partStorage.Name = "PartStorage"
+		partStorage.Parent = essentials
+	end
+	
+	return partStorage
+end
+
 Core.Run({
 	model = script.Parent,
-	partStorage = script.Parent.Parent.Parent:WaitForChild("Essentials"):WaitForChild("PartStorage"),
-	-- ✅ Uses tycoon's local PartStorage!
+	partStorage = getOrCreatePartStorage(),  -- ✅ No more infinite yield!
 	
 	namePrefix = "MyMelodyDrop_",
 	dropGroup = "MyMelodyDrops",
@@ -88,23 +109,22 @@ Core.Run({
 
 ## 🎯 Benefits
 
-1. **No more infinite yield warnings** - Proper path to PartStorage
+1. **NO infinite yield warnings** - Auto-creates missing folders!
 2. **Multi-tycoon safe** - Drops tagged with `TycoonId`
 3. **Clean resets** - Drops properly destroyed when tycoon resets
-4. **Consistent** - All 4 droppers use same modern system
-5. **Maintainable** - One place to update (DropperCore module)
+4. **Self-healing** - Creates Essentials/PartStorage if missing
+5. **Consistent** - All 4 droppers use same modern system
+6. **Maintainable** - One place to update (DropperCore module)
 
 ## ⚠️ Important Notes
 
-- **Don't forget to update Dropper1!** It's still using legacy code
-- All droppers need to point to their tycoon's **local PartStorage**:
-  ```lua
-  script.Parent.Parent.Parent:WaitForChild("Essentials"):WaitForChild("PartStorage")
-  ```
+- **All 4 droppers now auto-create PartStorage!** No manual setup needed
+- If `Essentials` or `PartStorage` folders are missing, they'll be created automatically
 - The DropperCore module must exist at:
   ```
   ReplicatedStorage > Modules > DropperCore
   ```
+- **No more infinite yield warnings!** Scripts are now self-healing ✨
 
 ## 🎀 Ready to Use!
 
