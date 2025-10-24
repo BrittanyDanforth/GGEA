@@ -56,9 +56,22 @@ local PILL_MAX_H = 120
 local CASH_RATIO = 2.85
 local GP_RATIO = 3.60
 
--- Card background tuning (ADJUST THESE TO FIT YOUR CARD ART!)
-local CARD_WIDTH = 0.85   -- REDUCED from 0.90 to 0.85 (cards take up 85% of cell)
-local CARD_ASPECT = 0.69  -- width/height ratio of your card art (adjust to match your texture)
+-- ======== CARD ART / GRID ========
+local CARD_IMAGE = "rbxassetid://108251319294182"
+
+-- exact aspect of the card art (width/height).
+-- open the PNG in any viewer to read pixels. e.g. 940x660 => 1.424
+local CARD_AR = 1.42
+
+-- two columns: each cell is ~48% of the scroller width
+local GRID_X_SCALE = 0.48
+
+-- how much to inset the card inside the cell (pixels)
+local CARD_INSET = 12
+
+-- if you have a 9-slice export of the card, turn this on and set slice rect.
+local USE_9_SLICE = false
+local CARD_SLICE = Rect.new(60, 60, 944, 600)
 
 -- ======== UTILITIES ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
@@ -330,6 +343,26 @@ function Shop:createMainInterface()
 	self.gpBtn.MouseButton1Click:Connect(function() self:showGamepasses() end)
 end
 
+function Shop:_bindGridAspect(grid)
+	local function recalc()
+		local pad = grid.Parent:FindFirstChildWhichIsA("UIPadding")
+		local left  = pad and pad.PaddingLeft.Offset  or 0
+		local right = pad and pad.PaddingRight.Offset or 0
+
+		local usable = math.max(0, grid.Parent.AbsoluteSize.X - (left + right))
+		if usable <= 0 then return end
+
+		local cellW = math.floor(usable * GRID_X_SCALE)
+		local cellH = math.max(120, math.floor(cellW / CARD_AR)) -- min height safety
+		grid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, cellH)
+	end
+
+	grid.Parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(recalc)
+	self.contentFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(recalc)
+	RunService.Heartbeat:Connect(recalc)
+	task.defer(recalc)
+end
+
 function Shop:createPages()
 	self.cashPage = Instance.new("ScrollingFrame")
 	self.cashPage.Name = "CashPage"
@@ -350,12 +383,14 @@ function Shop:createPages()
 	cashPad.PaddingRight = UDim.new(0, 8)
 	cashPad.Parent = self.cashPage
 
+	-- CASH GRID
 	local cashGrid = Instance.new("UIGridLayout")
-	cashGrid.CellSize = UDim2.new(0.48, 0, 0, 155)  -- INCREASED HEIGHT to 155 for more space
-	cashGrid.CellPadding = UDim2.fromOffset(18, 40)  -- INCREASED VERTICAL SPACING to 40
+	cashGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 120) -- temporary; auto-height will override
+	cashGrid.CellPadding = UDim2.fromOffset(18, 40)
 	cashGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	cashGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	cashGrid.Parent = self.cashPage
+	self:_bindGridAspect(cashGrid)
 
 	cashGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		self.cashPage.CanvasSize = UDim2.new(0, 0, 0, cashGrid.AbsoluteContentSize.Y + 24)
@@ -384,12 +419,14 @@ function Shop:createPages()
 	gpPad.PaddingRight = UDim.new(0, 8)
 	gpPad.Parent = self.gpPage
 
+	-- GP GRID
 	local gpGrid = Instance.new("UIGridLayout")
-	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 155)  -- INCREASED HEIGHT to 155 for more space
-	gpGrid.CellPadding = UDim2.fromOffset(18, 40)  -- INCREASED VERTICAL SPACING to 40
+	gpGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 120)
+	gpGrid.CellPadding = UDim2.fromOffset(18, 40)
 	gpGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gpGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	gpGrid.Parent = self.gpPage
+	self:_bindGridAspect(gpGrid)
 
 	gpGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		self.gpPage.CanvasSize = UDim2.new(0, 0, 0, gpGrid.AbsoluteContentSize.Y + 24)
@@ -415,17 +452,21 @@ function Shop:createProductItem(product, productType, parent)
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
-	-- Visible card background (properly sized using UDim2 scaling)
+	-- Visible card background (fills the cell with a small inset)
 	local bg = Instance.new("ImageLabel")
 	bg.Name = "CardBG"
-	bg.AnchorPoint = Vector2.new(0.5, 0.5)
-	bg.Position = UDim2.fromScale(0.5, 0.5)
-	-- Use UDim2 scaling based on the constants - this works with the grid system
-	bg.Size = UDim2.new(CARD_WIDTH, 0, CARD_WIDTH / CARD_ASPECT, 0)
 	bg.BackgroundTransparency = 1
-	bg.Image = "rbxassetid://108251319294182"
-	bg.ScaleType = Enum.ScaleType.Crop
+	bg.Image = CARD_IMAGE
+	bg.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET)
+	bg.Size = UDim2.new(1, -2*CARD_INSET, 1, -2*CARD_INSET)
 	bg.Parent = container
+
+	if USE_9_SLICE then
+		bg.ScaleType = Enum.ScaleType.Slice
+		bg.SliceCenter = CARD_SLICE
+	else
+		bg.ScaleType = Enum.ScaleType.Fit  -- never crops the art
+	end
 
 	-- Inner content (text & button) sits on top of the bg
 	-- Add padding to keep everything nicely inside the card image
@@ -757,10 +798,10 @@ Player.CharacterAdded:Connect(function()
 	end
 end)
 
-print("[SanrioShop] Cards redesigned - clean & professional!")
-print("[SanrioShop] Better descriptions without spam")
-print("[SanrioShop] Full-width buttons, bonus badges, BEST VALUE tags")
-print("[SanrioShop] Cards now look great and balanced!")
-print("[SanrioShop] Gift box texture:", GIFT_BOX_TEXTURE_ID)
+print("[SanrioShop] ✨ GODLY POLISHED - Dynamic aspect-ratio sizing!")
+print("[SanrioShop] 🎨 Cards auto-size perfectly - no crop, no guessing!")
+print("[SanrioShop] 📐 Grid height follows card art aspect ratio")
+print("[SanrioShop] 💎 Clean layout with proper descriptions & badges")
+print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
 return shop
