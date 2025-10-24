@@ -61,10 +61,10 @@ local CARD_SLICE = Rect.new(60, 60, 944, 600)
 
 -- ======== CARD CONTENT OFFSETS (fine-tune here) ========
 local TEXT_X = 32                  -- INCREASED from 26 to 32 (MORE RIGHT)
-local TITLE_Y = 38                 -- INCREASED from 32 to 38 (LOWER)
-local DESC_Y  = 66                 -- INCREASED from 60 to 66 (LOWER)
-local BONUS_Y = 100                -- INCREASED from 94 to 100 (LOWER)
-local BTN_BOTTOM = -56             -- INCREASED from -64 to -56 (HIGHER UP)
+local TITLE_Y = 48                 -- INCREASED from 38 to 48 (MUCH LOWER)
+local DESC_Y  = 76                 -- INCREASED from 66 to 76 (MUCH LOWER)
+local BONUS_Y = 110                -- INCREASED from 100 to 110 (MUCH LOWER)
+local BTN_BOTTOM = -68             -- INCREASED from -56 to -68 (MUCH HIGHER UP)
 
 -- ======== UTILITIES ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
