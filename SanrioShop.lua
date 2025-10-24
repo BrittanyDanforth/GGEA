@@ -1199,7 +1199,7 @@ function Shop:createCashPage()
 			CellSize = Core.Utils.isMobile() and 
 				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE_MOBILE.X, Core.CONSTANTS.CARD_SIZE_MOBILE.Y) or
 				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
-			CellPadding = UDim2.fromOffset(20, 20),
+			CellPadding = UDim2.fromOffset(25, 30),
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		},
 		padding = {
@@ -1234,7 +1234,7 @@ function Shop:createGamepassesPage()
 			CellSize = Core.Utils.isMobile() and 
 				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE_MOBILE.X, Core.CONSTANTS.CARD_SIZE_MOBILE.Y) or
 				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
-			CellPadding = UDim2.fromOffset(20, 20),
+			CellPadding = UDim2.fromOffset(25, 30),
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		},
 		padding = {
@@ -1478,7 +1478,9 @@ function Shop:createProductCard(product, productType, parent)
 
 	local purchaseButton = UI.Components.Button({
 		Text = isOwned and "✓ Owned" or "Purchase",
-		Size = UDim2.new(1, 0, 1, 0),
+		Size = UDim2.new(0.85, 0, 1, 0),
+		Position = UDim2.new(0.5, 0, 0, 0),
+		AnchorPoint = Vector2.new(0.5, 0),
 		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
@@ -1497,7 +1499,9 @@ function Shop:createProductCard(product, productType, parent)
 	-- Add toggle switch for gamepasses with toggle feature
 	if isOwned and product.hasToggle then
 		-- Adjust button size to make room for toggle
-		purchaseButton.Size = UDim2.new(0.7, -4, 1, 0)
+		purchaseButton.Size = UDim2.new(0.6, -4, 1, 0)
+		purchaseButton.Position = UDim2.new(0, 0, 0, 0)
+		purchaseButton.AnchorPoint = Vector2.new(0, 0)
 		self:addToggleSwitch(product, buttonContainer)
 	end
 
