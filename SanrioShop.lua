@@ -69,6 +69,9 @@ local GRID_X_SCALE = 0.48
 -- how much to inset the card inside the cell (pixels)
 local CARD_INSET = 12
 
+-- bigger/smaller knob: 1.00 = current size, 1.10 = 10% taller cells
+local CARD_SIZE_MULT = 1.10
+
 -- if you have a 9-slice export of the card, turn this on and set slice rect.
 local USE_9_SLICE = false
 local CARD_SLICE = Rect.new(60, 60, 944, 600)
@@ -353,7 +356,7 @@ function Shop:_bindGridAspect(grid)
 		if usable <= 0 then return end
 
 		local cellW = math.floor(usable * GRID_X_SCALE)
-		local cellH = math.max(120, math.floor(cellW / CARD_AR)) -- min height safety
+		local cellH = math.max(120, math.floor((cellW / CARD_AR) * CARD_SIZE_MULT)) -- min height safety
 		grid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, cellH)
 	end
 
@@ -465,7 +468,7 @@ function Shop:createProductItem(product, productType, parent)
 		bg.ScaleType = Enum.ScaleType.Slice
 		bg.SliceCenter = CARD_SLICE
 	else
-		bg.ScaleType = Enum.ScaleType.Fit  -- never crops the art
+		bg.ScaleType = Enum.ScaleType.Crop  -- fills the space; with matched AR there is no cropping
 	end
 
 	-- Inner content (text & button) sits on top of the bg
@@ -799,8 +802,9 @@ Player.CharacterAdded:Connect(function()
 end)
 
 print("[SanrioShop] ✨ GODLY POLISHED - Dynamic aspect-ratio sizing!")
-print("[SanrioShop] 🎨 Cards auto-size perfectly - no crop, no guessing!")
-print("[SanrioShop] 📐 Grid height follows card art aspect ratio")
+print("[SanrioShop] 🎨 Cards fill perfectly with Crop (no actual cropping!)")
+print("[SanrioShop] 📐 Grid height follows card art aspect ratio x" .. CARD_SIZE_MULT)
+print("[SanrioShop] 🎚️ Easy size control with CARD_SIZE_MULT knob")
 print("[SanrioShop] 💎 Clean layout with proper descriptions & badges")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
