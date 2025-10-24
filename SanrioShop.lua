@@ -1,20 +1,10 @@
 --[[
     SANRIO SHOP — PERFECT MERGE (CARD BACKGROUNDS FIXED)
-    ✅ Beautiful pill buttons (from first script)
-    ✅ Full functionality (from second script)
-    ✅ Card backgrounds now fill the grid cells (no tiny cards)
-    ✅ FIXED: Bigger gap between cards
-    ✅ FIXED: Button positioning adjusted
-
-    Features:
-    - Clean pill button design with crop images
-    - Purchase system with marketplace
-    - Auto-collect toggle
-    - Confetti + pulse effects
-    - Gift box button
-    - Mobile optimization
-    - Smart caching
-    - BEST VALUE ribbons
+    ✅ Beautiful pill buttons
+    ✅ Full functionality
+    ✅ Card backgrounds fill cells (no tiny cards)
+    ✅ Larger gaps between cards
+    ✅ Adjusted: grid starts higher, text lower, button higher
 ]]
 
 -- Services
@@ -40,13 +30,16 @@ local IMG_CASH = "rbxassetid://84262748186110"
 local GIFT_BOX_TEXTURE_ID = "130623477775352" -- ← YOUR GIFT BOX
 
 -- ======== LAYOUT CONSTANTS ========
-local FRAME_SCALE = 0.92  -- INCREASED from 0.8 to 0.92 (bigger shop!)
+local FRAME_SCALE = 0.92
 local TAB_ROW_Y = 0.36
 local GP_ROW_EXTRA = 0.02
-local CONTENT_TOP_Y = 0.50
+
+-- Move the content area up a touch
+local CONTENT_TOP_Y = 0.472  -- was 0.50 → 0.48; now a bit higher
+
 local BAR_WIDTH_FACTOR = 0.86
-local CONTENT_WIDTH_FACTOR = 0.90   -- gives the grid a little more width
-local CONTENT_HEIGHT_FACTOR = 0.48  -- INCREASED from 0.45 to 0.48 (taller content area)
+local CONTENT_WIDTH_FACTOR = 0.90
+local CONTENT_HEIGHT_FACTOR = 0.48
 
 -- Per-pill sizing
 local CASH_H_FACTOR = 0.09
@@ -58,27 +51,24 @@ local GP_RATIO = 3.60
 
 -- ======== CARD ART / GRID ========
 local CARD_IMAGE = "rbxassetid://108251319294182"
+local CARD_AR = 1.42               -- card art aspect (width/height)
+local GRID_X_SCALE = 0.475         -- ~2 columns + padding
+local CARD_INSET = 8               -- inner inset in pixels
+local CARD_SIZE_MULT = 1.24        -- overall cell height boost
 
--- exact aspect of the card art (width/height).
--- open the PNG in any viewer to read pixels. e.g. 940x660 => 1.424
-local CARD_AR = 1.42
-
--- two columns: each cell is ~48% of the scroller width
-local GRID_X_SCALE = 0.475          -- each cell ~47.5% (safe for 2 columns with padding)
-
--- how much to inset the card inside the cell (pixels)
-local CARD_INSET = 8                 -- less dead margin around the art
-
--- bigger/smaller knob: 1.00 = current size, 1.10 = 10% taller cells
-local CARD_SIZE_MULT = 1.24          -- ~24% taller cards
-
--- if you have a 9-slice export of the card, turn this on and set slice rect.
 local USE_9_SLICE = false
 local CARD_SLICE = Rect.new(60, 60, 944, 600)
 
+-- ======== CARD CONTENT OFFSETS (fine-tune here) ========
+local TEXT_X = 32                  -- INCREASED from 26 to 32 (MORE RIGHT)
+local TITLE_Y = 38                 -- INCREASED from 32 to 38 (LOWER)
+local DESC_Y  = 66                 -- INCREASED from 60 to 66 (LOWER)
+local BONUS_Y = 100                -- INCREASED from 94 to 100 (LOWER)
+local BTN_BOTTOM = -56             -- INCREASED from -64 to -56 (HIGHER UP)
+
 -- ======== UTILITIES ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
-local function isPhone() if not isMobile() then return false end; local cam=workspace.CurrentCamera; local v=cam.ViewportSize; return math.min(v.X,v.Y)<700 end
+local function isPhone() if not isMobile() then return false end; local v=workspace.CurrentCamera.ViewportSize; return math.min(v.X,v.Y)<700 end
 local function formatNumber(n) local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end return s end
 local function blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
 local function formatBonusText(b) return b and b > 0 and ("+%d%% Bonus"):format(math.floor(b*100)) or nil end
@@ -356,7 +346,7 @@ function Shop:_bindGridAspect(grid)
 		if usable <= 0 then return end
 
 		local cellW = math.ceil(usable * GRID_X_SCALE)
-		local cellH = math.max(120, math.ceil((cellW / CARD_AR) * CARD_SIZE_MULT)) -- min height safety
+		local cellH = math.max(120, math.ceil((cellW / CARD_AR) * CARD_SIZE_MULT))
 		grid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, cellH)
 	end
 
@@ -378,9 +368,9 @@ function Shop:createPages()
 	self.cashPage.ZIndex = 4
 	self.cashPage.Parent = self.contentFrame
 
-	-- Add padding to prevent top cutoff
+	-- Padding (slightly smaller on top so cards start higher)
 	local cashPad = Instance.new("UIPadding")
-	cashPad.PaddingTop = UDim.new(0, 12)
+	cashPad.PaddingTop = UDim.new(0, 6)       -- was 12
 	cashPad.PaddingBottom = UDim.new(0, 12)
 	cashPad.PaddingLeft = UDim.new(0, 8)
 	cashPad.PaddingRight = UDim.new(0, 8)
@@ -388,7 +378,7 @@ function Shop:createPages()
 
 	-- CASH GRID
 	local cashGrid = Instance.new("UIGridLayout")
-	cashGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 120) -- temporary; auto-height will override
+	cashGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 120) -- temp; auto-height overrides
 	cashGrid.CellPadding = UDim2.fromOffset(18, 40)
 	cashGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	cashGrid.SortOrder = Enum.SortOrder.LayoutOrder
@@ -416,8 +406,8 @@ function Shop:createPages()
 	self.gpPage.Parent = self.contentFrame
 
 	local gpPad = Instance.new("UIPadding")
-	gpPad.PaddingTop = UDim.new(0, 8)
-	gpPad.PaddingBottom = UDim.new(0, 8)
+	gpPad.PaddingTop = UDim.new(0, 6)         -- was 8
+	gpPad.PaddingBottom = UDim.new(0, 12)
 	gpPad.PaddingLeft = UDim.new(0, 8)
 	gpPad.PaddingRight = UDim.new(0, 8)
 	gpPad.Parent = self.gpPage
@@ -468,21 +458,20 @@ function Shop:createProductItem(product, productType, parent)
 		bg.ScaleType = Enum.ScaleType.Slice
 		bg.SliceCenter = CARD_SLICE
 	else
-		bg.ScaleType = Enum.ScaleType.Crop  -- fills the space; with matched AR there is no cropping
+		bg.ScaleType = Enum.ScaleType.Crop
 	end
 
-	-- Inner content (text & button) sits on top of the bg
-	-- Add padding to keep everything nicely inside the card image
+	-- Inner content
 	local content = Instance.new("Frame")
 	content.Name = "Content"
-	content.Size = UDim2.new(1, -32, 1, -24)  -- More padding: -32 horizontal, -24 vertical
-	content.Position = UDim2.fromOffset(16, 12)  -- Centered with padding
+	content.Size = UDim2.new(1, -32, 1, -24)
+	content.Position = UDim2.fromOffset(16, 12)
 	content.BackgroundTransparency = 1
 	content.Parent = bg
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.70, 0, 0, 24)
-	nameLabel.Position = UDim2.fromOffset(26, 24)  -- MOVED LOWER (was 18, now 24)
+	nameLabel.Position = UDim2.fromOffset(TEXT_X, TITLE_Y)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
@@ -492,10 +481,9 @@ function Shop:createProductItem(product, productType, parent)
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	nameLabel.Parent = content
 
-	-- Show description
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Size = UDim2.new(0.95, 0, 0, 32)
-	descLabel.Position = UDim2.fromOffset(26, 52)  -- MOVED LOWER (was 46, now 52)
+	descLabel.Position = UDim2.fromOffset(TEXT_X, DESC_Y)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = product.description
 	descLabel.TextColor3 = theme.textSecondary
@@ -506,18 +494,18 @@ function Shop:createProductItem(product, productType, parent)
 	descLabel.TextWrapped = true
 	descLabel.Parent = content
 
-	-- Add bonus badge if applicable
+	-- Bonus badge
 	if product.bonus and product.bonus > 0 then
 		local bonusBadge = Instance.new("Frame")
 		bonusBadge.Size = UDim2.fromOffset(70, 24)
-		bonusBadge.Position = UDim2.fromOffset(26, 82)  -- Adjusted to match text position
+		bonusBadge.Position = UDim2.fromOffset(TEXT_X, BONUS_Y)
 		bonusBadge.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 		bonusBadge.BorderSizePixel = 0
 		bonusBadge.Parent = content
 		local badgeCorner = Instance.new("UICorner")
 		badgeCorner.CornerRadius = UDim.new(0, 8)
 		badgeCorner.Parent = bonusBadge
-		
+
 		local bonusText = Instance.new("TextLabel")
 		bonusText.Size = UDim2.fromScale(1, 1)
 		bonusText.BackgroundTransparency = 1
@@ -527,8 +515,8 @@ function Shop:createProductItem(product, productType, parent)
 		bonusText.TextSize = 11
 		bonusText.Parent = bonusBadge
 	end
-	
-	-- Add BEST VALUE badge if applicable
+
+	-- Best value badge
 	if product.best then
 		local bestBadge = Instance.new("Frame")
 		bestBadge.Size = UDim2.fromOffset(90, 26)
@@ -539,7 +527,7 @@ function Shop:createProductItem(product, productType, parent)
 		local bestCorner = Instance.new("UICorner")
 		bestCorner.CornerRadius = UDim.new(0, 10)
 		bestCorner.Parent = bestBadge
-		
+
 		local bestText = Instance.new("TextLabel")
 		bestText.Size = UDim2.fromScale(1, 1)
 		bestText.BackgroundTransparency = 1
@@ -550,10 +538,10 @@ function Shop:createProductItem(product, productType, parent)
 		bestText.Parent = bestBadge
 	end
 
-	-- Button positioned in the bottom area - full width and more prominent
+	-- Purchase / Toggle button (raised a bit)
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.new(0.78, 0, 0, 36)  -- Reduced width from 0.85 to 0.78
-	buyBtn.Position = UDim2.new(0.5, 0, 1, -48)  -- MOVED UP (was -40, now -48)
+	buyBtn.Size = UDim2.new(0.78, 0, 0, 36)
+	buyBtn.Position = UDim2.new(0.5, 0, 1, BTN_BOTTOM)
 	buyBtn.AnchorPoint = Vector2.new(0.5, 0)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "BUY - R$" .. tostring(product.price or 0)
@@ -577,7 +565,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	if isGamepass and product.hasToggle and owned then
 		buyBtn.Size = UDim2.new(0.6, 0, 0, 36)
-		buyBtn.Position = UDim2.new(0.3, 0, 1, -48)  -- MOVED UP (was -40, now -48)
+		buyBtn.Position = UDim2.new(0.3, 0, 1, BTN_BOTTOM)
 		buyBtn.AnchorPoint = Vector2.new(0, 0)
 		buyBtn.Text = "OFF"
 		local state = false
@@ -804,7 +792,7 @@ end)
 print("[SanrioShop] ✨ GODLY POLISHED - Dynamic aspect-ratio sizing!")
 print("[SanrioShop] 🎨 Cards properly sized with optimized constants!")
 print("[SanrioShop] 📐 Grid: " .. GRID_X_SCALE .. " scale, " .. CARD_SIZE_MULT .. "x mult, " .. CARD_INSET .. "px inset")
-print("[SanrioShop] 🎚️ math.ceil prevents pixel loss, Crop ignores transparent edges")
+print("[SanrioShop] 🎚️ Offsets → TEXT_X:"..TEXT_X..", TITLE_Y:"..TITLE_Y..", DESC_Y:"..DESC_Y..", BONUS_Y:"..BONUS_Y..", BTN_BOTTOM:"..BTN_BOTTOM)
 print("[SanrioShop] 💎 Clean layout with proper descriptions & badges")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
