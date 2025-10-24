@@ -401,12 +401,12 @@ function Shop:createProductItem(product, productType, parent)
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
-	-- Visible card background (slightly smaller to avoid crop)
+	-- Visible card background (smaller to prevent crop)
 	local bg = Instance.new("ImageLabel")
 	bg.Name = "CardBG"
 	bg.AnchorPoint = Vector2.new(0.5, 0.5)
 	bg.Position = UDim2.fromScale(0.5, 0.5)
-	bg.Size = UDim2.new(0.94, 0, 0.84, 0)  -- Shrink to prevent top/bottom crop
+	bg.Size = UDim2.new(0.90, 0, 0.76, 0)  -- Much smaller to prevent crop
 	bg.BackgroundTransparency = 1
 	bg.Image = "rbxassetid://108251319294182"
 	bg.ScaleType = Enum.ScaleType.Crop
