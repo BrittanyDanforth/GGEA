@@ -482,7 +482,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.70, 0, 0, 24)
-	nameLabel.Position = UDim2.fromOffset(26, 18)  -- EVEN MORE RIGHT (26)
+	nameLabel.Position = UDim2.fromOffset(26, 24)  -- MOVED LOWER (was 18, now 24)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
@@ -495,7 +495,7 @@ function Shop:createProductItem(product, productType, parent)
 	-- Show description
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Size = UDim2.new(0.95, 0, 0, 32)
-	descLabel.Position = UDim2.fromOffset(26, 46)  -- EVEN MORE RIGHT (26)
+	descLabel.Position = UDim2.fromOffset(26, 52)  -- MOVED LOWER (was 46, now 52)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = product.description
 	descLabel.TextColor3 = theme.textSecondary
@@ -553,7 +553,7 @@ function Shop:createProductItem(product, productType, parent)
 	-- Button positioned in the bottom area - full width and more prominent
 	local buyBtn = Instance.new("TextButton")
 	buyBtn.Size = UDim2.new(0.78, 0, 0, 36)  -- Reduced width from 0.85 to 0.78
-	buyBtn.Position = UDim2.new(0.5, 0, 1, -40)  -- Centered at bottom
+	buyBtn.Position = UDim2.new(0.5, 0, 1, -48)  -- MOVED UP (was -40, now -48)
 	buyBtn.AnchorPoint = Vector2.new(0.5, 0)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "BUY - R$" .. tostring(product.price or 0)
@@ -577,7 +577,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	if isGamepass and product.hasToggle and owned then
 		buyBtn.Size = UDim2.new(0.6, 0, 0, 36)
-		buyBtn.Position = UDim2.new(0.3, 0, 1, -40)
+		buyBtn.Position = UDim2.new(0.3, 0, 1, -48)  -- MOVED UP (was -40, now -48)
 		buyBtn.AnchorPoint = Vector2.new(0, 0)
 		buyBtn.Text = "OFF"
 		local state = false
