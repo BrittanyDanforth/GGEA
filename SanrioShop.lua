@@ -40,13 +40,13 @@ local IMG_CASH = "rbxassetid://84262748186110"
 local GIFT_BOX_TEXTURE_ID = "130623477775352" -- ← YOUR GIFT BOX
 
 -- ======== LAYOUT CONSTANTS ========
-local FRAME_SCALE = 0.8
+local FRAME_SCALE = 0.92  -- INCREASED from 0.8 to 0.92 (bigger shop!)
 local TAB_ROW_Y = 0.36
 local GP_ROW_EXTRA = 0.02
 local CONTENT_TOP_Y = 0.50
 local BAR_WIDTH_FACTOR = 0.86
 local CONTENT_WIDTH_FACTOR = 0.86
-local CONTENT_HEIGHT_FACTOR = 0.45
+local CONTENT_HEIGHT_FACTOR = 0.48  -- INCREASED from 0.45 to 0.48 (taller content area)
 
 -- Per-pill sizing
 local CASH_H_FACTOR = 0.09
@@ -57,7 +57,7 @@ local CASH_RATIO = 2.85
 local GP_RATIO = 3.60
 
 -- Card background tuning (ADJUST THESE TO FIT YOUR CARD ART!)
-local CARD_WIDTH = 0.90   -- % of grid cell width the card uses (0.85 = 85% of cell width)
+local CARD_WIDTH = 0.85   -- REDUCED from 0.90 to 0.85 (cards take up 85% of cell)
 local CARD_ASPECT = 0.69  -- width/height ratio of your card art (adjust to match your texture)
 
 -- ======== UTILITIES ========
@@ -343,8 +343,8 @@ function Shop:createPages()
 	self.cashPage.Parent = self.contentFrame
 
 	local cashGrid = Instance.new("UIGridLayout")
-	cashGrid.CellSize = UDim2.new(0.48, 0, 0, 95)
-	cashGrid.CellPadding = UDim2.fromOffset(10, 25)  -- INCREASED VERTICAL GAP from 10 to 25
+	cashGrid.CellSize = UDim2.new(0.48, 0, 0, 140)  -- INCREASED HEIGHT from 95 to 140
+	cashGrid.CellPadding = UDim2.fromOffset(18, 35)  -- INCREASED SPACING: horizontal 10→18, vertical 25→35
 	cashGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	cashGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	cashGrid.Parent = self.cashPage
@@ -377,8 +377,8 @@ function Shop:createPages()
 	gpPad.Parent = self.gpPage
 
 	local gpGrid = Instance.new("UIGridLayout")
-	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 95)
-	gpGrid.CellPadding = UDim2.fromOffset(10, 25)  -- INCREASED VERTICAL GAP from 10 to 25
+	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 140)  -- INCREASED HEIGHT from 95 to 140
+	gpGrid.CellPadding = UDim2.fromOffset(18, 35)  -- INCREASED SPACING: horizontal 10→18, vertical 25→35
 	gpGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gpGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	gpGrid.Parent = self.gpPage
@@ -702,8 +702,10 @@ Player.CharacterAdded:Connect(function()
 end)
 
 print("[SanrioShop] ✨ Card backgrounds now fill properly!")
-print("[SanrioShop] ✅ Fixed: Bigger vertical gap between cards (25px)")
-print("[SanrioShop] ✅ Fixed: Button positioning adjusted")
+print("[SanrioShop] ✅ Shop frame is now BIGGER (92% scale)")
+print("[SanrioShop] ✅ Grid cells increased to 140px height")
+print("[SanrioShop] ✅ Card spacing: 18px horizontal, 35px vertical")
+print("[SanrioShop] ✅ Cards now have PLENTY of space!")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
 return shop
