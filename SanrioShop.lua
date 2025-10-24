@@ -60,11 +60,11 @@ local USE_9_SLICE = false
 local CARD_SLICE = Rect.new(60, 60, 944, 600)
 
 -- ======== CARD CONTENT OFFSETS (fine-tune here) ========
-local TEXT_X = 40                  -- MUCH MORE RIGHT
-local TITLE_Y = 60                 -- WAY LOWER - halfway down the card
-local DESC_Y  = 88                 -- WAY LOWER 
-local BONUS_Y = 122                -- WAY LOWER
-local BTN_BOTTOM = -50             -- WAY HIGHER UP (closer to 0 = higher)
+local TEXT_X = 50                  -- CENTER FOCUSED - more right
+local TITLE_Y = 55                 -- Centered vertically
+local DESC_Y  = 83                 -- Below title
+local BONUS_Y = 115                -- Below description
+local BTN_BOTTOM = -35             -- MUCH HIGHER (closer to bottom)
 
 -- ======== UTILITIES ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
@@ -470,25 +470,25 @@ function Shop:createProductItem(product, productType, parent)
 	content.Parent = bg
 
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.70, 0, 0, 24)
+	nameLabel.Size = UDim2.new(0.85, 0, 0, 28)  -- Wider, taller
 	nameLabel.Position = UDim2.fromOffset(TEXT_X, TITLE_Y)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.FredokaOne
-	nameLabel.TextSize = 17
+	nameLabel.TextSize = 19  -- BIGGER (was 17)
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	nameLabel.Parent = content
 
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(0.95, 0, 0, 32)
+	descLabel.Size = UDim2.new(0.85, 0, 0, 36)  -- Wider
 	descLabel.Position = UDim2.fromOffset(TEXT_X, DESC_Y)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = product.description
 	descLabel.TextColor3 = theme.textSecondary
 	descLabel.Font = Enum.Font.FredokaOne
-	descLabel.TextSize = 13
+	descLabel.TextSize = 14  -- BIGGER (was 13)
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.TextYAlignment = Enum.TextYAlignment.Top
 	descLabel.TextWrapped = true
