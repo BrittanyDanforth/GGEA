@@ -430,7 +430,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.50, 0, 0, 22)  -- Slightly wider for better fit
-	nameLabel.Position = UDim2.fromOffset(24, 18)  -- EVEN MORE RIGHT (24px) and LOWER (18px)
+	nameLabel.Position = UDim2.fromOffset(28, 18)  -- TINY BIT MORE RIGHT (28px)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
@@ -443,7 +443,7 @@ function Shop:createProductItem(product, productType, parent)
 	local descText = isGamepass and product.description or (formatNumber(product.amount))
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Size = UDim2.new(0.50, 0, 0, 18)
-	descLabel.Position = UDim2.fromOffset(24, 42)  -- EVEN MORE RIGHT (24px) and LOWER (42px)
+	descLabel.Position = UDim2.fromOffset(28, 42)  -- TINY BIT MORE RIGHT (28px)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = descText
 	descLabel.TextColor3 = theme.textSecondary
@@ -456,7 +456,7 @@ function Shop:createProductItem(product, productType, parent)
 	-- Button positioned in the bottom-right of the content area
 	local buyBtn = Instance.new("TextButton")
 	buyBtn.Size = UDim2.fromOffset(90, 36)  -- Slightly smaller to fit better
-	buyBtn.Position = UDim2.new(1, -125, 1, -60)  -- EVEN MORE LEFT (-125) and HIGHER (-60)
+	buyBtn.Position = UDim2.new(1, -130, 1, -65)  -- TINY BIT MORE LEFT (-130) and UP (-65)
 	buyBtn.AnchorPoint = Vector2.new(0, 0)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "R$" .. tostring(product.price or 0)
@@ -480,7 +480,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	if isGamepass and product.hasToggle and owned then
 		buyBtn.Size = UDim2.fromOffset(75, 36)
-		buyBtn.Position = UDim2.new(1, -125, 1, -60)  -- Keep consistent positioning (EVEN MORE LEFT and UP)
+		buyBtn.Position = UDim2.new(1, -130, 1, -65)  -- Keep consistent positioning (TINY BIT MORE LEFT and UP)
 		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
