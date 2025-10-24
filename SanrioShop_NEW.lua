@@ -59,9 +59,10 @@ local CARD_SLICE = Rect.new(60, 60, 944, 600)
 
 -- ======== CARD CONTENT OFFSETS ========
 local TITLE_X = 70
-local DESC_X = 40
-local TITLE_Y = 70
-local DESC_Y = 150
+local DESC_X  = 40
+-- Pull text up so bigger sizes still fit the card nicely
+local TITLE_Y = 52     -- was 70
+local DESC_Y  = 108    -- was 150
 local BTN_BOTTOM = -35
 
 -- ======== UTILITIES ========
@@ -69,6 +70,27 @@ local function isMobile() return UserInputService.TouchEnabled and not GuiServic
 local function isPhone() if not isMobile() then return false end; local v=workspace.CurrentCamera.ViewportSize; return math.min(v.X,v.Y)<700 end
 local function formatNumber(n) local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end return s end
 local function blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
+
+-- ======== TYPOGRAPHY HELPERS ========
+local function applyBubbleText(lbl, opts)
+	opts = opts or {}
+	lbl.TextScaled = true
+	lbl.RichText = false
+	lbl.TextWrapped = (opts.wrap ~= false)
+
+	-- Pastel bubble look: bright fill + soft lavender outline
+	lbl.TextColor3 = opts.fill or Color3.fromRGB(255, 255, 255)
+	lbl.TextStrokeColor3 = opts.stroke or Color3.fromRGB(170, 150, 220)
+	lbl.TextStrokeTransparency = opts.strokeT ~= nil and opts.strokeT or 0.1
+
+	-- Constrain auto-scaling so it never gets tiny or comically large
+	local minS = opts.min or 16
+	local maxS = opts.max or 28
+	local tsc = lbl:FindFirstChildOfClass("UITextSizeConstraint") or Instance.new("UITextSizeConstraint")
+	tsc.MinTextSize = minS
+	tsc.MaxTextSize = maxS
+	tsc.Parent = lbl
+end
 
 -- ======== THEME ========
 local theme = {
@@ -460,30 +482,44 @@ function Shop:createProductItem(product, productType, parent)
 	content.BackgroundTransparency = 1
 	content.Parent = bg
 
+	-- TITLE
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.80, 0, 0, 32)
+	nameLabel.Size = UDim2.new(0.80, 0, 0, 36)
 	nameLabel.Position = UDim2.fromOffset(TITLE_X, TITLE_Y)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
-	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.FredokaOne
-	nameLabel.TextSize = 21
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	nameLabel.TextYAlignment = Enum.TextYAlignment.Top
+	nameLabel.ZIndex = 6
 	nameLabel.Parent = content
+	applyBubbleText(nameLabel, {
+		min = isPhone() and 18 or 20,
+		max = isPhone() and 24 or 30,
+		fill = Color3.fromRGB(255,255,255),
+		stroke = Color3.fromRGB(168,150,232), -- soft lavender outline
+		strokeT = 0.08,
+	})
 
+	-- DESCRIPTION
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(0.85, 0, 0, 36)
+	descLabel.Size = UDim2.new(0.85, 0, 0, 42)
 	descLabel.Position = UDim2.fromOffset(DESC_X, DESC_Y)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = product.description
-	descLabel.TextColor3 = theme.textSecondary
-	descLabel.Font = Enum.Font.FredokaOne
-	descLabel.TextSize = 14
+	descLabel.Font = Enum.Font.FredokaOne -- stays bubbly to match; switch to GothamMedium if you prefer
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.TextYAlignment = Enum.TextYAlignment.Top
-	descLabel.TextWrapped = true
+	descLabel.ZIndex = 5
+	descLabel.LineHeight = 1.05
 	descLabel.Parent = content
+	applyBubbleText(descLabel, {
+		min = isPhone() and 13 or 14,
+		max = isPhone() and 15 or 18,
+		fill = Color3.fromRGB(250,250,255),
+		stroke = Color3.fromRGB(190,176,236),
+		strokeT = 0.25,
+	})
 
 	-- BONUS BADGE - TOP RIGHT CORNER
 	if product.bonus and product.bonus > 0 then
@@ -540,8 +576,15 @@ function Shop:createProductItem(product, productType, parent)
 	buyBtn.TextSize = 15
 	buyBtn.AutoButtonColor = false
 	buyBtn.BorderSizePixel = 0
+	buyBtn.TextStrokeColor3 = Color3.fromRGB(255,255,255)
+	buyBtn.TextStrokeTransparency = 0.15
+	buyBtn.TextScaled = true
 	buyBtn.Parent = content
 	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 12); btnCorner.Parent = buyBtn
+	local btsc = Instance.new("UITextSizeConstraint")
+	btsc.MinTextSize = 14
+	btsc.MaxTextSize = 18
+	btsc.Parent = buyBtn
 
 	buyBtn.MouseEnter:Connect(function()
 		playSound("hover")
