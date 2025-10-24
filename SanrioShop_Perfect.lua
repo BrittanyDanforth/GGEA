@@ -54,6 +54,10 @@ local PILL_MAX_H = 120
 local CASH_RATIO = 2.85
 local GP_RATIO = 3.60
 
+-- Card background tuning (ADJUST THESE TO FIT YOUR CARD ART!)
+local CARD_WIDTH = 0.86   -- % of grid cell width the card uses (smaller = less crop)
+local CARD_ASPECT = 3.60  -- width/height ratio of your card art (adjust to match your texture)
+
 -- ======== UTILITIES ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
 local function isPhone() if not isMobile() then return false end; local cam=workspace.CurrentCamera; local v=cam.ViewportSize; return math.min(v.X,v.Y)<700 end
