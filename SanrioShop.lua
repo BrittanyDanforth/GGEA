@@ -94,15 +94,15 @@ local ownershipCache = Cache.new(60)
 -- ======== DATA ========
 local products = {
 	cash = {
-		{ id = 3366419712, amount = 1000,    name = "1,000 Cash",    description = "Includes 1,000 Cash",    icon = "rbxassetid://10709728059", price = 0 },
-		{ id = 3366420012, amount = 5000,    name = "5,000 Cash",    description = "Includes 5,000 Cash",    icon = "rbxassetid://10709728059", price = 0 },
-		{ id = 3366420478, amount = 10000,   name = "10,000 Cash",   description = "Includes 10,000 Cash",   icon = "rbxassetid://10709728059", price = 0, bonus = 0.10 },
-		{ id = 3366420800, amount = 25000,   name = "25,000 Cash",   description = "Includes 25,000 Cash",   icon = "rbxassetid://10709728059", price = 0 },
-		{ id = 3424973374, amount = 50000,   name = "50,000 Cash",   description = "Includes 50,000 Cash",   icon = "rbxassetid://10709728059", price = 0, bonus = 0.25 },
-		{ id = 3424974046, amount = 100000,  name = "100,000 Cash",  description = "Includes 100,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
-		{ id = 3424974161, amount = 250000,  name = "250,000 Cash",  description = "Includes 250,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
-		{ id = 3424974327, amount = 500000,  name = "500,000 Cash",  description = "Includes 500,000 Cash",  icon = "rbxassetid://10709728059", price = 0 },
-		{ id = 3424974402, amount = 1000000, name = "1,000,000 Cash",description = "Includes 1,000,000 Cash",icon = "rbxassetid://10709728059", price = 0, best = true, bonus = 0.35 },
+		{ id = 3366419712, amount = 1000,    name = "1,000 Cash",    description = "Perfect starter pack! 💝", icon = "rbxassetid://10709728059", price = 0, emoji = "🌸" },
+		{ id = 3366420012, amount = 5000,    name = "5,000 Cash",    description = "Great for early upgrades! ✨", icon = "rbxassetid://10709728059", price = 0, emoji = "🎀" },
+		{ id = 3366420478, amount = 10000,   name = "10,000 Cash",   description = "Boost your progress fast! 🚀", icon = "rbxassetid://10709728059", price = 0, bonus = 0.10, emoji = "💖" },
+		{ id = 3366420800, amount = 25000,   name = "25,000 Cash",   description = "Popular choice! 🌟", icon = "rbxassetid://10709728059", price = 0, emoji = "✨" },
+		{ id = 3424973374, amount = 50000,   name = "50,000 Cash",   description = "Major upgrade power! 💪", icon = "rbxassetid://10709728059", price = 0, bonus = 0.25, emoji = "🎉" },
+		{ id = 3424974046, amount = 100000,  name = "100,000 Cash",  description = "Supercharge your tycoon! ⚡", icon = "rbxassetid://10709728059", price = 0, emoji = "💎" },
+		{ id = 3424974161, amount = 250000,  name = "250,000 Cash",  description = "Mega bundle for big dreams! 🌈", icon = "rbxassetid://10709728059", price = 0, emoji = "🦄" },
+		{ id = 3424974327, amount = 500000,  name = "500,000 Cash",  description = "Ultimate fortune awaits! 👑", icon = "rbxassetid://10709728059", price = 0, emoji = "💰" },
+		{ id = 3424974402, amount = 1000000, name = "1,000,000 Cash",description = "BEST VALUE! Max out everything! 🔥", icon = "rbxassetid://10709728059", price = 0, best = true, bonus = 0.35, emoji = "🏆" },
 	},
 	gamepasses = {
 		{ id = 1412171840, name = "Auto Collect", description = "Automatically collect all cash drops", icon = "rbxassetid://10709727148", price = 99,  hasToggle = true  },
@@ -428,45 +428,113 @@ function Shop:createProductItem(product, productType, parent)
 	content.BackgroundTransparency = 1
 	content.Parent = bg
 
+	-- Add cute emoji icon for visual interest
+	local emojiLabel = Instance.new("TextLabel")
+	emojiLabel.Size = UDim2.fromOffset(32, 32)
+	emojiLabel.Position = UDim2.fromOffset(8, 12)
+	emojiLabel.BackgroundTransparency = 1
+	emojiLabel.Text = product.emoji or "💝"
+	emojiLabel.Font = Enum.Font.FredokaOne
+	emojiLabel.TextSize = 24
+	emojiLabel.Parent = content
+
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.50, 0, 0, 22)  -- Slightly wider for better fit
-	nameLabel.Position = UDim2.fromOffset(34, 18)  -- MORE RIGHT (34px)
+	nameLabel.Size = UDim2.new(0.55, 0, 0, 22)
+	nameLabel.Position = UDim2.fromOffset(46, 12)  -- Offset for emoji
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.FredokaOne  -- CUTE BUBBLY FONT!
-	nameLabel.TextSize = 15
+	nameLabel.TextSize = 16
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	nameLabel.Parent = content
 
-	local descText = isGamepass and product.description or (formatNumber(product.amount))
+	-- Show description instead of amount again
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(0.50, 0, 0, 18)
-	descLabel.Position = UDim2.fromOffset(34, 42)  -- MORE RIGHT (34px)
+	descLabel.Size = UDim2.new(0.95, 0, 0, 36)
+	descLabel.Position = UDim2.fromOffset(8, 46)
 	descLabel.BackgroundTransparency = 1
-	descLabel.Text = descText
+	descLabel.Text = product.description
 	descLabel.TextColor3 = theme.textSecondary
-	descLabel.Font = Enum.Font.FredokaOne  -- CUTE BUBBLY FONT!
-	descLabel.TextSize = 12
+	descLabel.Font = Enum.Font.FredokaOne
+	descLabel.TextSize = 13
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
-	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	descLabel.TextYAlignment = Enum.TextYAlignment.Top
+	descLabel.TextWrapped = true
 	descLabel.Parent = content
 
-	-- Button positioned in the bottom-right of the content area
+	-- Add bonus badge if applicable
+	if product.bonus and product.bonus > 0 then
+		local bonusBadge = Instance.new("Frame")
+		bonusBadge.Size = UDim2.fromOffset(65, 22)
+		bonusBadge.Position = UDim2.fromOffset(8, 84)
+		bonusBadge.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+		bonusBadge.BorderSizePixel = 0
+		bonusBadge.Parent = content
+		local badgeCorner = Instance.new("UICorner")
+		badgeCorner.CornerRadius = UDim.new(0, 6)
+		badgeCorner.Parent = bonusBadge
+		
+		local bonusText = Instance.new("TextLabel")
+		bonusText.Size = UDim2.fromScale(1, 1)
+		bonusText.BackgroundTransparency = 1
+		bonusText.Text = "+" .. math.floor(product.bonus * 100) .. "%"
+		bonusText.TextColor3 = Color3.fromRGB(139, 69, 19)
+		bonusText.Font = Enum.Font.FredokaOne
+		bonusText.TextSize = 13
+		bonusText.Parent = bonusBadge
+	end
+	
+	-- Add BEST VALUE badge if applicable
+	if product.best then
+		local bestBadge = Instance.new("Frame")
+		bestBadge.Size = UDim2.fromOffset(85, 24)
+		bestBadge.Position = UDim2.new(1, -90, 0, 8)
+		bestBadge.BackgroundColor3 = Color3.fromRGB(255, 64, 129)
+		bestBadge.BorderSizePixel = 0
+		bestBadge.Parent = content
+		local bestCorner = Instance.new("UICorner")
+		bestCorner.CornerRadius = UDim.new(0, 8)
+		bestCorner.Parent = bestBadge
+		
+		local bestText = Instance.new("TextLabel")
+		bestText.Size = UDim2.fromScale(1, 1)
+		bestText.BackgroundTransparency = 1
+		bestText.Text = "⭐ BEST!"
+		bestText.TextColor3 = Color3.new(1, 1, 1)
+		bestText.Font = Enum.Font.FredokaOne
+		bestText.TextSize = 12
+		bestText.Parent = bestBadge
+	end
+
+	-- Button positioned in the bottom area - full width and more prominent
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.fromOffset(90, 36)  -- Slightly smaller to fit better
-	buyBtn.Position = UDim2.new(1, -130, 1, -65)  -- TINY BIT MORE LEFT (-130) and UP (-65)
-	buyBtn.AnchorPoint = Vector2.new(0, 0)
+	buyBtn.Size = UDim2.new(0.95, 0, 0, 38)  -- Full width button
+	buyBtn.Position = UDim2.new(0.5, 0, 1, -42)  -- Centered at bottom
+	buyBtn.AnchorPoint = Vector2.new(0.5, 0)
 	buyBtn.BackgroundColor3 = accentColor
-	buyBtn.Text = "R$" .. tostring(product.price or 0)
+	buyBtn.Text = "💰 BUY • R$" .. tostring(product.price or 0)
 	buyBtn.TextColor3 = Color3.new(1, 1, 1)
 	buyBtn.Font = Enum.Font.FredokaOne  -- CUTE BUBBLY FONT!
-	buyBtn.TextSize = 14
+	buyBtn.TextSize = 15
 	buyBtn.AutoButtonColor = false
 	buyBtn.BorderSizePixel = 0
 	buyBtn.Parent = content
-	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 10); btnCorner.Parent = buyBtn
+	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 12); btnCorner.Parent = buyBtn
+	
+	-- Add subtle gradient to button
+	local btnGradient = Instance.new("UIGradient")
+	btnGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(240, 240, 240))
+	})
+	btnGradient.Rotation = 90
+	btnGradient.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.8),
+		NumberSequenceKeypoint.new(1, 0.9)
+	})
+	btnGradient.Parent = buyBtn
 
 	buyBtn.MouseEnter:Connect(function()
 		playSound("hover")
@@ -479,9 +547,10 @@ function Shop:createProductItem(product, productType, parent)
 	end)
 
 	if isGamepass and product.hasToggle and owned then
-		buyBtn.Size = UDim2.fromOffset(75, 36)
-		buyBtn.Position = UDim2.new(1, -130, 1, -65)  -- Keep consistent positioning (TINY BIT MORE LEFT and UP)
-		buyBtn.Text = "OFF"
+		buyBtn.Size = UDim2.new(0.6, 0, 0, 38)
+		buyBtn.Position = UDim2.new(0.3, 0, 1, -42)
+		buyBtn.AnchorPoint = Vector2.new(0, 0)
+		buyBtn.Text = "🔴 OFF"
 		local state = false
 		if Remotes then
 			local rf = Remotes:FindFirstChild("GetAutoCollectState")
@@ -495,10 +564,10 @@ function Shop:createProductItem(product, productType, parent)
 			state = on
 			if on then
 				buyBtn.BackgroundColor3 = theme.success
-				buyBtn.Text = "ON"
+				buyBtn.Text = "✅ ON"
 			else
 				buyBtn.BackgroundColor3 = theme.stroke
-				buyBtn.Text = "OFF"
+				buyBtn.Text = "🔴 OFF"
 			end
 		end
 		paint(state)
@@ -514,7 +583,7 @@ function Shop:createProductItem(product, productType, parent)
 		end)
 	elseif isGamepass and owned then
 		buyBtn.BackgroundColor3 = theme.success
-		buyBtn.Text = "OWNED"
+		buyBtn.Text = "✓ OWNED"
 		buyBtn.Active = false
 	else
 		buyBtn.MouseButton1Click:Connect(function()
@@ -703,13 +772,11 @@ Player.CharacterAdded:Connect(function()
 	end
 end)
 
-print("[SanrioShop] ✨ Card backgrounds now fill properly!")
-print("[SanrioShop] ✅ Shop frame is now BIGGER (92% scale)")
-print("[SanrioShop] ✅ Grid cells increased to 140px height")
-print("[SanrioShop] ✅ Card spacing: 18px horizontal, 35px vertical")
-print("[SanrioShop] ✅ Text and buttons now properly INSIDE card images!")
-print("[SanrioShop] ✅ All content has proper padding and positioning!")
-print("[SanrioShop] 🎀 CUTE BUBBLY FONT (FredokaOne) applied!")
+print("[SanrioShop] ✨ Cards redesigned with CUTE layouts!")
+print("[SanrioShop] 🎀 Emoji icons, better descriptions, bonus badges!")
+print("[SanrioShop] 💝 Full-width buttons with gradients!")
+print("[SanrioShop] ⭐ BEST VALUE badges for top deals!")
+print("[SanrioShop] 🌈 Cards now look AMAZING and full of life!")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
 return shop
