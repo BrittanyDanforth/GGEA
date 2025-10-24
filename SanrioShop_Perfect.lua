@@ -1,8 +1,9 @@
 --[[
-    SANRIO SHOP — PERFECT MERGE
+    SANRIO SHOP — PERFECT MERGE (CARD BACKGROUNDS FIXED)
     ✅ Beautiful pill buttons (from first script)
     ✅ Full functionality (from second script)
-    
+    ✅ Card backgrounds now fill the grid cells (no tiny cards)
+
     Features:
     - Clean pill button design with crop images
     - Purchase system with marketplace
@@ -12,7 +13,7 @@
     - Mobile optimization
     - Smart caching
     - BEST VALUE ribbons
---]]
+]]
 
 -- Services
 local Players = game:GetService("Players")
@@ -36,7 +37,7 @@ local IMG_GAMEPASSES = "rbxassetid://137846629770171"
 local IMG_CASH = "rbxassetid://84262748186110"
 local GIFT_BOX_TEXTURE_ID = "130623477775352" -- ← YOUR GIFT BOX
 
--- ======== LAYOUT CONSTANTS (from first script) ========
+-- ======== LAYOUT CONSTANTS ========
 local FRAME_SCALE = 0.8
 local TAB_ROW_Y = 0.36
 local GP_ROW_EXTRA = 0.02
@@ -215,7 +216,6 @@ function Shop:createToggleButton()
 	self.toggleButton.MouseButton1Click:Connect(function() self:toggle() end)
 end
 
--- ✅ PILL BUTTON CREATION (from first script)
 function Shop:makePill(name, imageId, ratio)
 	local container = Instance.new("Frame")
 	container.Name = name .. "Container"
@@ -256,7 +256,6 @@ function Shop:makePill(name, imageId, ratio)
 end
 
 function Shop:createMainInterface()
-	-- Main ScreenGui
 	self.gui = Instance.new("ScreenGui")
 	self.gui.Name = "SanrioShopMain"
 	self.gui.ResetOnSpawn = false
@@ -265,13 +264,11 @@ function Shop:createMainInterface()
 	self.gui.IgnoreGuiInset = true
 	self.gui.Parent = PlayerGui
 
-	-- Blur
 	self.blur = Lighting:FindFirstChild("SanrioShopBlur") or Instance.new("BlurEffect")
 	self.blur.Name = "SanrioShopBlur"
 	self.blur.Size = 0
 	self.blur.Parent = Lighting
 
-	-- Dim background
 	local dim = Instance.new("Frame")
 	dim.Size = UDim2.fromScale(1, 1)
 	dim.BackgroundColor3 = Color3.new(0, 0, 0)
@@ -279,7 +276,6 @@ function Shop:createMainInterface()
 	dim.BorderSizePixel = 0
 	dim.Parent = self.gui
 
-	-- ✅ Main frame with background image (from first script)
 	self.mainFrame = Instance.new("ImageLabel")
 	self.mainFrame.Name = "MainFrame"
 	self.mainFrame.BackgroundTransparency = 1
@@ -295,7 +291,6 @@ function Shop:createMainInterface()
 	aspect.AspectRatio = 1
 	aspect.Parent = self.mainFrame
 
-	-- ✅ Button bar (from first script)
 	self.buttonBar = Instance.new("Frame")
 	self.buttonBar.Name = "ButtonBar"
 	self.buttonBar.BackgroundTransparency = 1
@@ -305,11 +300,9 @@ function Shop:createMainInterface()
 	self.buttonBar.ZIndex = 5
 	self.buttonBar.Parent = self.mainFrame
 
-	-- ✅ Create pill buttons (from first script)
 	self.cashContainer, self.cashBtn = self:makePill("Cash", IMG_CASH, CASH_RATIO)
 	self.gpContainer, self.gpBtn = self:makePill("Gamepasses", IMG_GAMEPASSES, GP_RATIO)
 
-	-- ✅ Content frame (from first script)
 	self.contentFrame = Instance.new("Frame")
 	self.contentFrame.Name = "Content"
 	self.contentFrame.AnchorPoint = Vector2.new(0.5, 0)
@@ -324,19 +317,14 @@ function Shop:createMainInterface()
 	contentCorner.CornerRadius = UDim.new(0, 20)
 	contentCorner.Parent = self.contentFrame
 
-	-- Create pages
 	self:createPages()
-
-	-- ✅ Setup dynamic sizing (from first script)
 	self:setupDynamicSizing()
 
-	-- Wire button clicks
 	self.cashBtn.MouseButton1Click:Connect(function() self:showCash() end)
 	self.gpBtn.MouseButton1Click:Connect(function() self:showGamepasses() end)
 end
 
 function Shop:createPages()
-	-- Cash page
 	self.cashPage = Instance.new("ScrollingFrame")
 	self.cashPage.Name = "CashPage"
 	self.cashPage.BackgroundTransparency = 1
@@ -364,7 +352,6 @@ function Shop:createPages()
 		self:createProductItem(p, "cash", self.cashPage)
 	end
 
-	-- Gamepasses page
 	self.gpPage = Instance.new("ScrollingFrame")
 	self.gpPage.Name = "GamepassPage"
 	self.gpPage.BackgroundTransparency = 1
@@ -375,8 +362,7 @@ function Shop:createPages()
 	self.gpPage.Size = UDim2.fromScale(1, 1)
 	self.gpPage.ZIndex = 4
 	self.gpPage.Parent = self.contentFrame
-	
-	-- Add padding
+
 	local gpPad = Instance.new("UIPadding")
 	gpPad.PaddingTop = UDim.new(0, 8)
 	gpPad.PaddingBottom = UDim.new(0, 8)
@@ -406,25 +392,23 @@ function Shop:createProductItem(product, productType, parent)
 	local accentColor = isGamepass and theme.kuromi or theme.cinna
 	local owned = isGamepass and checkOwnership(product.id)
 
-	-- Container with YOUR CUSTOM CARD BACKGROUND!
+	-- Card fills entire grid cell with your custom background
 	local container = Instance.new("ImageLabel")
 	container.Name = product.name .. "Item"
-	container.Size = UDim2.new(1, 0, 0, 68)
+	container.Size = UDim2.new(1, 0, 1, 0)
 	container.BackgroundTransparency = 1
 	container.Image = "rbxassetid://108251319294182"
-	container.ScaleType = Enum.ScaleType.Fit
+	container.ScaleType = Enum.ScaleType.Crop
 	container.ImageColor3 = Color3.new(1, 1, 1)
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
-	-- Inner content frame for padding
 	local content = Instance.new("Frame")
 	content.Size = UDim2.new(1, -24, 1, -12)
 	content.Position = UDim2.fromOffset(12, 6)
 	content.BackgroundTransparency = 1
 	content.Parent = container
 
-	-- Name on the left
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.55, 0, 0, 20)
 	nameLabel.Position = UDim2.fromOffset(0, 8)
@@ -437,7 +421,6 @@ function Shop:createProductItem(product, productType, parent)
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	nameLabel.Parent = content
 
-	-- Amount/description below name
 	local descText = isGamepass and product.description or (formatNumber(product.amount))
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Size = UDim2.new(0.55, 0, 0, 16)
@@ -451,7 +434,6 @@ function Shop:createProductItem(product, productType, parent)
 	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	descLabel.Parent = content
 
-	-- Buy button - clean and flat
 	local buyBtn = Instance.new("TextButton")
 	buyBtn.Size = UDim2.fromOffset(95, 40)
 	buyBtn.Position = UDim2.new(1, -98, 0.5, 0)
@@ -466,7 +448,6 @@ function Shop:createProductItem(product, productType, parent)
 	buyBtn.Parent = content
 	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 10); btnCorner.Parent = buyBtn
 
-	-- Hover effect on button
 	buyBtn.MouseEnter:Connect(function()
 		playSound("hover")
 		TweenService:Create(buyBtn,TweenInfo.new(0.12),{BackgroundColor3=blend(accentColor, Color3.new(1,1,1), 0.2)}):Play()
@@ -477,9 +458,6 @@ function Shop:createProductItem(product, productType, parent)
 		end
 	end)
 
-	-- No separator needed with custom card background!
-
-	-- Toggle for Auto Collect
 	if isGamepass and product.hasToggle and owned then
 		buyBtn.Size = UDim2.fromOffset(75, 40)
 		buyBtn.Position = UDim2.new(1, -78, 0.5, 0)
@@ -492,7 +470,7 @@ function Shop:createProductItem(product, productType, parent)
 				if ok and type(val) == "boolean" then state = val end
 			end
 		end
-		
+
 		local function paint(on)
 			state = on
 			if on then
@@ -504,7 +482,7 @@ function Shop:createProductItem(product, productType, parent)
 			end
 		end
 		paint(state)
-		
+
 		buyBtn.MouseButton1Click:Connect(function()
 			local nextState = not state
 			paint(nextState)
@@ -531,9 +509,6 @@ function Shop:createProductItem(product, productType, parent)
 	product.purchaseButton = buyBtn
 end
 
--- Toggle functionality is now integrated into createProductItem
-
--- ✅ DYNAMIC SIZING (from first script)
 function Shop:setupDynamicSizing()
 	local function resize()
 		local H = self.mainFrame.AbsoluteSize.Y
@@ -642,14 +617,12 @@ function Shop:toggle()
 end
 
 function Shop:setupHandlers()
-	-- Input
 	UserInputService.InputBegan:Connect(function(i, gp)
 		if gp then return end
 		if i.KeyCode == Enum.KeyCode.M then self:toggle() end
 		if i.KeyCode == Enum.KeyCode.Escape and self.isOpen then self:close() end
 	end)
 
-	-- Remotes
 	if Remotes then
 		local gpPurchased = Remotes:FindFirstChild("GamepassPurchased")
 		if gpPurchased and gpPurchased:IsA("RemoteEvent") then
@@ -661,7 +634,6 @@ function Shop:setupHandlers()
 		end
 	end
 
-	-- Purchase callbacks
 	MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
 		if player ~= Player then return end
 		local p = self.purchasePending[passId]
@@ -700,7 +672,6 @@ function Shop:setupHandlers()
 	end)
 end
 
--- ======== BOOT ========
 local shop = Shop.new()
 shop:initialize()
 
@@ -711,6 +682,7 @@ Player.CharacterAdded:Connect(function()
 	end
 end)
 
-print("[SanrioShop] ✨ PERFECT MERGE: Beautiful pills + Full functionality!")
+print("[SanrioShop] ✨ Card backgrounds now fill properly!")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
+
 return shop
