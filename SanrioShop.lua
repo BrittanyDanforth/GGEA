@@ -48,6 +48,14 @@ Core.CONSTANTS = {
 	CARD_SIZE = Vector2.new(520, 300),
 	CARD_SIZE_MOBILE = Vector2.new(480, 280),
 
+	-- Card background tuning
+	-- Width fraction of the card header background inside its container (smaller = less crop)
+	CARD_WIDTH = 0.86,
+	-- Width/height ratio of your card art; tweak to match texture
+	CARD_ASPECT = 3.60,
+	-- Background image used for product cards (can be changed later easily)
+	CARD_BG_IMAGE = "rbxassetid://108251319294182",
+
 	ANIM_FAST = 0.15,
 	ANIM_MEDIUM = 0.25,
 	ANIM_SLOW = 0.35,
@@ -1405,23 +1413,22 @@ function Shop:createProductCard(product, productType, parent)
 		parent = content,
 	}):render()
 
-	-- Add gradient to image container
-	local imageGradient = Instance.new("UIGradient")
-	imageGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(1, Core.Utils.blend(cardColor, Color3.new(1, 1, 1), 0.9)),
-	})
-	imageGradient.Rotation = 45
-	imageGradient.Parent = imageContainer
+    -- Visible card background (smaller than the container, centered)
+    local cardBg = Instance.new("ImageLabel")
+    cardBg.Name = "CardBG"
+    cardBg.AnchorPoint = Vector2.new(0.5, 0.5)
+    cardBg.Position = UDim2.fromScale(0.5, 0.5)
+    cardBg.Size = UDim2.new(Core.CONSTANTS.CARD_WIDTH, 0, Core.CONSTANTS.CARD_WIDTH / Core.CONSTANTS.CARD_ASPECT, 0)
+    cardBg.BackgroundTransparency = 1
+    cardBg.Image = Core.CONSTANTS.CARD_BG_IMAGE
+    cardBg.ScaleType = Enum.ScaleType.Crop
+    cardBg.Parent = imageContainer
 
-	local productImage = UI.Components.Image({
-		Image = product.icon or "rbxassetid://0",
-		Size = UDim2.fromScale(0.7, 0.7),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		ScaleType = Enum.ScaleType.Fit,
-		parent = imageContainer,
-	}):render()
+    -- Keep the card’s aspect ratio no matter the container size
+    local ar = Instance.new("UIAspectRatioConstraint")
+    ar.AspectRatio = Core.CONSTANTS.CARD_ASPECT
+    ar.DominantAxis = Enum.DominantAxis.Width
+    ar.Parent = cardBg
 
 	local infoContainer = UI.Components.Frame({
 		Size = UDim2.new(1, 0, 1, -160),
