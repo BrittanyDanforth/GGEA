@@ -430,7 +430,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.70, 0, 0, 24)
-	nameLabel.Position = UDim2.fromOffset(12, 12)
+	nameLabel.Position = UDim2.fromOffset(20, 18)  -- MORE RIGHT (20) and LOWER (18)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
@@ -443,7 +443,7 @@ function Shop:createProductItem(product, productType, parent)
 	-- Show description
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Size = UDim2.new(0.95, 0, 0, 32)
-	descLabel.Position = UDim2.fromOffset(12, 40)
+	descLabel.Position = UDim2.fromOffset(20, 46)  -- MORE RIGHT (20) and LOWER (46)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = product.description
 	descLabel.TextColor3 = theme.textSecondary
@@ -458,7 +458,7 @@ function Shop:createProductItem(product, productType, parent)
 	if product.bonus and product.bonus > 0 then
 		local bonusBadge = Instance.new("Frame")
 		bonusBadge.Size = UDim2.fromOffset(70, 24)
-		bonusBadge.Position = UDim2.fromOffset(12, 76)
+		bonusBadge.Position = UDim2.fromOffset(20, 82)  -- Adjusted to match text position
 		bonusBadge.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 		bonusBadge.BorderSizePixel = 0
 		bonusBadge.Parent = content
@@ -500,7 +500,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	-- Button positioned in the bottom area - full width and more prominent
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.new(0.92, 0, 0, 36)  -- Full width button
+	buyBtn.Size = UDim2.new(0.85, 0, 0, 36)  -- Reduced width from 0.92 to 0.85
 	buyBtn.Position = UDim2.new(0.5, 0, 1, -40)  -- Centered at bottom
 	buyBtn.AnchorPoint = Vector2.new(0.5, 0)
 	buyBtn.BackgroundColor3 = accentColor
