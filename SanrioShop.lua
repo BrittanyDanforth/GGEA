@@ -77,6 +77,12 @@ local function isPhone() if not isMobile() then return false end; local v=worksp
 local function formatNumber(n) local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end return s end
 local function blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
 
+-- Only keep a big right pad when a badge is actually shown
+local function titleRightPadFor(product)
+	local hasBadge = (product.best == true) or (product.bonus and product.bonus > 0)
+	return hasBadge and 122 or 20 -- 20px when no badges -> plenty of room
+end
+
 -- ======== TYPOGRAPHY HELPERS ========
 local function applyBubbleText(lbl, opts)
 	opts = opts or {}
@@ -488,19 +494,21 @@ function Shop:createProductItem(product, productType, parent)
 	content.BackgroundTransparency = 1
 	content.Parent = bg
 
-	-- TITLE (TextScaled + min/max, no ellipses, room for badges)
+	-- TITLE (big, one line, dynamic right pad)
+	local rightPad = titleRightPadFor(product)
+
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "Name"
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Position = UDim2.fromOffset(TITLE_X, TITLE_Y)
-	nameLabel.Size = UDim2.new(1, -(TITLE_X + TITLE_RIGHT_PAD), 0, 40) -- a little taller for bigger text
+	nameLabel.Size = UDim2.new(1, -(TITLE_X + rightPad), 0, 44)  -- taller for chunky text
 	nameLabel.Font = Enum.Font.FredokaOne
-	nameLabel.Text = product.name
+	nameLabel.Text = product.name          -- e.g. "1,000 Cash"
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextYAlignment = Enum.TextYAlignment.Center
 	nameLabel.TextWrapped = false
 	nameLabel.TextTruncate = Enum.TextTruncate.None
-	nameLabel.TextScaled = true                  -- auto-fit width without going tiny
+	nameLabel.TextScaled = true
 	nameLabel.TextColor3 = Color3.fromRGB(255,255,255)
 	nameLabel.TextStrokeColor3 = Color3.fromRGB(168,150,232)
 	nameLabel.TextStrokeTransparency = 0.08
@@ -508,7 +516,7 @@ function Shop:createProductItem(product, productType, parent)
 	nameLabel.Parent = content
 
 	local nsc = Instance.new("UITextSizeConstraint")
-	nsc.MinTextSize = isPhone() and 18 or 22     -- keep it big
+	nsc.MinTextSize = isPhone() and 18 or 22  -- stays big
 	nsc.MaxTextSize = isPhone() and 26 or 32
 	nsc.Parent = nameLabel
 
@@ -845,7 +853,8 @@ print("[SanrioShop] 💎 BUY text readable with deep lavender outline")
 print("[SanrioShop] 🌙 Hover darkens button for better contrast")
 print("[SanrioShop] 🏆 Bonus badges in TOP-RIGHT corner!")
 print("[SanrioShop] 🎨 Title auto-scales (big & bubbly, no clipping!)")
-print("[SanrioShop] 📐 Title: X="..TITLE_X.." Y="..TITLE_Y.." RIGHT_PAD="..TITLE_RIGHT_PAD)
+print("[SanrioShop] 🧠 Dynamic right pad - badges=122px, no badges=20px")
+print("[SanrioShop] 📐 Title: X="..TITLE_X.." Y="..TITLE_Y.." (height=44)")
 print("[SanrioShop] 📝 Desc: X="..DESC_X.." Y="..DESC_Y)
 print("[SanrioShop] 🎯 Button: BTN_BOTTOM="..BTN_BOTTOM)
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
