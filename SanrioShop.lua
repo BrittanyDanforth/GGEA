@@ -495,25 +495,25 @@ function Shop:createProductItem(product, productType, parent)
 	descLabel.TextWrapped = true
 	descLabel.Parent = content
 
-	-- Bonus badge
+	-- Bonus badge (TOP RIGHT CORNER like BEST VALUE)
 	if product.bonus and product.bonus > 0 then
 		local bonusBadge = Instance.new("Frame")
-		bonusBadge.Size = UDim2.fromOffset(80, 26)  -- Slightly bigger
-		bonusBadge.Position = UDim2.fromOffset(DESC_X, BONUS_Y)  -- Same X as description
+		bonusBadge.Size = UDim2.fromOffset(85, 26)
+		bonusBadge.Position = UDim2.new(1, -90, 0, 42)  -- TOP RIGHT, below BEST VALUE if it exists
 		bonusBadge.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 		bonusBadge.BorderSizePixel = 0
 		bonusBadge.Parent = content
 		local badgeCorner = Instance.new("UICorner")
-		badgeCorner.CornerRadius = UDim.new(0, 8)
+		badgeCorner.CornerRadius = UDim.new(0, 10)
 		badgeCorner.Parent = bonusBadge
 
 		local bonusText = Instance.new("TextLabel")
 		bonusText.Size = UDim2.fromScale(1, 1)
 		bonusText.BackgroundTransparency = 1
-		bonusText.Text = "+" .. math.floor(product.bonus * 100) .. "% Bonus"
+		bonusText.Text = "+" .. math.floor(product.bonus * 100) .. "%"
 		bonusText.TextColor3 = Color3.fromRGB(139, 69, 19)
 		bonusText.Font = Enum.Font.FredokaOne
-		bonusText.TextSize = 12  -- Slightly bigger (was 11)
+		bonusText.TextSize = 13
 		bonusText.Parent = bonusBadge
 	end
 
@@ -793,8 +793,8 @@ end)
 print("[SanrioShop] ✨ GODLY POLISHED - Dynamic aspect-ratio sizing!")
 print("[SanrioShop] 🎨 Cards properly sized with optimized constants!")
 print("[SanrioShop] 📐 Grid: " .. GRID_X_SCALE .. " scale, " .. CARD_SIZE_MULT .. "x mult, " .. CARD_INSET .. "px inset")
-print("[SanrioShop] 🎚️ Offsets → TEXT_X:"..TEXT_X..", TITLE_Y:"..TITLE_Y..", DESC_Y:"..DESC_Y..", BONUS_Y:"..BONUS_Y..", BTN_BOTTOM:"..BTN_BOTTOM)
-print("[SanrioShop] 💎 Clean layout with proper descriptions & badges")
+print("[SanrioShop] 🏆 Bonus badges now in TOP RIGHT corner like BEST VALUE!")
+print("[SanrioShop] 💎 Clean layout with centered title, left description")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
 return shop
