@@ -45,7 +45,7 @@ local TAB_ROW_Y = 0.36
 local GP_ROW_EXTRA = 0.02
 local CONTENT_TOP_Y = 0.50
 local BAR_WIDTH_FACTOR = 0.86
-local CONTENT_WIDTH_FACTOR = 0.86
+local CONTENT_WIDTH_FACTOR = 0.90   -- gives the grid a little more width
 local CONTENT_HEIGHT_FACTOR = 0.48  -- INCREASED from 0.45 to 0.48 (taller content area)
 
 -- Per-pill sizing
@@ -64,13 +64,13 @@ local CARD_IMAGE = "rbxassetid://108251319294182"
 local CARD_AR = 1.42
 
 -- two columns: each cell is ~48% of the scroller width
-local GRID_X_SCALE = 0.48
+local GRID_X_SCALE = 0.495          -- each cell ~49.5% (still 2 columns with padding)
 
 -- how much to inset the card inside the cell (pixels)
-local CARD_INSET = 12
+local CARD_INSET = 8                 -- less dead margin around the art
 
 -- bigger/smaller knob: 1.00 = current size, 1.10 = 10% taller cells
-local CARD_SIZE_MULT = 1.10
+local CARD_SIZE_MULT = 1.24          -- ~24% taller cards
 
 -- if you have a 9-slice export of the card, turn this on and set slice rect.
 local USE_9_SLICE = false
@@ -355,8 +355,8 @@ function Shop:_bindGridAspect(grid)
 		local usable = math.max(0, grid.Parent.AbsoluteSize.X - (left + right))
 		if usable <= 0 then return end
 
-		local cellW = math.floor(usable * GRID_X_SCALE)
-		local cellH = math.max(120, math.floor((cellW / CARD_AR) * CARD_SIZE_MULT)) -- min height safety
+		local cellW = math.ceil(usable * GRID_X_SCALE)
+		local cellH = math.max(120, math.ceil((cellW / CARD_AR) * CARD_SIZE_MULT)) -- min height safety
 		grid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, cellH)
 	end
 
@@ -802,9 +802,9 @@ Player.CharacterAdded:Connect(function()
 end)
 
 print("[SanrioShop] ✨ GODLY POLISHED - Dynamic aspect-ratio sizing!")
-print("[SanrioShop] 🎨 Cards fill perfectly with Crop (no actual cropping!)")
-print("[SanrioShop] 📐 Grid height follows card art aspect ratio x" .. CARD_SIZE_MULT)
-print("[SanrioShop] 🎚️ Easy size control with CARD_SIZE_MULT knob")
+print("[SanrioShop] 🎨 Cards properly sized with optimized constants!")
+print("[SanrioShop] 📐 Grid: " .. GRID_X_SCALE .. " scale, " .. CARD_SIZE_MULT .. "x mult, " .. CARD_INSET .. "px inset")
+print("[SanrioShop] 🎚️ math.ceil prevents pixel loss, Crop ignores transparent edges")
 print("[SanrioShop] 💎 Clean layout with proper descriptions & badges")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
