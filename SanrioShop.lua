@@ -48,14 +48,6 @@ Core.CONSTANTS = {
 	CARD_SIZE = Vector2.new(520, 300),
 	CARD_SIZE_MOBILE = Vector2.new(480, 280),
 
-	-- Card background tuning
-	-- Width fraction of the card header background inside its container (smaller = less crop)
-	CARD_WIDTH = 0.86,
-	-- Width/height ratio of your card art; tweak to match texture
-	CARD_ASPECT = 3.60,
-	-- Background image used for product cards (can be changed later easily)
-	CARD_BG_IMAGE = "rbxassetid://108251319294182",
-
 	ANIM_FAST = 0.15,
 	ANIM_MEDIUM = 0.25,
 	ANIM_SLOW = 0.35,
@@ -76,6 +68,14 @@ Core.CONSTANTS = {
 	RETRY_DELAY = 2,
 	MAX_RETRIES = 3,
 }
+
+-- Card background tuning (ADJUST THESE TO FIT YOUR CARD ART!)
+-- % of the image header width the card art uses (smaller = less crop)
+local CARD_WIDTH = 0.86
+-- width/height ratio of your card art; tweak to your texture
+local CARD_ASPECT = 3.60
+-- Background image used for product cards (can be changed later easily)
+local CARD_BG_IMAGE = "rbxassetid://108251319294182"
 
 -- State Management
 Core.State = {
@@ -1418,15 +1418,15 @@ function Shop:createProductCard(product, productType, parent)
     cardBg.Name = "CardBG"
     cardBg.AnchorPoint = Vector2.new(0.5, 0.5)
     cardBg.Position = UDim2.fromScale(0.5, 0.5)
-    cardBg.Size = UDim2.new(Core.CONSTANTS.CARD_WIDTH, 0, Core.CONSTANTS.CARD_WIDTH / Core.CONSTANTS.CARD_ASPECT, 0)
+    cardBg.Size = UDim2.new(CARD_WIDTH, 0, CARD_WIDTH / CARD_ASPECT, 0)
     cardBg.BackgroundTransparency = 1
-    cardBg.Image = Core.CONSTANTS.CARD_BG_IMAGE
+    cardBg.Image = CARD_BG_IMAGE
     cardBg.ScaleType = Enum.ScaleType.Crop
     cardBg.Parent = imageContainer
 
     -- Keep the card’s aspect ratio no matter the container size
     local ar = Instance.new("UIAspectRatioConstraint")
-    ar.AspectRatio = Core.CONSTANTS.CARD_ASPECT
+    ar.AspectRatio = CARD_ASPECT
     ar.DominantAxis = Enum.DominantAxis.Width
     ar.Parent = cardBg
 
