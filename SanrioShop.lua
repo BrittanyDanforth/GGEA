@@ -60,10 +60,11 @@ local USE_9_SLICE = false
 local CARD_SLICE = Rect.new(60, 60, 944, 600)
 
 -- ======== CARD CONTENT OFFSETS (fine-tune here) ========
-local TEXT_X = 50                  -- CENTER FOCUSED - more right
-local TITLE_Y = 55                 -- Centered vertically
-local DESC_Y  = 83                 -- Below title
-local BONUS_Y = 115                -- Below description
+local TITLE_X = 58                 -- Title more right for centering
+local DESC_X = 32                  -- Description to the left
+local TITLE_Y = 50                 -- Title lower and centered
+local DESC_Y  = 80                 -- Below title
+local BONUS_Y = 108                -- Below description, above button
 local BTN_BOTTOM = -35             -- MUCH HIGHER (closer to bottom)
 
 -- ======== UTILITIES ========
@@ -470,25 +471,25 @@ function Shop:createProductItem(product, productType, parent)
 	content.Parent = bg
 
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.85, 0, 0, 28)  -- Wider, taller
-	nameLabel.Position = UDim2.fromOffset(TEXT_X, TITLE_Y)
+	nameLabel.Size = UDim2.new(0.80, 0, 0, 32)  -- Nice size
+	nameLabel.Position = UDim2.fromOffset(TITLE_X, TITLE_Y)  -- More right, centered
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.FredokaOne
-	nameLabel.TextSize = 19  -- BIGGER (was 17)
+	nameLabel.TextSize = 21  -- BIGGER (was 19)
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	nameLabel.Parent = content
 
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(0.85, 0, 0, 36)  -- Wider
-	descLabel.Position = UDim2.fromOffset(TEXT_X, DESC_Y)
+	descLabel.Size = UDim2.new(0.85, 0, 0, 36)
+	descLabel.Position = UDim2.fromOffset(DESC_X, DESC_Y)  -- More to the left
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = product.description
 	descLabel.TextColor3 = theme.textSecondary
 	descLabel.Font = Enum.Font.FredokaOne
-	descLabel.TextSize = 14  -- BIGGER (was 13)
+	descLabel.TextSize = 14
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.TextYAlignment = Enum.TextYAlignment.Top
 	descLabel.TextWrapped = true
@@ -497,8 +498,8 @@ function Shop:createProductItem(product, productType, parent)
 	-- Bonus badge
 	if product.bonus and product.bonus > 0 then
 		local bonusBadge = Instance.new("Frame")
-		bonusBadge.Size = UDim2.fromOffset(70, 24)
-		bonusBadge.Position = UDim2.fromOffset(TEXT_X, BONUS_Y)
+		bonusBadge.Size = UDim2.fromOffset(80, 26)  -- Slightly bigger
+		bonusBadge.Position = UDim2.fromOffset(DESC_X, BONUS_Y)  -- Same X as description
 		bonusBadge.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 		bonusBadge.BorderSizePixel = 0
 		bonusBadge.Parent = content
@@ -512,7 +513,7 @@ function Shop:createProductItem(product, productType, parent)
 		bonusText.Text = "+" .. math.floor(product.bonus * 100) .. "% Bonus"
 		bonusText.TextColor3 = Color3.fromRGB(139, 69, 19)
 		bonusText.Font = Enum.Font.FredokaOne
-		bonusText.TextSize = 11
+		bonusText.TextSize = 12  -- Slightly bigger (was 11)
 		bonusText.Parent = bonusBadge
 	end
 
@@ -541,7 +542,7 @@ function Shop:createProductItem(product, productType, parent)
 	-- Purchase / Toggle button (raised a bit)
 	local buyBtn = Instance.new("TextButton")
 	buyBtn.Size = UDim2.new(0.78, 0, 0, 36)
-	buyBtn.Position = UDim2.new(0.5, 0, 1, BTN_BOTTOM)
+	buyBtn.Position = UDim2.new(0.48, 0, 1, BTN_BOTTOM)  -- Slightly left (was 0.5, now 0.48)
 	buyBtn.AnchorPoint = Vector2.new(0.5, 0)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "BUY - R$" .. tostring(product.price or 0)
