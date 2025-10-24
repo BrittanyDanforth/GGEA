@@ -22,6 +22,7 @@ local ContentProvider = game:GetService("ContentProvider")
 local SoundService = game:GetService("SoundService")
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
+local TextService = game:GetService("TextService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -67,11 +68,27 @@ local TITLE_Y = 64      -- was 52
 local DESC_Y  = 124     -- was 108
 local BTN_BOTTOM = -35
 
+-- Reserve room for right badges so the title never overlaps them
+local TITLE_RIGHT_PAD = 122 -- ≈ (90px best + margin); safe when best+bonus show
+
 -- ======== UTILITIES ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
 local function isPhone() if not isMobile() then return false end; local v=workspace.CurrentCamera.ViewportSize; return math.min(v.X,v.Y)<700 end
 local function formatNumber(n) local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end return s end
 local function blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
+
+-- Fit a label's TextSize to a max width (binary search = crisp & fast)
+local function fitTextToWidth(lbl, maxWidth, minSize, maxSize)
+	minSize = minSize or 18
+	maxSize = maxSize or 30
+	local lo, hi, best = minSize, maxSize, minSize
+	while lo <= hi do
+		local mid = math.floor((lo + hi) * 0.5)
+		local sz = TextService:GetTextSize(lbl.Text, mid, lbl.Font, Vector2.new(1e6, 1e6))
+		if sz.X <= maxWidth then best, lo = mid, mid + 1 else hi = mid - 1 end
+	end
+	lbl.TextSize = best
+end
 
 -- ======== TYPOGRAPHY HELPERS ========
 local function applyBubbleText(lbl, opts)
@@ -484,24 +501,38 @@ function Shop:createProductItem(product, productType, parent)
 	content.BackgroundTransparency = 1
 	content.Parent = bg
 
-	-- TITLE
+	-- TITLE (auto-fit + reserved space for badges)
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.80, 0, 0, 36)
-	nameLabel.Position = UDim2.fromOffset(TITLE_X, TITLE_Y)
+	nameLabel.Name = "Name"
 	nameLabel.BackgroundTransparency = 1
-	nameLabel.Text = product.name
-	nameLabel.Font = Enum.Font.FredokaOne
+	nameLabel.Position = UDim2.fromOffset(TITLE_X, TITLE_Y)
+	nameLabel.Size = UDim2.new(1, -(TITLE_X + TITLE_RIGHT_PAD), 0, 36) -- use full width minus pads
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextYAlignment = Enum.TextYAlignment.Top
-	nameLabel.ZIndex = 6
+	nameLabel.Font = Enum.Font.FredokaOne
+	nameLabel.Text = product.name
+	nameLabel.TextColor3 = Color3.fromRGB(255,255,255)
 	nameLabel.Parent = content
-	applyBubbleText(nameLabel, {
-		min = isPhone() and 18 or 20,
-		max = isPhone() and 24 or 30,
-		fill = Color3.fromRGB(255,255,255),
-		stroke = Color3.fromRGB(168,150,232), -- soft lavender outline
-		strokeT = 0.08,
-	})
+	nameLabel.ZIndex = 6
+	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+	-- cute outline (same palette as before)
+	nameLabel.TextStrokeColor3 = Color3.fromRGB(168,150,232)
+	nameLabel.TextStrokeTransparency = 0.08
+
+	-- we will size manually; kill any auto-scaler if present
+	nameLabel.TextScaled = false
+	local old = nameLabel:FindFirstChildOfClass("UITextSizeConstraint")
+	if old then old:Destroy() end
+
+	-- initial fit + keep it fitting on resize/text changes
+	local function refitTitle()
+		local w = math.max(60, content.AbsoluteSize.X - TITLE_X - TITLE_RIGHT_PAD)
+		fitTextToWidth(nameLabel, w, isPhone() and 18 or 20, isPhone() and 24 or 30)
+	end
+	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(refitTitle) end)
+	nameLabel:GetPropertyChangedSignal("Text"):Connect(refitTitle)
+	task.defer(refitTitle)
 
 	-- DESCRIPTION
 	local descLabel = Instance.new("TextLabel")
