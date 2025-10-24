@@ -9,6 +9,7 @@
     ✅ Title/desc pushed down for better spacing
     ✅ BUY text readable with deep lavender outline
     ✅ Hover darkens button for better contrast
+    ✅ Title auto-scales (big & bubbly, never clips!)
 ]]
 
 -- Services
@@ -22,7 +23,6 @@ local ContentProvider = game:GetService("ContentProvider")
 local SoundService = game:GetService("SoundService")
 local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
-local TextService = game:GetService("TextService")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -76,19 +76,6 @@ local function isMobile() return UserInputService.TouchEnabled and not GuiServic
 local function isPhone() if not isMobile() then return false end; local v=workspace.CurrentCamera.ViewportSize; return math.min(v.X,v.Y)<700 end
 local function formatNumber(n) local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end return s end
 local function blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
-
--- Fit a label's TextSize to a max width (binary search = crisp & fast)
-local function fitTextToWidth(lbl, maxWidth, minSize, maxSize)
-	minSize = minSize or 18
-	maxSize = maxSize or 30
-	local lo, hi, best = minSize, maxSize, minSize
-	while lo <= hi do
-		local mid = math.floor((lo + hi) * 0.5)
-		local sz = TextService:GetTextSize(lbl.Text, mid, lbl.Font, Vector2.new(1e6, 1e6))
-		if sz.X <= maxWidth then best, lo = mid, mid + 1 else hi = mid - 1 end
-	end
-	lbl.TextSize = best
-end
 
 -- ======== TYPOGRAPHY HELPERS ========
 local function applyBubbleText(lbl, opts)
@@ -501,38 +488,29 @@ function Shop:createProductItem(product, productType, parent)
 	content.BackgroundTransparency = 1
 	content.Parent = bg
 
-	-- TITLE (auto-fit + reserved space for badges)
+	-- TITLE (TextScaled + min/max, no ellipses, room for badges)
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Name = "Name"
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Position = UDim2.fromOffset(TITLE_X, TITLE_Y)
-	nameLabel.Size = UDim2.new(1, -(TITLE_X + TITLE_RIGHT_PAD), 0, 36) -- use full width minus pads
-	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-	nameLabel.TextYAlignment = Enum.TextYAlignment.Top
+	nameLabel.Size = UDim2.new(1, -(TITLE_X + TITLE_RIGHT_PAD), 0, 40) -- a little taller for bigger text
 	nameLabel.Font = Enum.Font.FredokaOne
 	nameLabel.Text = product.name
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	nameLabel.TextYAlignment = Enum.TextYAlignment.Center
+	nameLabel.TextWrapped = false
+	nameLabel.TextTruncate = Enum.TextTruncate.None
+	nameLabel.TextScaled = true                  -- auto-fit width without going tiny
 	nameLabel.TextColor3 = Color3.fromRGB(255,255,255)
-	nameLabel.Parent = content
-	nameLabel.ZIndex = 6
-	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
-
-	-- cute outline (same palette as before)
 	nameLabel.TextStrokeColor3 = Color3.fromRGB(168,150,232)
 	nameLabel.TextStrokeTransparency = 0.08
+	nameLabel.ZIndex = 6
+	nameLabel.Parent = content
 
-	-- we will size manually; kill any auto-scaler if present
-	nameLabel.TextScaled = false
-	local old = nameLabel:FindFirstChildOfClass("UITextSizeConstraint")
-	if old then old:Destroy() end
-
-	-- initial fit + keep it fitting on resize/text changes
-	local function refitTitle()
-		local w = math.max(60, content.AbsoluteSize.X - TITLE_X - TITLE_RIGHT_PAD)
-		fitTextToWidth(nameLabel, w, isPhone() and 18 or 20, isPhone() and 24 or 30)
-	end
-	content:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(refitTitle) end)
-	nameLabel:GetPropertyChangedSignal("Text"):Connect(refitTitle)
-	task.defer(refitTitle)
+	local nsc = Instance.new("UITextSizeConstraint")
+	nsc.MinTextSize = isPhone() and 18 or 22     -- keep it big
+	nsc.MaxTextSize = isPhone() and 26 or 32
+	nsc.Parent = nameLabel
 
 	-- DESCRIPTION
 	local descLabel = Instance.new("TextLabel")
@@ -866,7 +844,8 @@ print("[SanrioShop_NEW] 🔧 Title/desc pushed down (Y+12)")
 print("[SanrioShop_NEW] 💎 BUY text readable with deep lavender outline")
 print("[SanrioShop_NEW] 🌙 Hover darkens button for better contrast")
 print("[SanrioShop_NEW] 🏆 Bonus badges in TOP-RIGHT corner!")
-print("[SanrioShop_NEW] 📐 Title: X="..TITLE_X.." Y="..TITLE_Y)
+print("[SanrioShop_NEW] 🎨 Title auto-scales (big & bubbly, no clipping!)")
+print("[SanrioShop_NEW] 📐 Title: X="..TITLE_X.." Y="..TITLE_Y.." RIGHT_PAD="..TITLE_RIGHT_PAD)
 print("[SanrioShop_NEW] 📝 Desc: X="..DESC_X.." Y="..DESC_Y)
 print("[SanrioShop_NEW] 🎯 Button: BTN_BOTTOM="..BTN_BOTTOM)
 print("[SanrioShop_NEW] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
