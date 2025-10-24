@@ -69,6 +69,10 @@ Core.CONSTANTS = {
 	MAX_RETRIES = 3,
 }
 
+-- Card background tuning
+local CARD_WIDTH   = 0.86   -- % of the grid-cell width the card uses (smaller = less crop)
+local CARD_ASPECT  = 3.60   -- width/height of your card art; tweak to your texture
+
 -- State Management
 Core.State = {
 	isOpen = false,
@@ -1196,9 +1200,7 @@ function Shop:createCashPage()
 		Size = UDim2.fromScale(1, 1),
 		layout = {
 			type = "Grid",
-			CellSize = Core.Utils.isMobile() and 
-				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE_MOBILE.X, Core.CONSTANTS.CARD_SIZE_MOBILE.Y) or
-				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
+			CellSize = UDim2.new(0.48, 0, 0, 100), -- was 95, increased to 100
 			CellPadding = UDim2.fromOffset(20, 20),
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		},
@@ -1231,9 +1233,7 @@ function Shop:createGamepassesPage()
 		Size = UDim2.fromScale(1, 1),
 		layout = {
 			type = "Grid",
-			CellSize = Core.Utils.isMobile() and 
-				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE_MOBILE.X, Core.CONSTANTS.CARD_SIZE_MOBILE.Y) or
-				UDim2.fromOffset(Core.CONSTANTS.CARD_SIZE.X, Core.CONSTANTS.CARD_SIZE.Y),
+			CellSize = UDim2.new(0.48, 0, 0, 100), -- was 95, increased to 100
 			CellPadding = UDim2.fromOffset(20, 20),
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 		},
@@ -1356,155 +1356,137 @@ function Shop:createHeroSection(parent)
 end
 
 function Shop:createProductCard(product, productType, parent)
-	local isGamepass = productType == "gamepass"
-	local cardColor = isGamepass and UI.Theme:get("kuromi") or UI.Theme:get("cinna")
+	local isGamepass = (productType == "gamepass")
+	local accentColor = isGamepass and UI.Theme:get("kuromi") or UI.Theme:get("cinna")
+	local owned = isGamepass and Core.DataManager.checkOwnership(product.id)
 
-	local card = UI.Components.Frame({
-		Name = product.name .. "Card",
-		Size = UDim2.fromOffset(
-			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.X or Core.CONSTANTS.CARD_SIZE.X,
-			Core.Utils.isMobile() and Core.CONSTANTS.CARD_SIZE_MOBILE.Y or Core.CONSTANTS.CARD_SIZE.Y
-		),
-		BackgroundColor3 = UI.Theme:get("surface"),
-		cornerRadius = UDim.new(0, 16),
-		stroke = {
-			color = cardColor,
-			thickness = 2,
-			transparency = 0.5,
-		},
-		parent = parent,
-	}):render()
+	-- Invisible cell container (fills the UIGrid cell)
+	local container = Instance.new("Frame")
+	container.Name = product.name .. "Cell"
+	container.Size = UDim2.new(1, 0, 1, 0)
+	container.BackgroundTransparency = 1
+	container.BorderSizePixel = 0
+	container.LayoutOrder = product.LayoutOrder or 1
+	container.Parent = parent
 
-	-- Add shadow
-	local shadow = Instance.new("ImageLabel")
-	shadow.Name = "Shadow"
-	shadow.BackgroundTransparency = 1
-	shadow.Image = "rbxassetid://6015897843"
-	shadow.ImageColor3 = Color3.new(0, 0, 0)
-	shadow.ImageTransparency = 0.85
-	shadow.ScaleType = Enum.ScaleType.Slice
-	shadow.SliceCenter = Rect.new(49, 49, 450, 450)
-	shadow.Size = UDim2.new(1, 20, 1, 20)
-	shadow.Position = UDim2.fromOffset(-10, -10)
-	shadow.ZIndex = card.ZIndex - 1
-	shadow.Parent = card
+	-- Visible card background (smaller than the cell, centered)
+	local bg = Instance.new("ImageLabel")
+	bg.Name = "CardBG"
+	bg.AnchorPoint = Vector2.new(0.5, 0.5)
+	bg.Position = UDim2.fromScale(0.5, 0.5)
+	bg.Size = UDim2.new(CARD_WIDTH, 0, CARD_WIDTH / CARD_ASPECT, 0)  -- << THIS controls card size
+	bg.BackgroundTransparency = 1
+	bg.Image = "rbxassetid://108251319294182"
+	bg.ScaleType = Enum.ScaleType.Crop  -- keep crop, but card is smaller so edges aren't cut
+	bg.Parent = container
 
-	self:addCardHoverEffect(card)
+	-- Keep the card's aspect ratio no matter the grid size
+	local ar = Instance.new("UIAspectRatioConstraint")
+	ar.AspectRatio = CARD_ASPECT          -- << tweak if your art's ratio differs
+	ar.DominantAxis = Enum.DominantAxis.Width
+	ar.Parent = bg
 
-	local content = UI.Components.Frame({
-		Size = UDim2.new(1, -24, 1, -24),
-		Position = UDim2.fromOffset(12, 12),
-		BackgroundTransparency = 1,
-		parent = card,
-	}):render()
+	-- Content inside the card
+	local content = Instance.new("Frame")
+	content.Name = "Content"
+	content.Size = UDim2.new(1, -24, 1, -12)
+	content.Position = UDim2.fromOffset(12, 6)
+	content.BackgroundTransparency = 1
+	content.Parent = bg
 
-	local imageContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 140),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 12),
-		parent = content,
-	}):render()
+	-- Title
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(0.55, 0, 0, 20)
+	nameLabel.Position = UDim2.fromOffset(0, 8)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = product.name
+	nameLabel.TextColor3 = UI.Theme:get("text")
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextSize = 16
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	nameLabel.Parent = content
 
-	-- Add gradient to image container
-	local imageGradient = Instance.new("UIGradient")
-	imageGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(1, Core.Utils.blend(cardColor, Color3.new(1, 1, 1), 0.9)),
-	})
-	imageGradient.Rotation = 45
-	imageGradient.Parent = imageContainer
+	-- Subtext
+	local descText = isGamepass and product.description or tostring(Core.Utils.formatNumber(product.amount))
+	local descLabel = Instance.new("TextLabel")
+	descLabel.Size = UDim2.new(0.55, 0, 0, 16)
+	descLabel.Position = UDim2.fromOffset(0, 32)
+	descLabel.BackgroundTransparency = 1
+	descLabel.Text = descText
+	descLabel.TextColor3 = UI.Theme:get("textSecondary")
+	descLabel.Font = Enum.Font.Gotham
+	descLabel.TextSize = 12
+	descLabel.TextXAlignment = Enum.TextXAlignment.Left
+	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	descLabel.Parent = content
 
-	local productImage = UI.Components.Image({
-		Image = product.icon or "rbxassetid://0",
-		Size = UDim2.fromScale(0.7, 0.7),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		ScaleType = Enum.ScaleType.Fit,
-		parent = imageContainer,
-	}):render()
+	-- Buy / Toggle button
+	local buyBtn = Instance.new("TextButton")
+	buyBtn.Size = UDim2.fromOffset(95, 40)
+	buyBtn.Position = UDim2.new(1, -98, 0.5, 0)
+	buyBtn.AnchorPoint = Vector2.new(0, 0.5)
+	buyBtn.BackgroundColor3 = accentColor
+	buyBtn.Text = "R$" .. tostring(product.price or 0)
+	buyBtn.TextColor3 = Color3.new(1, 1, 1)
+	buyBtn.Font = Enum.Font.GothamBold
+	buyBtn.TextSize = 15
+	buyBtn.AutoButtonColor = false
+	buyBtn.BorderSizePixel = 0
+	buyBtn.Parent = content
+	Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0, 10)
 
-	local infoContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 1, -160),
-		Position = UDim2.fromOffset(0, 160),
-		BackgroundTransparency = 1,
-		parent = content,
-	}):render()
+	buyBtn.MouseEnter:Connect(function()
+		Core.SoundSystem.play("hover")
+		TweenService:Create(buyBtn, TweenInfo.new(0.12), {BackgroundColor3 = Core.Utils.blend(accentColor, Color3.new(1,1,1), 0.2)}):Play()
+	end)
+	buyBtn.MouseLeave:Connect(function()
+		if not owned or (isGamepass and product.hasToggle) then
+			TweenService:Create(buyBtn, TweenInfo.new(0.12), {BackgroundColor3 = accentColor}):Play()
+		end
+	end)
 
-	local title = UI.Components.TextLabel({
-		Text = product.name,
-		Size = UDim2.new(1, 0, 0, 28),
-		Font = Enum.Font.GothamBold,
-		TextSize = 20,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		parent = infoContainer,
-	}):render()
-
-	local description = UI.Components.TextLabel({
-		Text = product.description,
-		Size = UDim2.new(1, 0, 0, 40),
-		Position = UDim2.fromOffset(0, 32),
-		Font = Enum.Font.Gotham,
-		TextSize = 14,
-		TextColor3 = UI.Theme:get("textSecondary"),
-		TextXAlignment = Enum.TextXAlignment.Left,
-		TextWrapped = true,
-		parent = infoContainer,
-	}):render()
-
-	local priceText = isGamepass and 
-		("R$" .. tostring(product.price or 0)) or 
-		("R$" .. tostring(product.price or 0) .. " • " .. Core.Utils.formatNumber(product.amount) .. " Cash")
-
-	local priceLabel = UI.Components.TextLabel({
-		Text = priceText,
-		Size = UDim2.new(1, 0, 0, 24),
-		Position = UDim2.fromOffset(0, 76),
-		Font = Enum.Font.GothamBold,
-		TextSize = 18,
-		TextColor3 = cardColor,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		parent = infoContainer,
-	}):render()
-
-	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
-
-	-- Create button container for better positioning
-	local buttonContainer = UI.Components.Frame({
-		Size = UDim2.new(1, 0, 0, 40),
-		Position = UDim2.new(0, 0, 1, -40),
-		BackgroundTransparency = 1,
-		parent = infoContainer,
-	}):render()
-
-	local purchaseButton = UI.Components.Button({
-		Text = isOwned and "✓ Owned" or "Purchase",
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
-		TextColor3 = Color3.new(1, 1, 1),
-		Font = Enum.Font.GothamBold,
-		TextSize = 16,
-		cornerRadius = UDim.new(0, 8),
-		parent = buttonContainer,
-		onClick = function()
-			if not isOwned then
-				self:promptPurchase(product, productType)
-			elseif product.hasToggle then
-				-- Toggle functionality handled by toggle switch
+	-- Toggle logic / purchase
+	if isGamepass and product.hasToggle and owned then
+		buyBtn.Size = UDim2.fromOffset(75, 40)
+		buyBtn.Position = UDim2.new(1, -78, 0.5, 0)
+		buyBtn.Text = "OFF"
+		local state = false
+		if Remotes then
+			local rf = Remotes:FindFirstChild("GetAutoCollectState")
+			if rf and rf:IsA("RemoteFunction") then
+				local ok, val = pcall(function() return rf:InvokeServer() end)
+				if ok and type(val) == "boolean" then state = val end
 			end
-		end,
-	}):render()
-
-	-- Add toggle switch for gamepasses with toggle feature
-	if isOwned and product.hasToggle then
-		-- Adjust button size to make room for toggle
-		purchaseButton.Size = UDim2.new(0.7, -4, 1, 0)
-		self:addToggleSwitch(product, buttonContainer)
+		end
+		local function paint(on)
+			state = on
+			buyBtn.BackgroundColor3 = on and UI.Theme:get("success") or UI.Theme:get("stroke")
+			buyBtn.Text = on and "ON" or "OFF"
+		end
+		paint(state)
+		buyBtn.MouseButton1Click:Connect(function()
+			local nextState = not state
+			paint(nextState); Core.SoundSystem.play("click")
+			if Remotes then
+				local ev = Remotes:FindFirstChild("AutoCollectToggle")
+				if ev and ev:IsA("RemoteEvent") then ev:FireServer(nextState) end
+			end
+		end)
+	elseif isGamepass and owned then
+		buyBtn.BackgroundColor3 = UI.Theme:get("success")
+		buyBtn.Text = "OWNED"
+		buyBtn.Active = false
+	else
+		buyBtn.MouseButton1Click:Connect(function()
+			if owned then return end
+			buyBtn.Text = "..."; buyBtn.Active = false
+			self:promptPurchase(product, productType, buyBtn)
+		end)
 	end
 
-	product.cardInstance = card
-	product.purchaseButton = purchaseButton
-
-	return card
+	product.cardInstance = bg
+	product.purchaseButton = buyBtn
 end
 
 function Shop:addCardHoverEffect(card)
