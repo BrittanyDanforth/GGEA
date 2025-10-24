@@ -430,7 +430,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.50, 0, 0, 22)  -- Slightly wider for better fit
-	nameLabel.Position = UDim2.fromOffset(8, 6)  -- Moved RIGHT 8px, DOWN 6px
+	nameLabel.Position = UDim2.fromOffset(16, 12)  -- Moved MORE RIGHT (16px) and MORE DOWN (12px)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
@@ -443,7 +443,7 @@ function Shop:createProductItem(product, productType, parent)
 	local descText = isGamepass and product.description or (formatNumber(product.amount))
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Size = UDim2.new(0.50, 0, 0, 18)
-	descLabel.Position = UDim2.fromOffset(8, 30)  -- Moved RIGHT 8px, DOWN 6px (was 24)
+	descLabel.Position = UDim2.fromOffset(16, 36)  -- Moved MORE RIGHT (16px) and MORE DOWN (36px)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = descText
 	descLabel.TextColor3 = theme.textSecondary
@@ -456,7 +456,7 @@ function Shop:createProductItem(product, productType, parent)
 	-- Button positioned in the bottom-right of the content area
 	local buyBtn = Instance.new("TextButton")
 	buyBtn.Size = UDim2.fromOffset(90, 36)  -- Slightly smaller to fit better
-	buyBtn.Position = UDim2.new(1, -105, 1, -44)  -- Moved LEFT (was -90, now -105) and UP (was -36, now -44)
+	buyBtn.Position = UDim2.new(1, -115, 1, -52)  -- Moved MORE LEFT (-115) and MORE UP (-52)
 	buyBtn.AnchorPoint = Vector2.new(0, 0)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "R$" .. tostring(product.price or 0)
@@ -480,7 +480,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	if isGamepass and product.hasToggle and owned then
 		buyBtn.Size = UDim2.fromOffset(75, 36)
-		buyBtn.Position = UDim2.new(1, -105, 1, -44)  -- Keep consistent positioning (LEFT and UP)
+		buyBtn.Position = UDim2.new(1, -115, 1, -52)  -- Keep consistent positioning (MORE LEFT and MORE UP)
 		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
