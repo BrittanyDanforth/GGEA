@@ -405,28 +405,13 @@ function Shop:createProductItem(product, productType, parent)
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
-	-- Calculate card size based on grid cell and card constants
-	-- Get the actual cell size from the grid layout
-	local gridLayout = parent:FindFirstChildOfClass("UIGridLayout")
-	local cellSize = gridLayout and gridLayout.CellSize or UDim2.fromOffset(200, 95) -- fallback size
-	
-	-- Calculate card dimensions using the constants
-	local cardWidth = cellSize.X.Offset * CARD_WIDTH
-	local cardHeight = cardWidth / CARD_ASPECT
-	
-	-- Ensure card doesn't exceed cell height
-	local maxHeight = cellSize.Y.Offset * 0.9 -- 90% of cell height
-	if cardHeight > maxHeight then
-		cardHeight = maxHeight
-		cardWidth = cardHeight * CARD_ASPECT
-	end
-
-	-- Visible card background (properly sized to prevent crop)
+	-- Visible card background (properly sized using UDim2 scaling)
 	local bg = Instance.new("ImageLabel")
 	bg.Name = "CardBG"
 	bg.AnchorPoint = Vector2.new(0.5, 0.5)
 	bg.Position = UDim2.fromScale(0.5, 0.5)
-	bg.Size = UDim2.fromOffset(cardWidth, cardHeight)
+	-- Use UDim2 scaling based on the constants - this works with the grid system
+	bg.Size = UDim2.new(CARD_WIDTH, 0, CARD_WIDTH / CARD_ASPECT, 0)
 	bg.BackgroundTransparency = 1
 	bg.Image = "rbxassetid://108251319294182"
 	bg.ScaleType = Enum.ScaleType.Crop
