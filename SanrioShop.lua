@@ -430,11 +430,11 @@ function Shop:createProductItem(product, productType, parent)
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.50, 0, 0, 22)  -- Slightly wider for better fit
-	nameLabel.Position = UDim2.fromOffset(28, 18)  -- TINY BIT MORE RIGHT (28px)
+	nameLabel.Position = UDim2.fromOffset(34, 18)  -- MORE RIGHT (34px)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
-	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.Font = Enum.Font.FredokaOne  -- CUTE BUBBLY FONT!
 	nameLabel.TextSize = 15
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
@@ -443,11 +443,11 @@ function Shop:createProductItem(product, productType, parent)
 	local descText = isGamepass and product.description or (formatNumber(product.amount))
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Size = UDim2.new(0.50, 0, 0, 18)
-	descLabel.Position = UDim2.fromOffset(28, 42)  -- TINY BIT MORE RIGHT (28px)
+	descLabel.Position = UDim2.fromOffset(34, 42)  -- MORE RIGHT (34px)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = descText
 	descLabel.TextColor3 = theme.textSecondary
-	descLabel.Font = Enum.Font.Gotham
+	descLabel.Font = Enum.Font.FredokaOne  -- CUTE BUBBLY FONT!
 	descLabel.TextSize = 12
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
@@ -461,7 +461,7 @@ function Shop:createProductItem(product, productType, parent)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "R$" .. tostring(product.price or 0)
 	buyBtn.TextColor3 = Color3.new(1, 1, 1)
-	buyBtn.Font = Enum.Font.GothamBold
+	buyBtn.Font = Enum.Font.FredokaOne  -- CUTE BUBBLY FONT!
 	buyBtn.TextSize = 14
 	buyBtn.AutoButtonColor = false
 	buyBtn.BorderSizePixel = 0
@@ -709,6 +709,7 @@ print("[SanrioShop] ✅ Grid cells increased to 140px height")
 print("[SanrioShop] ✅ Card spacing: 18px horizontal, 35px vertical")
 print("[SanrioShop] ✅ Text and buttons now properly INSIDE card images!")
 print("[SanrioShop] ✅ All content has proper padding and positioning!")
+print("[SanrioShop] 🎀 CUTE BUBBLY FONT (FredokaOne) applied!")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
 return shop
