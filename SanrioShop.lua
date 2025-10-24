@@ -64,7 +64,7 @@ local CARD_IMAGE = "rbxassetid://108251319294182"
 local CARD_AR = 1.42
 
 -- two columns: each cell is ~48% of the scroller width
-local GRID_X_SCALE = 0.495          -- each cell ~49.5% (still 2 columns with padding)
+local GRID_X_SCALE = 0.475          -- each cell ~47.5% (safe for 2 columns with padding)
 
 -- how much to inset the card inside the cell (pixels)
 local CARD_INSET = 8                 -- less dead margin around the art
