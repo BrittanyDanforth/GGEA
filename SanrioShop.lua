@@ -420,29 +420,30 @@ function Shop:createProductItem(product, productType, parent)
 	bg.Parent = container
 
 	-- Inner content (text & button) sits on top of the bg
+	-- Add padding to keep everything nicely inside the card image
 	local content = Instance.new("Frame")
 	content.Name = "Content"
-	content.Size = UDim2.new(1, -24, 1, -12)
-	content.Position = UDim2.fromOffset(12, 6)
+	content.Size = UDim2.new(1, -32, 1, -24)  -- More padding: -32 horizontal, -24 vertical
+	content.Position = UDim2.fromOffset(16, 12)  -- Centered with padding
 	content.BackgroundTransparency = 1
 	content.Parent = bg
 
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.55, 0, 0, 20)
-	nameLabel.Position = UDim2.fromOffset(0, 8)
+	nameLabel.Size = UDim2.new(0.50, 0, 0, 22)  -- Slightly wider for better fit
+	nameLabel.Position = UDim2.fromOffset(0, 0)  -- Start from top
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.TextSize = 16
+	nameLabel.TextSize = 15
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	nameLabel.Parent = content
 
 	local descText = isGamepass and product.description or (formatNumber(product.amount))
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(0.55, 0, 0, 16)
-	descLabel.Position = UDim2.fromOffset(0, 32)
+	descLabel.Size = UDim2.new(0.50, 0, 0, 18)
+	descLabel.Position = UDim2.fromOffset(0, 24)  -- Right below name
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = descText
 	descLabel.TextColor3 = theme.textSecondary
@@ -452,15 +453,16 @@ function Shop:createProductItem(product, productType, parent)
 	descLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	descLabel.Parent = content
 
+	-- Button positioned in the bottom-right of the content area
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.fromOffset(95, 40)
-	buyBtn.Position = UDim2.new(1, -78, 0.5, 0)  -- ADJUSTED from -98 to -78 (moved button left)
-	buyBtn.AnchorPoint = Vector2.new(0, 0.5)
+	buyBtn.Size = UDim2.fromOffset(90, 36)  -- Slightly smaller to fit better
+	buyBtn.Position = UDim2.new(1, -90, 1, -36)  -- Bottom right corner with proper margins
+	buyBtn.AnchorPoint = Vector2.new(0, 0)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "R$" .. tostring(product.price or 0)
 	buyBtn.TextColor3 = Color3.new(1, 1, 1)
 	buyBtn.Font = Enum.Font.GothamBold
-	buyBtn.TextSize = 15
+	buyBtn.TextSize = 14
 	buyBtn.AutoButtonColor = false
 	buyBtn.BorderSizePixel = 0
 	buyBtn.Parent = content
@@ -477,8 +479,8 @@ function Shop:createProductItem(product, productType, parent)
 	end)
 
 	if isGamepass and product.hasToggle and owned then
-		buyBtn.Size = UDim2.fromOffset(75, 40)
-		buyBtn.Position = UDim2.new(1, -78, 0.5, 0)  -- Also adjusted for consistency
+		buyBtn.Size = UDim2.fromOffset(75, 36)
+		buyBtn.Position = UDim2.new(1, -90, 1, -36)  -- Keep consistent positioning
 		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
@@ -705,7 +707,8 @@ print("[SanrioShop] ✨ Card backgrounds now fill properly!")
 print("[SanrioShop] ✅ Shop frame is now BIGGER (92% scale)")
 print("[SanrioShop] ✅ Grid cells increased to 140px height")
 print("[SanrioShop] ✅ Card spacing: 18px horizontal, 35px vertical")
-print("[SanrioShop] ✅ Cards now have PLENTY of space!")
+print("[SanrioShop] ✅ Text and buttons now properly INSIDE card images!")
+print("[SanrioShop] ✅ All content has proper padding and positioning!")
 print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
 return shop
