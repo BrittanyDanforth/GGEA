@@ -4,7 +4,8 @@
     ✅ Full functionality
     ✅ Card backgrounds fill cells (no tiny cards)
     ✅ Larger gaps between cards
-    ✅ Adjusted: grid starts higher, text lower, button higher
+    ✅ BONUS BADGES IN TOP-RIGHT CORNER
+    ✅ Perfect positioning for all elements
 ]]
 
 -- Services
@@ -27,16 +28,13 @@ local Remotes = ReplicatedStorage:FindFirstChild("TycoonRemotes")
 local IMG_FRAME = "rbxassetid://83301831904885"
 local IMG_GAMEPASSES = "rbxassetid://137846629770171"
 local IMG_CASH = "rbxassetid://84262748186110"
-local GIFT_BOX_TEXTURE_ID = "130623477775352" -- ← YOUR GIFT BOX
+local GIFT_BOX_TEXTURE_ID = "130623477775352"
 
 -- ======== LAYOUT CONSTANTS ========
 local FRAME_SCALE = 0.92
 local TAB_ROW_Y = 0.36
 local GP_ROW_EXTRA = 0.02
-
--- Move the content area up a touch
-local CONTENT_TOP_Y = 0.472  -- was 0.50 → 0.48; now a bit higher
-
+local CONTENT_TOP_Y = 0.472
 local BAR_WIDTH_FACTOR = 0.86
 local CONTENT_WIDTH_FACTOR = 0.90
 local CONTENT_HEIGHT_FACTOR = 0.48
@@ -51,28 +49,48 @@ local GP_RATIO = 3.60
 
 -- ======== CARD ART / GRID ========
 local CARD_IMAGE = "rbxassetid://108251319294182"
-local CARD_AR = 1.42               -- card art aspect (width/height)
-local GRID_X_SCALE = 0.475         -- ~2 columns + padding
-local CARD_INSET = 8               -- inner inset in pixels
-local CARD_SIZE_MULT = 1.24        -- overall cell height boost
+local CARD_AR = 1.42
+local GRID_X_SCALE = 0.475
+local CARD_INSET = 8
+local CARD_SIZE_MULT = 1.24
 
 local USE_9_SLICE = false
 local CARD_SLICE = Rect.new(60, 60, 944, 600)
 
--- ======== CARD CONTENT OFFSETS (fine-tune here) ========
-local TITLE_X = 58                 -- Title more right for centering
-local DESC_X = 32                  -- Description to the left
-local TITLE_Y = 50                 -- Title lower and centered
-local DESC_Y  = 80                 -- Below title
-local BONUS_Y = 108                -- Below description, above button
-local BTN_BOTTOM = -35             -- MUCH HIGHER (closer to bottom)
+-- ======== CARD CONTENT OFFSETS ========
+local TITLE_X = 70
+local DESC_X  = 40
+-- Pull text up so bigger sizes still fit the card nicely
+local TITLE_Y = 52     -- was 70
+local DESC_Y  = 108    -- was 150
+local BTN_BOTTOM = -35
 
 -- ======== UTILITIES ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
 local function isPhone() if not isMobile() then return false end; local v=workspace.CurrentCamera.ViewportSize; return math.min(v.X,v.Y)<700 end
 local function formatNumber(n) local s=tostring(n); local k=1; while k~=0 do s,k=s:gsub("^(-?%d+)(%d%d%d)","%1,%2") end return s end
 local function blend(a,b,t) t=math.clamp(t,0,1); return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
-local function formatBonusText(b) return b and b > 0 and ("+%d%% Bonus"):format(math.floor(b*100)) or nil end
+
+-- ======== TYPOGRAPHY HELPERS ========
+local function applyBubbleText(lbl, opts)
+	opts = opts or {}
+	lbl.TextScaled = true
+	lbl.RichText = false
+	lbl.TextWrapped = (opts.wrap ~= false)
+
+	-- Pastel bubble look: bright fill + soft lavender outline
+	lbl.TextColor3 = opts.fill or Color3.fromRGB(255, 255, 255)
+	lbl.TextStrokeColor3 = opts.stroke or Color3.fromRGB(170, 150, 220)
+	lbl.TextStrokeTransparency = opts.strokeT ~= nil and opts.strokeT or 0.1
+
+	-- Constrain auto-scaling so it never gets tiny or comically large
+	local minS = opts.min or 16
+	local maxS = opts.max or 28
+	local tsc = lbl:FindFirstChildOfClass("UITextSizeConstraint") or Instance.new("UITextSizeConstraint")
+	tsc.MinTextSize = minS
+	tsc.MaxTextSize = maxS
+	tsc.Parent = lbl
+end
 
 -- ======== THEME ========
 local theme = {
@@ -190,7 +208,7 @@ function Shop:initialize()
 	self:createToggleButton()
 	self:createMainInterface()
 	self:setupHandlers()
-	print("[SanrioShop] ✅ Perfect merge loaded!")
+	print("[SanrioShop] ✅ NEW FILE - All updates applied!")
 end
 
 function Shop:createToggleButton()
@@ -369,17 +387,15 @@ function Shop:createPages()
 	self.cashPage.ZIndex = 4
 	self.cashPage.Parent = self.contentFrame
 
-	-- Padding (slightly smaller on top so cards start higher)
 	local cashPad = Instance.new("UIPadding")
-	cashPad.PaddingTop = UDim.new(0, 6)       -- was 12
+	cashPad.PaddingTop = UDim.new(0, 6)
 	cashPad.PaddingBottom = UDim.new(0, 12)
 	cashPad.PaddingLeft = UDim.new(0, 8)
 	cashPad.PaddingRight = UDim.new(0, 8)
 	cashPad.Parent = self.cashPage
 
-	-- CASH GRID
 	local cashGrid = Instance.new("UIGridLayout")
-	cashGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 120) -- temp; auto-height overrides
+	cashGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 120)
 	cashGrid.CellPadding = UDim2.fromOffset(18, 40)
 	cashGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	cashGrid.SortOrder = Enum.SortOrder.LayoutOrder
@@ -407,13 +423,12 @@ function Shop:createPages()
 	self.gpPage.Parent = self.contentFrame
 
 	local gpPad = Instance.new("UIPadding")
-	gpPad.PaddingTop = UDim.new(0, 6)         -- was 8
+	gpPad.PaddingTop = UDim.new(0, 6)
 	gpPad.PaddingBottom = UDim.new(0, 12)
 	gpPad.PaddingLeft = UDim.new(0, 8)
 	gpPad.PaddingRight = UDim.new(0, 8)
 	gpPad.Parent = self.gpPage
 
-	-- GP GRID
 	local gpGrid = Instance.new("UIGridLayout")
 	gpGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 120)
 	gpGrid.CellPadding = UDim2.fromOffset(18, 40)
@@ -437,7 +452,6 @@ function Shop:createProductItem(product, productType, parent)
 	local accentColor = isGamepass and theme.kuromi or theme.cinna
 	local owned = isGamepass and checkOwnership(product.id)
 
-	-- Cell container (fills the grid cell; no visual)
 	local container = Instance.new("Frame")
 	container.Name = product.name .. "Cell"
 	container.Size = UDim2.new(1, 0, 1, 0)
@@ -446,7 +460,6 @@ function Shop:createProductItem(product, productType, parent)
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
-	-- Visible card background (fills the cell with a small inset)
 	local bg = Instance.new("ImageLabel")
 	bg.Name = "CardBG"
 	bg.BackgroundTransparency = 1
@@ -462,7 +475,6 @@ function Shop:createProductItem(product, productType, parent)
 		bg.ScaleType = Enum.ScaleType.Crop
 	end
 
-	-- Inner content
 	local content = Instance.new("Frame")
 	content.Name = "Content"
 	content.Size = UDim2.new(1, -32, 1, -24)
@@ -470,36 +482,50 @@ function Shop:createProductItem(product, productType, parent)
 	content.BackgroundTransparency = 1
 	content.Parent = bg
 
+	-- TITLE
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(0.80, 0, 0, 32)  -- Nice size
-	nameLabel.Position = UDim2.fromOffset(TITLE_X, TITLE_Y)  -- More right, centered
+	nameLabel.Size = UDim2.new(0.80, 0, 0, 36)
+	nameLabel.Position = UDim2.fromOffset(TITLE_X, TITLE_Y)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
-	nameLabel.TextColor3 = theme.text
 	nameLabel.Font = Enum.Font.FredokaOne
-	nameLabel.TextSize = 21  -- BIGGER (was 19)
 	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	nameLabel.TextYAlignment = Enum.TextYAlignment.Top
+	nameLabel.ZIndex = 6
 	nameLabel.Parent = content
+	applyBubbleText(nameLabel, {
+		min = isPhone() and 18 or 20,
+		max = isPhone() and 24 or 30,
+		fill = Color3.fromRGB(255,255,255),
+		stroke = Color3.fromRGB(168,150,232), -- soft lavender outline
+		strokeT = 0.08,
+	})
 
+	-- DESCRIPTION
 	local descLabel = Instance.new("TextLabel")
-	descLabel.Size = UDim2.new(0.85, 0, 0, 36)
-	descLabel.Position = UDim2.fromOffset(DESC_X, DESC_Y)  -- More to the left
+	descLabel.Size = UDim2.new(0.85, 0, 0, 42)
+	descLabel.Position = UDim2.fromOffset(DESC_X, DESC_Y)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = product.description
-	descLabel.TextColor3 = theme.textSecondary
-	descLabel.Font = Enum.Font.FredokaOne
-	descLabel.TextSize = 14
+	descLabel.Font = Enum.Font.FredokaOne -- stays bubbly to match; switch to GothamMedium if you prefer
 	descLabel.TextXAlignment = Enum.TextXAlignment.Left
 	descLabel.TextYAlignment = Enum.TextYAlignment.Top
-	descLabel.TextWrapped = true
+	descLabel.ZIndex = 5
+	descLabel.LineHeight = 1.05
 	descLabel.Parent = content
+	applyBubbleText(descLabel, {
+		min = isPhone() and 13 or 14,
+		max = isPhone() and 15 or 18,
+		fill = Color3.fromRGB(250,250,255),
+		stroke = Color3.fromRGB(190,176,236),
+		strokeT = 0.25,
+	})
 
-	-- Bonus badge (TOP RIGHT CORNER like BEST VALUE)
+	-- BONUS BADGE - TOP RIGHT CORNER
 	if product.bonus and product.bonus > 0 then
 		local bonusBadge = Instance.new("Frame")
 		bonusBadge.Size = UDim2.fromOffset(85, 26)
-		bonusBadge.Position = UDim2.new(1, -90, 0, 42)  -- TOP RIGHT, below BEST VALUE if it exists
+		bonusBadge.Position = UDim2.new(1, -90, 0, 42)
 		bonusBadge.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 		bonusBadge.BorderSizePixel = 0
 		bonusBadge.Parent = content
@@ -517,7 +543,7 @@ function Shop:createProductItem(product, productType, parent)
 		bonusText.Parent = bonusBadge
 	end
 
-	-- Best value badge
+	-- BEST VALUE BADGE - TOP RIGHT
 	if product.best then
 		local bestBadge = Instance.new("Frame")
 		bestBadge.Size = UDim2.fromOffset(90, 26)
@@ -539,10 +565,9 @@ function Shop:createProductItem(product, productType, parent)
 		bestText.Parent = bestBadge
 	end
 
-	-- Purchase / Toggle button (raised a bit)
 	local buyBtn = Instance.new("TextButton")
 	buyBtn.Size = UDim2.new(0.78, 0, 0, 36)
-	buyBtn.Position = UDim2.new(0.48, 0, 1, BTN_BOTTOM)  -- Slightly left (was 0.5, now 0.48)
+	buyBtn.Position = UDim2.new(0.485, 0, 1, BTN_BOTTOM)
 	buyBtn.AnchorPoint = Vector2.new(0.5, 0)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = "BUY - R$" .. tostring(product.price or 0)
@@ -551,8 +576,15 @@ function Shop:createProductItem(product, productType, parent)
 	buyBtn.TextSize = 15
 	buyBtn.AutoButtonColor = false
 	buyBtn.BorderSizePixel = 0
+	buyBtn.TextStrokeColor3 = Color3.fromRGB(255,255,255)
+	buyBtn.TextStrokeTransparency = 0.15
+	buyBtn.TextScaled = true
 	buyBtn.Parent = content
 	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0, 12); btnCorner.Parent = buyBtn
+	local btsc = Instance.new("UITextSizeConstraint")
+	btsc.MinTextSize = 14
+	btsc.MaxTextSize = 18
+	btsc.Parent = buyBtn
 
 	buyBtn.MouseEnter:Connect(function()
 		playSound("hover")
@@ -612,7 +644,6 @@ function Shop:createProductItem(product, productType, parent)
 		end)
 	end
 
-	-- Effects target the visible bg
 	product.cardInstance = bg
 	product.purchaseButton = buyBtn
 end
@@ -679,7 +710,7 @@ function Shop:refreshAllProducts()
 	for _, gp in ipairs(products.gamepasses) do
 		local owned = checkOwnership(gp.id)
 		if gp.purchaseButton then
-			gp.purchaseButton.Text = owned and "✓ Owned" or ("R$" .. tostring(gp.price or 0))
+			gp.purchaseButton.Text = owned and "OWNED" or ("BUY - R$" .. tostring(gp.price or 0))
 			gp.purchaseButton.BackgroundColor3 = owned and theme.success or theme.kuromi
 			gp.purchaseButton.Active = not owned
 		end
@@ -746,7 +777,7 @@ function Shop:setupHandlers()
 		if player ~= Player then return end
 		local p = self.purchasePending[passId]
 		if p and p.button and p.button.Parent then
-			p.button.Text = purchased and "✓ Owned" or ("R$" .. tostring(p.product.price or 0))
+			p.button.Text = purchased and "OWNED" or ("BUY - R$" .. tostring(p.product.price or 0))
 			p.button.Active = not purchased
 		end
 		self.purchasePending[passId] = nil
@@ -766,7 +797,7 @@ function Shop:setupHandlers()
 		if player ~= Player then return end
 		local p = self.purchasePending[productId]
 		if p and p.button and p.button.Parent then
-			p.button.Text = "R$" .. tostring(p.product.price or 0)
+			p.button.Text = "BUY - R$" .. tostring(p.product.price or 0)
 			p.button.Active = true
 		end
 		self.purchasePending[productId] = nil
@@ -790,11 +821,11 @@ Player.CharacterAdded:Connect(function()
 	end
 end)
 
-print("[SanrioShop] ✨ GODLY POLISHED - Dynamic aspect-ratio sizing!")
-print("[SanrioShop] 🎨 Cards properly sized with optimized constants!")
-print("[SanrioShop] 📐 Grid: " .. GRID_X_SCALE .. " scale, " .. CARD_SIZE_MULT .. "x mult, " .. CARD_INSET .. "px inset")
-print("[SanrioShop] 🏆 Bonus badges now in TOP RIGHT corner like BEST VALUE!")
-print("[SanrioShop] 💎 Clean layout with centered title, left description")
-print("[SanrioShop] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
+print("[SanrioShop_NEW] ✨ FRESH FILE WITH ALL UPDATES!")
+print("[SanrioShop_NEW] 🏆 Bonus badges in TOP-RIGHT corner!")
+print("[SanrioShop_NEW] 📐 Title: X="..TITLE_X.." Y="..TITLE_Y)
+print("[SanrioShop_NEW] 📝 Desc: X="..DESC_X.." Y="..DESC_Y)
+print("[SanrioShop_NEW] 🎯 Button: BTN_BOTTOM="..BTN_BOTTOM)
+print("[SanrioShop_NEW] 🎁 Gift box texture:", GIFT_BOX_TEXTURE_ID)
 
 return shop
