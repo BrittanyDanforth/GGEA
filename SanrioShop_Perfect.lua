@@ -392,22 +392,33 @@ function Shop:createProductItem(product, productType, parent)
 	local accentColor = isGamepass and theme.kuromi or theme.cinna
 	local owned = isGamepass and checkOwnership(product.id)
 
-	-- Card fills entire grid cell with your custom background
-	local container = Instance.new("ImageLabel")
-	container.Name = product.name .. "Item"
+	-- Cell container (fills the grid cell; no visual)
+	local container = Instance.new("Frame")
+	container.Name = product.name .. "Cell"
 	container.Size = UDim2.new(1, 0, 1, 0)
 	container.BackgroundTransparency = 1
-	container.Image = "rbxassetid://108251319294182"
-	container.ScaleType = Enum.ScaleType.Crop
-	container.ImageColor3 = Color3.new(1, 1, 1)
+	container.BorderSizePixel = 0
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
+	-- Visible card background (slightly smaller to avoid crop)
+	local bg = Instance.new("ImageLabel")
+	bg.Name = "CardBG"
+	bg.AnchorPoint = Vector2.new(0.5, 0.5)
+	bg.Position = UDim2.fromScale(0.5, 0.5)
+	bg.Size = UDim2.new(0.94, 0, 0.84, 0)  -- Shrink to prevent top/bottom crop
+	bg.BackgroundTransparency = 1
+	bg.Image = "rbxassetid://108251319294182"
+	bg.ScaleType = Enum.ScaleType.Crop
+	bg.Parent = container
+
+	-- Inner content (text & button) sits on top of the bg
 	local content = Instance.new("Frame")
+	content.Name = "Content"
 	content.Size = UDim2.new(1, -24, 1, -12)
 	content.Position = UDim2.fromOffset(12, 6)
 	content.BackgroundTransparency = 1
-	content.Parent = container
+	content.Parent = bg
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.55, 0, 0, 20)
@@ -505,7 +516,8 @@ function Shop:createProductItem(product, productType, parent)
 		end)
 	end
 
-	product.cardInstance = container
+	-- Effects target the visible bg
+	product.cardInstance = bg
 	product.purchaseButton = buyBtn
 end
 
