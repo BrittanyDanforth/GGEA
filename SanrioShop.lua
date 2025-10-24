@@ -342,15 +342,23 @@ function Shop:createPages()
 	self.cashPage.ZIndex = 4
 	self.cashPage.Parent = self.contentFrame
 
+	-- Add padding to prevent top cutoff
+	local cashPad = Instance.new("UIPadding")
+	cashPad.PaddingTop = UDim.new(0, 12)
+	cashPad.PaddingBottom = UDim.new(0, 12)
+	cashPad.PaddingLeft = UDim.new(0, 8)
+	cashPad.PaddingRight = UDim.new(0, 8)
+	cashPad.Parent = self.cashPage
+
 	local cashGrid = Instance.new("UIGridLayout")
-	cashGrid.CellSize = UDim2.new(0.48, 0, 0, 140)  -- INCREASED HEIGHT from 95 to 140
-	cashGrid.CellPadding = UDim2.fromOffset(18, 35)  -- INCREASED SPACING: horizontal 10→18, vertical 25→35
+	cashGrid.CellSize = UDim2.new(0.48, 0, 0, 155)  -- INCREASED HEIGHT to 155 for more space
+	cashGrid.CellPadding = UDim2.fromOffset(18, 40)  -- INCREASED VERTICAL SPACING to 40
 	cashGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	cashGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	cashGrid.Parent = self.cashPage
 
 	cashGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self.cashPage.CanvasSize = UDim2.new(0, 0, 0, cashGrid.AbsoluteContentSize.Y + 16)
+		self.cashPage.CanvasSize = UDim2.new(0, 0, 0, cashGrid.AbsoluteContentSize.Y + 24)
 	end)
 
 	for i, p in ipairs(products.cash) do
@@ -377,14 +385,14 @@ function Shop:createPages()
 	gpPad.Parent = self.gpPage
 
 	local gpGrid = Instance.new("UIGridLayout")
-	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 140)  -- INCREASED HEIGHT from 95 to 140
-	gpGrid.CellPadding = UDim2.fromOffset(18, 35)  -- INCREASED SPACING: horizontal 10→18, vertical 25→35
+	gpGrid.CellSize = UDim2.new(0.48, 0, 0, 155)  -- INCREASED HEIGHT to 155 for more space
+	gpGrid.CellPadding = UDim2.fromOffset(18, 40)  -- INCREASED VERTICAL SPACING to 40
 	gpGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gpGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	gpGrid.Parent = self.gpPage
 
 	gpGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self.gpPage.CanvasSize = UDim2.new(0, 0, 0, gpGrid.AbsoluteContentSize.Y + 16)
+		self.gpPage.CanvasSize = UDim2.new(0, 0, 0, gpGrid.AbsoluteContentSize.Y + 24)
 	end)
 
 	for i, gp in ipairs(products.gamepasses) do
@@ -430,7 +438,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	local nameLabel = Instance.new("TextLabel")
 	nameLabel.Size = UDim2.new(0.70, 0, 0, 24)
-	nameLabel.Position = UDim2.fromOffset(20, 18)  -- MORE RIGHT (20) and LOWER (18)
+	nameLabel.Position = UDim2.fromOffset(26, 18)  -- EVEN MORE RIGHT (26)
 	nameLabel.BackgroundTransparency = 1
 	nameLabel.Text = product.name
 	nameLabel.TextColor3 = theme.text
@@ -443,7 +451,7 @@ function Shop:createProductItem(product, productType, parent)
 	-- Show description
 	local descLabel = Instance.new("TextLabel")
 	descLabel.Size = UDim2.new(0.95, 0, 0, 32)
-	descLabel.Position = UDim2.fromOffset(20, 46)  -- MORE RIGHT (20) and LOWER (46)
+	descLabel.Position = UDim2.fromOffset(26, 46)  -- EVEN MORE RIGHT (26)
 	descLabel.BackgroundTransparency = 1
 	descLabel.Text = product.description
 	descLabel.TextColor3 = theme.textSecondary
@@ -458,7 +466,7 @@ function Shop:createProductItem(product, productType, parent)
 	if product.bonus and product.bonus > 0 then
 		local bonusBadge = Instance.new("Frame")
 		bonusBadge.Size = UDim2.fromOffset(70, 24)
-		bonusBadge.Position = UDim2.fromOffset(20, 82)  -- Adjusted to match text position
+		bonusBadge.Position = UDim2.fromOffset(26, 82)  -- Adjusted to match text position
 		bonusBadge.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 		bonusBadge.BorderSizePixel = 0
 		bonusBadge.Parent = content
@@ -500,7 +508,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	-- Button positioned in the bottom area - full width and more prominent
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.new(0.85, 0, 0, 36)  -- Reduced width from 0.92 to 0.85
+	buyBtn.Size = UDim2.new(0.78, 0, 0, 36)  -- Reduced width from 0.85 to 0.78
 	buyBtn.Position = UDim2.new(0.5, 0, 1, -40)  -- Centered at bottom
 	buyBtn.AnchorPoint = Vector2.new(0.5, 0)
 	buyBtn.BackgroundColor3 = accentColor
