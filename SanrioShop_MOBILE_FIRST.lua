@@ -394,13 +394,15 @@ function Shop:createMainInterface()
 	self.shell.BackgroundTransparency = 1
 	self.shell.Parent = self.gui
 
-	-- B) Decorative image fills the shell
+	-- B) Decorative image fills the shell (9-SLICE so it stretches!)
 	self.mainFrame = Instance.new("ImageLabel")
 	self.mainFrame.Name = "MainArt"
 	self.mainFrame.BackgroundTransparency = 1
 	self.mainFrame.Size = UDim2.fromScale(1, 1)
 	self.mainFrame.Image = IMG_FRAME
-	self.mainFrame.ScaleType = Enum.ScaleType.Fit
+	self.mainFrame.ScaleType = Enum.ScaleType.Slice
+	self.mainFrame.SliceCenter = Rect.new(240, 240, 1808, 1808)  -- adjust if corners look warped
+	self.mainFrame.SliceScale = 1
 	self.mainFrame.ZIndex = 1
 	self.mainFrame.Parent = self.shell
 
@@ -443,18 +445,28 @@ function Shop:_bindGridAspect(grid)
 		local right = pad and pad.PaddingRight.Offset or 0
 		local usable = math.max(0, grid.Parent.AbsoluteSize.X - (left + right))
 		if usable <= 0 then return end
-		
-		-- 1 column on phone portrait, 2 otherwise
+
 		local vp = workspace.CurrentCamera.ViewportSize
 		local isPortrait = vp.Y > vp.X
 		local isSmall = math.min(vp.X, vp.Y) < 700
-		local wScale = (isPortrait and isSmall) and 0.94 or GRID_X_SCALE
-		
-		local cellW = math.ceil(usable * wScale)
-		local cellH = math.max(160, math.ceil((cellW / CARD_AR) * CARD_SIZE_MULT))  -- Taller cards
+
+		-- 1 col on small portrait, 2 col otherwise
+		local wScale = (isPortrait and isSmall) and 0.96 or 0.48  -- 0.48 fits two columns with padding
+
+		-- Slightly wider aspect on landscape to keep cards shorter
+		local ar = (isPortrait and isSmall) and 1.6 or 2.2
+
+		local cellW = math.floor(usable * wScale)
+
+		-- Clamp the computed height so cards don't get silly-tall
+		local rawH = math.floor(cellW / ar)
+		local minH = 160
+		local maxH = (isPortrait and isSmall) and 260 or 300  -- tighter on phones, a bit taller on desktop/tablet
+		local cellH = math.clamp(rawH, minH, maxH)
+
 		grid.CellSize = UDim2.new(wScale, 0, 0, cellH)
-		
-		if pad and wScale > 0.9 then
+
+		if pad and wScale >= 0.9 then
 			pad.PaddingLeft = UDim.new(0, 4)
 			pad.PaddingRight = UDim.new(0, 4)
 		end
@@ -623,8 +635,10 @@ function Shop:setupDynamicSizing()
 		self.gpContainer.Size = UDim2.fromOffset(gpW, gpH)
 		self.gpContainer.Position = UDim2.fromScale(0.70, 0.50 + GP_ROW_EXTRA)
 
-		-- ✅ content width from W, height from H
-		self.contentFrame.Size = UDim2.new(0, math.floor(W * CONTENT_WIDTH_FACTOR), 0, math.floor(H * CONTENT_HEIGHT_FACTOR))
+		-- ✅ content width from W, height from H with sane clamp
+		local desiredH = math.floor(H * CONTENT_HEIGHT_FACTOR)
+		local contentH = math.clamp(desiredH, math.floor(H * 0.32), math.floor(H * 0.52))
+		self.contentFrame.Size = UDim2.new(0, math.floor(W * CONTENT_WIDTH_FACTOR), 0, contentH)
 
 		-- push content under tabs
 		local tabRowAbsY = self.buttonBar.AbsolutePosition.Y
