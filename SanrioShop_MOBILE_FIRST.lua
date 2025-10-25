@@ -386,12 +386,18 @@ function Shop:createMainInterface()
 	self.mainFrame = Instance.new("ImageLabel")
 	self.mainFrame.Name = "MainFrame"; self.mainFrame.BackgroundTransparency = 1
 	self.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5); self.mainFrame.Position = UDim2.fromScale(0.5, 0.5)
-	-- WIDER on mobile!
-	local scale = isPhone() and FRAME_SCALE_MOBILE or FRAME_SCALE
-	self.mainFrame.Size = UDim2.fromScale(scale, scale)
 	self.mainFrame.Image = IMG_FRAME; self.mainFrame.ScaleType = Enum.ScaleType.Fit
-	self.mainFrame.ZIndex = 1; self.mainFrame.Parent = self.gui
-	local aspect = Instance.new("UIAspectRatioConstraint"); aspect.AspectRatio = 1; aspect.Parent = self.mainFrame
+	self.mainFrame.ZIndex = 1; self.mainFrame.ClipsDescendants = false
+	self.mainFrame.Parent = self.gui
+	
+	-- WIDTH-DOMINANT aspect so it can get WIDER on phones!
+	local wScale = isPhone() and FRAME_SCALE_MOBILE or FRAME_SCALE
+	self.mainFrame.Size = UDim2.new(wScale, 0, 0, 0)  -- let height be computed
+	
+	local aspect = Instance.new("UIAspectRatioConstraint")
+	aspect.AspectRatio = 1.15                          -- width / height (wider than square!)
+	aspect.DominantAxis = Enum.DominantAxis.Width      -- WIDTH drives size!
+	aspect.Parent = self.mainFrame
 
 	self.buttonBar = Instance.new("Frame")
 	self.buttonBar.Name = "ButtonBar"; self.buttonBar.BackgroundTransparency = 1
@@ -585,13 +591,16 @@ end
 function Shop:setupDynamicSizing()
 	local function resize()
 		local H = self.mainFrame.AbsoluteSize.Y
-		if H <= 0 then return end
+		local W = self.mainFrame.AbsoluteSize.X
+		if H <= 0 or W <= 0 then return end
 
+		-- pills still based on H (height feels right for their visual)
 		local cashH = math.clamp(math.floor(H * CASH_H_FACTOR), PILL_MIN_H, PILL_MAX_H)
 		local gpH = math.clamp(math.floor(H * GP_H_FACTOR), PILL_MIN_H, PILL_MAX_H)
 		local barH = math.max(cashH, gpH)
 
-		self.buttonBar.Size = UDim2.new(0, math.floor(H * BAR_WIDTH_FACTOR), 0, barH)
+		-- ✅ width now uses W, so tabs actually get wider on phones!
+		self.buttonBar.Size = UDim2.new(0, math.floor(W * BAR_WIDTH_FACTOR), 0, barH)
 
 		local cashW = math.floor(cashH * CASH_RATIO)
 		self.cashContainer.Size = UDim2.fromOffset(cashW, cashH)
@@ -601,12 +610,14 @@ function Shop:setupDynamicSizing()
 		self.gpContainer.Size = UDim2.fromOffset(gpW, gpH)
 		self.gpContainer.Position = UDim2.fromScale(0.70, 0.50 + GP_ROW_EXTRA)
 
+		-- ✅ content width from W, height from H
+		self.contentFrame.Size = UDim2.new(0, math.floor(W * CONTENT_WIDTH_FACTOR), 0, math.floor(H * CONTENT_HEIGHT_FACTOR))
+
+		-- push content under tabs with extra gap
 		local tabRowAbsY = self.buttonBar.AbsolutePosition.Y
 		local barBottom = tabRowAbsY + self.buttonBar.AbsoluteSize.Y
 		local frameTop = self.mainFrame.AbsolutePosition.Y
-		local relY = math.max(CONTENT_TOP_Y, (barBottom - frameTop + 16) / H)
-		
-		self.contentFrame.Size = UDim2.new(0, math.floor(H * CONTENT_WIDTH_FACTOR), 0, math.floor(H * CONTENT_HEIGHT_FACTOR))
+		local relY = math.max(CONTENT_TOP_Y, (barBottom - frameTop + 20) / H)  -- +20px gap
 		self.contentFrame.Position = UDim2.new(0.5, 0, relY, 0)
 	end
 	self.mainFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
