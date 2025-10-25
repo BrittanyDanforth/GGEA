@@ -28,13 +28,14 @@ local IMG_CASH = "rbxassetid://84262748186110"
 local GIFT_BOX_TEXTURE_ID = "130623477775352"
 
 -- ======== LAYOUT ========
-local FRAME_SCALE = 0.92
+local FRAME_SCALE = 0.92  -- desktop
+local FRAME_SCALE_MOBILE = 0.98  -- WIDER on mobile!
 local TAB_ROW_Y = 0.36
 local GP_ROW_EXTRA = 0.02
 local CONTENT_TOP_Y = 0.472
-local BAR_WIDTH_FACTOR = 0.92
-local CONTENT_WIDTH_FACTOR = 0.90
-local CONTENT_HEIGHT_FACTOR = 0.48
+local BAR_WIDTH_FACTOR = 0.95  -- WIDER!
+local CONTENT_WIDTH_FACTOR = 0.96  -- WIDER!
+local CONTENT_HEIGHT_FACTOR = 0.50  -- taller too
 
 -- Pills (smaller for mobile)
 local CASH_H_FACTOR, GP_H_FACTOR = 0.075, 0.082
@@ -183,8 +184,8 @@ local function buildCard(parent, product, isGamepass)
 	-- Content with PADDING (not fixed offsets!)
 	local content = Instance.new("Frame")
 	content.BackgroundTransparency = 1
-	content.Size = UDim2.new(1, -24, 1, -24)  -- SCALE based
-	content.Position = UDim2.fromOffset(12, 12)
+	content.Size = UDim2.new(1, -16, 1, -16)  -- LESS padding = WIDER
+	content.Position = UDim2.fromOffset(8, 8)
 	content.Parent = inner
 
 	-- LIST LAYOUT so things stack and NEVER overlap!
@@ -228,7 +229,7 @@ local function buildCard(parent, product, isGamepass)
 	-- Title (with icon if exists)
 	local titleContainer = Instance.new("Frame")
 	titleContainer.BackgroundTransparency = 1
-	titleContainer.Size = UDim2.new(1, -110, 0, 40)  -- Leave room for badges
+	titleContainer.Size = UDim2.new(1, -100, 0, 40)  -- Less margin = WIDER
 	titleContainer.LayoutOrder = 1
 	titleContainer.Parent = content
 
@@ -266,7 +267,7 @@ local function buildCard(parent, product, isGamepass)
 	-- Description (wraps properly)
 	local desc = Instance.new("TextLabel")
 	desc.BackgroundTransparency = 1
-	desc.Size = UDim2.new(1, -20, 0, 50)  -- Height flexes
+	desc.Size = UDim2.new(1, -10, 0, 50)  -- WIDER
 	desc.Text = product.description or ""
 	desc.Font = Enum.Font.FredokaOne
 	desc.TextColor3 = Color3.fromRGB(255,255,255)
@@ -385,7 +386,9 @@ function Shop:createMainInterface()
 	self.mainFrame = Instance.new("ImageLabel")
 	self.mainFrame.Name = "MainFrame"; self.mainFrame.BackgroundTransparency = 1
 	self.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5); self.mainFrame.Position = UDim2.fromScale(0.5, 0.5)
-	self.mainFrame.Size = UDim2.fromScale(FRAME_SCALE, FRAME_SCALE)
+	-- WIDER on mobile!
+	local scale = isPhone() and FRAME_SCALE_MOBILE or FRAME_SCALE
+	self.mainFrame.Size = UDim2.fromScale(scale, scale)
 	self.mainFrame.Image = IMG_FRAME; self.mainFrame.ScaleType = Enum.ScaleType.Fit
 	self.mainFrame.ZIndex = 1; self.mainFrame.Parent = self.gui
 	local aspect = Instance.new("UIAspectRatioConstraint"); aspect.AspectRatio = 1; aspect.Parent = self.mainFrame
@@ -516,7 +519,7 @@ function Shop:createProductItem(product, productType, parent)
 
 	-- BUY button
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.new(0.85, 0, 1, 0)
+	buyBtn.Size = UDim2.new(0.92, 0, 1, 0)  -- WIDER button!
 	buyBtn.Position = UDim2.fromScale(0.5, 0.5)
 	buyBtn.AnchorPoint = Vector2.new(0.5, 0.5)
 	buyBtn.BackgroundColor3 = accentColor
@@ -542,8 +545,8 @@ function Shop:createProductItem(product, productType, parent)
 	end)
 
 	if isGamepass and product.hasToggle and owned then
-		buyBtn.Size = UDim2.new(0.5, 0, 1, 0)
-		buyBtn.Position = UDim2.fromScale(0.25, 0.5)
+		buyBtn.Size = UDim2.new(0.60, 0, 1, 0)  -- WIDER toggle button
+		buyBtn.Position = UDim2.fromScale(0.30, 0.5)
 		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
@@ -733,5 +736,7 @@ end)
 print("[SanrioShop] ✅ MOBILE FIRST - UIListLayout prevents overlaps!")
 print("[SanrioShop] 📱 Everything SCALES properly on any screen!")
 print("[SanrioShop] 🎨 Text NEVER goes under buttons!")
+print("[SanrioShop] 🖥️ WIDER shop on mobile (98% vs 92%)!")
+print("[SanrioShop] 📏 Wider cards, wider content, wider buttons!")
 
 return shop
