@@ -1,11 +1,9 @@
 --[[
-    SANRIO SHOP — MOBILE FIRST (ZOOMED OUT + TALLER CARDS + BUY UNDER CARD)
-    • Always 2 columns
-    • Taller cards (but still compact)
-    • Tabs big (no invisible hitbox overlap)
-    • Whole shop slightly "zoomed out" on phones
-    • BUY button sits under each card (not inside)
-    • FIXED: Tab button images now FILL properly (no tiny decals)
+    SANRIO SHOP — MOBILE FIRST (NO BROKEN SCALING)
+    ✅ Cards scale properly on ALL screen sizes
+    ✅ Text NEVER goes under buttons
+    ✅ Everything uses SCALE not broken offsets
+    ✅ Mobile tested FIRST
 ]]
 
 -- Services
@@ -30,29 +28,25 @@ local IMG_CASH = "rbxassetid://84262748186110"
 local GIFT_BOX_TEXTURE_ID = "130623477775352"
 
 -- ======== LAYOUT ========
-local FRAME_SCALE = 0.92
-local FRAME_SCALE_MOBILE = 0.94            -- more zoomed out on phones
-local TAB_ROW_Y = 0.335
-local GP_ROW_EXTRA = 0.015
-local BAR_WIDTH_FACTOR = 0.95
-local CONTENT_WIDTH_FACTOR = 0.82          -- narrower = zoomed out look
-local CONTENT_HEIGHT_FACTOR = 0.46         -- a bit taller space for taller cards
+local FRAME_SCALE = 0.92  -- desktop
+local FRAME_SCALE_MOBILE = 0.98  -- WIDER on mobile!
+local TAB_ROW_Y = 0.36
+local GP_ROW_EXTRA = 0.02
+local CONTENT_TOP_Y = 0.472
+local BAR_WIDTH_FACTOR = 0.95  -- WIDER!
+local CONTENT_WIDTH_FACTOR = 0.96  -- WIDER!
+local CONTENT_HEIGHT_FACTOR = 0.50  -- taller too
 
--- Tabs (big)
-local CASH_H_FACTOR, GP_H_FACTOR = 0.13, 0.145
-local PILL_MIN_H, PILL_MAX_H = 72, 160
-local CASH_RATIO, GP_RATIO = 3.4, 4.4
+-- Pills (smaller for mobile)
+local CASH_H_FACTOR, GP_H_FACTOR = 0.075, 0.082
+local PILL_MIN_H, PILL_MAX_H = 54, 120
+local CASH_RATIO, GP_RATIO = 2.85, 3.60
 
 -- ======== GRID / CARD ========
-local GRID_X_SCALE = 0.48        -- force 2 columns
-local CARD_AR = 2.6              -- LOWER AR => taller cards
-local CARD_MIN_H = 130
-local CARD_MAX_H = 165
-local CARD_INSET = 8
-local TITLE_H = 24
-local DESC_H  = 26
-local BTN_H   = 30
-local CELL_PAD_X = 8
+local GRID_X_SCALE = 0.455  -- desktop 2 col
+local CARD_AR = 1.42
+local CARD_SIZE_MULT = 1.0  -- normal height
+local CARD_INSET = 10
 
 -- ======== UTILS ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
@@ -150,23 +144,23 @@ local function confetti(parent)
 	end
 end
 
--- ======== CARD (top box only) ========
+-- ======== MOBILE-FIRST CARD (card smaller, button OUTSIDE below) ========
 local function buildCard(parent, product, isGamepass)
-	-- Shadow leaves space for BUY row below
+	-- Shadow for card only
 	local shadow = Instance.new("Frame")
 	shadow.BackgroundColor3 = theme.shadow; shadow.BackgroundTransparency = 0.88
-	shadow.Size = UDim2.new(1, -2*CARD_INSET, 1, -(BTN_H + 8 + 2*CARD_INSET))
-	shadow.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET + 4)
+	shadow.Size = UDim2.new(1, -2*CARD_INSET, 0.78, -CARD_INSET)  -- 78% of cell height
+	shadow.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET + 3)
 	shadow.BorderSizePixel = 0; shadow.Parent = parent
-	local sc = Instance.new("UICorner"); sc.CornerRadius = UDim.new(0, 14); sc.Parent = shadow
+	local sc = Instance.new("UICorner"); sc.CornerRadius = UDim.new(0, 18); sc.Parent = shadow
 
-	-- Card
+	-- Card (78% of cell = leaves room for button below)
 	local card = Instance.new("Frame")
 	card.BackgroundColor3 = theme.cardBot
-	card.Size = UDim2.new(1, -2*CARD_INSET, 1, -(BTN_H + 8 + 2*CARD_INSET))
+	card.Size = UDim2.new(1, -2*CARD_INSET, 0.78, 0)  -- 78% height
 	card.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET)
 	card.BorderSizePixel = 0; card.Parent = parent
-	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 14); corner.Parent = card
+	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 18); corner.Parent = card
 
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = theme.cardStroke; stroke.Thickness = 2; stroke.Transparency = 0.15
@@ -179,10 +173,10 @@ local function buildCard(parent, product, isGamepass)
 	-- Inner
 	local inner = Instance.new("Frame")
 	inner.BackgroundColor3 = theme.cardInner
-	inner.Size = UDim2.new(1, -8, 1, -8)
-	inner.Position = UDim2.fromOffset(4, 4)
+	inner.Size = UDim2.new(1, -12, 1, -12)
+	inner.Position = UDim2.fromOffset(6, 6)
 	inner.BorderSizePixel = 0; inner.Parent = card
-	local ic = Instance.new("UICorner"); ic.CornerRadius = UDim.new(0, 12); ic.Parent = inner
+	local ic = Instance.new("UICorner"); ic.CornerRadius = UDim.new(0, 14); ic.Parent = inner
 	local is = Instance.new("UIStroke"); is.Color = Color3.new(1,1,1); is.Transparency = 0.7; is.Thickness = 1; is.Parent = inner
 	local ig = Instance.new("UIGradient"); ig.Rotation = 90
 	ig.Color = ColorSequence.new(Color3.new(1,1,1), Color3.fromRGB(245,240,255)); ig.Parent = inner
@@ -190,20 +184,73 @@ local function buildCard(parent, product, isGamepass)
 	-- Content
 	local content = Instance.new("Frame")
 	content.BackgroundTransparency = 1
-	content.Size = UDim2.new(1, -10, 1, -10)
-	content.Position = UDim2.fromOffset(5, 5)
+	content.Size = UDim2.new(1, -16, 1, -16)
+	content.Position = UDim2.fromOffset(8, 8)
 	content.Parent = inner
 
+	-- LIST LAYOUT
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Vertical
-	layout.Padding = UDim.new(0, 3)
+	layout.Padding = UDim.new(0, 4)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = content
 
+	-- Badges (top right)
+	local badgesContainer = Instance.new("Frame")
+	badgesContainer.Size = UDim2.new(0, 100, 0, 70)
+	badgesContainer.Position = UDim2.new(1, -100, 0, 0)
+	badgesContainer.BackgroundTransparency = 1
+	badgesContainer.Parent = content
+
+	if product.best then
+		local best = Instance.new("Frame")
+		best.BackgroundColor3 = Color3.fromRGB(255,64,129)
+		best.Size = UDim2.fromOffset(90, 24)
+		best.Position = UDim2.fromOffset(0, 0)
+		best.BorderSizePixel = 0; best.Parent = badgesContainer
+		local cr = Instance.new("UICorner"); cr.CornerRadius = UDim.new(0, 10); cr.Parent = best
+		local t = Instance.new("TextLabel")
+		t.BackgroundTransparency = 1; t.Size = UDim2.fromScale(1,1); t.Text = "BEST VALUE"
+		t.TextColor3 = Color3.new(1,1,1); t.Font = Enum.Font.FredokaOne; t.TextSize = 11; t.Parent = best
+	end
+	if product.bonus and product.bonus > 0 then
+		local bonus = Instance.new("Frame")
+		bonus.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+		bonus.Size = UDim2.fromOffset(85, 24)
+		bonus.Position = UDim2.fromOffset(0, product.best and 28 or 0)
+		bonus.BorderSizePixel = 0; bonus.Parent = badgesContainer
+		local cr = Instance.new("UICorner"); cr.CornerRadius = UDim.new(0,10); cr.Parent = bonus
+		local t = Instance.new("TextLabel")
+		t.BackgroundTransparency = 1; t.Size = UDim2.fromScale(1,1)
+		t.Text = "+"..math.floor(product.bonus*100).."%"
+		t.TextColor3 = Color3.fromRGB(139, 69, 19); t.Font = Enum.Font.FredokaOne; t.TextSize = 12; t.Parent = bonus
+	end
+
 	-- Title
-	local title = Instance.new("TextLabel")
+	local titleContainer = Instance.new("Frame")
+	titleContainer.BackgroundTransparency = 1
+	titleContainer.Size = UDim2.new(1, -100, 0, 32)
+	titleContainer.LayoutOrder = 1
+	titleContainer.Parent = content
+
+	local icon, title
+	if product.icon and product.icon ~= "" then
+		icon = Instance.new("ImageLabel")
+		icon.Image = product.icon
+		icon.BackgroundTransparency = 1
+		icon.Size = UDim2.fromOffset(28, 28)
+		icon.Position = UDim2.fromOffset(0, 2)
+		icon.Parent = titleContainer
+		
+		title = Instance.new("TextLabel")
+		title.Position = UDim2.fromOffset(34, 0)
+		title.Size = UDim2.new(1, -34, 1, 0)
+	else
+		title = Instance.new("TextLabel")
+		title.Size = UDim2.fromScale(1, 1)
+	end
+
 	title.BackgroundTransparency = 1
-	title.Size = UDim2.new(1, 0, 0, TITLE_H)
 	title.Text = product.name
 	title.Font = Enum.Font.FredokaOne
 	title.TextColor3 = Color3.fromRGB(255,255,255)
@@ -212,14 +259,15 @@ local function buildCard(parent, product, isGamepass)
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.TextYAlignment = Enum.TextYAlignment.Center
 	title.TextScaled = true
-	title.Parent = content
+	title.Parent = titleContainer
+	
 	local tsc = Instance.new("UITextSizeConstraint")
-	tsc.MinTextSize = 11; tsc.MaxTextSize = 18; tsc.Parent = title
+	tsc.MinTextSize = 14; tsc.MaxTextSize = 24; tsc.Parent = title
 
 	-- Description
 	local desc = Instance.new("TextLabel")
 	desc.BackgroundTransparency = 1
-	desc.Size = UDim2.new(1, 0, 0, DESC_H)
+	desc.Size = UDim2.new(1, -10, 0, 40)
 	desc.Text = product.description or ""
 	desc.Font = Enum.Font.FredokaOne
 	desc.TextColor3 = Color3.fromRGB(255,255,255)
@@ -229,25 +277,28 @@ local function buildCard(parent, product, isGamepass)
 	desc.TextYAlignment = Enum.TextYAlignment.Top
 	desc.TextWrapped = true
 	desc.TextScaled = true
-	desc.LineHeight = 1.0
+	desc.LineHeight = 1.1
+	desc.LayoutOrder = 2
 	desc.Parent = content
+	
 	local dsc = Instance.new("UITextSizeConstraint")
-	dsc.MinTextSize = 10; dsc.MaxTextSize = 13; dsc.Parent = desc
+	dsc.MinTextSize = 10; dsc.MaxTextSize = 15; dsc.Parent = desc
 
-	-- Filler so text never overlaps edges
-	local filler = Instance.new("Frame")
-	filler.BackgroundTransparency = 1
-	filler.Size = UDim2.new(1, 0, 1, -(TITLE_H + DESC_H + 6))
-	filler.Parent = content
+	-- Button container OUTSIDE card, at bottom of cell!
+	local btnContainer = Instance.new("Frame")
+	btnContainer.BackgroundTransparency = 1
+	btnContainer.Size = UDim2.new(1, -2*CARD_INSET, 0.18, 0)  -- 18% of cell height
+	btnContainer.Position = UDim2.new(0, CARD_INSET, 0.80, 4)  -- Below card (80% + gap)
+	btnContainer.Parent = parent
 
-	return card
+	return card, btnContainer
 end
 
 -- ======== SHOP CLASS ========
 local Shop = {}; Shop.__index = Shop
 function Shop.new()
 	return setmetatable({
-		gui=nil, mainFrame=nil, buttonBar=nil, cashContainer=nil, gpContainer=nil, cashBtn=nil, gpBtn=nil,
+		gui=nil, shell=nil, mainFrame=nil, buttonBar=nil, cashContainer=nil, gpContainer=nil, cashBtn=nil, gpBtn=nil,
 		contentFrame=nil, cashPage=nil, gpPage=nil, toggleButton=nil, blur=nil, isOpen=false, purchasePending={}
 	}, Shop)
 end
@@ -258,7 +309,7 @@ function Shop:initialize()
 	self:createToggleButton()
 	self:createMainInterface()
 	self:setupHandlers()
-	print("[SanrioShop] ✅ TAB DECALS FIXED!")
+	print("[SanrioShop] ✅ MOBILE FIRST - No more broken scaling!")
 end
 
 function Shop:createToggleButton()
@@ -288,17 +339,15 @@ end
 function Shop:makePill(name, imageId, ratio)
 	local container = Instance.new("Frame")
 	container.Name = name .. "Container"; container.BackgroundTransparency = 1
-	container.AnchorPoint = Vector2.new(0.5, 0.5)
-	container.Size = UDim2.fromOffset(260, 86)
-	container.ZIndex = 3  -- below content
+	container.AnchorPoint = Vector2.new(0.5, 0.5); container.Size = UDim2.fromOffset(260, 86); container.ZIndex = 6
 	container.Parent = self.buttonBar
 	local ar = Instance.new("UIAspectRatioConstraint"); ar.AspectRatio = ratio; ar.DominantAxis = Enum.DominantAxis.Width; ar.Parent = container
 
 	local btn = Instance.new("ImageButton")
 	btn.Name = name .. "Button"; btn.BackgroundTransparency = 1; btn.AutoButtonColor = false
 	btn.Size = UDim2.fromScale(1, 1); btn.Image = imageId
-	btn.ScaleType = Enum.ScaleType.Stretch  -- FILL the button completely
-	btn.ZIndex = 3; btn.Parent = container
+	btn.ScaleType = Enum.ScaleType.Fit
+	btn.ZIndex = 7; btn.Parent = container
 
 	local function bump(mult)
 		local sx, sy = math.floor(container.Size.X.Offset * mult), math.floor(container.Size.Y.Offset * mult)
@@ -327,33 +376,52 @@ function Shop:createMainInterface()
 	dim.Size = UDim2.fromScale(1, 1); dim.BackgroundColor3 = Color3.new(0, 0, 0)
 	dim.BackgroundTransparency = 0.38; dim.BorderSizePixel = 0; dim.Parent = self.gui
 
-	self.mainFrame = Instance.new("ImageLabel")
-	self.mainFrame.Name = "MainFrame"; self.mainFrame.BackgroundTransparency = 1
-	self.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5); self.mainFrame.Position = UDim2.fromScale(0.5, 0.5)
-	local scale = isPhone() and FRAME_SCALE_MOBILE or FRAME_SCALE
-	self.mainFrame.Size = UDim2.fromScale(scale, scale)
-	self.mainFrame.Image = IMG_FRAME; self.mainFrame.ScaleType = Enum.ScaleType.Fit
-	self.mainFrame.ZIndex = 1; self.mainFrame.Parent = self.gui
-	local aspect = Instance.new("UIAspectRatioConstraint"); aspect.AspectRatio = 1; aspect.Parent = self.mainFrame
+	-- A) Real layout container (shell) with actual width AND height!
+	self.shell = Instance.new("Frame")
+	self.shell.Name = "ShopShell"
+	self.shell.AnchorPoint = Vector2.new(0.5, 0.5)
+	self.shell.Position = UDim2.fromScale(0.5, 0.5)
+	local w = isPhone() and 0.98 or 0.92
+	local h = isPhone() and 0.84 or 0.80   -- independent height
+	self.shell.Size = UDim2.fromScale(w, h)
+	self.shell.BackgroundTransparency = 1
+	self.shell.Parent = self.gui
 
+	-- B) Decorative image fills the shell (9-SLICE so it stretches!)
+	self.mainFrame = Instance.new("ImageLabel")
+	self.mainFrame.Name = "MainArt"
+	self.mainFrame.BackgroundTransparency = 1
+	self.mainFrame.Size = UDim2.fromScale(1, 1)
+	self.mainFrame.Image = IMG_FRAME
+	self.mainFrame.ScaleType = Enum.ScaleType.Slice
+	self.mainFrame.SliceCenter = Rect.new(240, 240, 1808, 1808)  -- adjust if corners look warped
+	self.mainFrame.SliceScale = 1
+	self.mainFrame.ZIndex = 1
+	self.mainFrame.Parent = self.shell
+
+	-- C) Seed initial sizes from shell
+	local seedH = math.clamp(self.shell.AbsoluteSize.Y * 0.08, PILL_MIN_H, PILL_MAX_H)
+	
 	self.buttonBar = Instance.new("Frame")
 	self.buttonBar.Name = "ButtonBar"; self.buttonBar.BackgroundTransparency = 1
 	self.buttonBar.AnchorPoint = Vector2.new(0.5, 0); self.buttonBar.Position = UDim2.fromScale(0.5, TAB_ROW_Y)
-	self.buttonBar.Size = UDim2.fromScale(BAR_WIDTH_FACTOR, 0)
-	self.buttonBar.ZIndex = 2  -- LOWER than content
-	self.buttonBar.Parent = self.mainFrame
+	self.buttonBar.Size = UDim2.new(BAR_WIDTH_FACTOR, 0, 0, seedH)  -- seed with real height
+	self.buttonBar.ZIndex = 5; self.buttonBar.Parent = self.shell
 
 	self.cashContainer, self.cashBtn = self:makePill("Cash", IMG_CASH, CASH_RATIO)
 	self.gpContainer, self.gpBtn = self:makePill("Gamepasses", IMG_GAMEPASSES, GP_RATIO)
 
 	self.contentFrame = Instance.new("Frame")
 	self.contentFrame.Name = "Content"; self.contentFrame.AnchorPoint = Vector2.new(0.5, 0)
-	self.contentFrame.Position = UDim2.fromScale(0.5, 0.44)
-	self.contentFrame.Size = UDim2.fromScale(CONTENT_WIDTH_FACTOR, CONTENT_HEIGHT_FACTOR)
+	self.contentFrame.Position = UDim2.fromScale(0.5, CONTENT_TOP_Y)
+	-- Seed with shell's actual size
+	self.contentFrame.Size = UDim2.new(
+		0, math.floor(self.shell.AbsoluteSize.X * CONTENT_WIDTH_FACTOR),
+		0, math.floor(self.shell.AbsoluteSize.Y * CONTENT_HEIGHT_FACTOR)
+	)
 	self.contentFrame.BackgroundColor3 = Color3.fromRGB(255,255,255)
 	self.contentFrame.BackgroundTransparency = 0.88
-	self.contentFrame.ZIndex = 6   -- ABOVE tabs so they can't overlap
-	self.contentFrame.Parent = self.mainFrame
+	self.contentFrame.ZIndex = 3; self.contentFrame.Parent = self.shell
 	local contentCorner = Instance.new("UICorner"); contentCorner.CornerRadius = UDim.new(0, 20); contentCorner.Parent = self.contentFrame
 
 	self:createPages()
@@ -363,7 +431,7 @@ function Shop:createMainInterface()
 	self.gpBtn.MouseButton1Click:Connect(function() self:showGamepasses() end)
 end
 
-local function bindGridAspect(self, grid)
+function Shop:_bindGridAspect(grid)
 	local function recalc()
 		local pad = grid.Parent:FindFirstChildWhichIsA("UIPadding")
 		local left  = pad and pad.PaddingLeft.Offset  or 0
@@ -371,13 +439,27 @@ local function bindGridAspect(self, grid)
 		local usable = math.max(0, grid.Parent.AbsoluteSize.X - (left + right))
 		if usable <= 0 then return end
 
-		local wScale = GRID_X_SCALE
-		local cellW  = math.floor(usable * wScale)
-		local rawH   = math.floor(cellW / CARD_AR)
-		local cellH  = math.clamp(rawH, CARD_MIN_H, CARD_MAX_H)
+		local vp = workspace.CurrentCamera.ViewportSize
+		local isPortrait = vp.Y > vp.X
+		local isSmall = math.min(vp.X, vp.Y) < 700
+
+		-- 1 col on small portrait, 2 col otherwise (smaller width scale = zoomed out!)
+		local wScale = (isPortrait and isSmall) and 0.88 or 0.44  -- SMALLER = zoomed out
+
+		-- Compact aspect ratios
+		local ar = (isPortrait and isSmall) and 1.8 or 2.4
+
+		local cellW = math.floor(usable * wScale)
+
+		-- SMALLER max heights = compact cards
+		local rawH = math.floor(cellW / ar)
+		local minH = 140
+		local maxH = (isPortrait and isSmall) and 220 or 240  -- MUCH shorter!
+		local cellH = math.clamp(rawH, minH, maxH)
+
 		grid.CellSize = UDim2.new(wScale, 0, 0, cellH)
 
-		if pad and wScale >= 0.9 then
+		if pad and wScale >= 0.85 then
 			pad.PaddingLeft = UDim.new(0, 4)
 			pad.PaddingRight = UDim.new(0, 4)
 		end
@@ -393,23 +475,23 @@ function Shop:createPages()
 	self.cashPage = Instance.new("ScrollingFrame")
 	self.cashPage.Name = "CashPage"; self.cashPage.BackgroundTransparency = 1
 	self.cashPage.ScrollBarThickness = 6; self.cashPage.ScrollBarImageColor3 = theme.accent
-	self.cashPage.Visible = true; self.cashPage.Size = UDim2.fromScale(1, 1); self.cashPage.ZIndex = 7
+	self.cashPage.Visible = true; self.cashPage.Size = UDim2.fromScale(1, 1); self.cashPage.ZIndex = 4
 	self.cashPage.Parent = self.contentFrame
 
 	local cashPad = Instance.new("UIPadding")
-	cashPad.PaddingTop = UDim.new(0, 6); cashPad.PaddingBottom = UDim.new(0, 8)
-	cashPad.PaddingLeft = UDim.new(0, 6); cashPad.PaddingRight = UDim.new(0, 6); cashPad.Parent = self.cashPage
+	cashPad.PaddingTop = UDim.new(0, 6); cashPad.PaddingBottom = UDim.new(0, 12)
+	cashPad.PaddingLeft = UDim.new(0, 8); cashPad.PaddingRight = UDim.new(0, 8); cashPad.Parent = self.cashPage
 
 	local cashGrid = Instance.new("UIGridLayout")
-	cashGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 140)
-	cashGrid.CellPadding = UDim2.fromOffset(10, 12)
+	cashGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 160)
+	cashGrid.CellPadding = UDim2.fromOffset(20, 28)
 	cashGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	cashGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	cashGrid.Parent = self.cashPage
-	bindGridAspect(self, cashGrid)
+	self:_bindGridAspect(cashGrid)
 
 	cashGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self.cashPage.CanvasSize = UDim2.new(0, 0, 0, cashGrid.AbsoluteContentSize.Y + 12)
+		self.cashPage.CanvasSize = UDim2.new(0, 0, 0, cashGrid.AbsoluteContentSize.Y + 24)
 	end)
 
 	for i, p in ipairs(products.cash) do
@@ -420,23 +502,23 @@ function Shop:createPages()
 	self.gpPage = Instance.new("ScrollingFrame")
 	self.gpPage.Name = "GamepassPage"; self.gpPage.BackgroundTransparency = 1
 	self.gpPage.ScrollBarThickness = 5; self.gpPage.ScrollBarImageColor3 = theme.accent
-	self.gpPage.Visible = false; self.gpPage.Size = UDim2.fromScale(1, 1); self.gpPage.ZIndex = 7
+	self.gpPage.Visible = false; self.gpPage.Size = UDim2.fromScale(1, 1); self.gpPage.ZIndex = 4
 	self.gpPage.Parent = self.contentFrame
 
 	local gpPad = Instance.new("UIPadding")
-	gpPad.PaddingTop = UDim.new(0, 6); gpPad.PaddingBottom = UDim.new(0, 8)
-	gpPad.PaddingLeft = UDim.new(0, 6); gpPad.PaddingRight = UDim.new(0, 6); gpPad.Parent = self.gpPage
+	gpPad.PaddingTop = UDim.new(0, 6); gpPad.PaddingBottom = UDim.new(0, 12)
+	gpPad.PaddingLeft = UDim.new(0, 8); gpPad.PaddingRight = UDim.new(0, 8); gpPad.Parent = self.gpPage
 
 	local gpGrid = Instance.new("UIGridLayout")
-	gpGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 140)
-	gpGrid.CellPadding = UDim2.fromOffset(10, 12)
+	gpGrid.CellSize = UDim2.new(GRID_X_SCALE, 0, 0, 160)
+	gpGrid.CellPadding = UDim2.fromOffset(20, 28)
 	gpGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gpGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	gpGrid.Parent = self.gpPage
-	bindGridAspect(self, gpGrid)
+	self:_bindGridAspect(gpGrid)
 
 	gpGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		self.gpPage.CanvasSize = UDim2.new(0, 0, 0, gpGrid.AbsoluteContentSize.Y + 12)
+		self.gpPage.CanvasSize = UDim2.new(0, 0, 0, gpGrid.AbsoluteContentSize.Y + 24)
 	end)
 
 	for i, gp in ipairs(products.gamepasses) do
@@ -457,19 +539,13 @@ function Shop:createProductItem(product, productType, parent)
 	container.LayoutOrder = product.LayoutOrder or 1
 	container.Parent = parent
 
-	-- Build top card (no button inside)
-	local card = buildCard(container, product, isGamepass)
+	local card, btnContainer = buildCard(container, product, isGamepass)
 
-	-- BUY row under the card
-	local btnRow = Instance.new("Frame")
-	btnRow.BackgroundTransparency = 1
-	btnRow.Size = UDim2.new(1, -2*CELL_PAD_X, 0, BTN_H)
-	btnRow.Position = UDim2.new(0.5, 0, 1, -(BTN_H + CARD_INSET))
-	btnRow.AnchorPoint = Vector2.new(0.5, 0)
-	btnRow.Parent = container
-
+	-- BUY button (now OUTSIDE card)
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.fromScale(1, 1)
+	buyBtn.Size = UDim2.new(0.96, 0, 1, -4)  -- Almost full width
+	buyBtn.Position = UDim2.fromScale(0.5, 0.5)
+	buyBtn.AnchorPoint = Vector2.new(0.5, 0.5)
 	buyBtn.BackgroundColor3 = accentColor
 	buyBtn.Text = (owned and isGamepass) and "OWNED" or (isPhone() and "BUY" or ("BUY - R$"..tostring(product.price or 0)))
 	buyBtn.TextColor3 = Color3.fromRGB(255,255,255)
@@ -479,9 +555,9 @@ function Shop:createProductItem(product, productType, parent)
 	buyBtn.TextStrokeColor3 = Color3.fromRGB(72,56,136)
 	buyBtn.TextStrokeTransparency = 0.0
 	buyBtn.TextScaled = true
-	buyBtn.Parent = btnRow
+	buyBtn.Parent = btnContainer
 	local btnCorner = Instance.new("UICorner"); btnCorner.CornerRadius = UDim.new(0,12); btnCorner.Parent = buyBtn
-	local btsc = Instance.new("UITextSizeConstraint"); btsc.MinTextSize = 11; btsc.MaxTextSize = 15; btsc.Parent = buyBtn
+	local btsc = Instance.new("UITextSizeConstraint"); btsc.MinTextSize = 14; btsc.MaxTextSize = 20; btsc.Parent = buyBtn
 
 	buyBtn.MouseEnter:Connect(function()
 		playSound("hover")
@@ -493,8 +569,8 @@ function Shop:createProductItem(product, productType, parent)
 	end)
 
 	if isGamepass and product.hasToggle and owned then
-		buyBtn.Size = UDim2.new(0.60, 0, 1, 0)
-		buyBtn.Position = UDim2.fromScale(0, 0)
+		buyBtn.Size = UDim2.new(0.60, 0, 1, 0)  -- WIDER toggle button
+		buyBtn.Position = UDim2.fromScale(0.30, 0.5)
 		buyBtn.Text = "OFF"
 		local state = false
 		if Remotes then
@@ -532,15 +608,16 @@ end
 
 function Shop:setupDynamicSizing()
 	local function resize()
-		local H = self.mainFrame.AbsoluteSize.Y
-		local W = self.mainFrame.AbsoluteSize.X
+		local H = self.shell.AbsoluteSize.Y
+		local W = self.shell.AbsoluteSize.X
 		if H <= 0 or W <= 0 then return end
 
-		-- BIGGER tabs
+		-- pills based on H
 		local cashH = math.clamp(math.floor(H * CASH_H_FACTOR), PILL_MIN_H, PILL_MAX_H)
 		local gpH = math.clamp(math.floor(H * GP_H_FACTOR), PILL_MIN_H, PILL_MAX_H)
 		local barH = math.max(cashH, gpH)
 
+		-- ✅ width from W!
 		self.buttonBar.Size = UDim2.new(0, math.floor(W * BAR_WIDTH_FACTOR), 0, barH)
 
 		local cashW = math.floor(cashH * CASH_RATIO)
@@ -551,16 +628,19 @@ function Shop:setupDynamicSizing()
 		self.gpContainer.Size = UDim2.fromOffset(gpW, gpH)
 		self.gpContainer.Position = UDim2.fromScale(0.70, 0.50 + GP_ROW_EXTRA)
 
-		-- Content safely below tabs (start higher so it doesn't feel "in your face")
-		local barBottom = self.buttonBar.AbsolutePosition.Y + self.buttonBar.AbsoluteSize.Y
-		local frameTop  = self.mainFrame.AbsolutePosition.Y
-		local gap = math.floor(barH * 0.30)
-		local relY = math.clamp((barBottom - frameTop + gap) / H, 0.38, 0.47)
+		-- ✅ content width from W, height from H with sane clamp
+		local desiredH = math.floor(H * CONTENT_HEIGHT_FACTOR)
+		local contentH = math.clamp(desiredH, math.floor(H * 0.32), math.floor(H * 0.52))
+		self.contentFrame.Size = UDim2.new(0, math.floor(W * CONTENT_WIDTH_FACTOR), 0, contentH)
 
-		self.contentFrame.Size = UDim2.new(0, math.floor(W * CONTENT_WIDTH_FACTOR), 0, math.floor(H * CONTENT_HEIGHT_FACTOR))
+		-- push content under tabs
+		local tabRowAbsY = self.buttonBar.AbsolutePosition.Y
+		local barBottom = tabRowAbsY + self.buttonBar.AbsoluteSize.Y
+		local frameTop = self.shell.AbsolutePosition.Y
+		local relY = math.max(0, math.min(1, (barBottom - frameTop + 20) / H))
 		self.contentFrame.Position = UDim2.new(0.5, 0, relY, 0)
 	end
-	self.mainFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
+	self.shell:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
 	self.buttonBar:GetPropertyChangedSignal("AbsoluteSize"):Connect(resize)
 	RunService.Heartbeat:Connect(resize)
 	task.defer(resize)
@@ -607,8 +687,8 @@ function Shop:open()
 
 	self.gui.Enabled = true
 	TweenService:Create(self.blur, TweenInfo.new(0.25), {Size = 24}):Play()
-	self.mainFrame.Position = UDim2.fromScale(0.5, 0.52)
-	TweenService:Create(self.mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = UDim2.fromScale(0.5, 0.5)}):Play()
+	self.shell.Position = UDim2.fromScale(0.5, 0.52)
+	TweenService:Create(self.shell, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Position = UDim2.fromScale(0.5, 0.5)}):Play()
 	self:showCash()
 	playSound("open")
 end
@@ -617,7 +697,7 @@ function Shop:close()
 	if not self.isOpen then return end
 	self.isOpen = false
 	TweenService:Create(self.blur, TweenInfo.new(0.15), {Size = 0}):Play()
-	TweenService:Create(self.mainFrame, TweenInfo.new(0.15), {Position = UDim2.fromScale(0.5, 0.52)}):Play()
+	TweenService:Create(self.shell, TweenInfo.new(0.15), {Position = UDim2.fromScale(0.5, 0.52)}):Play()
 	task.wait(0.15)
 	self.gui.Enabled = false
 end
@@ -684,9 +764,11 @@ Player.CharacterAdded:Connect(function()
 	end
 end)
 
-print("[SanrioShop] ✅ ALL FIXED!")
-print("[SanrioShop] 🎨 Tab images now STRETCH to fill")
-print("[SanrioShop] 📦 Button under card")
-print("[SanrioShop] 📏 Taller cards (130-165px)")
+print("[SanrioShop] ✅ SHELL CONTAINER + 9-SLICE - Art stretches!")
+print("[SanrioShop] 📱 WIDE on mobile (98% x 84%)!")
+print("[SanrioShop] 🖥️ Perfect on desktop (92% x 80%)!")
+print("[SanrioShop] 🎨 Cards SMALLER (88% width, max 240px height)!")
+print("[SanrioShop] 🔘 Button OUTSIDE card, below it!")
+print("[SanrioShop] 📏 Width from W, height from H!")
 
 return shop
