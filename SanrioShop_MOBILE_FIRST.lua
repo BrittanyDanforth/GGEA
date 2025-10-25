@@ -144,20 +144,20 @@ local function confetti(parent)
 	end
 end
 
--- ======== MOBILE-FIRST CARD ========
+-- ======== MOBILE-FIRST CARD (card smaller, button OUTSIDE below) ========
 local function buildCard(parent, product, isGamepass)
-	-- Shadow
+	-- Shadow for card only
 	local shadow = Instance.new("Frame")
 	shadow.BackgroundColor3 = theme.shadow; shadow.BackgroundTransparency = 0.88
-	shadow.Size = UDim2.new(1, -2*CARD_INSET, 1, -2*CARD_INSET)
-	shadow.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET + 5)
+	shadow.Size = UDim2.new(1, -2*CARD_INSET, 0.78, -CARD_INSET)  -- 78% of cell height
+	shadow.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET + 3)
 	shadow.BorderSizePixel = 0; shadow.Parent = parent
 	local sc = Instance.new("UICorner"); sc.CornerRadius = UDim.new(0, 18); sc.Parent = shadow
 
-	-- Card
+	-- Card (78% of cell = leaves room for button below)
 	local card = Instance.new("Frame")
 	card.BackgroundColor3 = theme.cardBot
-	card.Size = UDim2.new(1, -2*CARD_INSET, 1, -2*CARD_INSET)
+	card.Size = UDim2.new(1, -2*CARD_INSET, 0.78, 0)  -- 78% height
 	card.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET)
 	card.BorderSizePixel = 0; card.Parent = parent
 	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 18); corner.Parent = card
@@ -181,23 +181,23 @@ local function buildCard(parent, product, isGamepass)
 	local ig = Instance.new("UIGradient"); ig.Rotation = 90
 	ig.Color = ColorSequence.new(Color3.new(1,1,1), Color3.fromRGB(245,240,255)); ig.Parent = inner
 
-	-- Content with PADDING (not fixed offsets!)
+	-- Content
 	local content = Instance.new("Frame")
 	content.BackgroundTransparency = 1
-	content.Size = UDim2.new(1, -16, 1, -16)  -- LESS padding = WIDER
+	content.Size = UDim2.new(1, -16, 1, -16)
 	content.Position = UDim2.fromOffset(8, 8)
 	content.Parent = inner
 
-	-- LIST LAYOUT so things stack and NEVER overlap!
+	-- LIST LAYOUT
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Vertical
-	layout.Padding = UDim.new(0, 6)
+	layout.Padding = UDim.new(0, 4)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = content
 
-	-- Badges container (top right)
+	-- Badges (top right)
 	local badgesContainer = Instance.new("Frame")
-	badgesContainer.Size = UDim2.new(0, 100, 0, 70)  -- Fixed size for badges
+	badgesContainer.Size = UDim2.new(0, 100, 0, 70)
 	badgesContainer.Position = UDim2.new(1, -100, 0, 0)
 	badgesContainer.BackgroundTransparency = 1
 	badgesContainer.Parent = content
@@ -205,31 +205,31 @@ local function buildCard(parent, product, isGamepass)
 	if product.best then
 		local best = Instance.new("Frame")
 		best.BackgroundColor3 = Color3.fromRGB(255,64,129)
-		best.Size = UDim2.fromOffset(90, 26)
+		best.Size = UDim2.fromOffset(90, 24)
 		best.Position = UDim2.fromOffset(0, 0)
 		best.BorderSizePixel = 0; best.Parent = badgesContainer
 		local cr = Instance.new("UICorner"); cr.CornerRadius = UDim.new(0, 10); cr.Parent = best
 		local t = Instance.new("TextLabel")
 		t.BackgroundTransparency = 1; t.Size = UDim2.fromScale(1,1); t.Text = "BEST VALUE"
-		t.TextColor3 = Color3.new(1,1,1); t.Font = Enum.Font.FredokaOne; t.TextSize = 12; t.Parent = best
+		t.TextColor3 = Color3.new(1,1,1); t.Font = Enum.Font.FredokaOne; t.TextSize = 11; t.Parent = best
 	end
 	if product.bonus and product.bonus > 0 then
 		local bonus = Instance.new("Frame")
 		bonus.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-		bonus.Size = UDim2.fromOffset(85, 26)
-		bonus.Position = UDim2.fromOffset(0, product.best and 32 or 0)
+		bonus.Size = UDim2.fromOffset(85, 24)
+		bonus.Position = UDim2.fromOffset(0, product.best and 28 or 0)
 		bonus.BorderSizePixel = 0; bonus.Parent = badgesContainer
 		local cr = Instance.new("UICorner"); cr.CornerRadius = UDim.new(0,10); cr.Parent = bonus
 		local t = Instance.new("TextLabel")
 		t.BackgroundTransparency = 1; t.Size = UDim2.fromScale(1,1)
 		t.Text = "+"..math.floor(product.bonus*100).."%"
-		t.TextColor3 = Color3.fromRGB(139, 69, 19); t.Font = Enum.Font.FredokaOne; t.TextSize = 13; t.Parent = bonus
+		t.TextColor3 = Color3.fromRGB(139, 69, 19); t.Font = Enum.Font.FredokaOne; t.TextSize = 12; t.Parent = bonus
 	end
 
-	-- Title (with icon if exists)
+	-- Title
 	local titleContainer = Instance.new("Frame")
 	titleContainer.BackgroundTransparency = 1
-	titleContainer.Size = UDim2.new(1, -100, 0, 40)  -- Less margin = WIDER
+	titleContainer.Size = UDim2.new(1, -100, 0, 32)
 	titleContainer.LayoutOrder = 1
 	titleContainer.Parent = content
 
@@ -238,13 +238,13 @@ local function buildCard(parent, product, isGamepass)
 		icon = Instance.new("ImageLabel")
 		icon.Image = product.icon
 		icon.BackgroundTransparency = 1
-		icon.Size = UDim2.fromOffset(32, 32)
-		icon.Position = UDim2.fromOffset(0, 4)
+		icon.Size = UDim2.fromOffset(28, 28)
+		icon.Position = UDim2.fromOffset(0, 2)
 		icon.Parent = titleContainer
 		
 		title = Instance.new("TextLabel")
-		title.Position = UDim2.fromOffset(40, 0)
-		title.Size = UDim2.new(1, -40, 1, 0)
+		title.Position = UDim2.fromOffset(34, 0)
+		title.Size = UDim2.new(1, -34, 1, 0)
 	else
 		title = Instance.new("TextLabel")
 		title.Size = UDim2.fromScale(1, 1)
@@ -262,12 +262,12 @@ local function buildCard(parent, product, isGamepass)
 	title.Parent = titleContainer
 	
 	local tsc = Instance.new("UITextSizeConstraint")
-	tsc.MinTextSize = 16; tsc.MaxTextSize = 28; tsc.Parent = title
+	tsc.MinTextSize = 14; tsc.MaxTextSize = 24; tsc.Parent = title
 
-	-- Description (wraps properly)
+	-- Description
 	local desc = Instance.new("TextLabel")
 	desc.BackgroundTransparency = 1
-	desc.Size = UDim2.new(1, -10, 0, 50)  -- WIDER
+	desc.Size = UDim2.new(1, -10, 0, 40)
 	desc.Text = product.description or ""
 	desc.Font = Enum.Font.FredokaOne
 	desc.TextColor3 = Color3.fromRGB(255,255,255)
@@ -282,21 +282,14 @@ local function buildCard(parent, product, isGamepass)
 	desc.Parent = content
 	
 	local dsc = Instance.new("UITextSizeConstraint")
-	dsc.MinTextSize = 12; dsc.MaxTextSize = 18; dsc.Parent = desc
+	dsc.MinTextSize = 10; dsc.MaxTextSize = 15; dsc.Parent = desc
 
-	-- Spacer pushes button to bottom
-	local spacer = Instance.new("Frame")
-	spacer.BackgroundTransparency = 1
-	spacer.Size = UDim2.new(1, 0, 1, -150)  -- Fills remaining space
-	spacer.LayoutOrder = 3
-	spacer.Parent = content
-
-	-- Button at bottom
+	-- Button container OUTSIDE card, at bottom of cell!
 	local btnContainer = Instance.new("Frame")
 	btnContainer.BackgroundTransparency = 1
-	btnContainer.Size = UDim2.new(1, 0, 0, 40)
-	btnContainer.LayoutOrder = 4
-	btnContainer.Parent = content
+	btnContainer.Size = UDim2.new(1, -2*CARD_INSET, 0.18, 0)  -- 18% of cell height
+	btnContainer.Position = UDim2.new(0, CARD_INSET, 0.80, 4)  -- Below card (80% + gap)
+	btnContainer.Parent = parent
 
 	return card, btnContainer
 end
@@ -450,23 +443,23 @@ function Shop:_bindGridAspect(grid)
 		local isPortrait = vp.Y > vp.X
 		local isSmall = math.min(vp.X, vp.Y) < 700
 
-		-- 1 col on small portrait, 2 col otherwise
-		local wScale = (isPortrait and isSmall) and 0.96 or 0.48  -- 0.48 fits two columns with padding
+		-- 1 col on small portrait, 2 col otherwise (smaller width scale = zoomed out!)
+		local wScale = (isPortrait and isSmall) and 0.88 or 0.44  -- SMALLER = zoomed out
 
-		-- Slightly wider aspect on landscape to keep cards shorter
-		local ar = (isPortrait and isSmall) and 1.6 or 2.2
+		-- Compact aspect ratios
+		local ar = (isPortrait and isSmall) and 1.8 or 2.4
 
 		local cellW = math.floor(usable * wScale)
 
-		-- Clamp the computed height so cards don't get silly-tall
+		-- SMALLER max heights = compact cards
 		local rawH = math.floor(cellW / ar)
-		local minH = 160
-		local maxH = (isPortrait and isSmall) and 260 or 300  -- tighter on phones, a bit taller on desktop/tablet
+		local minH = 140
+		local maxH = (isPortrait and isSmall) and 220 or 240  -- MUCH shorter!
 		local cellH = math.clamp(rawH, minH, maxH)
 
 		grid.CellSize = UDim2.new(wScale, 0, 0, cellH)
 
-		if pad and wScale >= 0.9 then
+		if pad and wScale >= 0.85 then
 			pad.PaddingLeft = UDim.new(0, 4)
 			pad.PaddingRight = UDim.new(0, 4)
 		end
@@ -548,9 +541,9 @@ function Shop:createProductItem(product, productType, parent)
 
 	local card, btnContainer = buildCard(container, product, isGamepass)
 
-	-- BUY button
+	-- BUY button (now OUTSIDE card)
 	local buyBtn = Instance.new("TextButton")
-	buyBtn.Size = UDim2.new(0.92, 0, 1, 0)  -- WIDER button!
+	buyBtn.Size = UDim2.new(0.96, 0, 1, -4)  -- Almost full width
 	buyBtn.Position = UDim2.fromScale(0.5, 0.5)
 	buyBtn.AnchorPoint = Vector2.new(0.5, 0.5)
 	buyBtn.BackgroundColor3 = accentColor
@@ -771,10 +764,11 @@ Player.CharacterAdded:Connect(function()
 	end
 end)
 
-print("[SanrioShop] ✅ SHELL CONTAINER - Art shows properly!")
+print("[SanrioShop] ✅ SHELL CONTAINER + 9-SLICE - Art stretches!")
 print("[SanrioShop] 📱 WIDE on mobile (98% x 84%)!")
 print("[SanrioShop] 🖥️ Perfect on desktop (92% x 80%)!")
-print("[SanrioShop] 🎨 Text NEVER goes under buttons!")
-print("[SanrioShop] 📏 Width from W, height from H - no more skinny!")
+print("[SanrioShop] 🎨 Cards SMALLER (88% width, max 240px height)!")
+print("[SanrioShop] 🔘 Button OUTSIDE card, below it!")
+print("[SanrioShop] 📏 Width from W, height from H!")
 
 return shop
