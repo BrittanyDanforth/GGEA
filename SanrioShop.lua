@@ -1,12 +1,16 @@
 --[[
-    SANRIO SHOP — MOBILE FIRST (ZOOMED OUT + TALLER CARDS + BUY UNDER CARD)
-    • Keeps the white outline highlight on CASH / GAMEPASS tabs
-    • Dark, high-contrast card text
-    • Always 2 columns; taller cards (top/bottom only)
-    • BUY/OWNED rows live UNDER the card
-    • Auto Collect shows: OWNED (upper row) + ON/OFF (bottom row)
-    • UPDATE: Lowered ONLY Auto Collect rows (both "OWNED" and toggle). 2x Cash unchanged.
-    • FIXED: Proper toggle display after purchase, no confetti
+    SANRIO SHOP CLIENT (FIXED VERSION)
+    Place in: StarterPlayer > StarterPlayerScripts
+    Name: SanrioShop
+    
+    Features:
+    • Mobile-first design with responsive layout
+    • Cash products and Gamepasses
+    • Auto Collect with ON/OFF toggle
+    • Server-verified purchase updates (no flickering!)
+    • No confetti effect
+    
+    FIXED: Gamepasses now show "OWNED" and toggle properly after purchase
 ]]
 
 -- Services
@@ -32,30 +36,26 @@ local GIFT_BOX_TEXTURE_ID = "130623477775352"
 
 -- ======== LAYOUT ========
 local FRAME_SCALE = 0.92
-local FRAME_SCALE_MOBILE = 0.94            -- more zoomed out on phones
+local FRAME_SCALE_MOBILE = 0.94
 
--- Tabs row
 local TAB_ROW_Y = 0.365
 local GP_ROW_EXTRA = 0.015
 
 local BAR_WIDTH_FACTOR = 0.95
-local CONTENT_WIDTH_FACTOR = 0.82          -- keep width the same
-local CONTENT_HEIGHT_FACTOR = 0.46         -- a bit taller space for taller cards
+local CONTENT_WIDTH_FACTOR = 0.82
+local CONTENT_HEIGHT_FACTOR = 0.46
 
--- Tabs (PC slightly larger CASH; mobile unchanged)
 local CASH_H_FACTOR_DESKTOP, GP_H_FACTOR_DESKTOP = 0.095, 0.090
 local CASH_H_FACTOR_PHONE,   GP_H_FACTOR_PHONE   = 0.018, 0.02325
 local PILL_MIN_H, PILL_MAX_H = 33, 140
 local CASH_RATIO, GP_RATIO    = 3.25, 4.20
 local PILL_BAR_PAD            = 10
 
--- Inner padding for pill images so Crop never chops edges
 local PILL_IMG_PAD_X = 8
 local PILL_IMG_PAD_Y = 6
 
--- ======== GRID / CARD ========
-local GRID_X_SCALE = 0.40        -- 2 columns
-local CARD_AR = 1.90             -- LOWER AR => taller (~+20%)
+local GRID_X_SCALE = 0.40
+local CARD_AR = 1.90
 local CARD_MIN_H = 150
 local CARD_MAX_H = 220
 local CARD_INSET = 8
@@ -65,9 +65,8 @@ local BTN_H   = 30
 local CELL_PAD_X = 8
 local SECOND_ROW_GAP = 8
 
--- Alignment nudges
-local TWO_ROW_BOTTOM_PUSH_PX    = 37  -- ⬇️ lower Auto Collect rows
-local SINGLE_ROW_BOTTOM_PUSH_PX = 0   -- leave 2x Cash EXACTLY as before
+local TWO_ROW_BOTTOM_PUSH_PX    = 37
+local SINGLE_ROW_BOTTOM_PUSH_PX = 0
 
 -- ======== UTILS ========
 local function isMobile() return UserInputService.TouchEnabled and not GuiService:IsTenFootInterface() end
@@ -76,7 +75,6 @@ local function isPhone()
 	local v = workspace.CurrentCamera.ViewportSize
 	return math.min(v.X, v.Y) < 700
 end
-local function blend(a,b,t) t=math.clamp(t,0,1) return Color3.new(a.R+(b.R-a.R)*t,a.G+(b.G-a.G)*t,a.B+(b.B-a.B)*t) end
 
 -- ======== THEME ========
 local theme = {
@@ -89,8 +87,6 @@ local theme = {
 	cardInner   = Color3.fromRGB(243,235,255),
 	cardStroke  = Color3.fromRGB(206,190,248),
 	shadow      = Color3.fromRGB(50, 30, 90),
-
-	-- Dark text for high contrast on light card
 	textDark    = Color3.fromRGB(62, 36, 96),
 	textSubtle  = Color3.fromRGB(84, 60, 122),
 }
@@ -158,27 +154,23 @@ local function pulse(frame)
 	task.delay(0.1,function() TweenService:Create(s,TweenInfo.new(0.18),{Scale=1}):Play() end)
 end
 
--- ======== CARD (top box only) ========
+-- ======== CARD BUILDER ========
 local function buildCard(parent, product, reservedRows)
 	reservedRows = reservedRows or 1
 	local reservedPx = (reservedRows * BTN_H) + math.max(0, reservedRows-1) * SECOND_ROW_GAP + 8 + (2 * CARD_INSET)
 
-	-- Shadow leaves space for rows
 	local shadow = Instance.new("Frame")
 	shadow.BackgroundColor3 = theme.shadow; shadow.BackgroundTransparency = 0.88
 	shadow.Size = UDim2.new(1, -2*CARD_INSET, 1, -reservedPx)
 	shadow.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET + 4)
-	shadow.BorderSizePixel = 0; shadow.Parent = parent
-	shadow.ZIndex = 11
+	shadow.BorderSizePixel = 0; shadow.Parent = parent; shadow.ZIndex = 11
 	local sc = Instance.new("UICorner"); sc.CornerRadius = UDim.new(0, 14); sc.Parent = shadow
 
-	-- Card
 	local card = Instance.new("Frame")
 	card.BackgroundColor3 = theme.cardBot
 	card.Size = UDim2.new(1, -2*CARD_INSET, 1, -reservedPx)
 	card.Position = UDim2.fromOffset(CARD_INSET, CARD_INSET)
-	card.BorderSizePixel = 0; card.Parent = parent
-	card.ZIndex = 12
+	card.BorderSizePixel = 0; card.Parent = parent; card.ZIndex = 12
 	local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(0, 14); corner.Parent = card
 
 	local stroke = Instance.new("UIStroke")
@@ -189,25 +181,21 @@ local function buildCard(parent, product, reservedRows)
 	g.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, theme.cardTop), ColorSequenceKeypoint.new(1, theme.cardBot)})
 	g.Parent = card
 
-	-- Inner
 	local inner = Instance.new("Frame")
 	inner.BackgroundColor3 = theme.cardInner
 	inner.Size = UDim2.new(1, -8, 1, -8)
 	inner.Position = UDim2.fromOffset(4, 4)
-	inner.BorderSizePixel = 0; inner.Parent = card
-	inner.ZIndex = 13
+	inner.BorderSizePixel = 0; inner.Parent = card; inner.ZIndex = 13
 	local ic = Instance.new("UICorner"); ic.CornerRadius = UDim.new(0, 12); ic.Parent = inner
 	local is = Instance.new("UIStroke"); is.Color = Color3.new(1,1,1); is.Transparency = 0.7; is.Thickness = 1; is.Parent = inner
 	local ig = Instance.new("UIGradient"); ig.Rotation = 90
 	ig.Color = ColorSequence.new(Color3.new(1,1,1), Color3.fromRGB(245,240,255)); ig.Parent = inner
 
-	-- Content
 	local content = Instance.new("Frame")
 	content.BackgroundTransparency = 1
 	content.Size = UDim2.new(1, -10, 1, -10)
 	content.Position = UDim2.fromOffset(5, 5)
-	content.Parent = inner
-	content.ZIndex = 14
+	content.Parent = inner; content.ZIndex = 14
 
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Vertical
@@ -215,7 +203,6 @@ local function buildCard(parent, product, reservedRows)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = content
 
-	-- Title (dark, high-contrast)
 	local title = Instance.new("TextLabel")
 	title.BackgroundTransparency = 1
 	title.Size = UDim2.new(1, 0, 0, TITLE_H)
@@ -226,13 +213,10 @@ local function buildCard(parent, product, reservedRows)
 	title.TextStrokeTransparency = 0.85
 	title.TextXAlignment = Enum.TextXAlignment.Left
 	title.TextYAlignment = Enum.TextYAlignment.Center
-	title.TextScaled = true
-	title.ZIndex = 15
-	title.Parent = content
+	title.TextScaled = true; title.ZIndex = 15; title.Parent = content
 	local tsc = Instance.new("UITextSizeConstraint")
 	tsc.MinTextSize = 11; tsc.MaxTextSize = 20; tsc.Parent = title
 
-	-- Description (dark)
 	local desc = Instance.new("TextLabel")
 	desc.BackgroundTransparency = 1
 	desc.Size = UDim2.new(1, 0, 0, DESC_H)
@@ -243,20 +227,15 @@ local function buildCard(parent, product, reservedRows)
 	desc.TextStrokeTransparency = 0.9
 	desc.TextXAlignment = Enum.TextXAlignment.Left
 	desc.TextYAlignment = Enum.TextYAlignment.Top
-	desc.TextWrapped = true
-	desc.TextScaled = true
-	desc.LineHeight = 1.0
-	desc.ZIndex = 15
-	desc.Parent = content
+	desc.TextWrapped = true; desc.TextScaled = true; desc.LineHeight = 1.0
+	desc.ZIndex = 15; desc.Parent = content
 	local dsc = Instance.new("UITextSizeConstraint")
 	dsc.MinTextSize = 10; dsc.MaxTextSize = 15; dsc.Parent = desc
 
-	-- Spacer
 	local filler = Instance.new("Frame")
 	filler.BackgroundTransparency = 1
 	filler.Size = UDim2.new(1, 0, 1, -(TITLE_H + DESC_H + 6))
-	filler.ZIndex = 14
-	filler.Parent = content
+	filler.ZIndex = 14; filler.Parent = content
 
 	return card
 end
@@ -303,32 +282,21 @@ function Shop:createToggleButton()
 	self.toggleButton.MouseButton1Click:Connect(function() self:toggle() end)
 end
 
-local function addSelectionFX(container)
-	local scl = Instance.new("UIScale")
-	scl.Scale = 1
-	scl.Parent = container
-	return scl
-end
-
 function Shop:makePill(name, imageId, ratio)
 	local container = Instance.new("Frame")
 	container.Name = name .. "Container"; container.BackgroundTransparency = 1
 	container.AnchorPoint = Vector2.new(0.5, 0.5)
 	container.Size = UDim2.fromOffset(260, 86)
-	container.ZIndex = 9  -- above content
-	container.ClipsDescendants = false
+	container.ZIndex = 9; container.ClipsDescendants = false
 	container.Parent = self.buttonBar
 	local ar = Instance.new("UIAspectRatioConstraint"); ar.AspectRatio = ratio; ar.DominantAxis = Enum.DominantAxis.Width; ar.Parent = container
 
-	-- inset so Crop never clips
 	local inner = Instance.new("Frame")
 	inner.Name = name .. "Inner"
 	inner.AnchorPoint = Vector2.new(0.5, 0.5)
 	inner.Position = UDim2.fromScale(0.5, 0.5)
 	inner.Size = UDim2.new(1, -2*PILL_IMG_PAD_X, 1, -2*PILL_IMG_PAD_Y)
-	inner.BackgroundTransparency = 1
-	inner.ZIndex = 9
-	inner.Parent = container
+	inner.BackgroundTransparency = 1; inner.ZIndex = 9; inner.Parent = container
 
 	local btn = Instance.new("ImageButton")
 	btn.Name = name .. "Button"; btn.BackgroundTransparency = 1; btn.AutoButtonColor = false
@@ -337,10 +305,9 @@ function Shop:makePill(name, imageId, ratio)
 	btn.Size = UDim2.fromScale(1, 2)
 	btn.Image = imageId
 	btn.ScaleType = Enum.ScaleType.Crop
-	btn.ZIndex = 9
-	btn.Parent = inner
+	btn.ZIndex = 9; btn.Parent = inner
 
-	local scl = addSelectionFX(container)
+	local scl = Instance.new("UIScale"); scl.Scale = 1; scl.Parent = container
 
 	local function bump(mult)
 		local sx, sy = math.floor(container.Size.X.Offset * mult), math.floor(container.Size.Y.Offset * mult)
@@ -351,7 +318,7 @@ function Shop:makePill(name, imageId, ratio)
 	btn.MouseButton1Down:Connect(function() bump(0.98) end)
 	btn.MouseButton1Up:Connect(function() bump(1.02) end)
 
-	return container, btn, scl, nil
+	return container, btn, scl
 end
 
 function Shop:updateTabSelection(which)
@@ -388,8 +355,7 @@ function Shop:createMainInterface()
 	self.buttonBar.Name = "ButtonBar"; self.buttonBar.BackgroundTransparency = 1
 	self.buttonBar.AnchorPoint = Vector2.new(0.5, 0); self.buttonBar.Position = UDim2.fromScale(0.5, TAB_ROW_Y)
 	self.buttonBar.Size = UDim2.fromScale(BAR_WIDTH_FACTOR, 0)
-	self.buttonBar.ZIndex = 8
-	self.buttonBar.ClipsDescendants = false
+	self.buttonBar.ZIndex = 8; self.buttonBar.ClipsDescendants = false
 	self.buttonBar.Parent = self.mainFrame
 	local barPad = Instance.new("UIPadding")
 	barPad.PaddingTop = UDim.new(0, PILL_BAR_PAD)
@@ -405,8 +371,7 @@ function Shop:createMainInterface()
 	self.contentFrame.Size = UDim2.fromScale(CONTENT_WIDTH_FACTOR, CONTENT_HEIGHT_FACTOR)
 	self.contentFrame.BackgroundColor3 = Color3.fromRGB(255,255,255)
 	self.contentFrame.BackgroundTransparency = 0.88
-	self.contentFrame.ZIndex = 5
-	self.contentFrame.Parent = self.mainFrame
+	self.contentFrame.ZIndex = 5; self.contentFrame.Parent = self.mainFrame
 	local contentCorner = Instance.new("UICorner"); contentCorner.CornerRadius = UDim.new(0, 20); contentCorner.Parent = self.contentFrame
 
 	self:createPages()
@@ -432,7 +397,6 @@ function Shop:createMainInterface()
 	self:updateTabSelection("cash")
 end
 
--- compute cell size; allow reserving extra rows under card
 local function bindGridAspect(self, grid, bottom_rows)
 	bottom_rows = bottom_rows or 1
 	local function recalc()
@@ -505,7 +469,6 @@ function Shop:createPages()
 	gpGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	gpGrid.SortOrder = Enum.SortOrder.LayoutOrder
 	gpGrid.Parent = self.gpPage
-	-- Reserve 2 rows so Auto Collect fits: OWNED + ON/OFF
 	bindGridAspect(self, gpGrid, 2)
 
 	gpGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
@@ -518,13 +481,12 @@ function Shop:createPages()
 	end
 end
 
--- bottom-row helper
 local function makeBottomRow(parentCell, orderFromBottom, text, color, active, extraPushPx)
 	local push = math.max(0, extraPushPx or 0)
 	local base = (orderFromBottom * BTN_H) + (orderFromBottom-1) * SECOND_ROW_GAP + CARD_INSET
 	local row = Instance.new("TextButton")
 	row.Size = UDim2.new(1, -2*CELL_PAD_X, 0, BTN_H)
-	row.Position = UDim2.new(0.5, 0, 1, -(base - push))  -- higher push => closer to bottom
+	row.Position = UDim2.new(0.5, 0, 1, -(base - push))
 	row.AnchorPoint = Vector2.new(0.5, 1)
 	row.BackgroundColor3 = color
 	row.AutoButtonColor = active ~= false
@@ -554,7 +516,6 @@ function Shop:createProductItem(product, productType, parent)
 	container.ZIndex = 12
 	container.Parent = parent
 
-	-- Reserve space (2 rows on GP page, 1 row elsewhere)
 	local reservedRows = (parent == self.gpPage) and 2 or 1
 	local card = buildCard(container, product, reservedRows)
 	card.ZIndex = 12
@@ -563,13 +524,9 @@ function Shop:createProductItem(product, productType, parent)
 		local owned = checkOwnership(product.id)
 
 		if product.hasToggle and owned then
-			-- AUTO COLLECT: two rows, both slightly LOWER (only change)
 			local push = TWO_ROW_BOTTOM_PUSH_PX
-
-			-- upper row = OWNED
 			makeBottomRow(container, 2, "OWNED", theme.success, false, push)
 
-			-- bottom row = ON/OFF toggle
 			local current = false
 			if Remotes then
 				local rf = Remotes:FindFirstChild("GetAutoCollectState")
@@ -594,7 +551,6 @@ function Shop:createProductItem(product, productType, parent)
 			end)
 
 		else
-			-- 2x Cash and other single-row passes UNCHANGED
 			local info = getGamePassInfo(product.id)
 			local price = (info and info.PriceInRobux) or product.price or 0
 			local text = owned and "OWNED" or (isPhone() and "BUY" or ("BUY - R$"..tostring(price)))
@@ -613,7 +569,6 @@ function Shop:createProductItem(product, productType, parent)
 			end
 		end
 	else
-		-- CASH products
 		local info = getProductInfo(product.id)
 		local price = (info and info.PriceInRobux) or product.price or 0
 		local buyBtn = makeBottomRow(container, 1, isPhone() and "BUY" or ("BUY - R$"..tostring(price)), accentColor, true, 0)
@@ -639,13 +594,11 @@ function Shop:setupDynamicSizing()
 		local W = self.mainFrame.AbsoluteSize.X
 		if H <= 0 or W <= 0 then return end
 
-		-- Tabs (PC vs phone)
 		local cf = isPhone() and CASH_H_FACTOR_PHONE or CASH_H_FACTOR_DESKTOP
 		local gf = isPhone() and GP_H_FACTOR_PHONE   or GP_H_FACTOR_DESKTOP
 		local cashH = math.clamp(math.floor(H * cf), PILL_MIN_H, PILL_MAX_H)
 		local gpH   = math.clamp(math.floor(H * gf), PILL_MIN_H, PILL_MAX_H)
 
-		-- bar height with safe padding (prevents clipping)
 		self.buttonBar.Size = UDim2.new(0, math.floor(W * BAR_WIDTH_FACTOR), 0, math.max(cashH, gpH) + PILL_BAR_PAD*2)
 
 		local cashW = math.floor(cashH * CASH_RATIO)
@@ -656,7 +609,6 @@ function Shop:setupDynamicSizing()
 		self.gpContainer.Size = UDim2.fromOffset(gpW, gpH)
 		self.gpContainer.Position = UDim2.fromScale(0.70, 0.64 + GP_ROW_EXTRA)
 
-		-- Content safely below tabs
 		local barBottom = self.buttonBar.AbsolutePosition.Y + self.buttonBar.AbsoluteSize.Y
 		local frameTop  = self.mainFrame.AbsolutePosition.Y
 		local gap = math.floor(math.max(cashH, gpH) * 0.44)
@@ -682,7 +634,6 @@ function Shop:promptPurchase(product, kind, button)
 	else
 		ok = pcall(function() MarketplaceService:PromptProductPurchase(Player, product.id) end)
 	end
-	-- fallback reset
 	task.delay(1.0, function()
 		local pend = self.purchasePending[product.id]
 		if pend and button and button.Parent then
@@ -699,16 +650,13 @@ function Shop:promptPurchase(product, kind, button)
 	end
 end
 
--- Recreate gamepass items (for toggle appearance)
 function Shop:recreateGamepassItems()
-	-- Clear existing items
 	for _, child in ipairs(self.gpPage:GetChildren()) do
 		if child:IsA("Frame") and child.Name:match("Cell$") then
 			child:Destroy()
 		end
 	end
-	
-	-- Recreate all gamepass items
+
 	for i, gp in ipairs(products.gamepasses) do
 		gp.LayoutOrder = i
 		self:createProductItem(gp, "gamepass", self.gpPage)
@@ -717,9 +665,7 @@ end
 
 function Shop:refreshAllProducts()
 	ownershipCache:clear()
-	
-	-- For gamepasses, need to recreate items if any become owned
-	-- (so toggle appears for Auto Collect)
+
 	local needRecreate = false
 	for _, gp in ipairs(products.gamepasses) do
 		local wasOwned = gp._wasOwned or false
@@ -729,11 +675,10 @@ function Shop:refreshAllProducts()
 		end
 		gp._wasOwned = isOwned
 	end
-	
+
 	if needRecreate then
 		self:recreateGamepassItems()
 	else
-		-- Just update existing buttons
 		for _, gp in ipairs(products.gamepasses) do
 			local owned = checkOwnership(gp.id)
 			if gp.purchaseButton then
@@ -778,6 +723,7 @@ function Shop:setupHandlers()
 		if i.KeyCode == Enum.KeyCode.Escape and self.isOpen then self:close() end
 	end)
 
+	-- ✅ FIXED: Wait for server confirmation before updating UI
 	if Remotes then
 		local gpPurchased = Remotes:FindFirstChild("GamepassPurchased")
 		if gpPurchased and gpPurchased:IsA("RemoteEvent") then
