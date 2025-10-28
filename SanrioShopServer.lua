@@ -41,12 +41,17 @@ local GetAutoCollectState = createRemote("GetAutoCollectState", "RemoteFunction"
 local AutoCollectDataStore = DataStoreService:GetDataStore("AutoCollectStates")
 local playerAutoCollectStates = {}
 
--- Product IDs mapping
+-- Product IDs mapping (UPDATED TO MATCH YOUR GAME)
 local PRODUCTS = {
-	[1897730242] = {amount = 1000, name = "1,000 Cash"},
-	[1897730373] = {amount = 5000, name = "5,000 Cash"},
-	[1897730467] = {amount = 10000, name = "10,000 Cash"},
-	[1897730581] = {amount = 50000, name = "50,000 Cash"},
+	[3366419712] = {amount = 1000, name = "1,000 Cash"},
+	[3366420012] = {amount = 5000, name = "5,000 Cash"},
+	[3366420478] = {amount = 10000, name = "10,000 Cash"},
+	[3366420800] = {amount = 25000, name = "25,000 Cash"},
+	[3424973374] = {amount = 50000, name = "50,000 Cash"},
+	[3424974046] = {amount = 100000, name = "100,000 Cash"},
+	[3424974161] = {amount = 250000, name = "250,000 Cash"},
+	[3424974327] = {amount = 500000, name = "500,000 Cash"},
+	[3424974402] = {amount = 1000000, name = "1,000,000 Cash"},
 }
 
 -- Gamepass IDs
@@ -57,13 +62,25 @@ local GAMEPASSES = {
 
 -- Helper function to grant currency
 local function grantCurrency(player, amount)
-	-- This is where you'd integrate with your tycoon system
-	-- For now, we'll use leaderstats as an example
+	-- Try ServerStorage.PlayerMoney first (your system)
+	local ServerStorage = game:GetService("ServerStorage")
+	local PlayerMoney = ServerStorage:FindFirstChild("PlayerMoney")
+	if PlayerMoney then
+		local playerMoney = PlayerMoney:FindFirstChild(player.Name)
+		if playerMoney and (playerMoney:IsA("IntValue") or playerMoney:IsA("NumberValue")) then
+			playerMoney.Value = playerMoney.Value + amount
+			print(string.format("[SanrioShop] ✅ Granted %d cash via ServerStorage.PlayerMoney", amount))
+			return true
+		end
+	end
+	
+	-- Fallback: Try leaderstats
 	local leaderstats = player:FindFirstChild("leaderstats")
 	if leaderstats then
 		local cash = leaderstats:FindFirstChild("Cash") or leaderstats:FindFirstChild("Money")
-		if cash and cash:IsA("IntValue") or cash:IsA("NumberValue") then
+		if cash and (cash:IsA("IntValue") or cash:IsA("NumberValue")) then
 			cash.Value = cash.Value + amount
+			print(string.format("[SanrioShop] ✅ Granted %d cash via leaderstats", amount))
 			return true
 		end
 	end
@@ -72,12 +89,14 @@ local function grantCurrency(player, amount)
 	local playerData = player:FindFirstChild("Data")
 	if playerData then
 		local cash = playerData:FindFirstChild("Cash")
-		if cash and cash:IsA("IntValue") or cash:IsA("NumberValue") then
+		if cash and (cash:IsA("IntValue") or cash:IsA("NumberValue")) then
 			cash.Value = cash.Value + amount
+			print(string.format("[SanrioShop] ✅ Granted %d cash via Data folder", amount))
 			return true
 		end
 	end
 	
+	warn(string.format("[SanrioShop] ❌ Could not find money value for %s", player.Name))
 	return false
 end
 
@@ -168,16 +187,33 @@ end)
 
 -- Handle gamepass purchases (for immediate updates)
 MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
+	print(string.format("🛍️ [SanrioShop] PromptGamePassPurchaseFinished - Player: %s, PassID: %d, Purchased: %s", player.Name, passId, tostring(purchased)))
+	
 	if purchased then
+		-- Wait a moment for Roblox systems to register the purchase
+		task.wait(0.5)
+		
+		-- Verify ownership
+		local verified = false
+		pcall(function()
+			verified = MarketplaceService:UserOwnsGamePassAsync(player.UserId, passId)
+		end)
+		
+		print(string.format("🔍 [SanrioShop] Ownership verified: %s", tostring(verified)))
+		
 		-- Notify the client immediately
 		GamepassPurchased:FireClient(player, passId)
+		print(string.format("📡 [SanrioShop] Fired GamepassPurchased to client for passId: %d", passId))
 		
 		-- Special handling for auto-collect
 		if passId == GAMEPASSES.AUTO_COLLECT then
 			playerAutoCollectStates[player.UserId] = true
+			print("🤖 [SanrioShop] Auto-Collect enabled for " .. player.Name)
 		end
 		
-		print(string.format("[SanrioShop] %s purchased gamepass %d", player.Name, passId))
+		print(string.format("✅ [SanrioShop] %s successfully purchased gamepass %d", player.Name, passId))
+	else
+		print(string.format("❌ [SanrioShop] %s cancelled gamepass %d purchase", player.Name, passId))
 	end
 end)
 
