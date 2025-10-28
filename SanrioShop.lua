@@ -69,6 +69,14 @@ Core.CONSTANTS = {
 	MAX_RETRIES = 3,
 }
 
+-- Card background tuning (ADJUST THESE TO FIT YOUR CARD ART!)
+-- % of the image header width the card art uses (smaller = less crop)
+local CARD_WIDTH = 0.86
+-- width/height ratio of your card art; tweak to your texture
+local CARD_ASPECT = 3.60
+-- Background image used for product cards (can be changed later easily)
+local CARD_BG_IMAGE = "rbxassetid://108251319294182"
+
 -- State Management
 Core.State = {
 	isOpen = false,
@@ -1405,23 +1413,22 @@ function Shop:createProductCard(product, productType, parent)
 		parent = content,
 	}):render()
 
-	-- Add gradient to image container
-	local imageGradient = Instance.new("UIGradient")
-	imageGradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-		ColorSequenceKeypoint.new(1, Core.Utils.blend(cardColor, Color3.new(1, 1, 1), 0.9)),
-	})
-	imageGradient.Rotation = 45
-	imageGradient.Parent = imageContainer
+    -- Visible card background (smaller than the container, centered)
+    local cardBg = Instance.new("ImageLabel")
+    cardBg.Name = "CardBG"
+    cardBg.AnchorPoint = Vector2.new(0.5, 0.5)
+    cardBg.Position = UDim2.fromScale(0.5, 0.5)
+    cardBg.Size = UDim2.new(CARD_WIDTH, 0, CARD_WIDTH / CARD_ASPECT, 0)
+    cardBg.BackgroundTransparency = 1
+    cardBg.Image = CARD_BG_IMAGE
+    cardBg.ScaleType = Enum.ScaleType.Crop
+    cardBg.Parent = imageContainer
 
-	local productImage = UI.Components.Image({
-		Image = product.icon or "rbxassetid://0",
-		Size = UDim2.fromScale(0.7, 0.7),
-		Position = UDim2.fromScale(0.5, 0.5),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		ScaleType = Enum.ScaleType.Fit,
-		parent = imageContainer,
-	}):render()
+    -- Keep the card’s aspect ratio no matter the container size
+    local ar = Instance.new("UIAspectRatioConstraint")
+    ar.AspectRatio = CARD_ASPECT
+    ar.DominantAxis = Enum.DominantAxis.Width
+    ar.Parent = cardBg
 
 	local infoContainer = UI.Components.Frame({
 		Size = UDim2.new(1, 0, 1, -160),
