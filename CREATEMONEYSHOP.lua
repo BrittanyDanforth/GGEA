@@ -651,16 +651,31 @@ function Shop:promptPurchase(product, kind, button)
 end
 
 function Shop:recreateGamepassItems()
+	print("🔄 [CREATEMONEYSHOP] recreateGamepassItems() called")
+	
+	-- Clear ownership cache FIRST
+	ownershipCache:clear()
+	print("🗑️ [CREATEMONEYSHOP] Cleared ownership cache")
+	
+	-- Clear existing items
+	local cleared = 0
 	for _, child in ipairs(self.gpPage:GetChildren()) do
 		if child:IsA("Frame") and child.Name:match("Cell$") then
 			child:Destroy()
+			cleared = cleared + 1
 		end
 	end
+	print("🗑️ [CREATEMONEYSHOP] Cleared", cleared, "old gamepass items")
 
+	-- Recreate all gamepass items with fresh ownership checks
 	for i, gp in ipairs(products.gamepasses) do
 		gp.LayoutOrder = i
+		local owned = checkOwnership(gp.id)
+		print("🔍 [CREATEMONEYSHOP] Recreating", gp.name, "- Owned:", owned)
 		self:createProductItem(gp, "gamepass", self.gpPage)
 	end
+	
+	print("✅ [CREATEMONEYSHOP] Recreated all gamepass items")
 end
 
 function Shop:refreshAllProducts()
@@ -724,20 +739,34 @@ function Shop:setupHandlers()
 	end)
 
 	-- ✅ FIXED: Wait for server confirmation before updating UI
+	local recreateDebounce = {}
+	
 	if Remotes then
 		local gpPurchased = Remotes:FindFirstChild("GamepassPurchased")
 		if gpPurchased and gpPurchased:IsA("RemoteEvent") then
 			gpPurchased.OnClientEvent:Connect(function(passId)
 				print("✅ [CREATEMONEYSHOP] Server confirmed gamepass purchase:", passId)
 				
-				-- Wait for Roblox to fully register ownership
-				task.wait(1.0)
+				-- Debounce: Prevent multiple rapid recreations for same pass
+				if recreateDebounce[passId] then
+					print("⏸️ [CREATEMONEYSHOP] Already processing", passId, "- skipping duplicate")
+					return
+				end
+				recreateDebounce[passId] = true
 				
-				-- Clear cache and recreate all gamepass items
-				ownershipCache:clear()
+				-- Wait for Roblox to fully register ownership
+				print("⏳ [CREATEMONEYSHOP] Waiting 1.5s for ownership to register...")
+				task.wait(1.5)
+				
+				-- Recreate all gamepass items (this clears cache internally)
 				self:recreateGamepassItems()
 				
 				print("🎉 [CREATEMONEYSHOP] Gamepass UI updated!")
+				
+				-- Clear debounce after a delay
+				task.delay(3, function()
+					recreateDebounce[passId] = nil
+				end)
 			end)
 		end
 	end

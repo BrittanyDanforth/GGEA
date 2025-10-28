@@ -60,6 +60,9 @@ print("✅ [SANRIOTYCOONSERVER] Remotes created!")
 local AutoCollectDataStore = DataStoreService:GetDataStore("AutoCollectStates")
 local playerAutoCollectStates = {}
 
+-- Track recent purchases to prevent duplicate notifications
+local recentPurchases = {}
+
 local GAMEPASSES = {
 	AUTO_COLLECT = 1412171840,
 	DOUBLE_CASH = 1398974710,
@@ -124,6 +127,10 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 		if verified then
 			print("✅ [SANRIOTYCOONSERVER] Ownership verified for", player.Name)
 			
+			-- Track this purchase to prevent duplicate notifications
+			local purchaseKey = tostring(player.UserId) .. "_" .. tostring(passId)
+			recentPurchases[purchaseKey] = tick()
+			
 			-- Notify client to update UI
 			GamepassPurchased:FireClient(player, passId)
 			print("📡 [SANRIOTYCOONSERVER] Sent GamepassPurchased event")
@@ -144,6 +151,11 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 			
 			if verified then
 				print("✅ [SANRIOTYCOONSERVER] Verified on retry!")
+				
+				-- Track this purchase to prevent duplicate notifications
+				local purchaseKey = tostring(player.UserId) .. "_" .. tostring(passId)
+				recentPurchases[purchaseKey] = tick()
+				
 				GamepassPurchased:FireClient(player, passId)
 			else
 				warn("❌ [SANRIOTYCOONSERVER] Still not verified for", player.Name, passId)
@@ -175,7 +187,7 @@ Players.PlayerAdded:Connect(function(player)
 		end
 	end
 	
-	-- Notify client of owned gamepasses
+	-- Notify client of owned gamepasses (skip recently purchased ones to avoid duplicates)
 	task.wait(1)
 	
 	for name, passId in pairs(GAMEPASSES) do
@@ -185,8 +197,16 @@ Players.PlayerAdded:Connect(function(player)
 		end)
 		
 		if owns then
-			GamepassPurchased:FireClient(player, passId)
-			print("📡 [SANRIOTYCOONSERVER] Notified", player.Name, "owns", name)
+			-- Check if this was recently purchased (within last 30 seconds)
+			local purchaseKey = tostring(player.UserId) .. "_" .. tostring(passId)
+			local recentTime = recentPurchases[purchaseKey]
+			
+			if recentTime and (tick() - recentTime) < 30 then
+				print("⏸️ [SANRIOTYCOONSERVER] Skipping notification for", name, "- recently purchased")
+			else
+				GamepassPurchased:FireClient(player, passId)
+				print("📡 [SANRIOTYCOONSERVER] Notified", player.Name, "owns", name)
+			end
 		end
 	end
 end)
@@ -194,7 +214,33 @@ end)
 -- Player leave: cleanup
 Players.PlayerRemoving:Connect(function(player)
 	playerAutoCollectStates[player.UserId] = nil
+	
+	-- Clean up recent purchases for this player
+	for key in pairs(recentPurchases) do
+		if key:match("^" .. tostring(player.UserId) .. "_") then
+			recentPurchases[key] = nil
+		end
+	end
+	
 	print("👋 [SANRIOTYCOONSERVER] Cleaned up", player.Name)
+end)
+
+-- Periodic cleanup of old purchase records (every 60 seconds)
+task.spawn(function()
+	while true do
+		task.wait(60)
+		local now = tick()
+		local cleaned = 0
+		for key, time in pairs(recentPurchases) do
+			if now - time > 60 then
+				recentPurchases[key] = nil
+				cleaned = cleaned + 1
+			end
+		end
+		if cleaned > 0 then
+			print("🧹 [SANRIOTYCOONSERVER] Cleaned", cleaned, "old purchase records")
+		end
+	end
 end)
 
 -- ========================================
