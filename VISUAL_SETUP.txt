@@ -1,0 +1,250 @@
+
+╔════════════════════════════════════════════════════════════════════╗
+║                  🎀 SANRIO SHOP - CORRECT SETUP 🎀                  ║
+╚════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────┐
+│  THE PROBLEM YOU HAD:                                              │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  MoneyShop.server.lua                                              │
+│  └─→ MarketplaceService.ProcessReceipt = handleCash()  ✅         │
+│                                                                    │
+│  SanrioShopServer.lua (OLD)                                        │
+│  └─→ MarketplaceService.ProcessReceipt = handleCash()  ❌         │
+│      └─→ OVERWRITES THE FIRST ONE!                                │
+│                                                                    │
+│  Result: Neither works properly! 💥                                │
+└────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────┐
+│  THE SOLUTION (FIXED):                                             │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  MoneyShop.server.lua                                              │
+│  └─→ MarketplaceService.ProcessReceipt = handleCash()  ✅         │
+│      └─→ Handles ALL cash products (1k, 5k, 10k, etc.)            │
+│                                                                    │
+│  SanrioShopServer.lua (NEW - FIXED)                                │
+│  └─→ NO ProcessReceipt!  ✅                                        │
+│      └─→ Only handles gamepass EVENTS                              │
+│          └─→ Fires GamepassPurchased to client                     │
+│              └─→ Client recreates UI with toggle                   │
+│                                                                    │
+│  Result: Everything works perfectly! 🎉                            │
+└────────────────────────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════╗
+║                     📁 FILE STRUCTURE                               ║
+╚════════════════════════════════════════════════════════════════════╝
+
+📂 ServerScriptService
+│
+├── 📜 MoneyShop.server.lua  ← ✅ KEEP THIS (don't touch!)
+│   │
+│   └─ Purpose: Handles cash product purchases
+│      └─ Sets: ProcessReceipt callback
+│         └─ Grants money to players
+│
+└── 📜 SanrioShopServer.lua  ← 🔄 REPLACE WITH NEW VERSION
+    │
+    └─ Purpose: Handles gamepass events ONLY
+       ├─ Detects when player buys gamepass
+       ├─ Fires GamepassPurchased event to client
+       ├─ Manages auto-collect toggle state
+       └─ Does NOT set ProcessReceipt (no conflict!)
+
+
+📂 StarterPlayer
+└── 📂 StarterPlayerScripts
+    │
+    └── 📜 SanrioShop.lua  ← 🔄 USE MOBILE-FIRST VERSION
+        │
+        └─ Purpose: Shop UI & client logic
+           ├─ Beautiful mobile-first design
+           ├─ Shows products with prices
+           ├─ Handles purchase prompts
+           ├─ Recreates UI after gamepass purchase
+           └─ No confetti (clean!)
+
+
+╔════════════════════════════════════════════════════════════════════╗
+║                  🔄 PURCHASE FLOW DIAGRAM                           ║
+╚════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│  CASH PRODUCT PURCHASE (e.g., 1,000 Cash)                      │
+└─────────────────────────────────────────────────────────────────┘
+
+  Player clicks "BUY" in shop
+         │
+         ├─→ Client: MarketplaceService:PromptProductPurchase()
+         │
+         ├─→ Roblox: Shows purchase prompt
+         │
+         ├─→ Player: Completes purchase
+         │
+         ├─→ Server: MoneyShop.server.lua
+         │          └─→ ProcessReceipt callback fires
+         │              └─→ Grants cash via _G.AddPlayerMoney
+         │
+         └─→ Client: PromptProductPurchaseFinished
+                    └─→ Plays success sound
+                    └─→ Button resets to "BUY"
+                    └─→ ✅ DONE!
+
+
+┌─────────────────────────────────────────────────────────────────┐
+│  GAMEPASS PURCHASE (e.g., Auto Collect)                        │
+└─────────────────────────────────────────────────────────────────┘
+
+  Player clicks "BUY" in shop
+         │
+         ├─→ Client: MarketplaceService:PromptGamePassPurchase()
+         │
+         ├─→ Roblox: Shows purchase prompt
+         │
+         ├─→ Player: Completes purchase
+         │
+         ├─→ Server: SanrioShopServer.lua
+         │          └─→ PromptGamePassPurchaseFinished fires
+         │              └─→ Waits 0.5s
+         │              └─→ Verifies ownership
+         │              └─→ Fires GamepassPurchased event
+         │
+         └─→ Client: Receives GamepassPurchased event
+                    └─→ Clears ownership cache
+                    └─→ Waits 0.3s
+                    └─→ Destroys old gamepass items
+                    └─→ Recreates all gamepass items
+                    └─→ Auto Collect now shows:
+                        ├─→ Row 1: "OWNED" (green)
+                        └─→ Row 2: "ON/OFF" toggle ✅
+                    └─→ Plays success sound
+                    └─→ ✅ DONE!
+
+
+╔════════════════════════════════════════════════════════════════════╗
+║                  🎯 WHAT EACH FILE DOES                             ║
+╚════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────┐
+│ MoneyShop.server.lua (ServerScriptService)                    │
+├────────────────────────────────────────────────────────────────┤
+│ ✅ Sets ProcessReceipt callback                                │
+│ ✅ Handles ALL 9 cash products                                 │
+│ ✅ Grants money via _G.AddPlayerMoney                          │
+│ ✅ Idempotency (prevents double-purchases)                     │
+│ ✅ Fallback to leaderstats if needed                           │
+└────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────┐
+│ SanrioShopServer.lua (ServerScriptService) - NEW VERSION!     │
+├────────────────────────────────────────────────────────────────┤
+│ ✅ Detects gamepass purchases                                  │
+│ ✅ Fires GamepassPurchased event to client                     │
+│ ✅ Manages auto-collect toggle state                           │
+│ ✅ Saves/loads state from DataStore                            │
+│ ❌ Does NOT set ProcessReceipt (avoids conflict!)              │
+└────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────┐
+│ SanrioShop.lua (StarterPlayerScripts) - LocalScript           │
+├────────────────────────────────────────────────────────────────┤
+│ ✅ Mobile-first beautiful UI                                   │
+│ ✅ Shows Cash & Gamepass tabs                                  │
+│ ✅ Displays prices dynamically                                 │
+│ ✅ Handles purchase prompts                                    │
+│ ✅ Recreates UI when GamepassPurchased fires                   │
+│ ✅ Shows toggle for Auto Collect when owned                    │
+│ ✅ No confetti (removed)                                       │
+└────────────────────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════╗
+║              🧪 TESTING: WHAT YOU SHOULD SEE                        ║
+╚════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│  1. Game Starts - Console Output:                              │
+├─────────────────────────────────────────────────────────────────┤
+│  ✅ MoneyShop v6 Ready. 9 cash products registered.            │
+│  🛍️ [SanrioShop] Initializing gamepass handler...              │
+│  🛍️ [SanrioShop] Gamepasses configured:                        │
+│     🤖 Auto Collect: 1412171840                                │
+│     💰 2x Cash: 1398974710                                     │
+│  ✅ [SanrioShop] Server handler ready!                         │
+│  ⚠️  NOTE: Cash products handled by MoneyShop.server.lua       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  2. Player Buys Auto-Collect - Console Output:                 │
+├─────────────────────────────────────────────────────────────────┤
+│  🛍️ [SanrioShop] Purchase prompt finished                      │
+│     Player: YourName, PassID: 1412171840, Purchased: true      │
+│  ✅ [SanrioShop] Ownership verified for YourName               │
+│  📡 [SanrioShop] Sent GamepassPurchased event to YourName      │
+│  🤖 [SanrioShop] Auto-Collect enabled by default               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  3. UI After Purchase - What Player Sees:                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌────────────────────────────┐                                │
+│  │    Auto Collect            │                                │
+│  │    Automatically collect   │                                │
+│  │    all cash drops          │                                │
+│  │                            │                                │
+│  │    [ OWNED ] ← Green       │  Row 1                         │
+│  │    [  ON   ] ← Toggle      │  Row 2 (works!)                │
+│  └────────────────────────────┘                                │
+│                                                                 │
+│  ✨ Success sound plays                                         │
+│  ✨ No confetti (clean!)                                        │
+└─────────────────────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════╗
+║                  ✅ FINAL CHECKLIST                                 ║
+╚════════════════════════════════════════════════════════════════════╝
+
+Before Testing:
+□ Deleted old SanrioShopServer.lua completely
+□ Added new SanrioShopServer.lua (from workspace)
+□ Updated SanrioShop.lua client (mobile-first version)
+□ Kept MoneyShop.server.lua unchanged
+□ Restarted Studio
+
+File Locations:
+□ MoneyShop.server.lua in ServerScriptService (Script)
+□ SanrioShopServer.lua in ServerScriptService (Script)
+□ SanrioShop.lua in StarterPlayerScripts (LocalScript)
+
+Console Check:
+□ No errors about "ProcessReceipt"
+□ Sees "MoneyShop v6 Ready"
+□ Sees "SanrioShop Server handler ready"
+
+Test Cash Purchase:
+□ Press M to open shop
+□ Click cash product
+□ Complete purchase
+□ Money gets added ✅
+
+Test Auto-Collect Purchase:
+□ Click "BUY" on Auto Collect
+□ Complete purchase
+□ UI recreates (0.3s delay)
+□ Shows "OWNED" + toggle ✅
+□ Toggle works when clicked ✅
+
+╔════════════════════════════════════════════════════════════════════╗
+║                  🎀 YOU'RE ALL SET! 🎀                              ║
+╚════════════════════════════════════════════════════════════════════╝
+
+If ALL checkboxes are ticked → Your shop works perfectly!
+
+No more conflicts • Clean purchases • Toggle displays properly
+
