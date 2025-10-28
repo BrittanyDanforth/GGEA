@@ -674,59 +674,153 @@ function Shop:promptPurchase(product, kind, button)
 	end
 end
 
-function Shop:recreateGamepassItems()
-	print("🔄 [CREATEMONEYSHOP] recreateGamepassItems() called")
+-- ✅ NEW: Smoothly update gamepass UI in place (NO DESTROY/RECREATE!)
+function Shop:updateGamepassUI(passId)
+	print("🔄 [CREATEMONEYSHOP] updateGamepassUI() for passId:", passId)
 	
-	-- Clear ownership cache FIRST
-	ownershipCache:clear()
-	print("🗑️ [CREATEMONEYSHOP] Cleared ownership cache")
-	
-	-- Clear existing items
-	local cleared = 0
-	for _, child in ipairs(self.gpPage:GetChildren()) do
-		if child:IsA("Frame") and child.Name:match("Cell$") then
-			child:Destroy()
-			cleared = cleared + 1
+	-- Find the gamepass product data
+	local gpData = nil
+	for _, gp in ipairs(products.gamepasses) do
+		if gp.id == passId then
+			gpData = gp
+			break
 		end
 	end
-	print("🗑️ [CREATEMONEYSHOP] Cleared", cleared, "old gamepass items")
-
-	-- Recreate all gamepass items with fresh ownership checks
-	for i, gp in ipairs(products.gamepasses) do
-		gp.LayoutOrder = i
-		local owned = checkOwnership(gp.id)
-		print("🔍 [CREATEMONEYSHOP] Recreating", gp.name, "- Owned:", owned)
-		self:createProductItem(gp, "gamepass", self.gpPage)
+	
+	if not gpData then
+		warn("❌ [CREATEMONEYSHOP] Gamepass data not found for:", passId)
+		return
 	end
 	
-	print("✅ [CREATEMONEYSHOP] Recreated all gamepass items")
+	-- Find the card container
+	local container = gpData.containerInstance
+	if not container or not container.Parent then
+		warn("❌ [CREATEMONEYSHOP] Card container not found for:", gpData.name)
+		return
+	end
+	
+	print("✅ [CREATEMONEYSHOP] Found card for:", gpData.name)
+	
+	-- Check if this gamepass has a toggle
+	local hasToggle = gpData.hasToggle
+	
+	-- Destroy old bottom buttons
+	for _, child in ipairs(container:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+	
+	-- Create new UI based on ownership
+	if hasToggle then
+		-- Auto Collect: OWNED + toggle
+		local push = TWO_ROW_BOTTOM_PUSH_PX
+		makeBottomRow(container, 2, "OWNED", theme.success, false, push)
+		
+		-- Get current auto-collect state from server
+		local current = false
+		if Remotes then
+			local rf = Remotes:FindFirstChild("GetAutoCollectState")
+			if rf and rf:IsA("RemoteFunction") then
+				local ok, val = pcall(function() return rf:InvokeServer() end)
+				if ok and type(val) == "boolean" then current = val end
+			end
+		end
+		
+		local toggle = makeBottomRow(container, 1, current and "ON" or "OFF", current and theme.success or theme.cardStroke, true, push)
+		local function paint(state)
+			toggle.Text = state and "ON" or "OFF"
+			toggle.BackgroundColor3 = state and theme.success or theme.cardStroke
+		end
+		paint(current)
+		
+		toggle.MouseButton1Click:Connect(function()
+			current = not current
+			paint(current)
+			if Remotes then
+				local ev = Remotes:FindFirstChild("AutoCollectToggle")
+				if ev and ev:IsA("RemoteEvent") then ev:FireServer(current) end
+			end
+		end)
+		
+		print("✅ [CREATEMONEYSHOP] Added OWNED + toggle for:", gpData.name)
+	else
+		-- Regular gamepass: just OWNED
+		makeBottomRow(container, 1, "OWNED", theme.success, false, SINGLE_ROW_BOTTOM_PUSH_PX)
+		print("✅ [CREATEMONEYSHOP] Added OWNED button for:", gpData.name)
+	end
+	
+	-- Smooth fade-in animation
+	local card = gpData.cardInstance
+	if card then
+		local originalTransparency = card.BackgroundTransparency
+		card.BackgroundTransparency = 1
+		TweenService:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundTransparency = originalTransparency
+		}):Play()
+		pulse(card)
+	end
+	
+	playSound("success")
+	print("🎉 [CREATEMONEYSHOP] Gamepass UI updated smoothly!")
 end
 
+-- ✅ NEW: Refresh all products smoothly (no destroy/recreate)
 function Shop:refreshAllProducts()
-	ownershipCache:clear()
-
-	local needRecreate = false
-	for _, gp in ipairs(products.gamepasses) do
-		local wasOwned = gp._wasOwned or false
-		local isOwned = checkOwnership(gp.id)
-		if wasOwned ~= isOwned and gp.hasToggle then
-			needRecreate = true
+	print("🔄 [CREATEMONEYSHOP] refreshAllProducts() called")
+	
+	-- Update cash products (prices may have changed)
+	for _, p in ipairs(products.cash) do
+		if p.purchaseButton and p.purchaseButton.Parent then
+			local info = getProductInfo(p.id)
+			local price = (info and info.PriceInRobux) or p.price or 0
+			p.purchaseButton.Text = isPhone() and "BUY" or ("BUY - R$" .. tostring(price))
 		end
-		gp._wasOwned = isOwned
 	end
-
-	if needRecreate then
-		self:recreateGamepassItems()
-	else
-		for _, gp in ipairs(products.gamepasses) do
-			local owned = checkOwnership(gp.id)
-			if gp.purchaseButton then
-				gp.purchaseButton.Text = owned and "OWNED" or (isPhone() and "BUY" or ("BUY - R$"..tostring(gp.price or 0)))
-				gp.purchaseButton.BackgroundColor3 = owned and theme.success or theme.kuromi
-				gp.purchaseButton.Active = not owned
+	
+	-- Update gamepass products (check ownership)
+	for _, gp in ipairs(products.gamepasses) do
+		local owned = checkOwnership(gp.id)
+		print("🔍 [CREATEMONEYSHOP] Checking", gp.name, "- Owned:", owned)
+		
+		-- If owned and has a toggle, update to OWNED + toggle UI
+		if owned and gp.hasToggle then
+			-- Check if UI already shows toggle
+			local hasToggleUI = false
+			if gp.containerInstance then
+				for _, child in ipairs(gp.containerInstance:GetChildren()) do
+					if child:IsA("TextButton") and (child.Text == "ON" or child.Text == "OFF") then
+						hasToggleUI = true
+						break
+					end
+				end
+			end
+			
+			-- Only update if not already showing toggle
+			if not hasToggleUI then
+				print("🔄 [CREATEMONEYSHOP] Needs toggle UI for:", gp.name)
+				self:updateGamepassUI(gp.id)
+			end
+		elseif owned and not gp.hasToggle then
+			-- Regular owned gamepass
+			if gp.purchaseButton and gp.purchaseButton.Parent then
+				gp.purchaseButton.Text = "OWNED"
+				gp.purchaseButton.BackgroundColor3 = theme.success
+				gp.purchaseButton.Active = false
+			end
+		else
+			-- Not owned - show BUY button
+			if gp.purchaseButton and gp.purchaseButton.Parent then
+				local info = getGamePassInfo(gp.id)
+				local price = (info and info.PriceInRobux) or gp.price or 0
+				gp.purchaseButton.Text = isPhone() and "BUY" or ("BUY - R$" .. tostring(price))
+				gp.purchaseButton.BackgroundColor3 = theme.kuromi
+				gp.purchaseButton.Active = true
 			end
 		end
 	end
+	
+	print("✅ [CREATEMONEYSHOP] All products refreshed")
 end
 
 function Shop:open()
@@ -789,28 +883,23 @@ function Shop:setupHandlers()
 			gpPurchased.OnClientEvent:Connect(function(passId)
 				print("✅ [CREATEMONEYSHOP] Server confirmed gamepass purchase:", passId)
 				
-				-- Debounce: Prevent multiple rapid recreations for same pass
+				-- Debounce: Prevent multiple rapid updates for same pass
 				if recreateDebounce[passId] then
 					print("⏸️ [CREATEMONEYSHOP] Already processing", passId, "- skipping duplicate")
 					return
 				end
 				recreateDebounce[passId] = true
 				
-				-- ✅ CRITICAL: Trust the server - it already verified ownership!
-				-- Prime the cache with TRUE so checkOwnership doesn't return false
+				-- ✅ CRITICAL: Trust the server - cache TRUE immediately
 				local key = ("%d_%d"):format(Player.UserId, passId)
 				ownershipCache:set(key, true)
 				print("✅ [CREATEMONEYSHOP] Cached ownership as TRUE for passId:", passId)
 				
-				-- Small wait for safety (but ownership already primed)
-				task.wait(0.3)
+				-- ✅ NEW: Smoothly update just this gamepass (no destroy/recreate!)
+				task.wait(0.2)
+				self:updateGamepassUI(passId)
 				
-				-- Recreate all gamepass items (will use cached TRUE value)
-				self:recreateGamepassItems()
-				
-				print("🎉 [CREATEMONEYSHOP] Gamepass UI updated!")
-				
-				-- Clear debounce after a delay
+				-- Clear debounce
 				task.delay(3, function()
 					recreateDebounce[passId] = nil
 				end)
