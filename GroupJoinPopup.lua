@@ -514,14 +514,14 @@ local function createRightSide(parent, prof)
 	decalImage.ZIndex = 22
 	decalImage.Parent = decalContainer
 	
-	local tapHint = Instance.new("TextLabel")
+    local tapHint = Instance.new("TextLabel")
 	tapHint.Name = "TapHint"
 	tapHint.AnchorPoint = Vector2.new(0.5, 1)
 	tapHint.Position = UDim2.new(0.5, 0, 1, -8)
 	tapHint.Size = UDim2.new(0, prof.isPhone and 100 or 140, 0, prof.isPhone and 20 or 24)
 	tapHint.BackgroundTransparency = 0.15
 	tapHint.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	tapHint.Text = "Tap to zoom"
+    tapHint.Text = "Tap image to view full guide"
 	tapHint.Font = Enum.Font.GothamBold
 	tapHint.TextSize = prof.isPhone and 10 or 12
 	tapHint.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -760,27 +760,13 @@ end
 -- ═══════════════════════════════════════════════════════════════════════════
 
 local function joinGroup()
-	if CONFIG.GROUP_ID == 0 then
-		logError("GROUP_ID not set!")
-		return
-	end
-	
-	log("joinGroup() - Showing group info for: " .. CONFIG.GROUP_ID)
-	
-	local success = pcall(function()
-		game:GetService("StarterGui"):SetCore("SendNotification", {
-			Title = "💖 Join Sanrio Tycoon Group!",
-			Text = "Follow the steps on the popup! Group ID: " .. CONFIG.GROUP_ID,
-			Duration = 12,
-			Button1 = "Got it!"
-		})
-	end)
-	
-	if success then
-		log("joinGroup() - Notification shown successfully!")
-	else
-		logError("joinGroup() - Failed to show notification")
-	end
+    -- No external notification/popups. The flow now opens the
+    -- in-game step-by-step guide (zoom overlay) directly.
+    if CONFIG.GROUP_ID == 0 then
+        logError("GROUP_ID not set!")
+        return
+    end
+    log("joinGroup() - Preparing to show in-game guide (no system notification)")
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -923,18 +909,18 @@ local function buildUI()
 	
 	local buttonContainer = createButtonContainer(leftSide, prof)
 	
-	local joinButton = createButton(buttonContainer, "JoinButton", "Join Group!", true, 1, prof)
+    local joinButton = createButton(buttonContainer, "JoinButton", "Show Me How!", true, 1, prof)
 	local notNowButton = createButton(buttonContainer, "NotNowButton", "Maybe Later", false, 2, prof)
 	
 	local rightSide, howToTitle, decalImage, decalContainer, tapHint = createRightSide(cardFrame, prof)
 	
 	local zoomOverlay, openZoom, closeZoom = createZoomOverlay(screenGui)
 	
-	joinButton.Activated:Connect(function()
-		log("[Join] Join Group button clicked!")
-		joinGroup()
-		hidePopup()
-	end)
+    joinButton.Activated:Connect(function()
+        log("[Join] Show Me How clicked - opening guide")
+        joinGroup()
+        openZoom()
+    end)
 	
 	notNowButton.Activated:Connect(function()
 		log("[Close] Maybe later button clicked")

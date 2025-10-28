@@ -155,6 +155,7 @@ Core.Cache = Cache
 -- Initialize caches
 local productCache = Cache.new(Core.CONSTANTS.CACHE_PRODUCT_INFO)
 local ownershipCache = Cache.new(Core.CONSTANTS.CACHE_OWNERSHIP)
+Core.State.lastPriceRefresh = 0
 
 -- Utility Functions
 Core.Utils = {}
@@ -225,6 +226,37 @@ function Core.Animation.tween(object, properties, duration, easingStyle, easingD
 	return tween
 end
 
+-- Lightweight effects (pulse + confetti)
+Core.Effects = {}
+
+function Core.Effects.pulse(frame)
+    if not frame then return end
+    local s = frame:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+    s.Parent = frame
+    Core.Animation.tween(s, {Scale = 1.06}, 0.10)
+    task.delay(0.10, function()
+        Core.Animation.tween(s, {Scale = 1.00}, 0.18)
+    end)
+end
+
+function Core.Effects.confetti(parent)
+    if not parent then return end
+    for i = 1, 8 do
+        local chip = Instance.new("Frame")
+        chip.BackgroundColor3 = (i % 2 == 0) and UI.Theme:get("accent") or UI.Theme:get("kuromi")
+        chip.Size = UDim2.fromOffset(6, 10)
+        chip.Position = UDim2.new(math.random(), 0, 0, -6)
+        chip.BorderSizePixel = 0
+        chip.Parent = parent
+        local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 2); c.Parent = chip
+        task.spawn(function()
+            local xoff = (math.random() - 0.5) * 60
+            Core.Animation.tween(chip, {Position = UDim2.new(chip.Position.X.Scale, xoff, 0, math.random(60, 110)), Rotation = math.random(-40, 40)}, 0.45, Enum.EasingStyle.Quad)
+            task.delay(0.46, function() chip:Destroy() end)
+        end)
+    end
+end
+
 -- Sound System
 Core.SoundSystem = {}
 
@@ -266,42 +298,10 @@ Core.DataManager = {}
 
 Core.DataManager.products = {
 	cash = {
-		{
-			id = 1897730242,
-			amount = 1000,
-			name = "1,000 Cash",
-			description = "A small boost to get you started",
-			icon = "rbxassetid://10709728059",
-			featured = false,
-			price = 0,
-		},
-		{
-			id = 1897730373,
-			amount = 5000,
-			name = "5,000 Cash",
-			description = "Perfect for mid-game expansion",
-			icon = "rbxassetid://10709728059",
-			featured = true,
-			price = 0,
-		},
-		{
-			id = 1897730467,
-			amount = 10000,
-			name = "10,000 Cash",
-			description = "Accelerate your progress significantly",
-			icon = "rbxassetid://10709728059",
-			featured = false,
-			price = 0,
-		},
-		{
-			id = 1897730581,
-			amount = 50000,
-			name = "50,000 Cash",
-			description = "Maximum value for serious players",
-			icon = "rbxassetid://10709728059",
-			featured = true,
-			price = 0,
-		},
+        { id = 1897730242, amount = 1000,  name = "1,000 Cash",  description = "A small boost to get you started", icon = "rbxassetid://10709728059", featured = false, price = 0 },
+        { id = 1897730373, amount = 5000,  name = "5,000 Cash",  description = "Perfect for mid-game expansion",   icon = "rbxassetid://10709728059", featured = true,  price = 0, bonus = 0.10 },
+        { id = 1897730467, amount = 10000, name = "10,000 Cash", description = "Accelerate your progress significantly", icon = "rbxassetid://10709728059", featured = false, price = 0, bonus = 0.15 },
+        { id = 1897730581, amount = 50000, name = "50,000 Cash", description = "Maximum value for serious players", icon = "rbxassetid://10709728059", featured = true,  price = 0, bonus = 0.25, best = true },
 	},
 	gamepasses = {
 		{
@@ -398,6 +398,14 @@ function Core.DataManager.refreshPrices()
 	end
 end
 
+function Core.DataManager.refreshPricesIfStale(intervalSec)
+    intervalSec = intervalSec or 180
+    if (tick() - Core.State.lastPriceRefresh) >= intervalSec then
+        Core.DataManager.refreshPrices()
+        Core.State.lastPriceRefresh = tick()
+    end
+end
+
 -- ========================================
 -- UI MODULE (Embedded)
 -- ========================================
@@ -414,7 +422,7 @@ UI.Theme = {
 			stroke = Color3.fromRGB(222, 226, 235),
 			text = Color3.fromRGB(35, 38, 46),
 			textSecondary = Color3.fromRGB(120, 126, 140),
-			accent = Color3.fromRGB(255, 64, 129),
+            accent = Color3.fromRGB(255, 80, 140),
 			accentAlt = Color3.fromRGB(186, 214, 255),
 			success = Color3.fromRGB(76, 175, 80),
 			warning = Color3.fromRGB(255, 152, 0),
@@ -810,23 +818,24 @@ function Shop:initialize()
 end
 
 function Shop:createToggleButton()
-	local toggleScreen = PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
+    local toggleScreen = PlayerGui:FindFirstChild("SanrioShopToggle") or Instance.new("ScreenGui")
 	toggleScreen.Name = "SanrioShopToggle"
 	toggleScreen.ResetOnSpawn = false
 	toggleScreen.DisplayOrder = 999
+    toggleScreen.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
 	toggleScreen.Parent = PlayerGui
 
-	self.toggleButton = UI.Components.Button({
+    self.toggleButton = UI.Components.Button({
 		Name = "ShopToggle",
 		Text = "",
-		Size = UDim2.fromOffset(180, 60),
-		Position = UDim2.new(1, -20, 1, -20),
-		AnchorPoint = Vector2.new(1, 1),
-		BackgroundColor3 = UI.Theme:get("surface"),
+        Size = UDim2.fromOffset(184, 56),
+        Position = UDim2.new(1, -16, 1, -16),
+        AnchorPoint = Vector2.new(1, 1),
+        BackgroundColor3 = Color3.fromRGB(255, 248, 252),
 		cornerRadius = UDim.new(1, 0),
 		stroke = {
-			color = UI.Theme:get("accent"),
-			thickness = 2,
+            color = Color3.fromRGB(255, 80, 140),
+            thickness = 2,
 		},
 		parent = toggleScreen,
 		onClick = function()
@@ -834,26 +843,66 @@ function Shop:createToggleButton()
 		end,
 	}):render()
 
-	local icon = UI.Components.Image({
+    -- Soft outline glow
+    local glow = Instance.new("UIStroke")
+    glow.Color = UI.Theme:get("accent")
+    glow.Thickness = 2
+    glow.Transparency = 0.35
+    glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Outline
+    glow.Parent = self.toggleButton
+
+    local icon = UI.Components.Image({
 		Name = "Icon",
 		Image = "rbxassetid://17398522865",
-		Size = UDim2.fromOffset(32, 32),
-		Position = UDim2.fromOffset(16, 14),
+        Size = UDim2.fromOffset(28, 28),
+        Position = UDim2.fromOffset(14, 14),
 		parent = self.toggleButton,
 	}):render()
 
-	local label = UI.Components.TextLabel({
+    local label = UI.Components.TextLabel({
 		Name = "Label",
-		Text = "Shop",
-		Size = UDim2.new(1, -64, 1, 0),
-		Position = UDim2.fromOffset(56, 0),
+        Text = "Shop",
+        Size = UDim2.new(1, -60, 1, 0),
+        Position = UDim2.fromOffset(50, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Enum.Font.GothamBold,
-		TextSize = 20,
+        TextSize = 18,
 		parent = self.toggleButton,
 	}):render()
 
-	self:addPulseAnimation(self.toggleButton)
+    -- Idle micro-pulse on phones to attract attention
+    if Core.Utils.isMobile() then
+        local s = Instance.new("UIScale")
+        s.Scale = 1
+        s.Parent = self.toggleButton
+        task.spawn(function()
+            while self.toggleButton and self.toggleButton.Parent do
+                Core.Animation.tween(s, {Scale = 1.03}, 0.7)
+                task.wait(0.9)
+                Core.Animation.tween(s, {Scale = 1.00}, 0.6)
+                task.wait(3.0)
+            end
+        end)
+    end
+
+    -- Optional SALE badge if any bonus exists
+    local hasBonus = false
+    for _, p in ipairs(Core.DataManager.products.cash) do
+        if p.bonus and p.bonus > 0 then hasBonus = true break end
+    end
+    if hasBonus then
+        local badge = Instance.new("TextLabel")
+        badge.BackgroundColor3 = UI.Theme:get("accent")
+        badge.TextColor3 = Color3.new(1,1,1)
+        badge.Font = Enum.Font.GothamBold
+        badge.TextSize = 12
+        badge.Text = "SALE"
+        badge.AnchorPoint = Vector2.new(1,0)
+        badge.Position = UDim2.new(1, -8, 0, -6)
+        badge.Size = UDim2.fromOffset(44, 20)
+        badge.Parent = self.toggleButton
+        local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(1,0); c.Parent = badge
+    end
 end
 
 function Shop:createMainInterface()
@@ -862,6 +911,7 @@ function Shop:createMainInterface()
 	self.gui.ResetOnSpawn = false
 	self.gui.DisplayOrder = 1000
 	self.gui.Enabled = false
+self.gui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
 	self.gui.Parent = PlayerGui
 
 	self.blur = Lighting:FindFirstChild("SanrioShopBlur") or Instance.new("BlurEffect")
@@ -869,29 +919,56 @@ function Shop:createMainInterface()
 	self.blur.Size = 0
 	self.blur.Parent = Lighting
 
-	local dimBackground = UI.Components.Frame({
+    local dimBackground = UI.Components.Frame({
 		Name = "DimBackground",
 		Size = UDim2.fromScale(1, 1),
-		BackgroundColor3 = Color3.new(0, 0, 0),
-		BackgroundTransparency = 0.3,
+        BackgroundColor3 = Color3.fromRGB(10, 5, 15),
+        BackgroundTransparency = 0.15,
 		parent = self.gui,
 	}):render()
+    -- Close when clicking outside the panel
+    dimBackground.Active = true
+    dimBackground.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if not self.mainPanel then return end
+            local pos = input.Position
+            local inset = GuiService:GetGuiInset()
+            local adjusted = Vector2.new(pos.X, pos.Y - inset.Y)
+            local p = self.mainPanel.AbsolutePosition
+            local s = self.mainPanel.AbsoluteSize
+            local inside = adjusted.X >= p.X and adjusted.X <= p.X + s.X and adjusted.Y >= p.Y and adjusted.Y <= p.Y + s.Y
+            if not inside then self:close() end
+        end
+    end)
 
 	local panelSize = Core.Utils.isMobile() and Core.CONSTANTS.PANEL_SIZE_MOBILE or Core.CONSTANTS.PANEL_SIZE
 
-	self.mainPanel = UI.Components.Frame({
+    self.mainPanel = UI.Components.Frame({
 		Name = "MainPanel",
 		Size = UDim2.fromOffset(panelSize.X, panelSize.Y),
 		Position = UDim2.fromScale(0.5, 0.5),
 		AnchorPoint = Vector2.new(0.5, 0.5),
-		BackgroundColor3 = UI.Theme:get("background"),
-		cornerRadius = UDim.new(0, 24),
+        BackgroundColor3 = Color3.fromRGB(255, 248, 252),
+        cornerRadius = UDim.new(0, 20),
 		stroke = {
-			color = UI.Theme:get("stroke"),
-			thickness = 1,
+            color = Color3.fromRGB(255, 220, 235),
+            thickness = 3,
+            transparency = 0,
 		},
 		parent = self.gui,
 	}):render()
+
+    -- Subtle pastel gradient like the group popup
+    do
+        local gradient = Instance.new("UIGradient")
+        gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 245)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(235, 225, 255))
+        })
+        gradient.Rotation = 135
+        gradient.Transparency = NumberSequence.new(0.3)
+        gradient.Parent = self.mainPanel
+    end
 
 	UI.Responsive.scale(self.mainPanel)
 
@@ -915,12 +992,12 @@ function Shop:createMainInterface()
 end
 
 function Shop:createHeader()
-	local header = UI.Components.Frame({
+    local header = UI.Components.Frame({
 		Name = "Header",
-		Size = UDim2.new(1, -48, 0, 80),
+        Size = UDim2.new(1, -48, 0, 72),
 		Position = UDim2.fromOffset(24, 24),
-		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
-		cornerRadius = UDim.new(0, 16),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        cornerRadius = UDim.new(0, 16),
 		parent = self.mainPanel,
 	}):render()
 
@@ -932,24 +1009,24 @@ function Shop:createHeader()
 		parent = header,
 	}):render()
 
-	local title = UI.Components.TextLabel({
+    local title = UI.Components.TextLabel({
 		Name = "Title",
-		Text = "Sanrio Shop",
+        Text = "Sanrio Shop",
 		Size = UDim2.new(1, -200, 1, 0),
 		Position = UDim2.fromOffset(92, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Enum.Font.GothamBold,
-		TextSize = 32,
+        TextSize = 28,
 		parent = header,
 	}):render()
 
-	local closeButton = UI.Components.Button({
+    local closeButton = UI.Components.Button({
 		Name = "CloseButton",
-		Text = "X",
+        Text = "✕",
 		Size = UDim2.fromOffset(48, 48),
 		Position = UDim2.new(1, -64, 0.5, 0),
 		AnchorPoint = Vector2.new(0, 0.5),
-		BackgroundColor3 = UI.Theme:get("error"),
+        BackgroundColor3 = Color3.fromRGB(255, 182, 213),
 		TextColor3 = Color3.new(1, 1, 1),
 		Font = Enum.Font.GothamBold,
 		TextSize = 24,
@@ -1072,8 +1149,8 @@ function Shop:createHomePage()
 
 	local hero = self:createHeroSection(scrollFrame)
 
-	local featuredTitle = UI.Components.TextLabel({
-		Text = "✨ Featured Items",
+    local featuredTitle = UI.Components.TextLabel({
+        Text = "Featured Items",
 		Size = UDim2.new(1, 0, 0, 40),
 		Font = Enum.Font.GothamBold,
 		TextSize = 28,
@@ -1112,8 +1189,8 @@ function Shop:createHomePage()
 	end
 
 	-- Add quick stats section
-	local statsTitle = UI.Components.TextLabel({
-		Text = "📊 Shop Stats",
+    local statsTitle = UI.Components.TextLabel({
+        Text = "Shop Stats",
 		Size = UDim2.new(1, 0, 0, 40),
 		Font = Enum.Font.GothamBold,
 		TextSize = 28,
@@ -1301,8 +1378,8 @@ function Shop:createHeroSection(parent)
 		parent = content,
 	}):render()
 
-	local heroTitle = UI.Components.TextLabel({
-		Text = "🎀 Welcome to Sanrio Shop!",
+    local heroTitle = UI.Components.TextLabel({
+        Text = "Welcome to Sanrio Shop",
 		Size = UDim2.new(1, 0, 0, 48),
 		Font = Enum.Font.GothamBold,
 		TextSize = 36,
@@ -1323,8 +1400,8 @@ function Shop:createHeroSection(parent)
 		parent = textContainer,
 	}):render()
 
-	local ctaButton = UI.Components.Button({
-		Text = "🛍️ Browse Items",
+    local ctaButton = UI.Components.Button({
+        Text = "Browse Items",
 		Size = UDim2.fromOffset(200, 52),
 		Position = UDim2.fromOffset(0, 140),
 		BackgroundColor3 = Color3.new(1, 1, 1),
@@ -1398,12 +1475,28 @@ function Shop:createProductCard(product, productType, parent)
 		parent = card,
 	}):render()
 
-	local imageContainer = UI.Components.Frame({
+    local imageContainer = UI.Components.Frame({
 		Size = UDim2.new(1, 0, 0, 140),
 		BackgroundColor3 = UI.Theme:get("surfaceAlt"),
 		cornerRadius = UDim.new(0, 12),
 		parent = content,
 	}):render()
+
+    -- BEST VALUE ribbon (cash only)
+    if (not isGamepass) and product.best then
+        local tag = Instance.new("TextLabel")
+        tag.Name = "BestRibbon"
+        tag.BackgroundColor3 = UI.Theme:get("accent")
+        tag.TextColor3 = Color3.new(1,1,1)
+        tag.Font = Enum.Font.GothamBold
+        tag.TextSize = 14
+        tag.Text = "BEST VALUE"
+        tag.AnchorPoint = Vector2.new(0,0)
+        tag.Position = UDim2.fromOffset(8, 8)
+        tag.Size = UDim2.fromOffset(112, 22)
+        tag.Parent = imageContainer
+        local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 10); c.Parent = tag
+    end
 
 	-- Add gradient to image container
 	local imageGradient = Instance.new("UIGradient")
@@ -1451,12 +1544,12 @@ function Shop:createProductCard(product, productType, parent)
 		parent = infoContainer,
 	}):render()
 
-	local priceText = isGamepass and 
+    local priceText = isGamepass and 
 		("R$" .. tostring(product.price or 0)) or 
 		("R$" .. tostring(product.price or 0) .. " • " .. Core.Utils.formatNumber(product.amount) .. " Cash")
 
-	local priceLabel = UI.Components.TextLabel({
-		Text = priceText,
+    local priceLabel = UI.Components.TextLabel({
+        Text = priceText,
 		Size = UDim2.new(1, 0, 0, 24),
 		Position = UDim2.fromOffset(0, 76),
 		Font = Enum.Font.GothamBold,
@@ -1465,6 +1558,20 @@ function Shop:createProductCard(product, productType, parent)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		parent = infoContainer,
 	}):render()
+
+    -- Optional bonus line (cash only)
+    if not isGamepass and product.bonus and product.bonus > 0 then
+        local bonus = Instance.new("TextLabel")
+        bonus.BackgroundTransparency = 1
+        bonus.Text = string.format("+%d%% Bonus", math.floor(product.bonus * 100))
+        bonus.TextColor3 = UI.Theme:get("accent")
+        bonus.Font = Enum.Font.Gotham
+        bonus.TextSize = 14
+        bonus.TextXAlignment = Enum.TextXAlignment.Left
+        bonus.Size = UDim2.new(1, 0, 0, 18)
+        bonus.Position = UDim2.fromOffset(0, 52)
+        bonus.Parent = infoContainer
+    end
 
 	local isOwned = isGamepass and Core.DataManager.checkOwnership(product.id)
 
@@ -1476,8 +1583,8 @@ function Shop:createProductCard(product, productType, parent)
 		parent = infoContainer,
 	}):render()
 
-	local purchaseButton = UI.Components.Button({
-		Text = isOwned and "✓ Owned" or "Purchase",
+    local purchaseButton = UI.Components.Button({
+        Text = isOwned and "Owned" or "Purchase",
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundColor3 = isOwned and UI.Theme:get("success") or cardColor,
 		TextColor3 = Color3.new(1, 1, 1),
@@ -1742,7 +1849,7 @@ function Shop:refreshProduct(product, productType)
 		local isOwned = Core.DataManager.checkOwnership(product.id)
 
 		if product.purchaseButton then
-			product.purchaseButton.Text = isOwned and "✓ Owned" or "Purchase"
+            product.purchaseButton.Text = isOwned and "Owned" or "Purchase"
 			product.purchaseButton.BackgroundColor3 = isOwned and 
 				UI.Theme:get("success") or UI.Theme:get("kuromi")
 			product.purchaseButton.Active = not isOwned
@@ -1780,7 +1887,7 @@ function Shop:open()
 	Core.State.isAnimating = true
 	Core.State.isOpen = true
 
-	Core.DataManager.refreshPrices()
+    Core.DataManager.refreshPricesIfStale(180)
 	self:refreshAllProducts()
 
 	self.gui.Enabled = true
@@ -1900,19 +2007,25 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 
 	Core.State.purchasePending[passId] = nil
 
-	if purchased then
-		ownershipCache:clear()
+    if purchased then
+        ownershipCache:clear()
 
-		if pending.product.purchaseButton then
-			pending.product.purchaseButton.Text = "✓ Owned"
-			pending.product.purchaseButton.BackgroundColor3 = UI.Theme:get("success")
-			pending.product.purchaseButton.Active = false
-		end
+        if pending.product.purchaseButton then
+            pending.product.purchaseButton.Text = "Owned"
+            pending.product.purchaseButton.BackgroundColor3 = UI.Theme:get("success")
+            pending.product.purchaseButton.Active = false
+        end
 
-		Core.SoundSystem.play("success")
+        Core.SoundSystem.play("success")
 
-		task.wait(0.5)
-		shop:refreshAllProducts()
+        -- feel-good feedback
+        if pending.product and pending.product.cardInstance then
+            Core.Effects.pulse(pending.product.cardInstance)
+            Core.Effects.confetti(pending.product.cardInstance)
+        end
+
+        task.wait(0.5)
+        shop:refreshAllProducts()
 	else
 		if pending.product.purchaseButton then
 			pending.product.purchaseButton.Text = "Purchase"
@@ -1929,15 +2042,21 @@ MarketplaceService.PromptProductPurchaseFinished:Connect(function(player, produc
 
 	Core.State.purchasePending[productId] = nil
 
-	if purchased then
-		Core.SoundSystem.play("success")
+    if purchased then
+        Core.SoundSystem.play("success")
 
-		if Remotes then
-			local grantEvent = Remotes:FindFirstChild("GrantProductCurrency")
-			if grantEvent and grantEvent:IsA("RemoteEvent") then
-				grantEvent:FireServer(productId)
-			end
-		end
+        if Remotes then
+            local grantEvent = Remotes:FindFirstChild("GrantProductCurrency")
+            if grantEvent and grantEvent:IsA("RemoteEvent") then
+                grantEvent:FireServer(productId)
+            end
+        end
+
+        local pendingLocal = pending
+        if pendingLocal and pendingLocal.product and pendingLocal.product.cardInstance then
+            Core.Effects.pulse(pendingLocal.product.cardInstance)
+            Core.Effects.confetti(pendingLocal.product.cardInstance)
+        end
 	end
 end)
 
@@ -1955,11 +2074,21 @@ end)
 -- Auto-refresh ownership periodically
 task.spawn(function()
 	while true do
-		task.wait(30)
-		if Core.State.isOpen then
-			shop:refreshAllProducts()
-		end
+        task.wait(30)
+        if Core.State.isOpen then
+            shop:refreshAllProducts()
+        end
 	end
+end)
+
+-- Background price warm-up (throttled)
+task.spawn(function()
+    while true do
+        task.wait(90)
+        if Core.State.isOpen then
+            Core.DataManager.refreshPricesIfStale(180)
+        end
+    end
 end)
 
 print("[SanrioShop] System initialized successfully! Version: " .. Core.VERSION)
