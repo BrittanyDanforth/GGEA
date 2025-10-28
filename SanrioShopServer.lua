@@ -8,7 +8,7 @@
     - Auto-collect toggle state management
     - State persistence in DataStore
     
-    ⚠️ NOTE: Developer Products (cash) are handled by MoneyShop script
+    ⚠️ NOTE: Developer Products (cash) are handled by MONEYSHOPSERV script
     ⚠️ This script does NOT set MarketplaceService.ProcessReceipt!
 ]]
 
@@ -240,7 +240,7 @@ print("   ✓ Gamepass purchase detection with retry logic")
 print("   ✓ Auto-collect toggle system")
 print("   ✓ State persistence (DataStore)")
 print("   ✓ Ownership verification")
-print("⚠️  NOTE: Cash products handled by MoneyShop script")
+print("⚠️  NOTE: Cash products handled by MONEYSHOPSERV script")
 print("⚠️  This script does NOT set ProcessReceipt (no conflicts!)")
 
 return true
