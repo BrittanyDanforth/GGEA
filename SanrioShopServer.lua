@@ -114,8 +114,10 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 		player.Name, passId, tostring(wasPurchased)))
 	
 	if wasPurchased then
-		-- Small delay for Roblox to register the purchase
-		task.wait(0.5)
+		print(string.format("⏳ [SanrioShop] Waiting for Roblox to register purchase..."))
+		
+		-- Wait longer for Roblox to fully process the purchase
+		task.wait(1.2)
 		
 		-- Verify ownership
 		local verified = false
@@ -137,6 +139,20 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passI
 			end
 		else
 			warn(string.format("⚠️ [SanrioShop] Purchase completed but ownership not verified for %s", player.Name))
+			warn(string.format("⚠️ [SanrioShop] This might mean Roblox is still processing. Retrying..."))
+			
+			-- Retry once after additional delay
+			task.wait(1.0)
+			pcall(function()
+				verified = MarketplaceService:UserOwnsGamePassAsync(player.UserId, passId)
+			end)
+			
+			if verified then
+				print(string.format("✅ [SanrioShop] Ownership verified on retry for %s", player.Name))
+				GamepassPurchased:FireClient(player, passId)
+			else
+				warn(string.format("❌ [SanrioShop] Ownership still not verified for %s (passId: %d)", player.Name, passId))
+			end
 		end
 	else
 		print(string.format("❌ [SanrioShop] %s cancelled purchase (passId: %d)", player.Name, passId))

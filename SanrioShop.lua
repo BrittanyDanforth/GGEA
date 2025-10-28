@@ -781,11 +781,17 @@ function Shop:setupHandlers()
 	if Remotes then
 		local gpPurchased = Remotes:FindFirstChild("GamepassPurchased")
 		if gpPurchased and gpPurchased:IsA("RemoteEvent") then
-			gpPurchased.OnClientEvent:Connect(function()
-				task.wait(0.5)
+			gpPurchased.OnClientEvent:Connect(function(passId)
+				print("✅ [Client] Server confirmed gamepass purchase:", passId)
+				
+				-- Wait for Roblox to fully register ownership
+				task.wait(1.0)
+				
+				-- Clear cache and recreate all gamepass items
 				ownershipCache:clear()
 				self:recreateGamepassItems()
-				playSound("success")
+				
+				print("🎉 [Client] Gamepass UI updated!")
 			end)
 		end
 	end
@@ -794,20 +800,19 @@ function Shop:setupHandlers()
 		if player ~= Player then return end
 		local p = self.purchasePending[passId]
 		self.purchasePending[passId] = nil
-		
+
 		if purchased then
-			ownershipCache:clear()
+			-- Don't recreate here - let server event handle it!
+			-- Server will fire GamepassPurchased after verifying ownership
 			playSound("success")
-			
-			-- Small delay then recreate gamepass items
-			task.wait(0.3)
-			self:recreateGamepassItems()
+			print("🛍️ [Client] Gamepass purchased, waiting for server confirmation...")
 		else
 			-- Purchase cancelled - reset button if it still exists
 			if p and p.button and p.button.Parent then
 				p.button.Text = isPhone() and "BUY" or ("BUY - R$"..tostring(p.product.price or 0))
 				p.button.Active = true
 			end
+			print("❌ [Client] Gamepass purchase cancelled")
 		end
 	end)
 
