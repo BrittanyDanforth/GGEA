@@ -48,6 +48,8 @@ end
 local GamepassPurchased = CreateRemote(RemotesFolder, "GamepassPurchased", "RemoteEvent")
 local AutoCollectToggle = CreateRemote(RemotesFolder, "AutoCollectToggle", "RemoteEvent")
 local GetAutoCollectState = CreateRemote(RemotesFolder, "GetAutoCollectState", "RemoteFunction")
+local CheckPassOwnership = CreateRemote(RemotesFolder, "CheckPassOwnership", "RemoteFunction")
+local GetOwnedPasses = CreateRemote(RemotesFolder, "GetOwnedPasses", "RemoteFunction")
 local GrantProductCurrency = CreateRemote(RemotesFolder, "GrantProductCurrency", "RemoteEvent")
 local MoneyCollected = CreateRemote(RemotesFolder, "MoneyCollected", "RemoteEvent")
 
@@ -106,6 +108,30 @@ GetAutoCollectState.OnServerInvoke = function(player)
 	if state == nil then state = true end
 	
 	return state
+end
+
+-- Check single gamepass ownership (authoritative server check)
+CheckPassOwnership.OnServerInvoke = function(player, passId)
+	local owns = false
+	pcall(function()
+		owns = MarketplaceService:UserOwnsGamePassAsync(player.UserId, passId)
+	end)
+	print("🔍 [SANRIOTYCOONSERVER] CheckPassOwnership -", player.Name, "passId:", passId, "owns:", owns)
+	return owns
+end
+
+-- Get all owned gamepasses (authoritative server check)
+GetOwnedPasses.OnServerInvoke = function(player)
+	local result = {}
+	for name, id in pairs(GAMEPASSES) do
+		local owns = false
+		pcall(function()
+			owns = MarketplaceService:UserOwnsGamePassAsync(player.UserId, id)
+		end)
+		result[id] = owns
+		print("🔍 [SANRIOTYCOONSERVER] GetOwnedPasses -", player.Name, name, "owns:", owns)
+	end
+	return result
 end
 
 -- Gamepass purchase detection (FIXED: Waits for Roblox to register)

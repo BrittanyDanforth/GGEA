@@ -130,9 +130,33 @@ local function getGamePassInfo(id)
 	if ok and info then productCache:set(key,info) return info end
 end
 local function checkOwnership(passId)
-	local key=("%d_%d"):format(Player.UserId,passId); local c=ownershipCache:get(key); if c~=nil then return c end
-	local ok,owns=pcall(function() return MarketplaceService:UserOwnsGamePassAsync(Player.UserId,passId) end)
-	if ok then ownershipCache:set(key,owns) return owns end; return false
+	local key = ("%d_%d"):format(Player.UserId, passId)
+	local c = ownershipCache:get(key)
+	if c ~= nil then return c end
+
+	-- ✅ Ask server first (authoritative - never stale!)
+	if Remotes then
+		local rf = Remotes:FindFirstChild("CheckPassOwnership")
+		if rf and rf:IsA("RemoteFunction") then
+			local ok, owns = pcall(function() return rf:InvokeServer(passId) end)
+			if ok then
+				ownershipCache:set(key, owns)
+				print("🔍 [CREATEMONEYSHOP] checkOwnership (server) -", passId, "owns:", owns)
+				return owns
+			end
+		end
+	end
+
+	-- Fallback: local API (can be stale in Studio right after purchase)
+	local ok, owns = pcall(function()
+		return MarketplaceService:UserOwnsGamePassAsync(Player.UserId, passId)
+	end)
+	if ok then
+		ownershipCache:set(key, owns)
+		print("🔍 [CREATEMONEYSHOP] checkOwnership (fallback) -", passId, "owns:", owns)
+		return owns
+	end
+	return false
 end
 local function refreshPrices()
 	for _,p in ipairs(products.cash) do local i=getProductInfo(p.id); if i and i.PriceInRobux then p.price=i.PriceInRobux end end
@@ -708,8 +732,26 @@ end
 function Shop:open()
 	if self.isOpen then return end
 	self.isOpen = true
+
 	ownershipCache:clear()
 	refreshPrices()
+
+	-- ✅ Preload authoritative ownership states from server
+	if Remotes then
+		local rf = Remotes:FindFirstChild("GetOwnedPasses")
+		if rf and rf:IsA("RemoteFunction") then
+			local ok, ownedMap = pcall(function() return rf:InvokeServer() end)
+			if ok and type(ownedMap) == "table" then
+				print("📥 [CREATEMONEYSHOP] Preloaded ownership from server:")
+				for id, owns in pairs(ownedMap) do
+					local key = ("%d_%d"):format(Player.UserId, tonumber(id))
+					ownershipCache:set(key, owns and true or false)
+					print("  ", id, "→", owns)
+				end
+			end
+		end
+	end
+
 	self:refreshAllProducts()
 
 	self.gui.Enabled = true
@@ -754,11 +796,16 @@ function Shop:setupHandlers()
 				end
 				recreateDebounce[passId] = true
 				
-				-- Wait for Roblox to fully register ownership
-				print("⏳ [CREATEMONEYSHOP] Waiting 1.5s for ownership to register...")
-				task.wait(1.5)
+				-- ✅ CRITICAL: Trust the server - it already verified ownership!
+				-- Prime the cache with TRUE so checkOwnership doesn't return false
+				local key = ("%d_%d"):format(Player.UserId, passId)
+				ownershipCache:set(key, true)
+				print("✅ [CREATEMONEYSHOP] Cached ownership as TRUE for passId:", passId)
 				
-				-- Recreate all gamepass items (this clears cache internally)
+				-- Small wait for safety (but ownership already primed)
+				task.wait(0.3)
+				
+				-- Recreate all gamepass items (will use cached TRUE value)
 				self:recreateGamepassItems()
 				
 				print("🎉 [CREATEMONEYSHOP] Gamepass UI updated!")
