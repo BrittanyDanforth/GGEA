@@ -4,6 +4,7 @@
 	✅ keepUpright so it won't tip
 	✅ yaw = 0 (faces straight)
 	✅ FIXED: Unique collision group to prevent inter-dropper collisions
+	✅ FIXED: Proper fade-in animation (no instant disappear)
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
@@ -37,8 +38,16 @@ Core.RunModel({
 	yawDegrees = 0,
 
 	-- Animation
-	fadeTime = 0.35,
+	fadeTime = 0.5,
 	prewarm  = 0,
+	animation = {
+		transparency = {
+			startTransparency = 1,
+			endTransparency = 0,
+			duration = 0.5,
+			style = Enum.EasingStyle.Quad,
+		},
+	},
 
 	-- Physics
 	density = 0.8,          -- a bit heavier = steadier

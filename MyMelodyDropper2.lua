@@ -5,7 +5,7 @@
 	✅ Proper fade-in/out using DropperCore
 	✅ Safe physics (no collisions with other droppers or players)
 	✅ FIXED: Unique collision group to prevent inter-dropper collisions
-	✅ FIXED: No collision with players
+	✅ FIXED: canCollide=false - no physical player collision
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
@@ -29,6 +29,7 @@ Core.Run({
 	color = Color3.fromRGB(255, 170, 200),
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
+	canCollide = false,  -- ✅ FIXED: No physical collision with players
 
 	mesh = {
 		meshType = Enum.MeshType.FileMesh,
