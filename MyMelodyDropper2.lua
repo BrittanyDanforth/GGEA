@@ -3,8 +3,9 @@
 	✅ Uses MyMelody beanie mesh + texture
 	✅ Perfect flat landing (no bounce or tipping)
 	✅ Proper fade-in/out using DropperCore
-	✅ Safe physics (no collisions with other droppers)
+	✅ Safe physics (no collisions with other droppers or players)
 	✅ FIXED: Unique collision group to prevent inter-dropper collisions
+	✅ FIXED: No collision with players
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
@@ -17,6 +18,7 @@ Core.Run({
 	namePrefix = "MyMelodyDrop2_",
 	dropGroup = "MyMelodyDrops2",
 	collisionGroup = "MyMelodyDrops2",  -- ✅ FIXED: Unique collision group
+	playerGroup = "Players",            -- ✅ FIXED: No collision with players
 
 	dropRate = 1.0,
 	cashValue = 30,
