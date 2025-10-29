@@ -1,14 +1,14 @@
 --[[
-	MyMelody Dropper 2 - FINAL POLISHED (Beanie Mesh)
+	MyMelody Dropper 2 - MODERNIZED (Beanie Mesh)
 	✅ Uses MyMelody beanie mesh + texture
 	✅ Perfect flat landing (no bounce or tipping)
 	✅ Proper fade-in/out using DropperCore
 	✅ Safe physics (no collisions with other droppers or players)
-	✅ FIXED: Unique collision group to prevent inter-dropper collisions
-	✅ FIXED: canCollide=false - no physical player collision
+	✅ FIXED: Matches Cinnamoroll dropper structure
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
+
 task.wait(1)
 
 Core.Run({
@@ -17,20 +17,18 @@ Core.Run({
 
 	namePrefix = "MyMelodyDrop2_",
 	dropGroup = "MyMelodyDrops2",
-	collisionGroup = "MyMelodyDrops2",  -- ✅ FIXED: Unique collision group
-	playerGroup = "Players",            -- ✅ FIXED: No collision with players
 
 	dropRate = 1.0,
 	cashValue = 30,
 	lifetime = 180,
 
-	-- smaller, compact hat
+	-- Part properties
 	size = Vector3.new(1.1, 1.1, 1.1),
 	color = Color3.fromRGB(255, 170, 200),
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
-	canCollide = false,  -- ✅ FIXED: No physical collision with players
 
+	-- Mesh configuration
 	mesh = {
 		meshType = Enum.MeshType.FileMesh,
 		meshId = "rbxassetid://95965901192105",      -- Beanie mesh
@@ -39,6 +37,7 @@ Core.Run({
 		offset = Vector3.new(0, 0.05, 0),
 	},
 
+	-- Light configuration
 	light = {
 		brightness = 0.6,
 		range = 4,
@@ -48,13 +47,22 @@ Core.Run({
 		flashDuration = 0.6,
 	},
 
+	-- Spawn configuration
 	spawn = {
 		rotation = CFrame.Angles(0, 0, 0),        -- upright
 		velocity = Vector3.new(0, -9, 0),         -- steady downward
 		angularVelocity = Vector3.new(0, 0, 0),   -- no spin
+		pattern = {
+			Vector3.new(0.15, 0, 0.15),
+			Vector3.new(-0.15, 0, 0.15),
+			Vector3.new(0.15, 0, -0.15),
+			Vector3.new(-0.15, 0, -0.15),
+			Vector3.new(0, 0, 0),
+		}
 	},
 	spawnYOffset = -1.4,
 
+	-- Animation
 	animation = {
 		mesh = {
 			startScale = Vector3.new(0.5, 0.5, 0.5),
@@ -65,6 +73,7 @@ Core.Run({
 	},
 	fadeTime = 0.45,
 
+	-- Particles
 	particles = {
 		-- Soft white sparkles (half rate)
 		{
@@ -94,6 +103,7 @@ Core.Run({
 		},
 	},
 
+	-- Spawn particles
 	spawnParticles = {
 		-- Soft pink ring
 		{
@@ -117,7 +127,7 @@ Core.Run({
 		},
 	},
 
-	-- tuned physics for soft land + perfect stability
+	-- Physics - tuned for soft land + perfect stability
 	density = 0.25,
 	friction = 0.35,
 	elasticity = 0.02,
