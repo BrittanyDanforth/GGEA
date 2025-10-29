@@ -1,9 +1,9 @@
 --[[
-	MyMelody Dropper 1 - MODERNIZED
-	✅ Uses MyMelody mesh
+	MyMelody Dropper 1 - DIFFERENT MYMELODY ITEM
+	✅ Uses DIFFERENT MyMelody mesh (NOT the beanie)
 	✅ Smooth fade-in, collision groups, spawn effects
 	✅ Pink MyMelody theme
-	✅ FIXED: Now uses Core.Run() like Cinnamoroll droppers
+	⚠️ TODO: Replace meshId with your OTHER MyMelody mesh asset ID
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
@@ -22,18 +22,19 @@ Core.Run({
 	cashValue = 10,
 	lifetime = 180,
 
-	-- Part properties
-	size = Vector3.new(1.5, 1.5, 1.5),
+	-- Part properties (larger than beanie)
+	size = Vector3.new(1.8, 1.8, 1.8),
 	color = Color3.fromRGB(255, 192, 203), -- Pink
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
 
 	-- Mesh configuration
+	-- ⚠️ CHANGE THIS: Use your OTHER MyMelody mesh (plushie, backpack, etc. - NOT the beanie)
 	mesh = {
 		meshType = Enum.MeshType.FileMesh,
-		meshId = "rbxassetid://95965901192105",      -- MyMelody mesh
-		textureId = "rbxassetid://79765468782729",   -- MyMelody texture
-		scale = Vector3.new(1.5, 1.5, 1.5),
+		meshId = "rbxassetid://YOUR_OTHER_MYMELODY_MESH_HERE",      -- ⚠️ REPLACE WITH YOUR MESH ID
+		textureId = "rbxassetid://YOUR_OTHER_MYMELODY_TEXTURE_HERE",   -- ⚠️ REPLACE WITH YOUR TEXTURE ID
+		scale = Vector3.new(1.8, 1.8, 1.8),
 	},
 
 	-- Light configuration
