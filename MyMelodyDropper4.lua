@@ -28,7 +28,7 @@ Core.Run({
 	lifetime = 180,
 
 	-- Part properties
-	size = Vector3.new(3.01, 2.62, 3.01),  -- 40% OF ORIGINAL SIZE
+	size = Vector3.new(4.52, 3.93, 4.52),  -- 60% OF ORIGINAL SIZE
 	color = Color3.fromRGB(255, 192, 203), -- Pink for MyMelody
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
@@ -41,7 +41,7 @@ Core.Run({
 		meshType = Enum.MeshType.FileMesh,
 		meshId = "rbxassetid://11816850109",      -- MyMelody mesh
 		textureId = "rbxassetid://11816850135",   -- MyMelody texture
-		scale = Vector3.new(0.4, 0.4, 0.4),  -- 40% SCALE
+		scale = Vector3.new(0.6, 0.6, 0.6),  -- 60% SCALE
 		offset = Vector3.new(0, 0, 0),
 	},
 
@@ -60,8 +60,8 @@ Core.Run({
 		popDuration = 0.5,
 		popStyle = Enum.EasingStyle.Elastic,
 		mesh = {
-			startScale = Vector3.new(0.2, 0.2, 0.2),
-			endScale = Vector3.new(0.4, 0.4, 0.4),
+			startScale = Vector3.new(0.3, 0.3, 0.3),
+			endScale = Vector3.new(0.6, 0.6, 0.6),
 			duration = 0.6,
 			style = Enum.EasingStyle.Elastic,
 		},
