@@ -28,7 +28,7 @@ Core.Run({
 	lifetime = 180,
 
 	-- Part properties
-	size = Vector3.new(1.5, 1.5, 1.5),
+	size = Vector3.new(1.95, 1.95, 1.95),  -- 30% BIGGER
 	color = Color3.fromRGB(255, 204, 153), -- Beanie color
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
@@ -41,7 +41,7 @@ Core.Run({
 		meshType = Enum.MeshType.FileMesh,
 		meshId = "rbxassetid://95965901192105",      -- Beanie mesh
 		textureId = "rbxassetid://79765468782729",   -- Beanie color map
-		scale = Vector3.new(1.1, 1.1, 1.1),
+		scale = Vector3.new(1.43, 1.43, 1.43),  -- 30% BIGGER
 		offset = Vector3.new(0, 0.05, 0),
 	},
 
@@ -60,8 +60,8 @@ Core.Run({
 		popDuration = 0.5,
 		popStyle = Enum.EasingStyle.Elastic,
 		mesh = {
-			startScale = Vector3.new(0.5, 0.5, 0.5),
-			endScale = Vector3.new(1.1, 1.1, 1.1),
+			startScale = Vector3.new(0.65, 0.65, 0.65),
+			endScale = Vector3.new(1.43, 1.43, 1.43),
 			duration = 0.6,
 			style = Enum.EasingStyle.Elastic,
 		},
