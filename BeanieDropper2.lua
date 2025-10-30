@@ -50,7 +50,7 @@ Core.Run({
 		rotation = CFrame.Angles(0, 0, 0), -- Upright
 		velocity = Vector3.new(0, -10, 0),
 	},
-	spawnYOffset = -3.0,  -- SPAWN MUCH LOWER
+	spawnYOffset = -3.5,  -- SPAWN EVEN LOWER
 
 	-- Animation
 	fadeTime = 0.5,
