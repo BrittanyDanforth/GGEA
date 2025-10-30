@@ -678,6 +678,8 @@ function Core.RunModel(config)
 	local EXTRA_LOWER = config.extraLower or 0.35
 	local FADE_TIME = config.fadeTime or 0.35
 	local YAW = math.rad(config.yawDegrees or 0)
+	local PITCH = math.rad(config.pitchDegrees or 0)  -- ✅ NEW: X-axis rotation
+	local ROLL = math.rad(config.rollDegrees or 0)   -- ✅ NEW: Z-axis rotation
 	local PREWARM = config.prewarm or 0 -- set 0 to avoid initial burst
 	local GROUP = config.dropGroup or "Drops"
 	local PLAYER_GRP = config.playerGroup or "Players"
@@ -775,13 +777,13 @@ function Core.RunModel(config)
 
 		local primary = model.PrimaryPart :: BasePart
 
-		-- Compute spawn pose
-		local yawOnly = CFrame.Angles(0, YAW, 0)
+		-- Compute spawn pose with full 3-axis rotation support
+		local fullRotation = CFrame.Angles(PITCH, YAW, ROLL)  -- ✅ X, Y, Z rotation
 		local ext = model:GetExtentsSize()
 		local sitY = (ext.Y / 2) - EXTRA_LOWER
 		local ox = math.random(-2, 2) * 0.1
 		local oz = math.random(-2, 2) * 0.1
-		model:PivotTo(CFrame.new(dropPart.Position + Vector3.new(-ox, -sitY, -oz)) * yawOnly)
+		model:PivotTo(CFrame.new(dropPart.Position + Vector3.new(-ox, -sitY, -oz)) * fullRotation)
 
 		-- Prepare fade-in
 		local parts, decals = {}, {}
@@ -816,7 +818,7 @@ function Core.RunModel(config)
 			stabilizeAO.RigidityEnabled = true
 			stabilizeAO.MaxTorque = keepUprightEnabled and 100000 or math.huge
 			stabilizeAO.Responsiveness = keepUprightEnabled and 50 or 40
-			stabilizeAO.CFrame = yawOnly
+			stabilizeAO.CFrame = fullRotation  -- ✅ Use full rotation for stabilization
 			stabilizeAO.Parent = primary
 
 			-- If keepUpright is disabled, remove after brief spawn stabilization
