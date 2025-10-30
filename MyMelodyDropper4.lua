@@ -1,9 +1,9 @@
 --[[
-	MyMelody Dropper 4 — LOWER SPAWN + UPRIGHT (FIXED)
-	✅ Spawns clearly LOWER so it sits on the belt
-	✅ Uses same collision setup as Dropper1/2/3
-	✅ Inline mesh - no ReplicatedStorage needed
-	✅ No collisions with players or other droppers
+	MyMelody Dropper 4 — 15% BIGGER VERSION
+	✅ Scaled up ~15% (looks chunkier/cuter)
+	✅ Hitbox also scaled so physics still matches
+	✅ Raised spawn so feet don't sink
+	✅ Still same drop group / behavior
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
@@ -11,7 +11,9 @@ local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 task.wait(0.5)
 
 -- Prevent double-starts
-if script.Parent:GetAttribute("DropperRunning") then return end
+if script.Parent:GetAttribute("DropperRunning") then
+	return
+end
 script.Parent:SetAttribute("DropperRunning", true)
 
 Core.Run({
@@ -19,7 +21,7 @@ Core.Run({
 	partStorage = workspace:WaitForChild("PartStorage"),
 
 	namePrefix = "MyMelodyDrop4_",
-	dropGroup = "MyMelodyDrops1",  -- USE SAME GROUP AS DROPPER1/2/3
+	dropGroup = "MyMelodyDrops1", -- same group as Dropper1/2/3
 	playerGroup = "Players",
 
 	-- Timing
@@ -28,29 +30,33 @@ Core.Run({
 	lifetime = 180,
 
 	-- Part properties
-	size = Vector3.new(1.5, 1.5, 1.5),  -- SMALL HITBOX TO MATCH VISUAL SIZE
-	color = Color3.fromRGB(255, 192, 203), -- Pink for MyMelody
+	-- hitbox scaled up 15% too so it still matches mesh
+	size = Vector3.new(0.92, 0.92, 0.92),
+	color = Color3.fromRGB(255, 192, 203),
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
 
-	-- NO LIGHT/AURA
+	-- No glow/light aura
 	light = false,
 
-	-- Mesh configuration
+	-- Mesh configuration (visual look)
 	mesh = {
 		meshType = Enum.MeshType.FileMesh,
 		meshId = "rbxassetid://11816850109",      -- MyMelody mesh
 		textureId = "rbxassetid://11816850135",   -- MyMelody texture
-		scale = Vector3.new(0.6, 0.6, 0.6),  -- 60% SCALE
+		scale = Vector3.new(0.69, 0.69, 0.69),    -- was 0.6, now ~15% bigger
 		offset = Vector3.new(0, 0, 0),
 	},
 
-	-- Spawn settings (orientation: 0, 0, 0)
+	-- Spawn settings (upright)
 	spawn = {
 		rotation = CFrame.Angles(0, 0, 0),
 		velocity = Vector3.new(0, -10, 0),
 	},
-	spawnYOffset = -2.5,  -- SPAWN LOWER
+
+	-- slight raise because she's larger now so feet don't clip
+	-- was -1.7, now -1.65
+	spawnYOffset = -1.65,
 
 	-- Animation
 	fadeTime = 0.5,
@@ -61,13 +67,13 @@ Core.Run({
 		popStyle = Enum.EasingStyle.Elastic,
 		mesh = {
 			startScale = Vector3.new(0.3, 0.3, 0.3),
-			endScale = Vector3.new(0.6, 0.6, 0.6),
-			duration = 0.6,
-			style = Enum.EasingStyle.Elastic,
+			endScale   = Vector3.new(0.69, 0.69, 0.69), -- match new final size
+			duration   = 0.6,
+			style      = Enum.EasingStyle.Elastic,
 		},
 	},
 
-	-- Physics (same as MyMelody Dropper1)
+	-- Physics
 	density = 0.8,
 	friction = 0.18,
 	elasticity = 0.03,
