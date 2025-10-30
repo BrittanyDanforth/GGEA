@@ -19,7 +19,7 @@ Core.Run({
 	partStorage = workspace:WaitForChild("PartStorage"),
 
 	namePrefix = "BeanieDrop_",
-	dropGroup = "BeanieDrops2",
+	dropGroup = "MyMelodyDrops1",  -- USE SAME GROUP AS WORKING DROPPER1
 	playerGroup = "Players",
 
 	-- Timing
