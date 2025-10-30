@@ -441,7 +441,11 @@ function Core.Run(config)
 	local particlesCfg = config.particles
 	local spawnParticlesCfg = config.spawnParticles
 
-	local lightConfig = config.light or {brightness = 1, range = 6, color = Color3.fromRGB(50, 255, 50)}
+	-- Only use default light if not explicitly disabled
+	local lightConfig = config.light
+	if lightConfig == nil then
+		lightConfig = {brightness = 1, range = 6, color = Color3.fromRGB(50, 255, 50)}
+	end
 
 	local spawnConfig = config.spawn or {}
 	local spawnRotation = spawnConfig.rotation or CFrame.Angles(0, 0, 0)

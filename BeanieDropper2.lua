@@ -33,6 +33,9 @@ Core.Run({
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
 
+	-- NO LIGHT/AURA
+	light = false,
+
 	-- Mesh configuration
 	mesh = {
 		meshType = Enum.MeshType.FileMesh,
