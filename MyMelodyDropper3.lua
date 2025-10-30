@@ -28,7 +28,7 @@ Core.Run({
 	lifetime = 180,
 
 	-- Part properties
-	size = Vector3.new(1.5, 1.5, 1.5),
+	size = Vector3.new(1.531, 5.326, 1.821),  -- EXACT SIZE FROM IMAGE
 	color = Color3.fromRGB(255, 192, 203), -- Pink for MyMelody
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
@@ -45,9 +45,9 @@ Core.Run({
 		offset = Vector3.new(0, 0, 0),
 	},
 
-	-- Spawn settings
+	-- Spawn settings (orientation: 0, -23.462, 90)
 	spawn = {
-		rotation = CFrame.Angles(0, 0, 0), -- Upright
+		rotation = CFrame.Angles(0, math.rad(-23.462), math.rad(90)),
 		velocity = Vector3.new(0, -10, 0),
 	},
 	spawnYOffset = -1.75,
