@@ -25,6 +25,7 @@ Core.Run({
 	color = Color3.new(1, 0.8, 0.6), -- Beanie color
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
+	canCollide = false,  -- ✅ NO COLLISIONS!
 
 	mesh = {
 		meshType = Enum.MeshType.FileMesh,
