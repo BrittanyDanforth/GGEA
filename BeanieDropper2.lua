@@ -52,4 +52,9 @@ Core.Run({
 	density = 0.8,
 	friction = 0.18,
 	elasticity = 0.03,
+
+	-- Collection
+	cashOn = "primary",
+	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
+	collectorTags  = {"Collector", "SellZone"},
 })
