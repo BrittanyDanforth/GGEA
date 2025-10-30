@@ -34,9 +34,9 @@ Core.RunModel({
 	-- Spawn pose / placement
 	scaleFactor = 0.9,
 	extraLower  = -0.50,  -- sits down on belt
-	pitchDegrees = 90,    -- TILT UP 90° TO STAND UPRIGHT |
+	pitchDegrees = 0,
 	yawDegrees  = 0,
-	rollDegrees = 0,
+	rollDegrees = 90,    -- ROLL 90° TO STAND UPRIGHT |
 
 	-- Visual fade
 	fadeTime = 0.5,
