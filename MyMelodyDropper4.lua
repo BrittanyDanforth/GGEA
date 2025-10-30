@@ -28,7 +28,7 @@ Core.Run({
 	lifetime = 180,
 
 	-- Part properties
-	size = Vector3.new(4.52, 3.93, 4.52),  -- 60% OF ORIGINAL SIZE
+	size = Vector3.new(1.5, 1.5, 1.5),  -- SMALL HITBOX TO MATCH VISUAL SIZE
 	color = Color3.fromRGB(255, 192, 203), -- Pink for MyMelody
 	material = Enum.Material.SmoothPlastic,
 	transparency = 0,
@@ -50,7 +50,7 @@ Core.Run({
 		rotation = CFrame.Angles(0, 0, 0),
 		velocity = Vector3.new(0, -10, 0),
 	},
-	spawnYOffset = -1.75,
+	spawnYOffset = -2.5,  -- SPAWN LOWER
 
 	-- Animation
 	fadeTime = 0.5,
