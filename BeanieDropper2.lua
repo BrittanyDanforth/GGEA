@@ -15,6 +15,7 @@ Core.Run({
 
 	namePrefix = "BeanieMesh_",
 	dropGroup = "BeanieDrops2",
+	playerGroup = "Players",
 
 	dropRate = 1.2,
 	cashValue = 10,
