@@ -1,59 +1,54 @@
 --[[
-	Beanie Dropper 2 — LOWER SPAWN + UPRIGHT (FIXED)
-	✅ Spawns clearly LOWER so it sits on the belt
-	✅ keepUpright so it won't tip
-	✅ yaw = 0 (faces straight)
-	✅ Uses Beanie templateModel from ReplicatedStorage
-	✅ No collisions with players or other droppers
-	
-	Mesh Info:
-	- meshId: rbxassetid://95965901192105
-	- textureId: rbxassetid://79765468782729
-	- scale: 1.1, 1.1, 1.1
-	- offset: 0, 0.05, 0
+	Beanie Dropper 2 - MODERNIZED
+	✅ Uses Beanie mesh (rbxassetid://95965901192105)
+	✅ Spawns inline with mesh config
+	✅ No ReplicatedStorage template needed
 ]]
 
 local Core = require(game.ReplicatedStorage.Modules.DropperCore)
 
-task.wait(0.5)
+task.wait(1)
 
--- Prevent double-starts
-if script.Parent:GetAttribute("DropperRunning") then return end
-script.Parent:SetAttribute("DropperRunning", true)
-
-Core.RunModel({
+Core.Run({
 	model = script.Parent,
 	partStorage = workspace:WaitForChild("PartStorage"),
-	templateModel = game.ReplicatedStorage:WaitForChild("Beanie"),
 
-	namePrefix = "BeanieDrop_",
+	namePrefix = "BeanieMesh_",
 	dropGroup = "BeanieDrops2",
-	playerGroup = "Players",
 
-	-- Timing
 	dropRate = 1.2,
 	cashValue = 10,
 	lifetime = 180,
 
-	-- Pose / spawn height
-	scaleFactor = 1.1,      -- matches the mesh scale
-	extraLower = -0.50,     -- ↓ force noticeably lower
-	yawDegrees = 0,
+	size = Vector3.new(2, 2, 2),
+	color = Color3.new(1, 0.8, 0.6), -- Beanie color
+	material = Enum.Material.SmoothPlastic,
+	transparency = 0,
 
-	-- Animation
-	fadeTime = 0.5,
-	prewarm  = 0,
+	mesh = {
+		meshType = Enum.MeshType.FileMesh,
+		meshId = "rbxassetid://95965901192105",      -- Beanie mesh
+		textureId = "rbxassetid://79765468782729",   -- Beanie color map
+		scale = Vector3.new(1.1, 1.1, 1.1),
+		offset = Vector3.new(0, 0.05, 0),
+	},
 
-	-- Physics
-	density = 0.8,          -- a bit heavier = steadier
-	friction = 0.18,        -- less sticking on belt
+	spawn = {
+		rotation = CFrame.Angles(0, 0, 0), -- Upright
+		velocity = Vector3.new(0, -10, 0),
+	},
+	spawnYOffset = -1.75,
+
+	animation = {
+		mesh = {
+			startScale = Vector3.new(0.5, 0.5, 0.5),
+			endScale = Vector3.new(1.1, 1.1, 1.1),
+			duration = 0.6,
+			style = Enum.EasingStyle.Elastic,
+		},
+	},
+
+	density = 0.8,
+	friction = 0.18,
 	elasticity = 0.03,
-
-	-- Stability
-	keepUpright = true,
-
-	-- Collection
-	cashOn = "primary",
-	collectorNames = {"Collector", "CollectorZone", "Receiver", "Sell", "SellPad"},
-	collectorTags  = {"Collector", "SellZone"},
 })
